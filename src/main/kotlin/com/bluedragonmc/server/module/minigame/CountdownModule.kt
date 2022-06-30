@@ -24,6 +24,7 @@ class CountdownModule(private val threshold: Int) : GameModule() {
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         eventNode.addListener(PlayerSpawnEvent::class.java) { event ->
+            parent.players.add(event.player) // TODO this is temporary until we get a queue system
             if(threshold > 0 && parent.players.size >= threshold && countdown == null) {
                 countdown = createCountdownTask(parent, 10)
             }
@@ -57,6 +58,7 @@ class CountdownModule(private val threshold: Int) : GameModule() {
                         Title.Times.times(Duration.ZERO, Duration.ofSeconds(2), Duration.ZERO)
                     )
                 )
+                secondsLeft = secondsLeft!! - 1
             } else {
                 parent.sendTitlePart(
                     TitlePart.TITLE, Component.text("GO!", NamedTextColor.GREEN).decorate(TextDecoration.BOLD)

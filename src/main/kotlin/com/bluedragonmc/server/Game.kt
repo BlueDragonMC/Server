@@ -22,7 +22,7 @@ open class Game : PacketGroupingAudience {
         modules.add(module)
 
         val eventNode = EventNode.event(this.toString(), EventFilter.ALL) { event ->
-            when(event) {
+            when (event) {
                 is InstanceEvent -> {
                     hasModule<InstanceModule>() && event.instance == getInstance()
                 }
@@ -44,7 +44,7 @@ open class Game : PacketGroupingAudience {
 
     fun unregister(module: GameModule) {
         module.deinitialize()
-        if(module.eventNode != null) {
+        if (module.eventNode != null) {
             val node = module.eventNode!!
             node.parent?.removeChild(node)
         }
@@ -80,7 +80,7 @@ open class Game : PacketGroupingAudience {
 
     fun endGame(delay: Duration = Duration.ZERO) {
         MinecraftServer.getSchedulerManager().buildTask {
-            modules.forEach { unregister(it) }
+            while (modules.isNotEmpty()) unregister(modules.first())
             // TODO queue all players before shutting down the instance
         }.delay(delay).schedule()
     }
