@@ -1,7 +1,7 @@
 package com.bluedragonmc.server
 
-import com.bluedragonmc.server.game.WackyMazeGame
 import com.bluedragonmc.server.command.InstanceCommand
+import com.bluedragonmc.server.game.WackyMazeGame
 import net.minestom.server.MinecraftServer
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.event.player.PlayerLoginEvent

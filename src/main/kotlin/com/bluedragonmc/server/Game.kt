@@ -14,6 +14,8 @@ import net.minestom.server.event.EventNode
 import net.minestom.server.event.player.PlayerSpawnEvent
 import net.minestom.server.event.trait.InstanceEvent
 import java.time.Duration
+import java.util.concurrent.CompletableFuture
+import kotlin.reflect.full.createInstance
 
 open class Game(val name: String) : PacketGroupingAudience {
 
@@ -83,8 +85,14 @@ open class Game(val name: String) : PacketGroupingAudience {
     fun endGame(delay: Duration = Duration.ZERO) {
         MinecraftServer.getSchedulerManager().buildTask {
             while (modules.isNotEmpty()) unregister(modules.first())
-            sendMessage(Component.text("This game is ending. You will be sent to a new game shortly.", NamedTextColor.GREEN))
-            // TODO queue all players before shutting down the instance
+            sendActionBar(Component.text("This game is ending. You will be sent to a new game shortly.", NamedTextColor.GREEN))
+
+            val newInstance = this::class.createInstance()
+            CompletableFuture.allOf(*players.map { player -> player.setInstance(newInstance.getInstance()) }.toTypedArray()).whenCompleteAsync { _, throwable ->
+                throwable?.printStackTrace()
+                MinecraftServer.getInstanceManager().unregisterInstance(getInstance())
+            }
+
         }.delay(delay).schedule()
     }
 }

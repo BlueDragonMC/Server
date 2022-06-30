@@ -9,6 +9,7 @@ import com.bluedragonmc.server.module.map.AnvilFileMapProviderModule
 import com.bluedragonmc.server.module.minigame.MiniGameModule
 import com.bluedragonmc.server.module.minigame.WinModule
 import net.kyori.adventure.text.Component
+import net.minestom.server.entity.GameMode
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.item.Enchantment
@@ -37,6 +38,7 @@ class WackyMazeGame : Game("WackyMaze") {
         use(OldCombatModule(allowDamage = false, allowKnockback = true))
         use(InstantRespawnModule())
         use(WorldPermissionsModule(allowBlockBreak = false, allowBlockPlace = false, allowBlockInteract = false))
+        use(PlayerResetModule(defaultGameMode = GameMode.ADVENTURE))
         use(WackyMazeStickModule())
     }
 }
