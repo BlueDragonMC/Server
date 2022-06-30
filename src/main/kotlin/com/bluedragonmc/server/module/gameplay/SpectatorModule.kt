@@ -1,5 +1,6 @@
 package com.bluedragonmc.server.module.gameplay
 
+import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.GameEvent
 import com.bluedragonmc.server.module.GameModule
@@ -34,7 +35,7 @@ class SpectatorModule(var spectateOnDeath: Boolean) : GameModule() {
     }
 
     override fun deinitialize() {
-        parent.players.forEach(Player::stopSpectating)
+        parent.players.forEach(::removeSpectator)
     }
 
     /**
@@ -52,6 +53,7 @@ class SpectatorModule(var spectateOnDeath: Boolean) : GameModule() {
      */
     fun removeSpectator(player: Player) {
         spectators.remove(player)
+        if(player is CustomPlayer && player.isSpectating) player.stopSpectating()
         parent.callEvent(StopSpectatingEvent(parent, player))
     }
 

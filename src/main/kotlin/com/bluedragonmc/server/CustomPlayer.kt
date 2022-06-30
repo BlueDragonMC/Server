@@ -11,21 +11,21 @@ import java.util.*
 class CustomPlayer(uuid: UUID, username: String, playerConnection: PlayerConnection) :
     Player(uuid, username, playerConnection) {
 
-    private var spectating = false
+    internal var isSpectating = false
 
     override fun spectate(entity: Entity) {
         super.spectate(entity)
-        spectating = true
+        isSpectating = true
     }
 
     override fun stopSpectating() {
         super.stopSpectating()
-        spectating = false
+        isSpectating = false
     }
 
     override fun setSneaking(sneaking: Boolean) {
         super.setSneaking(sneaking)
-        if (sneaking && spectating && gameMode == GameMode.SPECTATOR) {
+        if (sneaking && isSpectating && gameMode == GameMode.SPECTATOR) {
             stopSpectating()
         }
     }
@@ -34,7 +34,7 @@ class CustomPlayer(uuid: UUID, username: String, playerConnection: PlayerConnect
         val prevGameMode = this.gameMode
         super.setGameMode(gameMode)
         // When a player stops spectating, send a camera packet to make sure they are not stuck.
-        if (spectating && prevGameMode == GameMode.SPECTATOR && gameMode != GameMode.SPECTATOR) {
+        if (isSpectating && prevGameMode == GameMode.SPECTATOR && gameMode != GameMode.SPECTATOR) {
             stopSpectating()
         }
     }

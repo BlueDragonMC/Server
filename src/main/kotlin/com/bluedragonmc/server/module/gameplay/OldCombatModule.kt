@@ -2,7 +2,10 @@ package com.bluedragonmc.server.module.gameplay
 
 import com.bluedragonmc.server.*
 import com.bluedragonmc.server.module.GameModule
+import com.bluedragonmc.server.utils.asTextComponent
+import net.minestom.server.MinecraftServer
 import net.minestom.server.attribute.Attribute
+import net.minestom.server.coordinate.Vec
 import net.minestom.server.entity.*
 import net.minestom.server.entity.damage.DamageType
 import net.minestom.server.event.Event
@@ -14,6 +17,7 @@ import net.minestom.server.item.ItemStack
 import net.minestom.server.network.packet.server.play.EntityAnimationPacket
 import net.minestom.server.network.packet.server.play.EntityAnimationPacket.Animation
 import kotlin.math.cos
+import kotlin.math.hypot
 import kotlin.math.sin
 import kotlin.random.Random
 
@@ -42,7 +46,8 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
             // Extra damage provided by enchants like sharpness or smite
             val damageModifier = getDamageModifier(heldEnchantments, target)
 
-            val knockback = if (allowKnockback) (heldEnchantments[Enchantment.KNOCKBACK] ?: 0) + if (player.isSprinting) 1 else 0 else 0
+            val knockback = if (allowKnockback) (heldEnchantments[Enchantment.KNOCKBACK]
+                ?: 0) + if (player.isSprinting) 1 else 0 else 0
 
             if (dmgAttribute <= 0.0f && damageModifier <= 0.0f) return@addListener
 
@@ -78,12 +83,38 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
                 target.setFireForDuration(heldEnchantments[Enchantment.FIRE_ASPECT]!! * 4)
             }
 
+            // Standard knockback that is unaffected by modifiers
+            if (target is LivingEntity) {
+                var xKnockback: Double = player.position.x - target.getPosition().x
+                var zKnockback: Double = player.position.z - target.getPosition().z
+
+                while (xKnockback * xKnockback + zKnockback * zKnockback < 0.0001) {
+                    xKnockback = (Math.random() - Math.random()) * 0.01
+                    zKnockback = (Math.random() - Math.random()) * 0.01
+                }
+                val magnitude = hypot(xKnockback, zKnockback)
+
+                // see https://github.com/TogAr2/MinestomPvP/blob/4b2aa1e05b7a877ffe62183ed9b0b09088a7ca88/src/main/java/io/github/bloepiloepi/pvp/legacy/LegacyKnockbackSettings.java#L10
+                // for more info on these constants
+                val horizontal = MinecraftServer.TICK_PER_SECOND * 0.8 * 0.4
+                val vertical = (0.4 - 0.04) * MinecraftServer.TICK_PER_SECOND
+                val verticalLimit = 0.4 * MinecraftServer.TICK_PER_SECOND
+
+                target.velocity = target.velocity.apply { x, y, z ->
+                    Vec(
+                        x / 2.0 - (xKnockback  / magnitude * horizontal),
+                        (y / 2.0 + vertical).coerceAtMost(verticalLimit),
+                        z / 2.0 - (zKnockback / magnitude * horizontal)
+                    )
+                }
+            }
+
             if (knockback > 0) {
                 if (target is LivingEntity) {
                     target.takeKnockback(
                         knockback * 0.5f,
-                        sin(Math.toRadians(player.position.yaw.toDouble())) * knockback * 0.5f,
-                        cos(Math.toRadians(player.position.yaw.toDouble())) * knockback * 0.5f
+                        sin(Math.toRadians(player.position.yaw.toDouble())),
+                        -cos(Math.toRadians(player.position.yaw.toDouble()))
                     )
                 } else {
                     target.velocity = target.velocity.add(
