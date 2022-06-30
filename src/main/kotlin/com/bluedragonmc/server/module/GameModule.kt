@@ -8,5 +8,6 @@ abstract class GameModule {
 
     var eventNode: EventNode<Event>? = null
     abstract fun initialize(parent: Game, eventNode: EventNode<Event>)
+    open fun deinitialize() {}
 
 }

@@ -43,6 +43,7 @@ open class Game : PacketGroupingAudience {
     }
 
     fun unregister(module: GameModule) {
+        module.deinitialize()
         if(module.eventNode != null) {
             val node = module.eventNode!!
             node.parent?.removeChild(node)
