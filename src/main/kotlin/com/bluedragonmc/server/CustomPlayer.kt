@@ -10,13 +10,6 @@ import java.util.*
 class CustomPlayer(uuid: UUID, username: String, playerConnection: PlayerConnection) :
     Player(uuid, username, playerConnection) {
 
-    var fallDistance = 0.0
-
-    override fun tick(time: Long) {
-        super.tick(time)
-        if (hurtResistantTime > 0) hurtResistantTime--
-    }
-
     fun isOnLadder() = instance!!.getBlock(position).registry().material() == Material.LADDER
 
     fun isInWater() = instance!!.getBlock(position).isLiquid
