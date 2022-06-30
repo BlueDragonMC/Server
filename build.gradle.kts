@@ -18,6 +18,9 @@ dependencies {
 
     // Minestom
     implementation("com.github.Minestom:Minestom:a04012d9bf")
+
+    // MiniMessage
+    implementation("net.kyori:adventure-text-minimessage:4.11.0")
 }
 
 tasks.test {
