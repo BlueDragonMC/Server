@@ -5,7 +5,7 @@ import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.gameplay.SpectatorModule
 import com.bluedragonmc.server.module.gameplay.TeamModule
 import com.bluedragonmc.server.utils.SingleAssignmentProperty
-import com.bluedragonmc.server.utils.TextUtils
+import com.bluedragonmc.server.utils.surroundWithSeparators
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
@@ -56,14 +56,12 @@ class WinModule(val winCondition: WinCondition = WinCondition.MANUAL) : GameModu
      */
     fun declareWinner(team: TeamModule.Team) {
         parent.sendMessage(
-            TextUtils.surroundWithSeparators(
-                team.name.append(
-                    Component.text(
-                        " won the game!",
-                        NamedTextColor.DARK_AQUA
-                    )
+            team.name.append(
+                Component.text(
+                    " won the game!",
+                    NamedTextColor.DARK_AQUA
                 )
-            )
+            ).surroundWithSeparators()
         )
         for (p in parent.players) {
             if (team.players.contains(p)) p.showTitle(

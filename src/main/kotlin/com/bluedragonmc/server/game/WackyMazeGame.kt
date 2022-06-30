@@ -3,6 +3,7 @@ package com.bluedragonmc.server.game
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.module.GameModule
+import com.bluedragonmc.server.module.gameplay.OldCombatModule
 import com.bluedragonmc.server.module.gameplay.SpectatorModule
 import com.bluedragonmc.server.module.gameplay.VoidDeathModule
 import com.bluedragonmc.server.module.instance.SharedInstanceModule
@@ -32,6 +33,7 @@ class WackyMazeGame : Game() {
                         "The last player alive wins!")
         ))
         use(SpectatorModule(spectateOnDeath = true))
+        use(OldCombatModule())
 
         use(WackyMazeStickModule())
     }

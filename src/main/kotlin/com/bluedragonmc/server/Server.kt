@@ -24,6 +24,9 @@ fun main() {
         InstanceCommand("instance", "/instance <list|add|remove> ...", "in")
     ).forEach(MinecraftServer.getCommandManager()::register)
 
+    // Set a custom player provider, so we can easily add fields to the Player class
+    MinecraftServer.getConnectionManager().setPlayerProvider(::CustomPlayer)
+
     // Start the server & bind to port 25565
     minecraftServer.start("0.0.0.0", 25565)
 
