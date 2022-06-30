@@ -3,10 +3,7 @@ package com.bluedragonmc.server.game
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.module.GameModule
-import com.bluedragonmc.server.module.gameplay.InstantRespawnModule
-import com.bluedragonmc.server.module.gameplay.OldCombatModule
-import com.bluedragonmc.server.module.gameplay.SpectatorModule
-import com.bluedragonmc.server.module.gameplay.VoidDeathModule
+import com.bluedragonmc.server.module.gameplay.*
 import com.bluedragonmc.server.module.instance.SharedInstanceModule
 import com.bluedragonmc.server.module.map.AnvilFileMapProviderModule
 import com.bluedragonmc.server.module.minigame.MiniGameModule
@@ -20,23 +17,26 @@ import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import java.nio.file.Paths
 
-class WackyMazeGame : Game() {
+class WackyMazeGame : Game("WackyMaze") {
     init {
         use(AnvilFileMapProviderModule(Paths.get("test_map")))
         use(SharedInstanceModule())
         use(VoidDeathModule(32.0))
-        use(MiniGameModule(
-            countdownThreshold = 2,
-            winCondition = WinModule.WinCondition.LAST_PLAYER_ALIVE,
-            motd = Component.text(
-                "Each player will receive a knockback stick.\n" +
-                    "Use it to wack your enemies off the map!\n" +
-                        "The last player alive wins!")
-        ))
+        use(
+            MiniGameModule(
+                countdownThreshold = 2,
+                winCondition = WinModule.WinCondition.LAST_PLAYER_ALIVE,
+                motd = Component.text(
+                    "Each player will receive a knockback stick.\n" +
+                            "Use it to wack your enemies off the map!\n" +
+                            "The last player alive wins!"
+                )
+            )
+        )
         use(SpectatorModule(spectateOnDeath = true))
-        use(OldCombatModule())
+        use(OldCombatModule(allowDamage = false, allowKnockback = true))
         use(InstantRespawnModule())
-
+        use(WorldPermissionsModule(allowBlockBreak = false, allowBlockPlace = false, allowBlockInteract = false))
         use(WackyMazeStickModule())
     }
 }

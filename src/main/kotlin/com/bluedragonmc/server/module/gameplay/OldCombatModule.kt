@@ -5,7 +5,6 @@ import com.bluedragonmc.server.module.GameModule
 import net.minestom.server.attribute.Attribute
 import net.minestom.server.entity.*
 import net.minestom.server.entity.damage.DamageType
-import net.minestom.server.entity.metadata.LivingEntityMeta
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.entity.EntityAttackEvent
@@ -18,7 +17,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.random.Random
 
-class OldCombatModule : GameModule() {
+class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boolean = true) : GameModule() {
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
 
         eventNode.addListener(EntityTickEvent::class.java) { event ->
@@ -43,7 +42,7 @@ class OldCombatModule : GameModule() {
             // Extra damage provided by enchants like sharpness or smite
             val damageModifier = getDamageModifier(heldEnchantments, target)
 
-            val knockback = (heldEnchantments[Enchantment.KNOCKBACK] ?: 0) + if (player.isSprinting) 1 else 0
+            val knockback = if (allowKnockback) (heldEnchantments[Enchantment.KNOCKBACK] ?: 0) + if (player.isSprinting) 1 else 0 else 0
 
             if (dmgAttribute <= 0.0f && damageModifier <= 0.0f) return@addListener
 
@@ -53,7 +52,7 @@ class OldCombatModule : GameModule() {
                 dmgAttribute *= 1.5f
             }
 
-            val damage = dmgAttribute + damageModifier
+            val damage = if (allowDamage) dmgAttribute + damageModifier else 0.0f
 
             if (target is LivingEntity) {
                 if (target.hurtResistantTime > target.maxHurtResistantTime / 2.0f) {

@@ -3,6 +3,8 @@ package com.bluedragonmc.server
 import com.bluedragonmc.server.event.GameEvent
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.instance.InstanceModule
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.MinecraftServer
 import net.minestom.server.adventure.audience.PacketGroupingAudience
 import net.minestom.server.entity.Player
@@ -13,7 +15,7 @@ import net.minestom.server.event.player.PlayerSpawnEvent
 import net.minestom.server.event.trait.InstanceEvent
 import java.time.Duration
 
-open class Game : PacketGroupingAudience {
+open class Game(val name: String) : PacketGroupingAudience {
 
     internal val modules = mutableListOf<GameModule>()
     internal val players = mutableListOf<Player>()
@@ -81,6 +83,7 @@ open class Game : PacketGroupingAudience {
     fun endGame(delay: Duration = Duration.ZERO) {
         MinecraftServer.getSchedulerManager().buildTask {
             while (modules.isNotEmpty()) unregister(modules.first())
+            sendMessage(Component.text("This game is ending. You will be sent to a new game shortly.", NamedTextColor.GREEN))
             // TODO queue all players before shutting down the instance
         }.delay(delay).schedule()
     }
