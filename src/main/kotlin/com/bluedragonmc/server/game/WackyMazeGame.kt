@@ -25,7 +25,7 @@ class WackyMazeGame : Game() {
         use(VoidDeathModule(32.0))
         use(MiniGameModule(
             countdownThreshold = 2,
-            winCondition = WinModule.WinCondition.LAST_ALIVE,
+            winCondition = WinModule.WinCondition.LAST_PLAYER_ALIVE,
             motd = Component.text(
                 "Each player will receive a knockback stick.\n" +
                     "Use it to wack your enemies off the map!\n" +

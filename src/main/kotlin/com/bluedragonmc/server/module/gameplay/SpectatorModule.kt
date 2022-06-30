@@ -26,6 +26,7 @@ class SpectatorModule(var spectateOnDeath: Boolean) : GameModule() {
 
     /**
      * Adds the specified player as a spectator and sets their game mode to spectator.
+     * When a player is a spectator, they are considered to be "out of the game".
      */
     fun addSpectator(player: Player) {
         spectators.add(player)
