@@ -74,4 +74,8 @@ class CountdownModule(private val threshold: Int) : GameModule() {
         secondsLeft = null
         countdown = null
     }
+
+    override fun deinitialize() {
+        countdown?.cancel()
+    }
 }

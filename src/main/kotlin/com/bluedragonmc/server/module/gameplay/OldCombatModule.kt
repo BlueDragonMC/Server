@@ -84,7 +84,7 @@ class OldCombatModule : GameModule() {
                     target.takeKnockback(
                         knockback * 0.5f,
                         sin(Math.toRadians(player.position.yaw.toDouble())) * knockback * 0.5f,
-                        -cos(Math.toRadians(player.position.yaw.toDouble())) * knockback * 0.5f
+                        cos(Math.toRadians(player.position.yaw.toDouble())) * knockback * 0.5f
                     )
                 } else {
                     target.velocity = target.velocity.add(
