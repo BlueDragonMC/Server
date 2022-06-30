@@ -8,6 +8,7 @@ import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
+import net.minestom.server.event.entity.EntityAttackEvent
 import net.minestom.server.event.player.PlayerDeathEvent
 
 /**
@@ -22,6 +23,18 @@ class SpectatorModule(var spectateOnDeath: Boolean) : GameModule() {
         eventNode.addListener(PlayerDeathEvent::class.java) { event ->
             if (spectateOnDeath && !isSpectating(event.player)) addSpectator(event.player)
         }
+        eventNode.addListener(EntityAttackEvent::class.java) { event ->
+            if (event.entity is Player) {
+                val player = event.entity as Player
+                if (player.gameMode == GameMode.SPECTATOR) {
+                    player.spectate(event.target)
+                }
+            }
+        }
+    }
+
+    override fun deinitialize() {
+        parent.players.forEach(Player::stopSpectating)
     }
 
     /**
@@ -55,10 +68,10 @@ class SpectatorModule(var spectateOnDeath: Boolean) : GameModule() {
     /**
      * This event is fired when a player becomes a spectator.
      */
-    class StartSpectatingEvent(game: Game, player: Player): GameEvent(game)
+    class StartSpectatingEvent(game: Game, player: Player) : GameEvent(game)
 
     /**
      * This event is fired when a player stops being a spectator.
      */
-    class StopSpectatingEvent(game: Game, player: Player): GameEvent(game)
+    class StopSpectatingEvent(game: Game, player: Player) : GameEvent(game)
 }
