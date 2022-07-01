@@ -2,7 +2,6 @@ package com.bluedragonmc.server.module.gameplay
 
 import com.bluedragonmc.server.*
 import com.bluedragonmc.server.module.GameModule
-import com.bluedragonmc.server.utils.asTextComponent
 import net.minestom.server.MinecraftServer
 import net.minestom.server.attribute.Attribute
 import net.minestom.server.coordinate.Vec
@@ -67,7 +66,7 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
                     if (damage > target.lastDamage) {
                         target.damage(DamageType.fromPlayer(player), damage - target.lastDamage)
                         target.lastDamage = damage
-                    }
+                    } else return@addListener
                 } else {
                     // The target has not been hit in the past (by default) 10 ticks.
                     target.damage(DamageType.fromPlayer(player), damage)
