@@ -2,6 +2,7 @@ package com.bluedragonmc.server
 
 import com.bluedragonmc.server.command.InstanceCommand
 import com.bluedragonmc.server.game.WackyMazeGame
+import com.bluedragonmc.server.module.gameplay.SpawnpointModule
 import net.minestom.server.MinecraftServer
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.event.player.PlayerLoginEvent
@@ -15,7 +16,8 @@ fun main() {
 
     // Make players spawn in the test instance
     MinecraftServer.getGlobalEventHandler().addListener(PlayerLoginEvent::class.java) { event ->
-        event.player.respawnPoint = Pos(0.0, 65.0, 0.0)
+        if (wackyMaze.hasModule<SpawnpointModule>()) event.player.respawnPoint = wackyMaze.getModule<SpawnpointModule>().spawnpointProvider.getSpawnpoint(event.player)
+        else event.player.respawnPoint = Pos(0.0, 65.0, 0.0)
         event.setSpawningInstance(wackyMaze.getInstance())
     }
 

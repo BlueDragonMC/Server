@@ -2,6 +2,7 @@ package com.bluedragonmc.server
 
 import com.bluedragonmc.server.event.GameEvent
 import com.bluedragonmc.server.module.GameModule
+import com.bluedragonmc.server.module.gameplay.SpawnpointModule
 import com.bluedragonmc.server.module.instance.InstanceModule
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -92,6 +93,10 @@ open class Game(val name: String) : PacketGroupingAudience {
                 throwable?.printStackTrace()
                 MinecraftServer.getInstanceManager().unregisterInstance(getInstance())
             }
+            // TODO change this, this is temporary for now
+            if (hasModule<SpawnpointModule>())
+                for (player in players)
+                    player.respawnPoint = getModule<SpawnpointModule>().spawnpointProvider.getSpawnpoint(player)
 
         }.delay(delay).schedule()
     }

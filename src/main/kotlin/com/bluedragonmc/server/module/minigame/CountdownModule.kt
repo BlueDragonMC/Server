@@ -21,6 +21,7 @@ class CountdownModule(private val threshold: Int) : GameModule() {
 
     private var countdown: Timer? = null
     private var secondsLeft: Int? = null
+    private var countdownEnded: Boolean = false
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         eventNode.addListener(PlayerSpawnEvent::class.java) { event ->
@@ -65,6 +66,7 @@ class CountdownModule(private val threshold: Int) : GameModule() {
                 )
                 cancelCountdown()
                 parent.callEvent(GameStartEvent(parent))
+                countdownEnded = true
             }
         }
     }
