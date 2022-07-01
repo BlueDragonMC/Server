@@ -12,6 +12,7 @@ class CustomPlayer(uuid: UUID, username: String, playerConnection: PlayerConnect
     Player(uuid, username, playerConnection) {
 
     internal var isSpectating = false
+    internal var lastNPCInteractionTime = 0L
 
     override fun spectate(entity: Entity) {
         super.spectate(entity)

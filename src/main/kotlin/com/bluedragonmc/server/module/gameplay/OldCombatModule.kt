@@ -112,8 +112,8 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
                 if (target is LivingEntity) {
                     target.takeKnockback(
                         knockback * 0.5f,
-                        sin(Math.toRadians(player.position.yaw.toDouble())),
-                        -cos(Math.toRadians(player.position.yaw.toDouble()))
+                        sin(Math.toRadians(player.position.yaw.toDouble() + 180.0)),
+                        -cos(Math.toRadians(player.position.yaw.toDouble() + 180.0))
                     )
                 } else {
                     target.velocity = target.velocity.add(
