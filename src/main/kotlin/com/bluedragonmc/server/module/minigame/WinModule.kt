@@ -32,10 +32,10 @@ class WinModule(val winCondition: WinCondition = WinCondition.MANUAL) : GameModu
                         if (!spectatorModule.isSpectating(player)) {
                             teamIsRemaining = true
                         }
-                        if (teamIsRemaining) {
-                            if (remainingTeam == null) remainingTeam = team
-                            else return@addListener // if it gets to this point, there is more than 1 remaining team
-                        }
+                    }
+                    if (teamIsRemaining) {
+                        if (remainingTeam == null) remainingTeam = team
+                        else return@addListener // if it gets to this point, there is more than 1 remaining team
                     }
                     if (remainingTeam != null) declareWinner(remainingTeam)
                 }

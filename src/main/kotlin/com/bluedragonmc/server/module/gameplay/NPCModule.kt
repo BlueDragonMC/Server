@@ -59,20 +59,22 @@ class NPCModule : GameModule() {
         uuid: UUID = UUID.randomUUID(),
         customName: Component = Component.text("NPC"),
         skin: PlayerSkin? = null,
+        entityType: EntityType = EntityType.PLAYER,
         interaction: Consumer<NPCInteraction>? = null,
         customNameVisible: Boolean = true
     ) {
-        addNPC(instance, position, NPC(uuid, customName, skin, interaction, customNameVisible))
+        addNPC(instance, position, NPC(uuid, customName, skin, entityType, interaction, customNameVisible))
     }
 
     class NPC(
         uuid: UUID = UUID.randomUUID(),
         customName: Component = Component.text("NPC"),
         skin: PlayerSkin? = null,
+        entityType: EntityType = EntityType.PLAYER,
         val interaction: Consumer<NPCInteraction>? = null,
         private val customNameVisible: Boolean = true,
 
-        ) : LivingEntity(EntityType.PLAYER, uuid) {
+        ) : LivingEntity(entityType, uuid) {
 
         private val addPlayerPacket: PlayerInfoPacket = PlayerInfoPacket(
             PlayerInfoPacket.Action.ADD_PLAYER, PlayerInfoPacket.AddPlayer(

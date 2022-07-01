@@ -18,7 +18,6 @@ class TeamModule(val autoTeams: Boolean = false, val autoTeamMode: AutoTeamMode 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         eventNode.addListener(GameStartEvent::class.java) {
             // Auto team system
-            // Note: this is currently untested
             if (autoTeams) {
                 if (autoTeamMode == AutoTeamMode.PLAYER_COUNT) { // Set number of players on each team
                     var i = 0
@@ -37,10 +36,14 @@ class TeamModule(val autoTeams: Boolean = false, val autoTeamMode: AutoTeamMode 
                     }
                 } else { // Set number of teams
                     var team = 0
+                    // Create teams
+                    for (i in 0 until autoTeamCount) teams.add(Team(teamNumToName(i), mutableListOf()))
+                    // Add players to teams
                     for (player in parent.players) {
                         if (team >= autoTeamCount) team = 0
-                        if (teams.size < team) teams.add(Team(teamNumToName(team), mutableListOf()))
                         teams[team].players.add(player)
+                        player.sendMessage(Component.text("You are on ").append(teams[team].name))
+                        team++
                     }
                 }
             }
