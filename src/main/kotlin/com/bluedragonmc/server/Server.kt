@@ -1,7 +1,7 @@
 package com.bluedragonmc.server
 
 import com.bluedragonmc.server.command.InstanceCommand
-import com.bluedragonmc.server.game.WackyMazeGame
+import com.bluedragonmc.server.game.TeamDeathmatchGame
 import com.bluedragonmc.server.module.gameplay.SpawnpointModule
 import net.minestom.server.MinecraftServer
 import net.minestom.server.coordinate.Pos
@@ -11,7 +11,7 @@ fun main() {
     val minecraftServer = MinecraftServer.init()
 
     // Create a test instance
-    val wackyMaze = WackyMazeGame()
+    val wackyMaze = TeamDeathmatchGame()
 
 
     // Make players spawn in the test instance
