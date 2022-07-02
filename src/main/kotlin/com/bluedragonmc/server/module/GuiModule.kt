@@ -16,11 +16,12 @@ import net.minestom.server.item.Material
  * A library for creating GUIs with buttons that react to user input.
  * Code example:
  * ```
- * val menu = createMenu(Component.text("WackyMaze Shop"), InventoryType.CHEST_6_ROW) {
+ * val menu = createMenu(Component.text("WackyMaze Shop"), InventoryType.CHEST_6_ROW, isPerPlayer = true) {
  * // This block is a builder for the menu's slots. Use the `slot` method to create a new slot, and it is immediately added to the menu.
- *   slot(pos(6, 5), Material.BARRIER, {
+ *   slot(pos(6, 5), Material.BARRIER, { player -> // Inventories are generated per-player by default, so items can be customized depending on whose inventory is being viewed.
  *     // This block's context is Minestom's `ItemStack.Builder`, so all of its methods can be used without method chaining or running `build()`
  *     displayName(Component.text("Close", NamedTextColor.RED))
+ *     lore(player.displayName)
  *   }) {
  *     // The second block passed to the `slot` method is the action that will be triggered when the slot is clicked. It receives a `SlotClickEvent`.
  *     menu.close(player)
@@ -31,18 +32,31 @@ import net.minestom.server.item.Material
 class GuiModule : GameModule() {
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {}
 
-    fun createMenu(title: Component, inventoryType: InventoryType, items: ItemsBuilder.() -> Unit): Menu {
+    fun createMenu(
+        title: Component,
+        inventoryType: InventoryType,
+        items: ItemsBuilder.() -> Unit,
+        isPerPlayer: Boolean = true
+    ): Menu {
         val builder = ItemsBuilder(inventoryType)
         items(builder)
-        return Menu(title, inventoryType, builder.build())
+        return Menu(title, inventoryType, builder.build(), isPerPlayer)
     }
 
-    data class Menu(val title: Component, val inventoryType: InventoryType, val items: List<Slot>) {
+    data class Menu(
+        val title: Component,
+        val inventoryType: InventoryType,
+        private val items: List<Slot>,
+        private val isPerPlayer: Boolean
+    ) {
 
-        private val inventory by lazy {
-            Inventory(inventoryType, title).apply {
+        private lateinit var cachedInventory: Inventory
+
+        private fun getInventory(player: Player): Inventory {
+            if(!isPerPlayer && this::cachedInventory.isInitialized) return cachedInventory
+            return Inventory(inventoryType, title).apply {
                 items.forEach { item ->
-                    setItemStack(item.index, item.itemStack)
+                    setItemStack(item.index, item.itemStackBuilder(ItemStack.builder(item.material), player).build())
                     if (item.action != null) {
                         this.inventoryConditions.add(InventoryCondition { player, slot, clickType, inventoryConditionResult ->
                             if (slot == item.index) {
@@ -52,11 +66,14 @@ class GuiModule : GameModule() {
                         })
                     }
                 }
+            }.also { inventory ->
+                if(!isPerPlayer) cachedInventory = inventory
             }
         }
 
         fun open(player: Player) {
-            if (player.openInventory != this.inventory) {
+            val inventory = getInventory(player)
+            if (player.openInventory != inventory) {
                 player.openInventory(inventory)
             }
         }
@@ -80,15 +97,15 @@ class GuiModule : GameModule() {
          */
         fun border(
             material: Material,
-            itemStack: ItemStack.Builder.() -> ItemStack.Builder,
+            itemStackBuilder: ItemStack.Builder.(player: Player) -> ItemStack.Builder,
             action: (SlotClickEvent.() -> Unit)? = null
         ) {
             require(inventoryType.size % 9 == 0) { "InventoryType does not have a multiple of 9 slots." }
             require(inventoryType.size >= 9) { "InventoryType has less than 9 slots." }
             val rows = inventoryType.size / 9
             for (i in 1..rows) {
-                slot(pos(i, 1), material, itemStack, action)
-                slot(pos(i, 9), material, itemStack, action)
+                slot(pos(i, 1), material, itemStackBuilder, action)
+                slot(pos(i, 9), material, itemStackBuilder, action)
             }
         }
 
@@ -98,10 +115,10 @@ class GuiModule : GameModule() {
         fun slot(
             slotNumber: Int,
             material: Material,
-            itemStack: ItemStack.Builder.() -> ItemStack.Builder,
+            itemStackBuilder: ItemStack.Builder.(player: Player) -> ItemStack.Builder,
             action: (SlotClickEvent.() -> Unit)? = null
         ) {
-            items.add(Slot(slotNumber, itemStack(ItemStack.builder(material)).build(), true, action))
+            items.add(Slot(slotNumber, material, itemStackBuilder, true, action))
         }
 
         /**
@@ -111,10 +128,10 @@ class GuiModule : GameModule() {
         fun clickableSlot(
             slotNumber: Int,
             material: Material,
-            itemStack: ItemStack.Builder.() -> ItemStack.Builder,
+            itemStackBuilder: ItemStack.Builder.(player: Player) -> ItemStack.Builder,
             action: (SlotClickEvent.() -> Unit)? = null
         ) {
-            items.add(Slot(slotNumber, itemStack(ItemStack.builder(material)).build(), false, action))
+            items.add(Slot(slotNumber, material, itemStackBuilder, false, action))
         }
 
         // When the inventory is built, the items are made non-mutable.
@@ -125,7 +142,8 @@ class GuiModule : GameModule() {
 
     data class Slot(
         val index: Int,
-        val itemStack: ItemStack,
+        val material: Material,
+        val itemStackBuilder: ItemStack.Builder.(player: Player) -> ItemStack.Builder,
         val cancelClicks: Boolean = true,
         val action: (SlotClickEvent.() -> Unit)?
     )
