@@ -22,30 +22,17 @@ class WinModule(val winCondition: WinCondition = WinCondition.MANUAL) : GameModu
         this.parent = parent
         eventNode.addListener(SpectatorModule.StartSpectatingEvent::class.java) {
             if (winCondition == WinCondition.MANUAL) return@addListener
-            val spectatorModule = parent.getModule<SpectatorModule>() // This module is required for all the win conditions
+            val spectatorModule =
+                parent.getModule<SpectatorModule>() // This module is required for all the win conditions
             if (winCondition == WinCondition.LAST_TEAM_ALIVE) {
-                val teamModule = parent.getModule<TeamModule>()
-                var remainingTeam: TeamModule.Team? = null
-                for (team in teamModule.teams) {
-                    var teamIsRemaining = false
-                    for (player in team.players) {
-                        if (!spectatorModule.isSpectating(player)) {
-                            teamIsRemaining = true
-                        }
-                    }
-                    if (teamIsRemaining) {
-                        if (remainingTeam == null) remainingTeam = team
-                        else return@addListener // if it gets to this point, there is more than 1 remaining team
-                    }
-                    if (remainingTeam != null) declareWinner(remainingTeam)
+                val remainingTeams = parent.getModule<TeamModule>().teams.filter { team ->
+                    team.players.any { player -> !spectatorModule.isSpectating(player) }
+                }
+                if (remainingTeams.size == 1) {
+                    declareWinner(remainingTeams.first())
                 }
             } else if (winCondition == WinCondition.LAST_PLAYER_ALIVE && parent.players.size - spectatorModule.spectatorCount() <= 1) {
-                for (player in parent.players) {
-                    if (!spectatorModule.isSpectating(player)) {
-                        declareWinner(player)
-                        break
-                    }
-                }
+                declareWinner(parent.players.first { player -> !spectatorModule.isSpectating(player) })
             }
         }
     }

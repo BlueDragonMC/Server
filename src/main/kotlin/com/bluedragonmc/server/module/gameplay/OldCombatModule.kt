@@ -188,7 +188,7 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
 
     private fun getThornsDamage(level: Int): Int = if (level > 10) 10 - level else 1 + Random.nextInt(4)
 
-    fun getDamageModifier(enchants: Map<Enchantment, Short>, targetEntity: Entity): Float =
+    private fun getDamageModifier(enchants: Map<Enchantment, Short>, targetEntity: Entity): Float =
         if (enchants.containsKey(Enchantment.SHARPNESS)) {
             enchants[Enchantment.SHARPNESS]!! * 1.25f
         } else if (enchants.containsKey(Enchantment.SMITE) && isUndead(targetEntity)) {
@@ -197,7 +197,7 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
             enchants[Enchantment.BANE_OF_ARTHROPODS]!! * 2.5f
         } else 0.0f
 
-    fun isUndead(entity: Entity) = setOf(
+    private fun isUndead(entity: Entity) = setOf(
         EntityType.DROWNED,
         EntityType.HUSK,
         EntityType.PHANTOM,
@@ -212,7 +212,7 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
         EntityType.ZOMBIFIED_PIGLIN,
     ).contains(entity.entityType)
 
-    fun isArthropod(entity: Entity) =
+    private fun isArthropod(entity: Entity) =
         entity.entityType == EntityType.SPIDER || entity.entityType == EntityType.CAVE_SPIDER || entity.entityType == EntityType.ENDERMITE || entity.entityType == EntityType.SILVERFISH
 
     data class PlayerAttackEvent(private val instance: Instance, val attacker: Player, val target: Entity) : PlayerInstanceEvent, CancellableEvent {

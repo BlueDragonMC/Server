@@ -172,7 +172,7 @@ class TeamModule(
         TEAM_COUNT
     }
 
-    data class Team(val name: Component, val players: MutableList<Player>, val allowFriendlyFire: Boolean) :
+    data class Team(val name: Component, val players: MutableList<Player>, val allowFriendlyFire: Boolean = false) :
         PacketGroupingAudience {
         override fun getPlayers(): MutableCollection<Player> = players
 
