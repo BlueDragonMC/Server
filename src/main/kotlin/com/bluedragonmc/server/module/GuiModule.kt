@@ -35,8 +35,8 @@ class GuiModule : GameModule() {
     fun createMenu(
         title: Component,
         inventoryType: InventoryType,
-        items: ItemsBuilder.() -> Unit,
-        isPerPlayer: Boolean = true
+        isPerPlayer: Boolean = true,
+        items: ItemsBuilder.() -> Unit = {}
     ): Menu {
         val builder = ItemsBuilder(inventoryType)
         items(builder)
@@ -53,7 +53,7 @@ class GuiModule : GameModule() {
         private lateinit var cachedInventory: Inventory
 
         private fun getInventory(player: Player): Inventory {
-            if(!isPerPlayer && this::cachedInventory.isInitialized) return cachedInventory
+            if (!isPerPlayer && this::cachedInventory.isInitialized) return cachedInventory
             return Inventory(inventoryType, title).apply {
                 items.forEach { item ->
                     setItemStack(item.index, item.itemStackBuilder(ItemStack.builder(item.material), player).build())
@@ -67,7 +67,7 @@ class GuiModule : GameModule() {
                     }
                 }
             }.also { inventory ->
-                if(!isPerPlayer) cachedInventory = inventory
+                if (!isPerPlayer) cachedInventory = inventory
             }
         }
 
@@ -80,6 +80,10 @@ class GuiModule : GameModule() {
 
         fun close(player: Player) {
             player.closeInventory()
+        }
+
+        fun setItemStack(player: Player, slot: Int, stack: ItemStack) {
+            getInventory(player).setItemStack(slot, stack)
         }
     }
 
