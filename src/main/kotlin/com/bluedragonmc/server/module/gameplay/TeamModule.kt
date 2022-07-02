@@ -3,9 +3,12 @@ package com.bluedragonmc.server.module.gameplay
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.module.GameModule
+import com.bluedragonmc.server.utils.toPlainText
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
+import net.minestom.server.MinecraftServer
 import net.minestom.server.adventure.audience.PacketGroupingAudience
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
@@ -16,9 +19,10 @@ import net.minestom.server.event.EventNode
  * This module can automatically generate teams when the game starts, or teams can be created manually and added to the `teams` list.
  */
 class TeamModule(
-    val autoTeams: Boolean = false,
-    val autoTeamMode: AutoTeamMode = AutoTeamMode.PLAYER_COUNT,
-    val autoTeamCount: Int = 2
+    private val autoTeams: Boolean = false,
+    private val autoTeamMode: AutoTeamMode = AutoTeamMode.PLAYER_COUNT,
+    private val autoTeamCount: Int = 2,
+    private val allowFriendlyFire: Boolean = false
 ) : GameModule() {
     val teams = mutableListOf<Team>()
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
@@ -31,7 +35,7 @@ class TeamModule(
                         var teamNumber = 0
                         teams.addAll(
                             parent.players.chunked(autoTeamCount) { players ->
-                                Team(teamNumToName(teamNumber++), players.toMutableList())
+                                Team(teamNumToName(teamNumber++), players.toMutableList(), allowFriendlyFire)
                             }
                         )
                         logger.info("Created ${teams.size} teams with $autoTeamCount players per team.")
@@ -42,7 +46,7 @@ class TeamModule(
                         var teamNumber = 0
                         teams.addAll(
                             parent.players.chunked(playersPerTeam) { players ->
-                                Team(teamNumToName(teamNumber++), players.toMutableList())
+                                Team(teamNumToName(teamNumber++), players.toMutableList(), allowFriendlyFire)
                             }
                         )
                         logger.info("Created ${teams.size} teams with $playersPerTeam players per team.")
@@ -54,6 +58,34 @@ class TeamModule(
 
             teams.forEach { team ->
                 team.sendMessage(Component.text("You are on ", NamedTextColor.GREEN).append(team.name))
+                val scoreboardTeam = MinecraftServer.getTeamManager().createTeam(
+                    parent.getInstance().uniqueId.toString() + "-" + team.name.toPlainText(),
+                    team.name,
+                    Component.text( // Prefix
+                        team.name.toPlainText().first() + " ", // The first letter of the team's name
+                        team.name.color() ?: NamedTextColor.WHITE, // The team name's text color
+                        TextDecoration.BOLD
+                    ),
+                    NamedTextColor.nearestTo(
+                        team.name.color() ?: NamedTextColor.WHITE
+                    ), // Used for coloring player usernames
+                    Component.empty() // No suffix
+                )
+                scoreboardTeam.isAllowFriendlyFire = allowFriendlyFire
+                scoreboardTeam.sendUpdatePacket()
+                team.players.forEach { player ->
+                    scoreboardTeam.addMember(player.username)
+                }
+            }
+        }
+        eventNode.addListener(OldCombatModule.PlayerAttackEvent::class.java) { event ->
+            if (event.target is Player) {
+                // Check for friendly fire
+                // This listen will only fire if a misbehaving client attacks a player on its team
+                val attackerTeam = teams.find { it.players.contains(event.entity) } ?: return@addListener
+                if (attackerTeam.allowFriendlyFire) return@addListener
+                val targetTeam = teams.find { it.players.contains(event.target) } ?: return@addListener
+                if (attackerTeam == targetTeam) event.isCancelled = true
             }
         }
     }
@@ -140,7 +172,8 @@ class TeamModule(
         TEAM_COUNT
     }
 
-    data class Team(val name: Component, val players: MutableList<Player>) : PacketGroupingAudience {
+    data class Team(val name: Component, val players: MutableList<Player>, val allowFriendlyFire: Boolean) :
+        PacketGroupingAudience {
         override fun getPlayers(): MutableCollection<Player> = players
 
         override fun toString(): String =

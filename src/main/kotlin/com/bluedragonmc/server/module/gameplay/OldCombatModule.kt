@@ -11,6 +11,9 @@ import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.entity.EntityAttackEvent
 import net.minestom.server.event.entity.EntityTickEvent
+import net.minestom.server.event.trait.CancellableEvent
+import net.minestom.server.event.trait.PlayerInstanceEvent
+import net.minestom.server.instance.Instance
 import net.minestom.server.item.Enchantment
 import net.minestom.server.item.ItemStack
 import net.minestom.server.network.packet.server.play.EntityAnimationPacket
@@ -34,6 +37,10 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
 
         eventNode.addListener(EntityAttackEvent::class.java) { event ->
             if (event.entity !is Player) return@addListener
+
+            val playerAttackEvent = PlayerAttackEvent(event.instance, event.entity as Player, event.target)
+                .apply(MinecraftServer.getGlobalEventHandler()::call)
+            if(playerAttackEvent.isCancelled) return@addListener
 
             val player = event.entity as CustomPlayer
             val target = event.target
@@ -208,4 +215,17 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
     fun isArthropod(entity: Entity) =
         entity.entityType == EntityType.SPIDER || entity.entityType == EntityType.CAVE_SPIDER || entity.entityType == EntityType.ENDERMITE || entity.entityType == EntityType.SILVERFISH
 
+    data class PlayerAttackEvent(private val instance: Instance, val attacker: Player, val target: Entity) : PlayerInstanceEvent, CancellableEvent {
+
+        private var cancelled: Boolean = false
+
+        override fun getPlayer() = attacker
+
+        override fun getInstance() = instance
+        override fun isCancelled() = cancelled
+
+        override fun setCancelled(cancel: Boolean) {
+            cancelled = cancel
+        }
+    }
 }

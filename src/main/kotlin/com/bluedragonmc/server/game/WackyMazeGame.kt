@@ -42,6 +42,7 @@ class WackyMazeGame : Game("WackyMaze") {
         use(PlayerResetModule(defaultGameMode = GameMode.ADVENTURE))
         use(SpawnpointModule(SpawnpointModule.TestSpawnpointProvider(Pos(-6.5, 64.0, 7.5), Pos(8.5, 64.0, -3.5))))
         use(InventoryPermissionsModule(allowDropItem = false, allowMoveItem = false, forcedItemSlot = 1))
+        use(TeamModule(true, TeamModule.AutoTeamMode.PLAYER_COUNT, 1))
         use(WackyMazeStickModule())
     }
 }
