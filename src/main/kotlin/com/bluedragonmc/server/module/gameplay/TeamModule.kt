@@ -5,6 +5,8 @@ import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.module.GameModule
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
+import net.minestom.server.adventure.audience.PacketGroupingAudience
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
@@ -13,39 +15,45 @@ import net.minestom.server.event.EventNode
  * A module that provides team support.
  * This module can automatically generate teams when the game starts, or teams can be created manually and added to the `teams` list.
  */
-class TeamModule(val autoTeams: Boolean = false, val autoTeamMode: AutoTeamMode = AutoTeamMode.PLAYER_COUNT, val autoTeamCount: Int = 2) : GameModule() {
+class TeamModule(
+    val autoTeams: Boolean = false,
+    val autoTeamMode: AutoTeamMode = AutoTeamMode.PLAYER_COUNT,
+    val autoTeamCount: Int = 2
+) : GameModule() {
     val teams = mutableListOf<Team>()
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         eventNode.addListener(GameStartEvent::class.java) {
             // Auto team system
             if (autoTeams) {
-                if (autoTeamMode == AutoTeamMode.PLAYER_COUNT) { // Set number of players on each team
-                    var i = 0
-                    // Each iteration of this outer loop creates a new team
-                    while (i < parent.players.size) {
-                        val teamPlayers = mutableListOf<Player>()
-                        var j = 0
-                        // Each iteration of this inner loop adds a player to the team
-                        while (j < autoTeamCount) {
-                            if (i + j >= parent.players.size) break // No more players to add to any team
-                            teamPlayers.add(parent.players[i + j])
-                            j++
-                        }
-                        teams.add(Team(teamNumToName(i / autoTeamCount), teamPlayers))
-                        i += autoTeamCount
+                logger.info("Splitting ${parent.players.size} players into teams using strategy $autoTeamMode")
+                when (autoTeamMode) {
+                    AutoTeamMode.PLAYER_COUNT -> {
+                        var teamNumber = 0
+                        teams.addAll(
+                            parent.players.chunked(autoTeamCount) { players ->
+                                Team(teamNumToName(teamNumber++), players.toMutableList())
+                            }
+                        )
+                        logger.info("Created ${teams.size} teams with $autoTeamCount players per team.")
                     }
-                } else { // Set number of teams
-                    var team = 0
-                    // Create teams
-                    for (i in 0 until autoTeamCount) teams.add(Team(teamNumToName(i), mutableListOf()))
-                    // Add players to teams
-                    for (player in parent.players) {
-                        if (team >= autoTeamCount) team = 0
-                        teams[team].players.add(player)
-                        player.sendMessage(Component.text("You are on ").append(teams[team].name))
-                        team++
+                    AutoTeamMode.TEAM_COUNT -> {
+                        val teamCount = autoTeamCount
+                        val playersPerTeam = (parent.players.size / teamCount).coerceAtLeast(1)
+                        var teamNumber = 0
+                        teams.addAll(
+                            parent.players.chunked(playersPerTeam) { players ->
+                                Team(teamNumToName(teamNumber++), players.toMutableList())
+                            }
+                        )
+                        logger.info("Created ${teams.size} teams with $playersPerTeam players per team.")
                     }
                 }
+            } else logger.info("Automatic team creation is disabled.")
+
+            logger.info(teams.toString())
+
+            teams.forEach { team ->
+                team.sendMessage(Component.text("You are on ", NamedTextColor.GREEN).append(team.name))
             }
         }
     }
@@ -131,5 +139,14 @@ class TeamModule(val autoTeams: Boolean = false, val autoTeamMode: AutoTeamMode 
          */
         TEAM_COUNT
     }
-    data class Team(val name: Component, val players: MutableList<Player>)
+
+    data class Team(val name: Component, val players: MutableList<Player>) : PacketGroupingAudience {
+        override fun getPlayers(): MutableCollection<Player> = players
+
+        override fun toString(): String =
+            PlainTextComponentSerializer.plainText().serialize(name) + players.joinToString(
+                prefix = "[",
+                postfix = "]"
+            ) { it.username }
+    }
 }

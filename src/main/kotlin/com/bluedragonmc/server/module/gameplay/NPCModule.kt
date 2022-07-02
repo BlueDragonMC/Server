@@ -69,7 +69,7 @@ class NPCModule : GameModule() {
     class NPC(
         uuid: UUID = UUID.randomUUID(),
         customName: Component = Component.text("NPC"),
-        skin: PlayerSkin? = null,
+        private val skin: PlayerSkin? = null,
         entityType: EntityType = EntityType.PLAYER,
         val interaction: Consumer<NPCInteraction>? = null,
         private val customNameVisible: Boolean = true,
@@ -122,7 +122,7 @@ class NPCModule : GameModule() {
             player.sendPacket(addPlayerPacket)
 
             // If the player can see the entity, it can be removed from the tablist as its skin is already being loaded.
-            if(hasLineOfSight(player, true)) {
+            if(hasLineOfSight(player, true) || skin == null) {
                 player.sendPacket(removePlayerPacket)
                 return
             }
