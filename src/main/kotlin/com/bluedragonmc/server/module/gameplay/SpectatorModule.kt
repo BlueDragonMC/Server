@@ -40,6 +40,7 @@ class SpectatorModule(var spectateOnDeath: Boolean) : GameModule() {
 
     /**
      * Adds the specified player as a spectator and sets their game mode to spectator.
+     * Fires the `StartSpectatingEvent`.
      * When a player is a spectator, they are considered to be "out of the game".
      */
     fun addSpectator(player: Player) {
@@ -49,11 +50,14 @@ class SpectatorModule(var spectateOnDeath: Boolean) : GameModule() {
     }
 
     /**
-     * Removes the specified player as a spectator. Does not change their game mode.
+     * Removes the specified player as a spectator.
+     * Fires the `StopSpectatingEvent`
+     * If `PlayerResetModule` is loaded, changes the player's game mode to the `defaultGameMode`.
      */
     fun removeSpectator(player: Player) {
         spectators.remove(player)
         if(player is CustomPlayer && player.isSpectating) player.stopSpectating()
+        if (parent.hasModule<PlayerResetModule>()) player.gameMode = parent.getModule<PlayerResetModule>().defaultGameMode
         parent.callEvent(StopSpectatingEvent(parent, player))
     }
 

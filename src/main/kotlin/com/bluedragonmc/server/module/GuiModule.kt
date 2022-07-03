@@ -138,7 +138,7 @@ class GuiModule : GameModule() {
             items.add(Slot(slotNumber, material, itemStackBuilder, false, action))
         }
 
-        // When the inventory is built, the items are made non-mutable.
+        // When the inventory is built, the items are made immutable.
         fun build() = items.toList()
     }
 
