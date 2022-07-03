@@ -32,10 +32,11 @@ tasks.withType<KotlinCompile> {
 }
 
 tasks.jar {
+    dependsOn(tasks.shadowJar)
     manifest {
         attributes(
             mapOf(
-                "Main-Class" to "com.bluedragonmc.server.Server"
+                "Main-Class" to "com.bluedragonmc.server.ServerKt"
             )
         )
     }
