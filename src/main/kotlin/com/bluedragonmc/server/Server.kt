@@ -1,5 +1,6 @@
 package com.bluedragonmc.server
 
+import com.bluedragonmc.server.command.GameCommand
 import com.bluedragonmc.server.command.InstanceCommand
 import com.bluedragonmc.server.game.TeamDeathmatchGame
 import com.bluedragonmc.server.module.gameplay.SpawnpointModule
@@ -24,7 +25,8 @@ fun main() {
 
     // Initialize commands
     listOf(
-        InstanceCommand("instance", "/instance <list|add|remove> ...", "in")
+        InstanceCommand("instance", "/instance <list|add|remove> ...", "in"),
+        GameCommand("game", "/game <start|end>"),
     ).forEach(MinecraftServer.getCommandManager()::register)
 
     // Set a custom player provider, so we can easily add fields to the Player class
