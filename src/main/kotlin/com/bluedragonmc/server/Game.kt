@@ -14,6 +14,7 @@ import net.minestom.server.event.EventFilter
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.player.PlayerSpawnEvent
 import net.minestom.server.event.trait.InstanceEvent
+import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.concurrent.CompletableFuture
 import kotlin.reflect.full.createInstance
@@ -22,6 +23,16 @@ open class Game(val name: String) : PacketGroupingAudience {
 
     internal val modules = mutableListOf<GameModule>()
     internal val players = mutableListOf<Player>()
+
+    private val logger = LoggerFactory.getLogger(this.javaClass)
+
+    init {
+        MinecraftServer.getSchedulerManager().buildTask {
+            if(!games.contains(this)) {
+                logger.warn("Game was not registered after 5 seconds! Games MUST call the ready() method after they are constructed or they will not be joinable.")
+            }
+        }.delay(Duration.ofSeconds(5)).schedule()
+    }
 
     fun use(module: GameModule) {
         modules.add(module)
@@ -57,6 +68,7 @@ open class Game(val name: String) : PacketGroupingAudience {
     }
 
     fun ready() {
+        games.add(this)
         state = GameState.WAITING
     }
 
@@ -84,6 +96,7 @@ open class Game(val name: String) : PacketGroupingAudience {
     override fun getPlayers(): MutableCollection<Player> = players
 
     fun endGame(delay: Duration = Duration.ZERO) {
+        games.remove(this)
         MinecraftServer.getSchedulerManager().buildTask {
             while (modules.isNotEmpty()) unregister(modules.first())
             sendActionBar(Component.text("This game is ending. You will be sent to a new game shortly.", NamedTextColor.GREEN))
@@ -99,5 +112,11 @@ open class Game(val name: String) : PacketGroupingAudience {
                     player.respawnPoint = getModule<SpawnpointModule>().spawnpointProvider.getSpawnpoint(player)
 
         }.delay(delay).schedule()
+    }
+
+    companion object {
+        val games = mutableListOf<Game>()
+
+        fun findGame(player: Player): Game? = games.find { player in it.players }
     }
 }

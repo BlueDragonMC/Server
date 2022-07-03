@@ -7,7 +7,8 @@ import net.minestom.server.command.builder.Command
 /**
  * A basic command class that is extended by BlueDragon commands.
  */
-open class BlueDragonCommand(name: String, private val usage: String, vararg aliases: String?) : Command(name, *aliases) {
+open class BlueDragonCommand(name: String, private val usage: String, vararg aliases: String?) :
+    Command(name, *aliases) {
     init {
         setDefaultExecutor { sender, _ ->
             sender.sendMessage(Component.text("Usage: $usage").color(NamedTextColor.RED))

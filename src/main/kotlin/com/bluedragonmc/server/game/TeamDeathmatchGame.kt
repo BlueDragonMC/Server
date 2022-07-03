@@ -20,19 +20,11 @@ class TeamDeathmatchGame : Game("Team Deathmatch") {
         use(AnvilFileMapProviderModule(Paths.get("test_map")))
         use(SharedInstanceModule())
         use(VoidDeathModule(32.0))
-        use(
-            MiniGameModule(
-                countdownThreshold = 2,
-                winCondition = WinModule.WinCondition.LAST_TEAM_ALIVE,
-                motd = Component.text(
-                    "Two teams battle it out\n" +
-                            "until only one team stands!\n"
-                ),
-                useOnStart = arrayOf(
-                    OldCombatModule(allowDamage = true, allowKnockback = true),
-                    SpectatorModule(spectateOnDeath = true))
-            )
-        )
+        use(MiniGameModule(countdownThreshold = 2,
+            winCondition = WinModule.WinCondition.LAST_TEAM_ALIVE,
+            motd = Component.text("Two teams battle it out\n" + "until only one team stands!\n"),
+            useOnStart = arrayOf(OldCombatModule(allowDamage = true, allowKnockback = true),
+                SpectatorModule(spectateOnDeath = true))))
         use(InstantRespawnModule())
         use(WorldPermissionsModule(allowBlockBreak = false, allowBlockPlace = false, allowBlockInteract = false))
         use(PlayerResetModule(defaultGameMode = GameMode.ADVENTURE))
@@ -45,21 +37,18 @@ class TeamDeathmatchGame : Game("Team Deathmatch") {
         val ironLeggings = ItemStack.builder(Material.IRON_LEGGINGS).build()
         val ironBoots = ItemStack.builder(Material.IRON_BOOTS).build()
         val sword = ItemStack.builder(Material.DIAMOND_SWORD).build()
-        use(KitsModule(showMenu = true, selectableKits = listOf(KitsModule.Kit(
-            name = Component.text("Default", NamedTextColor.YELLOW),
-            icon = Material.DIAMOND_CHESTPLATE,
-            items = hashMapOf(
-                Pair(0, sword),
-                Pair(PlayerInventoryUtils.HELMET_SLOT, ironHelmet),
-                Pair(PlayerInventoryUtils.CHESTPLATE_SLOT, ironChestplate),
-                Pair(PlayerInventoryUtils.LEGGINGS_SLOT, ironLeggings),
-                Pair(PlayerInventoryUtils.BOOTS_SLOT, ironBoots)
-        )), KitsModule.Kit(
-            name = Component.text("Hard Mode", NamedTextColor.RED),
-            icon = Material.REDSTONE,
-            items = hashMapOf(
-                Pair(0, sword),
-                Pair(PlayerInventoryUtils.BOOTS_SLOT, ironBoots)
-        )))))
+        use(KitsModule(showMenu = true,
+            selectableKits = listOf(KitsModule.Kit(name = Component.text("Default", NamedTextColor.YELLOW),
+                icon = Material.DIAMOND_CHESTPLATE,
+                items = hashMapOf(0 to sword,
+                    PlayerInventoryUtils.HELMET_SLOT to ironHelmet,
+                    PlayerInventoryUtils.CHESTPLATE_SLOT to ironChestplate,
+                    PlayerInventoryUtils.LEGGINGS_SLOT to ironLeggings,
+                    PlayerInventoryUtils.BOOTS_SLOT to ironBoots)),
+                KitsModule.Kit(name = Component.text("Hard Mode", NamedTextColor.RED),
+                    icon = Material.REDSTONE,
+                    items = hashMapOf(0 to sword, PlayerInventoryUtils.BOOTS_SLOT to ironBoots)))))
+
+        ready()
     }
 }
