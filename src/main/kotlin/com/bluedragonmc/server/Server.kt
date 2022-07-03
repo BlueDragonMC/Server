@@ -6,6 +6,7 @@ import com.bluedragonmc.server.module.gameplay.SpawnpointModule
 import net.minestom.server.MinecraftServer
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.event.player.PlayerLoginEvent
+import net.minestom.server.extras.lan.OpenToLAN
 
 fun main() {
     val minecraftServer = MinecraftServer.init()
@@ -31,5 +32,7 @@ fun main() {
 
     // Start the server & bind to port 25565
     minecraftServer.start("0.0.0.0", 25565)
+
+    OpenToLAN.open()
 
 }
