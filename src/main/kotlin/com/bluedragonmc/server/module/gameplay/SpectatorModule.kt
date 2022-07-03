@@ -74,10 +74,10 @@ class SpectatorModule(var spectateOnDeath: Boolean) : GameModule() {
     /**
      * This event is fired when a player becomes a spectator.
      */
-    class StartSpectatingEvent(game: Game, player: Player) : GameEvent(game)
+    class StartSpectatingEvent(game: Game, val player: Player) : GameEvent(game)
 
     /**
      * This event is fired when a player stops being a spectator.
      */
-    class StopSpectatingEvent(game: Game, player: Player) : GameEvent(game)
+    class StopSpectatingEvent(game: Game, val player: Player) : GameEvent(game)
 }

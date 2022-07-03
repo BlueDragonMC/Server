@@ -12,21 +12,27 @@ import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.instance.RemoveEntityFromInstanceEvent
+import net.minestom.server.event.player.PlayerMoveEvent
 import net.minestom.server.event.player.PlayerSpawnEvent
 import java.time.Duration
 import java.util.*
 import kotlin.concurrent.fixedRateTimer
 
-class CountdownModule(private val threshold: Int, vararg val useOnStart: GameModule) : GameModule() {
+class CountdownModule(
+    private val threshold: Int,
+    val allowMoveDuringCountdown: Boolean = true,
+    vararg val useOnStart: GameModule
+) : GameModule() {
 
     private var countdown: Timer? = null
     private var secondsLeft: Int? = null
+    private var countdownRunning: Boolean = false
     private var countdownEnded: Boolean = false
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         eventNode.addListener(PlayerSpawnEvent::class.java) { event ->
             parent.players.add(event.player) // TODO this is temporary until we get a queue system
-            if(threshold > 0 && parent.players.size >= threshold && countdown == null) {
+            if (threshold > 0 && parent.players.size >= threshold && countdown == null) {
                 countdown = createCountdownTask(parent, 10)
             }
         }
@@ -35,18 +41,33 @@ class CountdownModule(private val threshold: Int, vararg val useOnStart: GameMod
             parent.players.remove(event.entity)
             if (threshold > 0 && countdown != null && parent.players.size < threshold) {
                 // Stop the countdown
+                countdownRunning = false
                 countdown?.cancel()
-                parent.showTitle(Title.title(
-                    Component.text("Cancelled!", NamedTextColor.RED),
-                    Component.text("Not enough players to start (${parent.players.size}/$threshold)", NamedTextColor.RED),
-                    Title.Times.times(Duration.ZERO, Duration.ofSeconds(5), Duration.ofSeconds(1))
-                ))
+                parent.showTitle(
+                    Title.title(
+                        Component.text("Cancelled!", NamedTextColor.RED),
+                        Component.text(
+                            "Not enough players to start (${parent.players.size}/$threshold)",
+                            NamedTextColor.RED
+                        ),
+                        Title.Times.times(Duration.ZERO, Duration.ofSeconds(5), Duration.ofSeconds(1))
+                    )
+                )
             }
+        }
+        eventNode.addListener(PlayerMoveEvent::class.java) { event ->
+            event.isCancelled =
+                countdownRunning && // Countdown started
+                        !countdownEnded && // Countdown not ended
+                        !allowMoveDuringCountdown &&
+                        (event.newPosition.x != event.player.position.x || event.newPosition.z != event.player.position.z)
         }
     }
 
     private fun createCountdownTask(parent: Game, initialSeconds: Int): Timer {
+        if (!allowMoveDuringCountdown) parent.players.forEach { it.teleport(it.respawnPoint) }
         secondsLeft = initialSeconds
+        countdownRunning = true
         return fixedRateTimer("countdown", initialDelay = 1000, period = 1000) {
             val seconds = secondsLeft ?: run {
                 cancelCountdown()
@@ -75,6 +96,7 @@ class CountdownModule(private val threshold: Int, vararg val useOnStart: GameMod
 
     private fun cancelCountdown() {
         countdown?.cancel()
+        countdownRunning = false
         secondsLeft = null
         countdown = null
     }

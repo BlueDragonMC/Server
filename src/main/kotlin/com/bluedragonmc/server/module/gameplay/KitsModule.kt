@@ -1,6 +1,7 @@
 package com.bluedragonmc.server.module.gameplay
 
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.event.GameEvent
 import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.GuiModule
@@ -23,7 +24,7 @@ import net.minestom.server.item.Material
  * Use the `giveKit` function to manually give a player their selected kit.
  * When the module is unloaded, players keep their kits.
  */
-class KitsModule(val showMenu: Boolean = false, val selectableKits: List<Kit>) : GameModule() {
+class KitsModule(val showMenu: Boolean = false, val giveKitsOnStart: Boolean = true, val selectableKits: List<Kit>) : GameModule() {
     private var parent by SingleAssignmentProperty<Game>()
 
     private val selectedKits = hashMapOf<Player, Kit>()
@@ -37,7 +38,7 @@ class KitsModule(val showMenu: Boolean = false, val selectableKits: List<Kit>) :
             }
         }
         eventNode.addListener(GameStartEvent::class.java) { event ->
-            for (player in parent.players) giveKit(player)
+            if (giveKitsOnStart) for (player in parent.players) giveKit(player)
         }
     }
 
@@ -59,6 +60,7 @@ class KitsModule(val showMenu: Boolean = false, val selectableKits: List<Kit>) :
                     selectedKits[this.player] = selectableKit
                     this.player.sendMessage(Component.text("You have selected the ", NamedTextColor.GREEN).append(selectableKit.name).append(Component.text(" kit.", NamedTextColor.GREEN)))
                     menu.close(this.player)
+                    parent.callEvent(KitSelectedEvent(parent, this.player, selectableKit))
                 }
             }
         }
@@ -84,4 +86,10 @@ class KitsModule(val showMenu: Boolean = false, val selectableKits: List<Kit>) :
     }
 
     data class Kit(val name: Component, val description: Component = Component.empty(), val icon: Material = Material.DIAMOND, val items: HashMap<Int, ItemStack>)
+
+    /**
+     * This event is fired when the player confirms their kit selection.
+     * If the player closes the kit selection menu, this event is not fired.
+     */
+    class KitSelectedEvent(game: Game, val player: Player, val kit: Kit) : GameEvent(game)
 }

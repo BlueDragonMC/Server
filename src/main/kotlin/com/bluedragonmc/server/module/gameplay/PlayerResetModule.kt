@@ -11,7 +11,7 @@ import net.minestom.server.event.player.PlayerSpawnEvent
 import java.time.Duration
 
 /**
- * "Resets" the player when the game starts. This changes some basic attributes to make sure effects don't persist in between games.
+ * "Resets" the player when they join the game. This changes some basic attributes to make sure effects don't persist in between games.
  * - Change game mode
  * - Clear inventory
  * - Reset health/hunger
