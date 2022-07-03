@@ -17,7 +17,7 @@ import java.time.Duration
 import java.util.*
 import kotlin.concurrent.fixedRateTimer
 
-class CountdownModule(private val threshold: Int) : GameModule() {
+class CountdownModule(private val threshold: Int, vararg val useOnStart: GameModule) : GameModule() {
 
     private var countdown: Timer? = null
     private var secondsLeft: Int? = null
@@ -32,6 +32,7 @@ class CountdownModule(private val threshold: Int) : GameModule() {
         }
         eventNode.addListener(RemoveEntityFromInstanceEvent::class.java) { event ->
             if (event.entity !is Player) return@addListener
+            parent.players.remove(event.entity)
             if (threshold > 0 && countdown != null && parent.players.size < threshold) {
                 // Stop the countdown
                 countdown?.cancel()
@@ -65,6 +66,7 @@ class CountdownModule(private val threshold: Int) : GameModule() {
                     TitlePart.TITLE, Component.text("GO!", NamedTextColor.GREEN).decorate(TextDecoration.BOLD)
                 )
                 cancelCountdown()
+                for (module in useOnStart) parent.use(module)
                 parent.callEvent(GameStartEvent(parent))
                 countdownEnded = true
             }

@@ -27,11 +27,12 @@ class TeamDeathmatchGame : Game("Team Deathmatch") {
                 motd = Component.text(
                     "Two teams battle it out\n" +
                             "until only one team stands!\n"
-                )
+                ),
+                useOnStart = arrayOf(
+                    OldCombatModule(allowDamage = true, allowKnockback = true),
+                    SpectatorModule(spectateOnDeath = true))
             )
         )
-        use(SpectatorModule(spectateOnDeath = true))
-        use(OldCombatModule(allowDamage = true, allowKnockback = true))
         use(InstantRespawnModule())
         use(WorldPermissionsModule(allowBlockBreak = false, allowBlockPlace = false, allowBlockInteract = false))
         use(PlayerResetModule(defaultGameMode = GameMode.ADVENTURE))

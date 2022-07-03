@@ -17,12 +17,13 @@ import net.minestom.server.event.EventNode
 class MiniGameModule(
     private val countdownThreshold: Int,
     private val winCondition: WinModule.WinCondition = WinModule.WinCondition.MANUAL,
-    private val motd: Component
+    private val motd: Component,
+    private vararg val useOnStart: GameModule,
 ) : GameModule() {
     private var parent by SingleAssignmentProperty<Game>()
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         this.parent = parent
-        parent.use(CountdownModule(threshold = countdownThreshold))
+        parent.use(CountdownModule(threshold = countdownThreshold, useOnStart = useOnStart))
         parent.use(WinModule(winCondition = winCondition))
         parent.use(MOTDModule(motd = motd))
     }

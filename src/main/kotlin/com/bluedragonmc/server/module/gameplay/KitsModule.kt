@@ -4,6 +4,7 @@ import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.GuiModule
+import com.bluedragonmc.server.utils.SingleAssignmentProperty
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.entity.Player
@@ -23,30 +24,16 @@ import net.minestom.server.item.Material
  * When the module is unloaded, players keep their kits.
  */
 class KitsModule(val showMenu: Boolean = false, val selectableKits: List<Kit>) : GameModule() {
+    private var parent by SingleAssignmentProperty<Game>()
+
     private val selectedKits = hashMapOf<Player, Kit>()
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
+        this.parent = parent
         // todo add support for unlockable kits
         // todo make this use a "player join game event" instead of spawn event
         eventNode.addListener(PlayerSpawnEvent::class.java) { event ->
             if (showMenu) {
-                if (!parent.hasModule<GuiModule>()) {
-                    logger.warn("Kits module used without GUI module. Creating GUI module with default settings.")
-                    parent.use(GuiModule())
-                }
-                val menu = parent.getModule<GuiModule>().createMenu(title = Component.text("Select Kit"), inventoryType = InventoryType.CHEST_1_ROW, isPerPlayer = true) {
-                    for (selectableKit in selectableKits) {
-                        val index = selectableKits.indexOf(selectableKit)
-                        slot(index, selectableKit.icon, { player ->
-                            displayName(selectableKit.name)
-                            lore(selectableKit.description)
-                        }) {
-                            selectedKits[this.player] = selectableKit
-                            this.player.sendMessage(Component.text("You have selected the ", NamedTextColor.GREEN).append(selectableKit.name).append(Component.text(" kit.", NamedTextColor.GREEN)))
-                            menu.close(this.player)
-                        }
-                    }
-                }
-                menu.open(event.player)
+                selectKit(event.player)
             }
         }
         eventNode.addListener(GameStartEvent::class.java) { event ->
@@ -54,6 +41,33 @@ class KitsModule(val showMenu: Boolean = false, val selectableKits: List<Kit>) :
         }
     }
 
+    /**
+     * Displays the kit selection menu to the specified player.
+     */
+    fun selectKit(player: Player) {
+        if (!parent.hasModule<GuiModule>()) {
+            logger.warn("Kits module used without GUI module. Creating GUI module with default settings.")
+            parent.use(GuiModule())
+        }
+        val menu = parent.getModule<GuiModule>().createMenu(title = Component.text("Select Kit"), inventoryType = InventoryType.CHEST_1_ROW, isPerPlayer = true) {
+            for (selectableKit in selectableKits) {
+                val index = selectableKits.indexOf(selectableKit)
+                slot(index, selectableKit.icon, { player ->
+                    displayName(selectableKit.name)
+                    lore(selectableKit.description)
+                }) {
+                    selectedKits[this.player] = selectableKit
+                    this.player.sendMessage(Component.text("You have selected the ", NamedTextColor.GREEN).append(selectableKit.name).append(Component.text(" kit.", NamedTextColor.GREEN)))
+                    menu.close(this.player)
+                }
+            }
+        }
+        menu.open(player)
+    }
+
+    /**
+     * Gives the player all the items in a specific kit.
+     */
     fun giveKit(player: Player, kit: Kit) {
         player.inventory.clear()
         for (item in kit.items) {
