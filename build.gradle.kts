@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     kotlin("jvm") version "1.7.0"
     id("com.github.johnrengelman.shadow") version "7.1.0"
+    kotlin("plugin.serialization") version "1.6.21"
 }
 
 group = "com.bluedragonmc"
@@ -21,6 +22,9 @@ dependencies {
 
     // MiniMessage
     implementation("net.kyori:adventure-text-minimessage:4.11.0")
+
+    // Database support
+    implementation("org.litote.kmongo:kmongo-coroutine-serialization:4.6.1")
 }
 
 tasks.test {

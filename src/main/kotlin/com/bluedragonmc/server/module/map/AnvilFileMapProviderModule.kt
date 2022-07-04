@@ -2,7 +2,6 @@ package com.bluedragonmc.server.module.map
 
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.GameModule
-import com.bluedragonmc.server.utils.SingleAssignmentProperty
 import net.minestom.server.MinecraftServer
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
@@ -12,7 +11,7 @@ import java.nio.file.Path
 
 class AnvilFileMapProviderModule(private val worldFolder: Path) : GameModule() {
 
-    var instanceContainer by SingleAssignmentProperty<InstanceContainer>()
+    lateinit var instanceContainer: InstanceContainer
         private set
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {

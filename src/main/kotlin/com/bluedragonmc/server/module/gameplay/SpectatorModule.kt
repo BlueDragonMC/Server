@@ -4,7 +4,6 @@ import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.GameEvent
 import com.bluedragonmc.server.module.GameModule
-import com.bluedragonmc.server.utils.SingleAssignmentProperty
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
@@ -17,7 +16,7 @@ import net.minestom.server.event.player.PlayerDeathEvent
  */
 class SpectatorModule(var spectateOnDeath: Boolean) : GameModule() {
     private val spectators = mutableListOf<Player>()
-    private var parent by SingleAssignmentProperty<Game>()
+    private lateinit var parent: Game
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         this.parent = parent

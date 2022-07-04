@@ -3,7 +3,6 @@ package com.bluedragonmc.server.module.gameplay
 import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.GameModule
-import com.bluedragonmc.server.utils.SingleAssignmentProperty
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
 import net.minestom.server.coordinate.Pos
@@ -31,7 +30,7 @@ import java.util.function.Consumer
  */
 class NPCModule : GameModule() {
 
-    private var parent by SingleAssignmentProperty<Game>()
+    private lateinit var parent: Game
     private val npcList: MutableList<NPC> = mutableListOf()
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         this.parent = parent

@@ -2,6 +2,7 @@ package com.bluedragonmc.server
 
 import com.bluedragonmc.server.event.GameEvent
 import com.bluedragonmc.server.module.GameModule
+import com.bluedragonmc.server.module.database.DatabaseModule
 import com.bluedragonmc.server.module.gameplay.SpawnpointModule
 import com.bluedragonmc.server.module.instance.InstanceModule
 import net.kyori.adventure.text.Component
@@ -27,6 +28,10 @@ open class Game(val name: String) : PacketGroupingAudience {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
     init {
+        // Initialize mandatory modules
+        use(DatabaseModule())
+
+        // Ensure the game was registered with `ready()` method
         MinecraftServer.getSchedulerManager().buildTask {
             if(!games.contains(this)) {
                 logger.warn("Game was not registered after 5 seconds! Games MUST call the ready() method after they are constructed or they will not be joinable.")

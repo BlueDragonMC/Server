@@ -1,5 +1,6 @@
 package com.bluedragonmc.server
 
+import com.bluedragonmc.server.module.database.PlayerDocument
 import net.minestom.server.entity.Entity
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
@@ -13,6 +14,10 @@ class CustomPlayer(uuid: UUID, username: String, playerConnection: PlayerConnect
 
     internal var isSpectating = false
     internal var lastNPCInteractionTime = 0L
+
+    internal lateinit var data: PlayerDocument
+
+    fun isDataInitialized() = ::data.isInitialized
 
     override fun spectate(entity: Entity) {
         super.spectate(entity)

@@ -5,7 +5,6 @@ import com.bluedragonmc.server.event.GameEvent
 import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.GuiModule
-import com.bluedragonmc.server.utils.SingleAssignmentProperty
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.entity.Player
@@ -25,7 +24,7 @@ import net.minestom.server.item.Material
  * When the module is unloaded, players keep their kits.
  */
 class KitsModule(val showMenu: Boolean = false, val giveKitsOnStart: Boolean = true, val selectableKits: List<Kit>) : GameModule() {
-    private var parent by SingleAssignmentProperty<Game>()
+    private lateinit var parent: Game
 
     private val selectedKits = hashMapOf<Player, Kit>()
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {

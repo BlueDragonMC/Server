@@ -1,22 +1,27 @@
 package com.bluedragonmc.server.module.minigame
 
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.event.GameEvent
 import com.bluedragonmc.server.module.GameModule
+import com.bluedragonmc.server.module.gameplay.AwardsModule
 import com.bluedragonmc.server.module.gameplay.SpectatorModule
 import com.bluedragonmc.server.module.gameplay.TeamModule
-import com.bluedragonmc.server.utils.SingleAssignmentProperty
 import com.bluedragonmc.server.utils.surroundWithSeparators
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.title.Title
+import net.minestom.server.MinecraftServer
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import java.time.Duration
 
-class WinModule(val winCondition: WinCondition = WinCondition.MANUAL) : GameModule() {
-    private var parent by SingleAssignmentProperty<Game>()
+class WinModule(
+    val winCondition: WinCondition = WinCondition.MANUAL,
+    private val coinAwardsFunction: (Player, TeamModule.Team) -> Int = { _, _ -> 0 },
+) : GameModule() {
+    private lateinit var parent: Game
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         this.parent = parent
@@ -35,6 +40,14 @@ class WinModule(val winCondition: WinCondition = WinCondition.MANUAL) : GameModu
                 declareWinner(parent.players.first { player -> !spectatorModule.isSpectating(player) })
             }
         }
+        eventNode.addListener(WinnerDeclaredEvent::class.java) { event ->
+            parent.players.forEach { player ->
+                val coins = coinAwardsFunction(player, event.winningTeam)
+                if (coins == 0) return@forEach
+                parent.getModule<AwardsModule>()
+                    .awardCoins(player, coins, if (player in event.winningTeam.players) "Win" else "Participation")
+            }
+        }
     }
 
     /**
@@ -42,30 +55,21 @@ class WinModule(val winCondition: WinCondition = WinCondition.MANUAL) : GameModu
      * All players are notified of the winning team.
      */
     fun declareWinner(team: TeamModule.Team) {
-        parent.sendMessage(
-            team.name.append(
-                Component.text(
-                    " won the game!",
-                    NamedTextColor.DARK_AQUA
-                )
-            ).surroundWithSeparators()
-        )
-        for (p in parent.players) {
-            if (team.players.contains(p)) p.showTitle(
-                Title.title(
-                    Component.text("VICTORY!", NamedTextColor.GOLD, TextDecoration.BOLD),
-                    Component.empty()
-                )
-            )
-            else p.showTitle(
-                Title.title(
-                    Component.text("GAME OVER!", NamedTextColor.RED, TextDecoration.BOLD),
-                    Component.text("Better luck next time!", NamedTextColor.RED)
-                )
-            )
+        MinecraftServer.getGlobalEventHandler().callCancellable(WinnerDeclaredEvent(parent, team)) {
+            parent.sendMessage(team.name.append(Component.text(" won the game!", NamedTextColor.DARK_AQUA))
+                .surroundWithSeparators())
+            for (p in parent.players) {
+                if (team.players.contains(p)) p.showTitle(Title.title(Component.text("VICTORY!",
+                    NamedTextColor.GOLD,
+                    TextDecoration.BOLD), Component.empty()))
+                else p.showTitle(Title.title(Component.text("GAME OVER!", NamedTextColor.RED, TextDecoration.BOLD),
+                    Component.text("Better luck next time!", NamedTextColor.RED)))
+            }
+            parent.endGame(Duration.ofSeconds(5))
         }
-        parent.endGame(Duration.ofSeconds(5))
     }
+
+    class WinnerDeclaredEvent(game: Game, val winningTeam: TeamModule.Team) : GameEvent(game)
 
     fun declareWinner(winner: Component) {
         declareWinner(TeamModule.Team(winner, mutableListOf()))

@@ -4,7 +4,7 @@ import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.gameplay.*
 import com.bluedragonmc.server.module.instance.SharedInstanceModule
 import com.bluedragonmc.server.module.map.AnvilFileMapProviderModule
-import com.bluedragonmc.server.module.minigame.MiniGameModule
+import com.bluedragonmc.server.module.minigame.CountdownModule
 import com.bluedragonmc.server.module.minigame.WinModule
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -20,11 +20,13 @@ class TeamDeathmatchGame : Game("Team Deathmatch") {
         use(AnvilFileMapProviderModule(Paths.get("test_map")))
         use(SharedInstanceModule())
         use(VoidDeathModule(32.0))
-        use(MiniGameModule(countdownThreshold = 2,
-            winCondition = WinModule.WinCondition.LAST_TEAM_ALIVE,
-            motd = Component.text("Two teams battle it out\n" + "until only one team stands!\n"),
-            useOnStart = arrayOf(OldCombatModule(allowDamage = true, allowKnockback = true),
-                SpectatorModule(spectateOnDeath = true))))
+        use(CountdownModule(2,
+            OldCombatModule(allowDamage = true, allowKnockback = true),
+            SpectatorModule(spectateOnDeath = true)))
+        use(WinModule(WinModule.WinCondition.LAST_TEAM_ALIVE) { player, winningTeam ->
+            if (player in winningTeam.players) 150 else 15
+        })
+        use(MOTDModule(Component.text("Two teams battle it out\n" + "until only one team stands!\n")))
         use(InstantRespawnModule())
         use(WorldPermissionsModule(allowBlockBreak = false, allowBlockPlace = false, allowBlockInteract = false))
         use(PlayerResetModule(defaultGameMode = GameMode.ADVENTURE))

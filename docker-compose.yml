@@ -1,0 +1,13 @@
+# Run using `docker compose up` (Compose V2 is integrated into docker and doesn't require a hyphen)
+version: "3.9"
+services:
+  server:
+    build: .
+    ports:
+      - "0.0.0.0:25565:25565"
+    volumes:
+      - ./test_map:/server/test_map
+  mongo:
+    image: mongo
+    ports:
+      - "27017:27017"

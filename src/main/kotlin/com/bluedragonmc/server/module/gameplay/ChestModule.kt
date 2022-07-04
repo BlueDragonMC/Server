@@ -3,7 +3,6 @@ package com.bluedragonmc.server.module.gameplay
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.GuiModule
-import com.bluedragonmc.server.utils.SingleAssignmentProperty
 import net.kyori.adventure.text.Component
 import net.minestom.server.MinecraftServer
 import net.minestom.server.coordinate.Point
@@ -23,7 +22,7 @@ import net.minestom.server.item.Material
 class ChestModule : GameModule() {
 
     private val menus = mutableMapOf<Point, GuiModule.Menu>()
-    private var parent by SingleAssignmentProperty<Game>()
+    private lateinit var parent: Game
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
 
