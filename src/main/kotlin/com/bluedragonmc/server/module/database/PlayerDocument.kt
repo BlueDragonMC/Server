@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextColor
+import net.minestom.server.coordinate.Pos
 import net.minestom.server.item.Material
 import net.minestom.server.permission.Permission
 import org.litote.kmongo.setTo
@@ -83,4 +84,12 @@ data class PermissionGroup(
     val color: TextColor = NamedTextColor.WHITE,
     val prefix: Component = Component.empty(),
     val permissions: List<@Serializable(with = DatabaseModule.PermissionSerializer::class) Permission> = emptyList(),
+)
+
+@Serializable
+data class MapData(
+    @SerialName("_id") val name: String,
+    val author: String = "BlueDragon Build Team",
+    val description: String = "An awesome map!",
+    val spawnpoints: List<@Serializable(with = DatabaseModule.PosSerializer::class) Pos> = emptyList()
 )

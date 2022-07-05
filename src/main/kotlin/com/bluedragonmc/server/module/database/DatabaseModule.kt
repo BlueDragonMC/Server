@@ -9,11 +9,13 @@ import com.mongodb.ConnectionString
 import kotlinx.coroutines.*
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.builtins.DoubleArraySerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
@@ -50,6 +52,7 @@ class DatabaseModule : GameModule() {
 
         internal fun getPlayersCollection(): CoroutineCollection<PlayerDocument> = database.getCollection("players")
         internal fun getGroupsCollection(): CoroutineCollection<PermissionGroup> = database.getCollection("groups")
+        internal fun getMapsCollection(): CoroutineCollection<MapData> = database.getCollection("maps")
     }
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
@@ -76,6 +79,11 @@ class DatabaseModule : GameModule() {
         }
     }
 
+    suspend fun getMap(mapName: String): MapData {
+        val col = getMapsCollection()
+        return col.findOneById(mapName)!!
+    }
+
     open class ToStringSerializer<T>(
         descriptorName: String,
         private inline val toStringMethod: (T) -> String,
@@ -98,6 +106,17 @@ class DatabaseModule : GameModule() {
         override val descriptor = PrimitiveSerialDescriptor("Date", PrimitiveKind.LONG)
         override fun serialize(encoder: Encoder, value: Date) = encoder.encodeLong(value.time)
         override fun deserialize(decoder: Decoder): Date = Date(decoder.decodeLong())
+    }
+
+    object PosSerializer : KSerializer<Pos> {
+        private val delegateSerializer = DoubleArraySerializer()
+        override val descriptor: SerialDescriptor = delegateSerializer.descriptor
+        override fun deserialize(decoder: Decoder): Pos = decoder.decodeSerializableValue(delegateSerializer).let {
+            Pos(it[0], it[1], it[2], it[3].toFloat(), it[4].toFloat())
+        }
+
+        override fun serialize(encoder: Encoder, value: Pos) =
+            encoder.encodeSerializableValue(delegateSerializer, doubleArrayOf(value.x, value.y, value.z, value.yaw.toDouble(), value.pitch.toDouble()))
     }
 
 }

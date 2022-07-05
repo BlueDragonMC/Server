@@ -24,7 +24,7 @@ class WackyMazeGame : Game("WackyMaze") {
         use(AnvilFileMapProviderModule(Paths.get("test_map")))
         use(SharedInstanceModule())
         use(VoidDeathModule(32.0))
-        use(CountdownModule(2,
+        use(CountdownModule(2, false,
             OldCombatModule(allowDamage = false, allowKnockback = true),
             SpectatorModule(spectateOnDeath = true)))
         use(WinModule(WinModule.WinCondition.LAST_PLAYER_ALIVE) { player, winningTeam ->
@@ -34,7 +34,7 @@ class WackyMazeGame : Game("WackyMaze") {
         use(InstantRespawnModule())
         use(WorldPermissionsModule(allowBlockBreak = false, allowBlockPlace = false, allowBlockInteract = false))
         use(PlayerResetModule(defaultGameMode = GameMode.ADVENTURE))
-        use(SpawnpointModule(SpawnpointModule.TestSpawnpointProvider(Pos(-6.5, 64.0, 7.5), Pos(8.5, 64.0, -3.5))))
+        use(SpawnpointModule(SpawnpointModule.DatabaseSpawnpointProvider(/*Pos(-6.5, 64.0, 7.5), Pos(8.5, 64.0, -3.5)*/)))
         use(InventoryPermissionsModule(allowDropItem = false, allowMoveItem = false, forcedItemSlot = 0))
         use(TeamModule(true, TeamModule.AutoTeamMode.PLAYER_COUNT, 1))
         use(WackyMazeStickModule())

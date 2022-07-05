@@ -27,6 +27,8 @@ open class Game(val name: String) : PacketGroupingAudience {
 
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
+    val mapName = "Islands" // TODO change this when we get an actual queue system
+
     init {
         // Initialize mandatory modules
         use(DatabaseModule())
