@@ -20,7 +20,7 @@ class TeamDeathmatchGame : Game("Team Deathmatch") {
         use(AnvilFileMapProviderModule(Paths.get("test_map")))
         use(SharedInstanceModule())
         use(VoidDeathModule(32.0))
-        use(CountdownModule(2,
+        use(CountdownModule(2, false,
             OldCombatModule(allowDamage = true, allowKnockback = true),
             SpectatorModule(spectateOnDeath = true)))
         use(WinModule(WinModule.WinCondition.LAST_TEAM_ALIVE) { player, winningTeam ->
@@ -30,7 +30,7 @@ class TeamDeathmatchGame : Game("Team Deathmatch") {
         use(InstantRespawnModule())
         use(WorldPermissionsModule(allowBlockBreak = false, allowBlockPlace = false, allowBlockInteract = false))
         use(PlayerResetModule(defaultGameMode = GameMode.ADVENTURE))
-        use(SpawnpointModule(SpawnpointModule.TestSpawnpointProvider(Pos(-6.5, 64.0, 7.5), Pos(8.5, 64.0, -3.5))))
+        use(SpawnpointModule(SpawnpointModule.TestSpawnpointProvider(Pos(8.5, 72.0, 11.5), Pos(11.5, 72.0, -2.5), Pos(40.5, 75.0, 12.5), Pos(21.5, 72.93750, 22.5))))
         use(TeamModule(autoTeams = true, autoTeamMode = TeamModule.AutoTeamMode.TEAM_COUNT, 2))
         use(InventoryPermissionsModule(allowDropItem = false, allowMoveItem = false, forcedItemSlot = null))
 

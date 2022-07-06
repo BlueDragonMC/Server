@@ -49,19 +49,35 @@ class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule(
         }
     }
 
+    class SingleSpawnpointModule(val spawn: Pos) : SpawnpointProvider {
+        override fun initialize(game: Game) {}
+
+        override fun getSpawnpoint(player: Player): Pos {
+            return spawn
+        }
+
+    }
+
     /**
      * Gets spawnpoints from the database.
      */
-    class DatabaseSpawnpointProvider(): SpawnpointProvider {
+    class DatabaseSpawnpointProvider(private val callback: () -> Unit) : SpawnpointProvider {
         lateinit var mapData: MapData
+        lateinit var iterator: Iterator<Pos>
+        private val cachedSpawnpoints = hashMapOf<Player, Pos>()
         override fun initialize(game: Game) {
             DatabaseModule.IO.launch {
                 mapData = game.getModule<DatabaseModule>().getMap(game.mapName)
+                iterator = mapData.spawnpoints.iterator()
+                callback()
             }
         }
 
         override fun getSpawnpoint(player: Player): Pos {
-            return mapData.spawnpoints.iterator().next()
+            if (cachedSpawnpoints.containsKey(player)) return cachedSpawnpoints[player]!!
+            if (!iterator.hasNext()) iterator = mapData.spawnpoints.iterator()
+            cachedSpawnpoints[player] = iterator.next()
+            return getSpawnpoint(player)
         }
 
     }

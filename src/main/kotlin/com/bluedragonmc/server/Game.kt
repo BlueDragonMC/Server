@@ -105,18 +105,15 @@ open class Game(val name: String) : PacketGroupingAudience {
     fun endGame(delay: Duration = Duration.ZERO) {
         games.remove(this)
         MinecraftServer.getSchedulerManager().buildTask {
+            val instance = getInstance()
             while (modules.isNotEmpty()) unregister(modules.first())
             sendActionBar(Component.text("This game is ending. You will be sent to a new game shortly.", NamedTextColor.GREEN))
-
-            val newInstance = this::class.createInstance()
-            CompletableFuture.allOf(*players.map { player -> player.setInstance(newInstance.getInstance()) }.toTypedArray()).whenCompleteAsync { _, throwable ->
-                throwable?.printStackTrace()
-                MinecraftServer.getInstanceManager().unregisterInstance(getInstance())
+            players.forEach {
+                queue.queue(it, name)
             }
-            // TODO change this, this is temporary for now
-            if (hasModule<SpawnpointModule>())
-                for (player in players)
-                    player.respawnPoint = getModule<SpawnpointModule>().spawnpointProvider.getSpawnpoint(player)
+            MinecraftServer.getSchedulerManager().buildTask {
+                MinecraftServer.getInstanceManager().unregisterInstance(instance)
+            }.delay(Duration.ofSeconds(30)).schedule() // TODO make this happen automatically when nobody is left in instance
 
         }.delay(delay).schedule()
     }

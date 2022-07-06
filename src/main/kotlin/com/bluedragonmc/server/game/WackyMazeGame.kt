@@ -21,7 +21,7 @@ import java.nio.file.Paths
 
 class WackyMazeGame : Game("WackyMaze") {
     init {
-        use(AnvilFileMapProviderModule(Paths.get("test_map")))
+        use(AnvilFileMapProviderModule(Paths.get("worlds/$name/$mapName")))
         use(SharedInstanceModule())
         use(VoidDeathModule(32.0))
         use(CountdownModule(2, false,
@@ -34,13 +34,11 @@ class WackyMazeGame : Game("WackyMaze") {
         use(InstantRespawnModule())
         use(WorldPermissionsModule(allowBlockBreak = false, allowBlockPlace = false, allowBlockInteract = false))
         use(PlayerResetModule(defaultGameMode = GameMode.ADVENTURE))
-        use(SpawnpointModule(SpawnpointModule.DatabaseSpawnpointProvider(/*Pos(-6.5, 64.0, 7.5), Pos(8.5, 64.0, -3.5)*/)))
+        use(SpawnpointModule(SpawnpointModule.DatabaseSpawnpointProvider(/*Pos(-6.5, 64.0, 7.5), Pos(8.5, 64.0, -3.5)*/ callback = { ready() })))
         use(InventoryPermissionsModule(allowDropItem = false, allowMoveItem = false, forcedItemSlot = 0))
         use(TeamModule(true, TeamModule.AutoTeamMode.PLAYER_COUNT, 1))
         use(WackyMazeStickModule())
         use(AwardsModule())
-
-        ready()
     }
 }
 

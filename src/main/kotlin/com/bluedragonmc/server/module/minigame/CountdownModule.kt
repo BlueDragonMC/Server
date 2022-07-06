@@ -31,14 +31,13 @@ class CountdownModule(
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         eventNode.addListener(PlayerSpawnEvent::class.java) { event ->
-            parent.players.add(event.player) // TODO this is temporary until we get a queue system
             if (threshold > 0 && parent.players.size >= threshold && countdown == null) {
                 countdown = createCountdownTask(parent, 10)
             }
         }
         eventNode.addListener(RemoveEntityFromInstanceEvent::class.java) { event ->
             if (event.entity !is Player) return@addListener
-            parent.players.remove(event.entity)
+            parent.players.remove(event.entity) // todo this is temporary, this should really be in the Game class
             if (threshold > 0 && countdown != null && parent.players.size < threshold) {
                 // Stop the countdown
                 countdownRunning = false
