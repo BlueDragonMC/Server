@@ -20,7 +20,7 @@ class TeamDeathmatchGame : Game("Team Deathmatch") {
         use(AnvilFileMapProviderModule(Paths.get("test_map")))
         use(SharedInstanceModule())
         use(VoidDeathModule(32.0))
-        use(CountdownModule(2,
+        use(CountdownModule(2, false,
             OldCombatModule(allowDamage = true, allowKnockback = true),
             SpectatorModule(spectateOnDeath = true)))
         use(WinModule(WinModule.WinCondition.LAST_TEAM_ALIVE) { player, winningTeam ->

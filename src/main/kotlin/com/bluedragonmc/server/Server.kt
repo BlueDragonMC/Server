@@ -2,10 +2,9 @@ package com.bluedragonmc.server
 
 import com.bluedragonmc.server.command.GameCommand
 import com.bluedragonmc.server.command.InstanceCommand
-import com.bluedragonmc.server.game.TeamDeathmatchGame
+import com.bluedragonmc.server.game.EmptyGame
 import com.bluedragonmc.server.module.gameplay.SpawnpointModule
 import net.minestom.server.MinecraftServer
-import net.minestom.server.coordinate.Pos
 import net.minestom.server.event.player.PlayerLoginEvent
 import net.minestom.server.extras.lan.OpenToLAN
 
@@ -13,14 +12,12 @@ fun main() {
     val minecraftServer = MinecraftServer.init()
 
     // Create a test instance
-    val wackyMaze = TeamDeathmatchGame()
-
+    val testGame = EmptyGame()
 
     // Make players spawn in the test instance
     MinecraftServer.getGlobalEventHandler().addListener(PlayerLoginEvent::class.java) { event ->
-        if (wackyMaze.hasModule<SpawnpointModule>()) event.player.respawnPoint = wackyMaze.getModule<SpawnpointModule>().spawnpointProvider.getSpawnpoint(event.player)
-        else event.player.respawnPoint = Pos(0.0, 65.0, 0.0)
-        event.setSpawningInstance(wackyMaze.getInstance())
+        event.player.respawnPoint = testGame.getModule<SpawnpointModule>().spawnpointProvider.getSpawnpoint(event.player)
+        event.setSpawningInstance(testGame.getInstance())
     }
 
     // Initialize commands

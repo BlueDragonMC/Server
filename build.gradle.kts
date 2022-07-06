@@ -25,6 +25,15 @@ dependencies {
 
     // Database support
     implementation("org.litote.kmongo:kmongo-coroutine-serialization:4.6.1")
+
+    // weird AI stuff? because why not.
+    val kdlVersion = "0.4.0"
+    implementation("org.jetbrains.kotlinx:kotlin-deeplearning-api:$kdlVersion")
+    implementation("org.jetbrains.kotlinx:kotlin-deeplearning-onnx:$kdlVersion")
+    implementation("org.jetbrains.kotlinx:kotlin-deeplearning-visualization:$kdlVersion")
+    // Nvidia GPU support
+//    implementation("org.tensorflow:libtensorflow:1.15.0")
+//    implementation("org.tensorflow:libtensorflow_jni_gpu:1.15.0")
 }
 
 tasks.test {

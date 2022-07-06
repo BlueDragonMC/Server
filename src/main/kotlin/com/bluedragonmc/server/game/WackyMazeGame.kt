@@ -24,7 +24,7 @@ class WackyMazeGame : Game("WackyMaze") {
         use(AnvilFileMapProviderModule(Paths.get("test_map")))
         use(SharedInstanceModule())
         use(VoidDeathModule(32.0))
-        use(CountdownModule(2,
+        use(CountdownModule(2, true,
             OldCombatModule(allowDamage = false, allowKnockback = true),
             SpectatorModule(spectateOnDeath = true)))
         use(WinModule(WinModule.WinCondition.LAST_PLAYER_ALIVE) { player, winningTeam ->
