@@ -33,22 +33,18 @@ class TeamModule(
                 when (autoTeamMode) {
                     AutoTeamMode.PLAYER_COUNT -> {
                         var teamNumber = 0
-                        teams.addAll(
-                            parent.players.chunked(autoTeamCount) { players ->
-                                Team(teamNumToName(teamNumber++), players.toMutableList(), allowFriendlyFire)
-                            }
-                        )
+                        teams.addAll(parent.players.chunked(autoTeamCount) { players ->
+                            Team(teamNumToName(teamNumber++), players.toMutableList(), allowFriendlyFire)
+                        })
                         logger.info("Created ${teams.size} teams with $autoTeamCount players per team.")
                     }
                     AutoTeamMode.TEAM_COUNT -> {
                         val teamCount = autoTeamCount
                         val playersPerTeam = (parent.players.size / teamCount).coerceAtLeast(1)
                         var teamNumber = 0
-                        teams.addAll(
-                            parent.players.chunked(playersPerTeam) { players ->
-                                Team(teamNumToName(teamNumber++), players.toMutableList(), allowFriendlyFire)
-                            }
-                        )
+                        teams.addAll(parent.players.chunked(playersPerTeam) { players ->
+                            Team(teamNumToName(teamNumber++), players.toMutableList(), allowFriendlyFire)
+                        })
                         logger.info("Created ${teams.size} teams with $playersPerTeam players per team.")
                     }
                 }
@@ -172,14 +168,16 @@ class TeamModule(
         TEAM_COUNT
     }
 
-    data class Team(val name: Component, val players: MutableList<Player>, val allowFriendlyFire: Boolean = false) :
-        PacketGroupingAudience {
+    data class Team(
+        val name: Component = Component.empty(),
+        val players: MutableList<Player> = mutableListOf(),
+        val allowFriendlyFire: Boolean = false
+    ) : PacketGroupingAudience {
         override fun getPlayers(): MutableCollection<Player> = players
 
         override fun toString(): String =
             PlainTextComponentSerializer.plainText().serialize(name) + players.joinToString(
-                prefix = "[",
-                postfix = "]"
+                prefix = "[", postfix = "]"
             ) { it.username }
     }
 }

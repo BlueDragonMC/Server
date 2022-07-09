@@ -1,17 +1,16 @@
 package com.bluedragonmc.server.command
 
 import com.bluedragonmc.server.lobby
-import net.minestom.server.MinecraftServer
-import net.minestom.server.command.CommandSender
-import net.minestom.server.command.builder.CommandContext
-import net.minestom.server.entity.Player
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
 
-class LobbyCommand(name: String, usage: String, vararg aliases: String?) : BlueDragonCommand(name, usage, *aliases) {
-    init {
-        setDefaultExecutor { sender: CommandSender, context: CommandContext ->
-            if (sender !is Player) return@setDefaultExecutor
-            sender.setInstance(lobby.getInstance())
+class LobbyCommand(name: String, vararg aliases: String?) : BlueDragonCommand(name, aliases, {
+    requirePlayers()
+    syntax {
+        if(player.instance == lobby.getInstance()) {
+            player.sendMessage(Component.text("You are already in the lobby!", NamedTextColor.RED))
+            return@syntax
         }
+        player.setInstance(lobby.getInstance())
     }
-
-}
+})
