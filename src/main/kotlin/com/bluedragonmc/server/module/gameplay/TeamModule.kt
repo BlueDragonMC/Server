@@ -7,6 +7,7 @@ import com.bluedragonmc.server.module.combat.OldCombatModule
 import com.bluedragonmc.server.utils.toPlainText
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
 import net.minestom.server.MinecraftServer
@@ -23,7 +24,8 @@ class TeamModule(
     private val autoTeams: Boolean = false,
     private val autoTeamMode: AutoTeamMode = AutoTeamMode.PLAYER_COUNT,
     private val autoTeamCount: Int = 2,
-    private val allowFriendlyFire: Boolean = false
+    private val allowFriendlyFire: Boolean = false,
+    private val teamsAutoAssignedCallback: () -> Unit = {}
 ) : GameModule() {
     val teams = mutableListOf<Team>()
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
@@ -49,6 +51,7 @@ class TeamModule(
                         logger.info("Created ${teams.size} teams with $playersPerTeam players per team.")
                     }
                 }
+                teamsAutoAssignedCallback()
             } else logger.info("Automatic team creation is disabled.")
 
             logger.info(teams.toString())
@@ -151,6 +154,17 @@ class TeamModule(
     fun getTeam(player: Player): Team? {
         for (team in teams) {
             if (team.players.contains(player)) return team
+        }
+        return null
+    }
+
+    /**
+     * Returns the team with the specified name color, or null if no team exists with this name color.
+     * Note: if more than one team exists with this name color, this function only returns the first one.
+     */
+    fun getTeam(color: TextColor): Team? {
+        for (team in teams) {
+            if (team.name.color() == color) return team
         }
         return null
     }

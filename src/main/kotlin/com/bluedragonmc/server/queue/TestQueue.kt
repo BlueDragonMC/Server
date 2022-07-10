@@ -1,6 +1,7 @@
 package com.bluedragonmc.server.queue
 
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.game.BedWarsGame
 import com.bluedragonmc.server.game.Lobby
 import com.bluedragonmc.server.game.TeamDeathmatchGame
 import com.bluedragonmc.server.game.WackyMazeGame
@@ -11,10 +12,11 @@ import net.kyori.adventure.text.event.HoverEventSource
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.MinecraftServer
 import net.minestom.server.entity.Player
+import java.io.File
 import java.time.Duration
 import java.util.function.Predicate
-
-// TODO redo this entire system because it sucks (but without the predicate, just use the string for the game)
+import kotlin.random.Random
+import kotlin.reflect.full.primaryConstructor
 
 /**
  * A temporary queue system that exists only on the current Minestom server.
@@ -26,6 +28,7 @@ class TestQueue {
     val gameClasses = hashMapOf(
         "WackyMaze" to WackyMazeGame::class.java,
         "TeamDeathmatch" to TeamDeathmatchGame::class.java,
+        "BedWars" to BedWarsGame::class.java,
     )
 
     /**
@@ -46,10 +49,8 @@ class TestQueue {
 
     /**
      * Adds a player to a game, regardless of their queue status.
-     * Removes the player from the queue.
      */
     fun join(player: Player, game: Game) {
-        queuedPlayers.remove(player)
         player.sendMessage(Component.text("You are being sent to a game.", NamedTextColor.GREEN))
         game.players.add(player)
         if (!game.hasModule<SpawnpointModule>())
@@ -63,16 +64,18 @@ class TestQueue {
     fun start() {
         MinecraftServer.getSchedulerManager().buildTask {
             try {
+                val playersToRemove = mutableListOf<Player>()
                 instanceStarting = false
                 queuedPlayers.forEach { (player, gameType) ->
                     if (!gameClasses.containsKey(gameType)) {
                         player.sendMessage(Component.text("Invalid game type. Removing you from the queue.", NamedTextColor.RED))
-                        queuedPlayers.remove(player)
+                        playersToRemove.add(player)
                         return@forEach
                     }
                     for (game in Game.games) {
                         if (game.name == gameType) {
                             println("Found a good game for ${player.username} to join")
+                            playersToRemove.add(player)
                             join(player, game)
                             return@forEach
                         }
@@ -85,13 +88,44 @@ class TestQueue {
                             NamedTextColor.GREEN
                         )
                     )
-                    gameClasses[gameType]!!.getDeclaredConstructor().newInstance()
+                    val map = randomMap(gameType)
+                    println("Map chosen: $map")
+                    gameClasses[gameType]!!.kotlin.primaryConstructor!!.call(map)
                     instanceStarting = true
                 }
+                playersToRemove.forEach { queuedPlayers.remove(it) }
             } catch (e: Exception) {
                 e.printStackTrace()
             }
         }.repeat(Duration.ofSeconds(2)).schedule()
+    }
+
+    fun getMaps(gameType: String): Array<File>? {
+        val worldFolder = "worlds/$gameType"
+        val file = File(worldFolder)
+        if (!(file.exists() && file.isDirectory)) arrayOf<File>()
+        return file.listFiles()
+    }
+
+    fun getMapNames(gameType: String): ArrayList<String> {
+        val maps = getMaps(gameType) ?: return arrayListOf()
+        val mapNames = ArrayList<String>()
+        for (map in maps) {
+            mapNames.add(map.name)
+        }
+        return mapNames
+    }
+
+    fun randomMap(gameType: String): String? {
+        val allMaps = getMaps(gameType)
+        if (allMaps != null) return allMaps[Random.nextInt(allMaps.size)].name
+        return null
+    }
+
+    fun randomMapOrDefault(gameType: String, defaultMap: String): String {
+        val map = randomMap(gameType)
+        if (map == null) return defaultMap
+        else return map
     }
 
 }

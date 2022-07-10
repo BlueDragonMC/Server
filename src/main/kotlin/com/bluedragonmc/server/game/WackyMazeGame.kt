@@ -19,7 +19,7 @@ import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import java.nio.file.Paths
 
-class WackyMazeGame : Game("WackyMaze") {
+class WackyMazeGame(mapName: String) : Game("WackyMaze", mapName) {
     init {
         use(AnvilFileMapProviderModule(Paths.get("worlds/$name/$mapName")))
         use(SharedInstanceModule())

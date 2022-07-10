@@ -12,6 +12,8 @@ import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.instance.RemoveEntityFromInstanceEvent
+import net.minestom.server.event.player.PlayerBlockBreakEvent
+import net.minestom.server.event.player.PlayerBlockPlaceEvent
 import net.minestom.server.event.player.PlayerMoveEvent
 import net.minestom.server.event.player.PlayerSpawnEvent
 import java.time.Duration
@@ -31,10 +33,20 @@ class CountdownModule(
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         eventNode.addListener(PlayerSpawnEvent::class.java) { event ->
+            if (countdownEnded) return@addListener
             if (threshold > 0 && parent.players.size >= threshold && countdown == null) {
                 countdown = createCountdownTask(parent, 10)
             }
         }
+
+        eventNode.addListener(PlayerBlockBreakEvent::class.java) { event ->
+            if (!countdownEnded) event.isCancelled = true
+        }
+
+        eventNode.addListener(PlayerBlockPlaceEvent::class.java) { event ->
+            if (!countdownEnded) event.isCancelled = true
+        }
+
         eventNode.addListener(RemoveEntityFromInstanceEvent::class.java) { event ->
             if (event.entity !is Player) return@addListener
             parent.players.remove(event.entity) // todo this is temporary, this should really be in the Game class

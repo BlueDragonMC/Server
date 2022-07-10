@@ -12,16 +12,16 @@ import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.GameMode
 import java.nio.file.Paths
 
-class Lobby : Game("Lobby") {
+class Lobby : Game("Lobby", "lobbyv2.1") {
     init {
         // World modules
-        use(AnvilFileMapProviderModule(Paths.get("worlds/$name/lobbyv2.1")))
+        use(AnvilFileMapProviderModule(Paths.get("worlds/$name/$mapName")))
         use(SharedInstanceModule())
 
         // Player modules
         use(VoidDeathModule(32.0))
         use(InstantRespawnModule())
-        use(SpawnpointModule(SpawnpointModule.SingleSpawnpointModule(Pos(0.5, 64.0, 0.5, 180F, 0F))))
+        use(SpawnpointModule(SpawnpointModule.SingleSpawnpointProvider(Pos(0.5, 64.0, 0.5, 180F, 0F))))
         use(PlayerResetModule(defaultGameMode = GameMode.ADVENTURE))
         use(InventoryPermissionsModule(allowDropItem = false, allowMoveItem = false, forcedItemSlot = null))
         use(WorldPermissionsModule(allowBlockBreak = false, allowBlockPlace = false, allowBlockInteract = false))
@@ -32,7 +32,10 @@ class Lobby : Game("Lobby") {
         getModule<NPCModule>().addNPC(instance = this.getInstance(), position = Pos(0.5, 62.5, -35.5, 0F, 0F), customName = Component.text("WackyMaze", NamedTextColor.YELLOW, TextDecoration.BOLD), skin = NPCModule.NPCSkins.EX4.skin, interaction = {
             queue.queue(it.player, "WackyMaze")
         })
-
+        // -3.5, 62.5, -34.5, 0.0, 0.0 LEFT OF CENTER
+        getModule<NPCModule>().addNPC(instance = this.getInstance(), position = Pos(-3.5, 62.5, -34.5, 0F, 0F), customName = Component.text("BedWars", NamedTextColor.YELLOW, TextDecoration.BOLD), skin = NPCModule.NPCSkins.SKY.skin, interaction = {
+            queue.queue(it.player, "BedWars")
+        })
         ready()
     }
 }

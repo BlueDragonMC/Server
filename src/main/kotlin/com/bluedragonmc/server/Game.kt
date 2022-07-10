@@ -20,14 +20,12 @@ import java.time.Duration
 import java.util.concurrent.CompletableFuture
 import kotlin.reflect.full.createInstance
 
-open class Game(val name: String) : PacketGroupingAudience {
+open class Game(val name: String, val mapName: String) : PacketGroupingAudience {
 
     internal val modules = mutableListOf<GameModule>()
     internal val players = mutableListOf<Player>()
 
     private val logger = LoggerFactory.getLogger(this.javaClass)
-
-    val mapName = "Islands" // TODO change this when we get an actual queue system
 
     init {
         // Initialize mandatory modules

@@ -15,6 +15,8 @@ import net.minestom.server.MinecraftServer
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
+import net.minestom.server.event.player.PlayerMoveEvent
+import net.minestom.server.instance.block.Block
 import java.time.Duration
 
 class WinModule(
@@ -46,6 +48,11 @@ class WinModule(
                 if (coins == 0) return@forEach
                 parent.getModule<AwardsModule>()
                     .awardCoins(player, coins, if (player in event.winningTeam.players) "Win" else "Participation")
+            }
+        }
+        if (winCondition == WinCondition.TOUCH_EMERALD) eventNode.addListener(PlayerMoveEvent::class.java) { event ->
+            if (event.player.instance?.getBlock(event.player.position.sub(0.0, 2.0, 0.0)) == Block.EMERALD_BLOCK) {
+                declareWinner(event.player)
             }
         }
     }
@@ -93,7 +100,12 @@ class WinModule(
         /**
          * Automatically declares the winner as the last team to have a non-spectating player. Requires the `SpectatorModule` and `TeamModule` to be active.
          */
-        LAST_TEAM_ALIVE
+        LAST_TEAM_ALIVE,
+
+        /**
+         * Automatically declares the winner as the first player to step on an emerald block.
+         */
+        TOUCH_EMERALD
     }
 
 }

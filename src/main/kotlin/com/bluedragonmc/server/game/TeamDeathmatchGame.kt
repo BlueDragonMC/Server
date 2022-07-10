@@ -16,7 +16,7 @@ import net.minestom.server.item.Material
 import net.minestom.server.utils.inventory.PlayerInventoryUtils
 import java.nio.file.Paths
 
-class TeamDeathmatchGame : Game("Team Deathmatch") {
+class TeamDeathmatchGame(mapName: String) : Game("Team Deathmatch", mapName) {
     init {
         use(AnvilFileMapProviderModule(Paths.get("test_map")))
         use(SharedInstanceModule())

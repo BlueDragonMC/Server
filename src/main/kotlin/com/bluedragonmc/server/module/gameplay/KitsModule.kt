@@ -7,6 +7,7 @@ import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.GuiModule
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.TextDecoration
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
@@ -54,7 +55,7 @@ class KitsModule(val showMenu: Boolean = false, val giveKitsOnStart: Boolean = t
                 val index = selectableKits.indexOf(selectableKit)
                 slot(index, selectableKit.icon, { player ->
                     displayName(selectableKit.name)
-                    lore(selectableKit.description)
+                    lore(descriptionToComponents(selectableKit.description))
                 }) {
                     selectedKits[this.player] = selectableKit
                     this.player.sendMessage(Component.text("You have selected the ", NamedTextColor.GREEN).append(selectableKit.name).append(Component.text(" kit.", NamedTextColor.GREEN)))
@@ -64,6 +65,13 @@ class KitsModule(val showMenu: Boolean = false, val giveKitsOnStart: Boolean = t
             }
         }
         menu.open(player)
+    }
+
+    private fun descriptionToComponents(description: String): MutableList<Component> {
+        val descriptionSplit = description.split("\n")
+        return MutableList(descriptionSplit.size) {
+            Component.text(descriptionSplit[it], NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false)
+        }
     }
 
     /**
@@ -84,7 +92,7 @@ class KitsModule(val showMenu: Boolean = false, val giveKitsOnStart: Boolean = t
         giveKit(player, selectedKits.getOrDefault(player, selectableKits[0]))
     }
 
-    data class Kit(val name: Component, val description: Component = Component.empty(), val icon: Material = Material.DIAMOND, val items: HashMap<Int, ItemStack>)
+    data class Kit(val name: Component, val description: String = "", val icon: Material = Material.DIAMOND, val items: HashMap<Int, ItemStack>)
 
     /**
      * This event is fired when the player confirms their kit selection.
