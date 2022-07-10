@@ -33,15 +33,21 @@ import net.minestom.server.event.player.PlayerBlockBreakEvent
 import net.minestom.server.event.player.PlayerBlockPlaceEvent
 import net.minestom.server.event.player.PlayerDeathEvent
 import net.minestom.server.instance.block.Block
+import net.minestom.server.instance.block.BlockFace
+import net.minestom.server.instance.block.BlockHandler
+import net.minestom.server.instance.block.BlockHandler.Destroy
 import net.minestom.server.inventory.InventoryType
 import net.minestom.server.inventory.TransactionOption
 import net.minestom.server.item.Enchantment
 import net.minestom.server.item.ItemMeta
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
+import net.minestom.server.utils.NamespaceID
 import net.minestom.server.utils.inventory.PlayerInventoryUtils
 import java.nio.file.Paths
 import java.time.Duration
+import java.util.*
+
 
 class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
     init {
@@ -137,9 +143,9 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
                 val sidebarTeamsSection = sidebar.bind {
                     teamModule.teams.map { t ->
                         "team-status-${t.name.toPlainText()}" to
-                                (t.name + Component.text(":", NamedTextColor.GRAY) +
+                                (t.name + Component.text(": ", NamedTextColor.GRAY) +
                                         (if(bedWarsTeamInfo[t]?.bedIntact != false) Component.text("✔", NamedTextColor.GREEN)
-                        else Component.text("✖", NamedTextColor.RED)))
+                        else Component.text("✗", NamedTextColor.RED)))
                     }
                 }
 
@@ -147,6 +153,7 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
                     for (team in parent.getModule<TeamModule>().teams) {
                         bedWarsTeamInfo[team] = BedWarsTeamInfo(bedIntact = true)
                     }
+                    sidebar.updateBinding(sidebarTeamsSection)
                 }
 
                 // Without this it is possible to break your own bed, making you invincible
@@ -179,6 +186,12 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
                             Component.text("BED DESTROYED", NamedTextColor.RED, TextDecoration.BOLD),
                             Component.text("You can no longer respawn!", NamedTextColor.RED)
                         ))
+
+                        // Break both parts of the bed
+                        var facing = BlockFace.valueOf(event.block.getProperty("facing").uppercase(Locale.getDefault()))
+                        if (event.block.getProperty("part") == "head") facing = facing.oppositeFace
+                        event.instance.setBlock(event.blockPosition.relative(facing), Block.AIR)
+
                         return@addListener
                     }
                     if (playerPlacedBlocks.contains(event.blockPosition)) playerPlacedBlocks.remove(event.blockPosition)
@@ -372,4 +385,16 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
     val bedWarsTeamInfo = hashMapOf<TeamModule.Team, BedWarsTeamInfo>()
 
     inner class BedWarsTeamInfo(var bedIntact: Boolean = true)
+
+    /**
+     * A [BlockHandler] that causes both parts of the bed to be destroyed when one part is broken.
+     */
+    class BedHandler : BlockHandler {
+        override fun onDestroy(destroy: Destroy) {
+        }
+
+        override fun getNamespaceId(): NamespaceID {
+            return NamespaceID.from("bluedragon:bedhandler")
+        }
+    }
 }
