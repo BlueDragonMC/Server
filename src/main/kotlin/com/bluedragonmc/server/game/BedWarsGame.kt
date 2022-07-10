@@ -75,6 +75,7 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
         use(NPCModule())
         use(GuiModule())
         use(ItemPickupModule())
+        use(ItemDropModule(dropAllOnDeath = true))
         use(
             KitsModule(
                 showMenu = true, giveKitsOnStart = true, selectableKits = listOf(
@@ -176,13 +177,19 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
                             team.name.append(Component.text(" bed was broken by ", NamedTextColor.AQUA))
                                 .append(event.player.name).surroundWithSeparators()
                         )
-                        parent.playSound(Sound.sound(
-                            Key.key("entity.enderdragon.growl"), Sound.Source.HOSTILE, 1.0f, 1.0f
-                        ))
-                        team.showTitle(Title.title(
-                            Component.text("BED DESTROYED", NamedTextColor.RED, TextDecoration.BOLD),
-                            Component.text("You can no longer respawn!", NamedTextColor.RED)
-                        ))
+                        for (player in parent.players) {
+                            if (!team.players.contains(player)) {
+                                player.playSound(Sound.sound(
+                                    Key.key("entity.ender_dragon.growl"), Sound.Source.HOSTILE, 1.0f, 1.0f
+                                ))
+                            } else {
+                                player.showTitle(Title.title(
+                                    Component.text("BED DESTROYED", NamedTextColor.RED, TextDecoration.BOLD),
+                                    Component.text("You can no longer respawn!", NamedTextColor.RED)
+                                ))
+                                player.playSound(Sound.sound(Key.key("entity.wither.death"), Sound.Source.HOSTILE, 1.0f, 1.0f))
+                            }
+                        }
 
                         // Break both parts of the bed
                         var facing = BlockFace.valueOf(event.block.getProperty("facing").uppercase(Locale.getDefault()))
@@ -271,7 +278,7 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
         val removeSuccess = player.inventory.takeItemStack(ItemStack.of(currency, price), TransactionOption.ALL_OR_NOTHING)
         val addSuccess = player.inventory.addItemStack(item, TransactionOption.DRY_RUN)
         if (!removeSuccess) {
-            player.sendMessage(Component.text("You do not have enough ${currency.name()} to buy this item.", NamedTextColor.RED))
+            player.sendMessage(Component.text("You do not have enough ${currency.displayName(NamedTextColor.RED)} to buy this item.", NamedTextColor.RED))
             return
         }
         if (!addSuccess) {
@@ -284,7 +291,7 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
     private fun GuiModule.ItemsBuilder.slotShopItem(slotNumber: Int, item: ItemStack, price: Int, currency: Material) {
         slot(slotNumber, item.material(), {
             displayName(item.material().displayName(NamedTextColor.WHITE).noItalic()
-                 + Component.text("x${item.amount()}", NamedTextColor.GRAY).noItalic())
+                 + Component.text(" x${item.amount()}", NamedTextColor.GRAY).noItalic())
 
             lore(Component.text("Price: ", NamedTextColor.GRAY).noItalic()
                     + Component.text("$price ", NamedTextColor.WHITE).noItalic()
@@ -307,14 +314,23 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
             slotShopItem(pos(2, 1), ItemStack.of(Material.SHEARS, 1), 50, Material.IRON_INGOT)
             slotShopItem(pos(2, 2), ItemStack.of(Material.STONE_PICKAXE, 1), 50, Material.IRON_INGOT)
             slotShopItem(pos(2, 3), ItemStack.of(Material.STONE_AXE, 1), 50, Material.IRON_INGOT)
+            slotShopItem(pos(2, 4), ItemStack.of(Material.IRON_PICKAXE, 1), 20, Material.GOLD_INGOT)
+            slotShopItem(pos(2, 5), ItemStack.of(Material.IRON_AXE, 1), 20, Material.GOLD_INGOT)
 
-            slotShopItem(pos(3, 1), ItemStack.of(Material.IRON_SWORD, 1), 10, Material.GOLD_INGOT)
+            slotShopItem(pos(3, 1), ItemStack.of(Material.STONE_SWORD, 1), 15, Material.IRON_INGOT)
+            slotShopItem(pos(3, 2), ItemStack.of(Material.IRON_SWORD, 1), 10, Material.GOLD_INGOT)
+            slotShopItem(pos(3, 3), ItemStack.of(Material.DIAMOND_SWORD, 1), 5, Material.EMERALD)
+
+            slotShopItem(pos(4, 1), ItemStack.of(Material.IRON_HELMET, 1), 20, Material.GOLD_INGOT)
+            slotShopItem(pos(4, 2), ItemStack.of(Material.IRON_CHESTPLATE, 1), 5, Material.EMERALD)
+            slotShopItem(pos(4, 3), ItemStack.of(Material.IRON_LEGGINGS, 1), 5, Material.EMERALD)
+            slotShopItem(pos(4, 4), ItemStack.of(Material.IRON_BOOTS, 1), 20, Material.GOLD_INGOT)
             val stickItem = ItemStack.builder(Material.STICK).displayName(Component.text("Knockback Stick"))
                 .lore(Component.text("Use this to wack your enemies"), Component.text("off the map!"))
                 .meta { metaBuilder: ItemMeta.Builder ->
                     metaBuilder.enchantment(Enchantment.KNOCKBACK, 3)
                 }.build()
-            slotShopItem(pos(3, 2), stickItem, 3, Material.EMERALD)
+            slotShopItem(pos(3, 4), stickItem, 3, Material.EMERALD)
         }
     }
 
