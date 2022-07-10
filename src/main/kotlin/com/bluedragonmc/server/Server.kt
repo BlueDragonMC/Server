@@ -4,13 +4,34 @@ import com.bluedragonmc.server.command.*
 import com.bluedragonmc.server.game.Lobby
 import com.bluedragonmc.server.module.gameplay.SpawnpointModule
 import com.bluedragonmc.server.queue.TestQueue
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.JoinConfiguration
+import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.TextColor
 import net.minestom.server.MinecraftServer
+import net.minestom.server.event.player.PlayerChatEvent
 import net.minestom.server.event.player.PlayerLoginEvent
 import net.minestom.server.extras.lan.OpenToLAN
 
 val queue = TestQueue()
 lateinit var lobby: Game
 
+/**
+ * Light color, often used for emphasis.
+ */
+val BRAND_COLOR_PRIMARY_1 = TextColor.color(0x4EB2F4)
+
+/**
+ * Medium color, often used for chat messages.
+ */
+val BRAND_COLOR_PRIMARY_2 = TextColor.color(0x2792f7) // Medium, often used for chat messages
+
+/**
+ * Very dark color.
+ */
+val BRAND_COLOR_PRIMARY_3 = TextColor.color(0x3336f4) // Very dark
+val ALT_COLOR_1 = NamedTextColor.YELLOW
+const val SERVER_IP = "bluedragonmc.com"
 fun main() {
     val minecraftServer = MinecraftServer.init()
 
@@ -23,8 +44,17 @@ fun main() {
         event.setSpawningInstance(lobby.getInstance())
     }
 
+    // Chat formatting
+    MinecraftServer.getGlobalEventHandler().addListener(PlayerChatEvent::class.java) { event ->
+        event.setChatFormat { Component.join(JoinConfiguration.noSeparators(),
+            event.player.name,
+            Component.text(": ", NamedTextColor.DARK_GRAY),
+            Component.text(event.message, NamedTextColor.WHITE))}
+    }
+
     // Initialize commands
     listOf(
+        JoinCommand("join", "/join <game>"),
         InstanceCommand("instance", "/instance <list|add|remove> ...", "in"),
         GameCommand("game", "/game <start|end>"),
         LobbyCommand("lobby", "/lobby", "l", "hub"),
