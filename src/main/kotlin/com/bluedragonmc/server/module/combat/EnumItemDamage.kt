@@ -3,7 +3,7 @@ package com.bluedragonmc.server.module.combat
 import com.bluedragonmc.server.module.combat.EnumItemDamage.ItemDamage.materialMap
 import net.minestom.server.item.Material
 
-enum class EnumItemDamage(material: Material, private val attackDamage: Float) {
+enum class EnumItemDamage(private val material: Material, private val attackDamage: Float) {
     WOODEN_SWORD(Material.WOODEN_SWORD, 4f),
     GOLD_SWORD(Material.GOLDEN_SWORD, 4f),
     STONE_SWORD(Material.STONE_SWORD, 5f),
@@ -39,12 +39,10 @@ enum class EnumItemDamage(material: Material, private val attackDamage: Float) {
     DIAMOND_HOE(Material.DIAMOND_HOE, 1f),
     NETHERITE_HOE(Material.NETHERITE_HOE, 1f);
 
-    init {
-        materialMap[material] = this
-    }
-
     object ItemDamage {
-        val materialMap = mutableMapOf<Material, EnumItemDamage>()
+        private val materialMap = values().associateBy {
+            it.material
+        }
 
         fun getAttackDamage(material: Material) = materialMap[material]?.attackDamage ?: 1f
     }

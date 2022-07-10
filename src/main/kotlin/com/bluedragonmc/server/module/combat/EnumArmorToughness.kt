@@ -1,13 +1,12 @@
 package com.bluedragonmc.server.module.combat
 
-import com.bluedragonmc.server.module.combat.EnumArmorToughness.ArmorToughness.armorDataMap
 import net.minestom.server.entity.Player
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import kotlin.math.max
 import kotlin.math.min
 
-enum class EnumArmorToughness(val armorToughness: Int, val defensePoints: Int, vararg materials: Material) {
+enum class EnumArmorToughness(val armorToughness: Int, val defensePoints: Int, val material: Material) {
 
     TURTLE_SHELL(0, 2, Material.TURTLE_HELMET),
     LEATHER_HELMET(0, 1, Material.LEATHER_HELMET),
@@ -38,15 +37,11 @@ enum class EnumArmorToughness(val armorToughness: Int, val defensePoints: Int, v
     DIAMOND_BOOTS(2, 3, Material.DIAMOND_BOOTS),
     NETHERITE_BOOTS(3, 3, Material.NETHERITE_BOOTS);
 
-    init {
-        materials.forEach {
-            armorDataMap[it] = armorToughness to defensePoints
-        }
-    }
-
     object ArmorToughness {
 
-        val armorDataMap = mutableMapOf<Material, Pair<Int, Int>>()
+        val armorDataMap = values().associate {
+            it.material to (it.armorToughness to it.defensePoints)
+        }
 
         private fun Player.getArmor() = listOf(helmet, chestplate, leggings, boots)
         private fun ItemStack.getArmorToughness() = armorDataMap[this.material()]?.first ?: 0
