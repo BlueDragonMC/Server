@@ -13,6 +13,7 @@ import net.minestom.server.event.EventNode
 import net.minestom.server.event.instance.RemoveEntityFromInstanceEvent
 import net.minestom.server.event.player.PlayerSpawnEvent
 import net.minestom.server.scoreboard.Sidebar
+import net.minestom.server.scoreboard.Sidebar.ScoreboardLine
 
 /**
  * A module that shows a sidebar to all players in the game.
@@ -22,7 +23,7 @@ class SidebarModule(title: String) : GameModule() {
     private val sidebar: Sidebar = Sidebar(Component.text(title.uppercase(), ALT_COLOR_1, TextDecoration.BOLD))
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         this.parent = parent
-        sidebar.createLine(Sidebar.ScoreboardLine("website", Component.text(SERVER_IP, BRAND_COLOR_PRIMARY_1), 0))
+        sidebar.createLine(ScoreboardLine("website", Component.text(SERVER_IP, BRAND_COLOR_PRIMARY_1), 0))
         parent.players.forEach { sidebar.addViewer(it) }
         eventNode.addListener(PlayerSpawnEvent::class.java) { event ->
             sidebar.addViewer(event.player)
@@ -33,11 +34,32 @@ class SidebarModule(title: String) : GameModule() {
         }
     }
 
+    fun bind(block: () -> Collection<Pair<String, Component>>) = ScoreboardBinding(block).also { updateBinding(it) }
+
+    fun addLines(lines: Collection<Pair<String, Component>>) {
+        addLines(lines.reversed().mapIndexed { i, it -> ScoreboardLine(it.first, it.second, sidebar.lines.size + i) })
+    }
+
+    fun addLines(lines: List<ScoreboardLine>) {
+        lines.forEach {
+            if (sidebar.getLine(it.id) == null) sidebar.createLine(it)
+            else {
+                sidebar.updateLineContent(it.id, it.content)
+                if (sidebar.getLine(it.id)!!.line != it.line)
+                    sidebar.updateLineScore(it.id, it.line)
+            }
+        }
+    }
+
+    fun updateBinding(binding: ScoreboardBinding) = addLines(binding.updateFunction())
+
+    data class ScoreboardBinding(internal val updateFunction: () -> Collection<Pair<String, Component>>)
+
     /**
      * Adds a new line above all existing lines.
      */
     fun addLine(id: String, line: Component) {
-        sidebar.createLine(Sidebar.ScoreboardLine(id, line, sidebar.lines.size))
+        sidebar.createLine(ScoreboardLine(id, line, sidebar.lines.size))
     }
 
     /**

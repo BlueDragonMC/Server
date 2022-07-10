@@ -8,17 +8,22 @@ import com.bluedragonmc.server.module.combat.OldCombatModule
 import com.bluedragonmc.server.module.database.DatabaseModule
 import com.bluedragonmc.server.module.database.MapData
 import com.bluedragonmc.server.module.gameplay.*
-import com.bluedragonmc.server.module.instance.SharedInstanceModule
+import com.bluedragonmc.server.module.instance.InstanceContainerModule
 import com.bluedragonmc.server.module.map.AnvilFileMapProviderModule
 import com.bluedragonmc.server.module.minigame.CountdownModule
 import com.bluedragonmc.server.module.minigame.WinModule
+import com.bluedragonmc.server.utils.plus
+import com.bluedragonmc.server.utils.surroundWithSeparators
+import com.bluedragonmc.server.utils.toPlainText
 import kotlinx.coroutines.launch
+import net.kyori.adventure.key.Key
+import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
+import net.kyori.adventure.title.Title
 import net.minestom.server.MinecraftServer
 import net.minestom.server.coordinate.Point
-import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.EntityType
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
@@ -27,7 +32,6 @@ import net.minestom.server.event.EventNode
 import net.minestom.server.event.player.PlayerBlockBreakEvent
 import net.minestom.server.event.player.PlayerBlockPlaceEvent
 import net.minestom.server.event.player.PlayerDeathEvent
-import net.minestom.server.event.player.PlayerRespawnEvent
 import net.minestom.server.instance.block.Block
 import net.minestom.server.inventory.InventoryType
 import net.minestom.server.inventory.TransactionOption
@@ -42,7 +46,7 @@ import java.time.Duration
 class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
     init {
         use(AnvilFileMapProviderModule(Paths.get("worlds/$name/$mapName")))
-        use(SharedInstanceModule()) // TODO do not use shared instances
+        use(InstanceContainerModule())
         use(VoidDeathModule(32.0))
         use(
             CountdownModule(
@@ -126,6 +130,19 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
             val playerPlacedBlocks = mutableListOf<Point>()
 
             override fun initialize(parent: Game, eventNode: EventNode<Event>) {
+
+                val sidebar = parent.getModule<SidebarModule>()
+                val teamModule = parent.getModule<TeamModule>()
+
+                val sidebarTeamsSection = sidebar.bind {
+                    teamModule.teams.map { t ->
+                        "team-status-${t.name.toPlainText()}" to
+                                (t.name + Component.text(":", NamedTextColor.GRAY) +
+                                        (if(bedWarsTeamInfo[t]?.bedIntact != false) Component.text("✔", NamedTextColor.GREEN)
+                        else Component.text("✖", NamedTextColor.RED)))
+                    }
+                }
+
                 eventNode.addListener(GameStartEvent::class.java) { event ->
                     for (team in parent.getModule<TeamModule>().teams) {
                         bedWarsTeamInfo[team] = BedWarsTeamInfo(bedIntact = true)
@@ -143,22 +160,26 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
                     if (team != null) {
                         if (team == parent.getModule<TeamModule>().getTeam(event.player)) {
                             event.player.sendMessage(
-                                Component.text(
-                                    "You cannot break your own bed!",
-                                    NamedTextColor.RED
-                                )
+                                Component.text("You cannot break your own bed!", NamedTextColor.RED)
                             )
                             event.isCancelled = true
                             return@addListener
                         }
                         if (!bedWarsTeamInfo.containsKey(team)) bedWarsTeamInfo[team] = BedWarsTeamInfo(false)
                         else bedWarsTeamInfo[team]!!.bedIntact = false
+                        sidebar.updateBinding(sidebarTeamsSection)
                         sendMessage(
                             team.name.append(Component.text(" bed was broken by ", NamedTextColor.AQUA))
-                                .append(event.player.name)
+                                .append(event.player.name).surroundWithSeparators()
                         )
+                        parent.playSound(Sound.sound(
+                            Key.key("entity.enderdragon.growl"), Sound.Source.HOSTILE, 1.0f, 1.0f
+                        ))
+                        team.showTitle(Title.title(
+                            Component.text("BED DESTROYED", NamedTextColor.RED, TextDecoration.BOLD),
+                            Component.text("You can no longer respawn!", NamedTextColor.RED)
+                        ))
                         return@addListener
-                        // TODO play a sound & update scoreboard when a bed is broken
                     }
                     if (playerPlacedBlocks.contains(event.blockPosition)) playerPlacedBlocks.remove(event.blockPosition)
                     else {
@@ -279,27 +300,27 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
         }
     }
 
-    fun openShop(player: Player) {
-        val shop =
-            getModule<GuiModule>().createMenu(Component.text("Shop"), InventoryType.CHEST_6_ROW, isPerPlayer = false) {
-                slotShopItem(0, ItemStack.of(Material.WHITE_WOOL, 16), 10, Material.IRON_INGOT)
-                slotShopItem(1, ItemStack.of(Material.OAK_WOOD, 8), 10, Material.GOLD_INGOT)
-                slotShopItem(2, ItemStack.of(Material.END_STONE, 8), 50, Material.IRON_INGOT)
+    private val shop by lazy {
+        getModule<GuiModule>().createMenu(Component.text("Shop"), InventoryType.CHEST_6_ROW, isPerPlayer = false) {
+            slotShopItem(0, ItemStack.of(Material.WHITE_WOOL, 16), 10, Material.IRON_INGOT)
+            slotShopItem(1, ItemStack.of(Material.OAK_WOOD, 8), 10, Material.GOLD_INGOT)
+            slotShopItem(2, ItemStack.of(Material.END_STONE, 8), 50, Material.IRON_INGOT)
 
-                slotShopItem(pos(2, 1), ItemStack.of(Material.SHEARS, 1), 50, Material.IRON_INGOT)
-                slotShopItem(pos(2, 2), ItemStack.of(Material.STONE_PICKAXE, 1), 50, Material.IRON_INGOT)
-                slotShopItem(pos(2, 3), ItemStack.of(Material.STONE_AXE, 1), 50, Material.IRON_INGOT)
+            slotShopItem(pos(2, 1), ItemStack.of(Material.SHEARS, 1), 50, Material.IRON_INGOT)
+            slotShopItem(pos(2, 2), ItemStack.of(Material.STONE_PICKAXE, 1), 50, Material.IRON_INGOT)
+            slotShopItem(pos(2, 3), ItemStack.of(Material.STONE_AXE, 1), 50, Material.IRON_INGOT)
 
-                slotShopItem(pos(3, 1), ItemStack.of(Material.IRON_SWORD, 1), 10, Material.GOLD_INGOT)
-                val stickItem = ItemStack.builder(Material.STICK).displayName(Component.text("Knockback Stick"))
-                    .lore(Component.text("Use this to wack your enemies"), Component.text("off the map!"))
-                    .meta { metaBuilder: ItemMeta.Builder ->
-                        metaBuilder.enchantment(Enchantment.KNOCKBACK, 10)
-                    }.build()
-                slotShopItem(pos(3, 2), stickItem, 3, Material.EMERALD)
-            }
-        shop.open(player)
+            slotShopItem(pos(3, 1), ItemStack.of(Material.IRON_SWORD, 1), 10, Material.GOLD_INGOT)
+            val stickItem = ItemStack.builder(Material.STICK).displayName(Component.text("Knockback Stick"))
+                .lore(Component.text("Use this to wack your enemies"), Component.text("off the map!"))
+                .meta { metaBuilder: ItemMeta.Builder ->
+                    metaBuilder.enchantment(Enchantment.KNOCKBACK, 10)
+                }.build()
+            slotShopItem(pos(3, 2), stickItem, 3, Material.EMERALD)
+        }
     }
+
+    fun openShop(player: Player) = shop.open(player)
 
     fun openTeamUpgradeShop(player: Player) {
 
