@@ -9,7 +9,7 @@ import net.minestom.server.instance.AnvilLoader
 import net.minestom.server.instance.InstanceContainer
 import java.nio.file.Path
 
-class AnvilFileMapProviderModule(private val worldFolder: Path) : GameModule() {
+class AnvilFileMapProviderModule(val worldFolder: Path) : GameModule() {
 
     lateinit var instanceContainer: InstanceContainer
         private set

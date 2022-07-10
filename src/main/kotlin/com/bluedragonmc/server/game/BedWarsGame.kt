@@ -134,18 +134,19 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
 
                 val sidebar = parent.getModule<SidebarModule>()
                 val teamModule = parent.getModule<TeamModule>()
-                val spectatorModule = parent.getModule<SpectatorModule>()
 
-                val sidebarTeamsSection = sidebar.bind {
-                    teamModule.teams.map { t ->
-                        "team-status-${t.name.toPlainText()}" to
-                                (t.name + Component.text(": ", NamedTextColor.GRAY) +
-                                        (if(bedWarsTeamInfo[t]?.bedIntact != false) Component.text("✔", NamedTextColor.GREEN)
-                        else Component.text(t.players.count { !spectatorModule.isSpectating(it) }, NamedTextColor.RED)))
-                    }
-                }
+                lateinit var sidebarTeamsSection: SidebarModule.ScoreboardBinding
 
                 eventNode.addListener(GameStartEvent::class.java) {
+                    val spectatorModule = parent.getModule<SpectatorModule>()
+                    sidebarTeamsSection = sidebar.bind {
+                        teamModule.teams.map { t ->
+                            "team-status-${t.name.toPlainText()}" to
+                                    (t.name + Component.text(": ", NamedTextColor.GRAY) +
+                                            (if(bedWarsTeamInfo[t]?.bedIntact != false) Component.text("✔", NamedTextColor.GREEN)
+                                            else Component.text(t.players.count { !spectatorModule.isSpectating(it) }, NamedTextColor.RED)))
+                        }
+                    }
                     for (team in parent.getModule<TeamModule>().teams) {
                         bedWarsTeamInfo[team] = BedWarsTeamInfo(bedIntact = true)
                     }

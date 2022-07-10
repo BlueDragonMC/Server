@@ -132,7 +132,7 @@ class NPCModule : GameModule() {
         }
 
         override fun updateNewViewer(player: Player) {
-            if(skin == null || entityType != EntityType.PLAYER) return
+            // if(skin == null || entityType != EntityType.PLAYER) return
 
             player.sendPacket(addPlayerPacket)
 
