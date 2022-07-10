@@ -1,6 +1,7 @@
 package com.bluedragonmc.server.game
 
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.module.combat.OldCombatModule
 import com.bluedragonmc.server.module.gameplay.*
 import com.bluedragonmc.server.module.instance.SharedInstanceModule
 import com.bluedragonmc.server.module.map.AnvilFileMapProviderModule

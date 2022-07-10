@@ -1,4 +1,4 @@
-package com.bluedragonmc.server.module.gameplay
+package com.bluedragonmc.server.module.combat
 
 import com.bluedragonmc.server.*
 import com.bluedragonmc.server.module.GameModule
@@ -40,17 +40,20 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
 
             val playerAttackEvent = PlayerAttackEvent(event.instance, event.entity as Player, event.target)
                 .apply(MinecraftServer.getGlobalEventHandler()::call)
-            if(playerAttackEvent.isCancelled) return@addListener
+            if (playerAttackEvent.isCancelled) return@addListener
 
             val player = event.entity as CustomPlayer
             val target = event.target
 
+            if (player.gameMode == GameMode.SPECTATOR) return@addListener // Players in spectator mode should never be able to attack
+
             // The player's base attack damage
-            var dmgAttribute = player.getAttributeValue(Attribute.ATTACK_DAMAGE)
+            var dmgAttribute =
+                player.getAttributeValue(Attribute.ATTACK_DAMAGE) + EnumItemDamage.ItemDamage.getAttackDamage(player.itemInMainHand.material())
 
             val heldEnchantments = player.inventory.itemInMainHand.meta().enchantmentMap
             // Extra damage provided by enchants like sharpness or smite
-            val damageModifier = getDamageModifier(heldEnchantments, target)
+            val damageModifier = CombatUtils.getDamageModifier(heldEnchantments, target)
 
             val knockback = if (allowKnockback) (heldEnchantments[Enchantment.KNOCKBACK]
                 ?: 0) + if (player.isSprinting) 1 else 0 else 0
@@ -58,12 +61,13 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
             if (dmgAttribute <= 0.0f && damageModifier <= 0.0f) return@addListener
 
             val shouldCrit =
-                player.velocity.y > 0.0f && !player.isOnGround && !player.isOnLadder() && !player.isInWater() && !player.isBlind()
+                player.velocity.y < 0.0f && !player.isOnGround && !player.isOnLadder() && !player.isInWater() && !player.isBlind()
             if (shouldCrit && dmgAttribute > 0.0f) {
                 dmgAttribute *= 1.5f
             }
 
-            val damage = if (allowDamage) dmgAttribute + damageModifier else 0.0f
+            var damage = if (allowDamage) dmgAttribute + damageModifier else 0.0f
+            if (target is Player) damage = EnumArmorToughness.ArmorToughness.getReducedDamage(damage, target)
 
             if (target is LivingEntity) {
                 if (target.hurtResistantTime > target.maxHurtResistantTime / 2.0f) {
@@ -108,7 +112,7 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
 
                 target.velocity = target.velocity.apply { x, y, z ->
                     Vec(
-                        x / 2.0 - (xKnockback  / magnitude * horizontal),
+                        x / 2.0 - (xKnockback / magnitude * horizontal),
                         (y / 2.0 + vertical).coerceAtMost(verticalLimit),
                         z / 2.0 - (zKnockback / magnitude * horizontal)
                     )
@@ -117,11 +121,20 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
 
             if (knockback > 0) {
                 if (target is LivingEntity) {
-                    target.takeKnockback(
-                        knockback * 0.5f,
-                        sin(Math.toRadians(player.position.yaw.toDouble() + 180.0)),
-                        -cos(Math.toRadians(player.position.yaw.toDouble() + 180.0))
-                    )
+                    // TODO Horrible hacky quick fix
+                    if (player.isSprinting) {
+                        target.takeKnockback(
+                            knockback * 0.5f,
+                            -sin(Math.toRadians(player.position.yaw.toDouble() + 180.0)),
+                            cos(Math.toRadians(player.position.yaw.toDouble() + 180.0))
+                        )
+                    } else {
+                        target.takeKnockback(
+                            knockback * 0.5f,
+                            sin(Math.toRadians(player.position.yaw.toDouble() + 180.0)),
+                            -cos(Math.toRadians(player.position.yaw.toDouble() + 180.0))
+                        )
+                    }
                 } else {
                     target.velocity = target.velocity.add(
                         -sin(Math.toRadians(player.position.yaw.toDouble())) * knockback * 0.5f,
@@ -153,10 +166,10 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
                 )
                 armor.forEach { (slot, itemStack) ->
                     val level = itemStack.meta().enchantmentMap[Enchantment.THORNS]?.toInt() ?: return@forEach
-                    if (shouldCauseThorns(level)) {
-                        val thornsDamage = getThornsDamage(level)
+                    if (CombatUtils.shouldCauseThorns(level)) {
+                        val thornsDamage = CombatUtils.getThornsDamage(level)
                         player.damage(DamageType.fromPlayer(target), thornsDamage.toFloat())
-                        player.inventory.setEquipment(slot, damageItemStack(itemStack, 2))
+                        player.inventory.setEquipment(slot, CombatUtils.damageItemStack(itemStack, 2))
                     }
                 }
             }
@@ -165,57 +178,8 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
         }
     }
 
-    private fun damageItemStack(itemStack: ItemStack, amount: Int): ItemStack {
-        val unbreakingLevel = itemStack.meta().enchantmentMap[Enchantment.UNBREAKING]?.toInt() ?: 0
-        val processedAmount = (0 until amount).count { !shouldRestoreDurability(itemStack, unbreakingLevel) }
-
-        return itemStack.withMeta { meta ->
-            meta.damage(itemStack.meta().damage - processedAmount)
-        }
-    }
-
-    private fun shouldRestoreDurability(itemStack: ItemStack, unbreakingLevel: Int): Boolean {
-        // see https://minecraft.fandom.com/wiki/Unbreaking?so=search#Usage
-        if (itemStack.material().isArmor) {
-            if (Math.random() >= (0.6 + 0.4 / (unbreakingLevel + 1))) return false
-        } else {
-            if (Math.random() >= 1.0 / (unbreakingLevel + 1)) return false
-        }
-        return true
-    }
-
-    private fun shouldCauseThorns(level: Int): Boolean = if (level <= 0) false else Random.nextFloat() < 0.15 * level
-
-    private fun getThornsDamage(level: Int): Int = if (level > 10) 10 - level else 1 + Random.nextInt(4)
-
-    private fun getDamageModifier(enchants: Map<Enchantment, Short>, targetEntity: Entity): Float =
-        if (enchants.containsKey(Enchantment.SHARPNESS)) {
-            enchants[Enchantment.SHARPNESS]!! * 1.25f
-        } else if (enchants.containsKey(Enchantment.SMITE) && isUndead(targetEntity)) {
-            enchants[Enchantment.SMITE]!! * 2.5f
-        } else if (enchants.containsKey(Enchantment.BANE_OF_ARTHROPODS) && isArthropod(targetEntity)) {
-            enchants[Enchantment.BANE_OF_ARTHROPODS]!! * 2.5f
-        } else 0.0f
-
-    private fun isUndead(entity: Entity) = setOf(
-        EntityType.DROWNED,
-        EntityType.HUSK,
-        EntityType.PHANTOM,
-        EntityType.SKELETON,
-        EntityType.SKELETON_HORSE,
-        EntityType.STRAY,
-        EntityType.WITHER,
-        EntityType.WITHER_SKELETON,
-        EntityType.ZOGLIN,
-        EntityType.ZOMBIE,
-        EntityType.ZOMBIE_VILLAGER,
-        EntityType.ZOMBIFIED_PIGLIN,
-    ).contains(entity.entityType)
-
-    private fun isArthropod(entity: Entity) =
-        entity.entityType == EntityType.SPIDER || entity.entityType == EntityType.CAVE_SPIDER || entity.entityType == EntityType.ENDERMITE || entity.entityType == EntityType.SILVERFISH
-
-    data class PlayerAttackEvent(private val instance: Instance, val attacker: Player, val target: Entity) : PlayerInstanceEvent, CancellableEvent {
+    data class PlayerAttackEvent(private val instance: Instance, val attacker: Player, val target: Entity) :
+        PlayerInstanceEvent, CancellableEvent {
 
         private var cancelled: Boolean = false
 

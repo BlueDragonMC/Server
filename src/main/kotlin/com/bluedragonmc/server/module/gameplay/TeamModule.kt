@@ -3,6 +3,7 @@ package com.bluedragonmc.server.module.gameplay
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.module.GameModule
+import com.bluedragonmc.server.module.combat.OldCombatModule
 import com.bluedragonmc.server.utils.toPlainText
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
