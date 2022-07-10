@@ -5,9 +5,11 @@ import net.kyori.adventure.text.JoinConfiguration
 import net.kyori.adventure.text.event.ClickEvent
 import net.kyori.adventure.text.event.HoverEvent
 import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.text.minimessage.MiniMessage
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
+import net.minestom.server.item.Material
 
 private val separator
     get() = Component.text("=================================", NamedTextColor.WHITE, TextDecoration.STRIKETHROUGH)
@@ -29,6 +31,11 @@ fun Component.clickEvent(command: String): Component =
     clickEvent(ClickEvent.clickEvent(ClickEvent.Action.RUN_COMMAND, command))
 
 fun Component.clickEvent(action: ClickEvent.Action, value: String) = clickEvent(ClickEvent.clickEvent(action, value))
+
+fun Material.displayName() = Component.translatable(registry().translationKey())
+fun Material.displayName(color: TextColor) = Component.translatable(registry().translationKey(), color)
+
+fun Component.noItalic() = decoration(TextDecoration.ITALIC, false)
 
 class ComponentBuilder {
 

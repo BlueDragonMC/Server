@@ -12,9 +12,7 @@ import com.bluedragonmc.server.module.instance.InstanceContainerModule
 import com.bluedragonmc.server.module.map.AnvilFileMapProviderModule
 import com.bluedragonmc.server.module.minigame.CountdownModule
 import com.bluedragonmc.server.module.minigame.WinModule
-import com.bluedragonmc.server.utils.plus
-import com.bluedragonmc.server.utils.surroundWithSeparators
-import com.bluedragonmc.server.utils.toPlainText
+import com.bluedragonmc.server.utils.*
 import kotlinx.coroutines.launch
 import net.kyori.adventure.key.Key
 import net.kyori.adventure.sound.Sound
@@ -34,15 +32,12 @@ import net.minestom.server.event.player.PlayerBlockPlaceEvent
 import net.minestom.server.event.player.PlayerDeathEvent
 import net.minestom.server.instance.block.Block
 import net.minestom.server.instance.block.BlockFace
-import net.minestom.server.instance.block.BlockHandler
-import net.minestom.server.instance.block.BlockHandler.Destroy
 import net.minestom.server.inventory.InventoryType
 import net.minestom.server.inventory.TransactionOption
 import net.minestom.server.item.Enchantment
 import net.minestom.server.item.ItemMeta
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
-import net.minestom.server.utils.NamespaceID
 import net.minestom.server.utils.inventory.PlayerInventoryUtils
 import java.nio.file.Paths
 import java.time.Duration
@@ -139,21 +134,22 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
 
                 val sidebar = parent.getModule<SidebarModule>()
                 val teamModule = parent.getModule<TeamModule>()
+                val spectatorModule = parent.getModule<SpectatorModule>()
 
                 val sidebarTeamsSection = sidebar.bind {
                     teamModule.teams.map { t ->
                         "team-status-${t.name.toPlainText()}" to
                                 (t.name + Component.text(": ", NamedTextColor.GRAY) +
                                         (if(bedWarsTeamInfo[t]?.bedIntact != false) Component.text("✔", NamedTextColor.GREEN)
-                        else Component.text("✗", NamedTextColor.RED)))
+                        else Component.text(t.players.count { !spectatorModule.isSpectating(it) }, NamedTextColor.RED)))
                     }
                 }
 
-                eventNode.addListener(GameStartEvent::class.java) { event ->
+                eventNode.addListener(GameStartEvent::class.java) {
                     for (team in parent.getModule<TeamModule>().teams) {
                         bedWarsTeamInfo[team] = BedWarsTeamInfo(bedIntact = true)
                     }
-                    sidebar.updateBinding(sidebarTeamsSection)
+                    sidebarTeamsSection.update()
                 }
 
                 // Without this it is possible to break your own bed, making you invincible
@@ -174,7 +170,7 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
                         }
                         if (!bedWarsTeamInfo.containsKey(team)) bedWarsTeamInfo[team] = BedWarsTeamInfo(false)
                         else bedWarsTeamInfo[team]!!.bedIntact = false
-                        sidebar.updateBinding(sidebarTeamsSection)
+                        sidebarTeamsSection.update()
                         sendMessage(
                             team.name.append(Component.text(" bed was broken by ", NamedTextColor.AQUA))
                                 .append(event.player.name).surroundWithSeparators()
@@ -205,14 +201,20 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
                     val team = parent.getModule<TeamModule>().getTeam(event.player)
                     if (!bedWarsTeamInfo[team]!!.bedIntact && !parent.getModule<SpectatorModule>()
                             .isSpectating(event.player)
-                    )
+                    ) {
                         parent.getModule<SpectatorModule>().addSpectator(event.player)
+                        sidebarTeamsSection.update()
+                    }
 
                     MinecraftServer.getSchedulerManager().buildTask {
                         if (parent.getModule<SpectatorModule>().isSpectating(event.player)) return@buildTask
                         event.player.respawn()
                         logger.info("Player ${event.player.username} respawned in BedWars")
                         event.player.gameMode = GameMode.SPECTATOR
+                        event.player.showTitle(Title.title(
+                            Component.text("YOU DIED", NamedTextColor.RED),
+                            Component.text("Respawning in 5 seconds...", NamedTextColor.RED)
+                        ))
                         MinecraftServer.getSchedulerManager().buildTask {
                             event.player.inventory.clear()
                             event.player.inventory.chestplate = ItemStack.of(Material.LEATHER_CHESTPLATE)
@@ -226,59 +228,35 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
 
                 eventNode.addListener(GameStartEvent::class.java) { event ->
                     val generatorsModule = getModule<ItemGeneratorsModule>()
-                    val spawnGenerators = mapData.additionalLocations[0]
-                    val diamondGenerators = mapData.additionalLocations[1]
-                    val emeraldGenerators = mapData.additionalLocations[2]
-                    spawnGenerators.forEach {
-                        generatorsModule.addGenerator(
-                            ItemGeneratorsModule.ItemGenerator(
-                                getInstance(), it, hashMapOf(
-                                    ItemStack.of(Material.IRON_INGOT) to 1,
-                                    ItemStack.of(Material.GOLD_INGOT) to 3,
-                                )
-                            )
-                        )
-                    }
-                    diamondGenerators.forEach {
-                        generatorsModule.addGenerator(
-                            ItemGeneratorsModule.ItemGenerator(
-                                getInstance(), it, hashMapOf(
-                                    ItemStack.of(Material.DIAMOND) to 25,
-                                )
-                            )
-                        )
-                    }
-                    emeraldGenerators.forEach {
-                        generatorsModule.addGenerator(
-                            ItemGeneratorsModule.ItemGenerator(
-                                getInstance(), it, hashMapOf(
-                                    ItemStack.of(Material.EMERALD) to 35,
-                                )
-                            )
-                        )
-                    }
-                    val mainShopkeepers = mapData.additionalLocations[3]
-                    val teamUpgradeShopkeepers = mapData.additionalLocations[4]
-                    mainShopkeepers.forEach { pos ->
-                        getModule<NPCModule>().addNPC(
-                            instance = getInstance(),
-                            position = pos,
-                            customName = Component.text("Shop", NamedTextColor.YELLOW, TextDecoration.BOLD),
-                            entityType = EntityType.VILLAGER,
-                            interaction = {
-                                openShop(it.player)
-                            })
-                    }
-                    teamUpgradeShopkeepers.forEach { pos ->
-                        getModule<NPCModule>().addNPC(
-                            instance = getInstance(),
-                            position = pos,
-                            customName = Component.text("Upgrades", NamedTextColor.YELLOW, TextDecoration.BOLD),
-                            entityType = EntityType.VILLAGER,
-                            interaction = {
-                                openTeamUpgradeShop(it.player)
-                            })
-                    }
+                    val (spawnGenerators, diamondGenerators, emeraldGenerators, mainShopkeepers, teamUpgradeShopkeepers) = mapData.additionalLocations
+                    generatorsModule.addGenerator(getInstance(), spawnGenerators, mapOf(
+                        ItemStack.of(Material.IRON_INGOT) to 1,
+                        ItemStack.of(Material.GOLD_INGOT) to 3,
+                    ))
+                    generatorsModule.addGenerator(getInstance(), diamondGenerators, mapOf(
+                        ItemStack.of(Material.DIAMOND) to 25,
+                    ))
+                    generatorsModule.addGenerator(getInstance(), emeraldGenerators, mapOf(
+                        ItemStack.of(Material.EMERALD) to 35,
+                    ))
+
+                    getModule<NPCModule>().addNPC(
+                        instance = getInstance(),
+                        positions = mainShopkeepers,
+                        customName = Component.text("Shop", NamedTextColor.YELLOW, TextDecoration.BOLD),
+                        entityType = EntityType.VILLAGER,
+                        interaction = {
+                            openShop(it.player)
+                    })
+
+                    getModule<NPCModule>().addNPC(
+                        instance = getInstance(),
+                        positions = teamUpgradeShopkeepers,
+                        customName = Component.text("Upgrades", NamedTextColor.YELLOW, TextDecoration.BOLD),
+                        entityType = EntityType.VILLAGER,
+                        interaction = {
+                            openTeamUpgradeShop(it.player)
+                    })
                 }
 
                 DatabaseModule.IO.launch {
@@ -288,7 +266,7 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
         })
     }
 
-    fun buyItem(player: Player, item: ItemStack, price: Int, currency: Material) {
+    private fun buyItem(player: Player, item: ItemStack, price: Int, currency: Material) {
         val removeSuccess = player.inventory.takeItemStack(ItemStack.of(currency, price), TransactionOption.ALL_OR_NOTHING)
         val addSuccess = player.inventory.addItemStack(item, TransactionOption.DRY_RUN)
         if (!removeSuccess) {
@@ -302,12 +280,18 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
         player.inventory.addItemStack(item, TransactionOption.ALL)
     }
 
-    fun GuiModule.ItemsBuilder.slotShopItem(slotNumber: Int, item: ItemStack, price: Int, currency: Material) {
-        slot(slotNumber, item.material(), { player ->
-            displayName(Component.text(item.material().name(), NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false)
-                .append(Component.text("x${item.amount()}", NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false)))
-            lore(Component.text("Price: ", NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false)
-                .append(Component.text("$price ${currency.name()}", NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false)))
+    private fun GuiModule.ItemsBuilder.slotShopItem(slotNumber: Int, item: ItemStack, price: Int, currency: Material) {
+        slot(slotNumber, item.material(), {
+            displayName(item.material().displayName(NamedTextColor.WHITE).noItalic()
+                 + Component.text("x${item.amount()}", NamedTextColor.GRAY).noItalic())
+
+            lore(Component.text("Price: ", NamedTextColor.GRAY).noItalic()
+                    + Component.text("$price ", NamedTextColor.WHITE).noItalic()
+                    + currency.displayName(NamedTextColor.WHITE).noItalic())
+
+            meta { metaBuilder ->
+                metaBuilder.enchantments(item.meta().enchantmentMap)
+            }
         }) {
             buyItem(this.player, item, price, currency)
         }
@@ -327,7 +311,7 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
             val stickItem = ItemStack.builder(Material.STICK).displayName(Component.text("Knockback Stick"))
                 .lore(Component.text("Use this to wack your enemies"), Component.text("off the map!"))
                 .meta { metaBuilder: ItemMeta.Builder ->
-                    metaBuilder.enchantment(Enchantment.KNOCKBACK, 10)
+                    metaBuilder.enchantment(Enchantment.KNOCKBACK, 3)
                 }.build()
             slotShopItem(pos(3, 2), stickItem, 3, Material.EMERALD)
         }
@@ -339,42 +323,21 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
 
     }
 
+    private val bedBlockToTeam = mapOf(
+        Material.RED_BED to NamedTextColor.RED,
+        Material.BLUE_BED to NamedTextColor.BLUE,
+        Material.GREEN_BED to NamedTextColor.GREEN,
+        Material.CYAN_BED to NamedTextColor.AQUA,
+        Material.PINK_BED to NamedTextColor.LIGHT_PURPLE,
+        Material.WHITE_BED to NamedTextColor.WHITE,
+        Material.GRAY_BED to NamedTextColor.GRAY,
+        Material.YELLOW_BED to NamedTextColor.YELLOW,
+        Material.ORANGE_BED to NamedTextColor.GOLD,
+        Material.PURPLE_BED to NamedTextColor.DARK_PURPLE,
+    )
+
     fun bedBlockToTeam(bed: Block): TeamModule.Team? {
-        return when (bed.registry().material()) {
-            Material.RED_BED -> {
-                getModule<TeamModule>().getTeam(NamedTextColor.RED)
-            }
-            Material.BLUE_BED -> {
-                getModule<TeamModule>().getTeam(NamedTextColor.BLUE)
-            }
-            Material.GREEN_BED -> {
-                getModule<TeamModule>().getTeam(NamedTextColor.GREEN)
-            }
-            Material.CYAN_BED -> {
-                getModule<TeamModule>().getTeam(NamedTextColor.AQUA)
-            }
-            Material.PINK_BED -> {
-                getModule<TeamModule>().getTeam(NamedTextColor.LIGHT_PURPLE)
-            }
-            Material.WHITE_BED -> {
-                getModule<TeamModule>().getTeam(NamedTextColor.WHITE)
-            }
-            Material.GRAY_BED -> {
-                getModule<TeamModule>().getTeam(NamedTextColor.GRAY)
-            }
-            Material.YELLOW_BED -> {
-                getModule<TeamModule>().getTeam(NamedTextColor.YELLOW)
-            }
-            Material.ORANGE_BED -> {
-                getModule<TeamModule>().getTeam(NamedTextColor.GOLD)
-            }
-            Material.PURPLE_BED -> {
-                getModule<TeamModule>().getTeam(NamedTextColor.DARK_PURPLE)
-            }
-            else -> {
-                null
-            }
-        }
+        return getModule<TeamModule>().getTeam(bedBlockToTeam[bed.registry().material()] ?: return null)
     }
 
     /*
@@ -386,15 +349,4 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
 
     inner class BedWarsTeamInfo(var bedIntact: Boolean = true)
 
-    /**
-     * A [BlockHandler] that causes both parts of the bed to be destroyed when one part is broken.
-     */
-    class BedHandler : BlockHandler {
-        override fun onDestroy(destroy: Destroy) {
-        }
-
-        override fun getNamespaceId(): NamespaceID {
-            return NamespaceID.from("bluedragon:bedhandler")
-        }
-    }
 }

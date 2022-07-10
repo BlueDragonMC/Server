@@ -1,10 +1,15 @@
 package com.bluedragonmc.server.module.gameplay
 
+import com.bluedragonmc.server.ALT_COLOR_1
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.GameModule
+import com.bluedragonmc.server.utils.plus
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.MinecraftServer
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.ItemEntity
+import net.minestom.server.entity.hologram.Hologram
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.instance.Instance
@@ -26,6 +31,12 @@ class ItemGeneratorsModule(generators: MutableList<ItemGenerator> = mutableListO
         }
     }
 
+    fun addGenerator(instance: Instance, locations: Collection<Pos>, items: Map<ItemStack, Int>, hasHologram: Boolean = items.size == 1) {
+        locations.forEach { pos ->
+            addGenerator(ItemGenerator(instance, pos, items, hasHologram))
+        }
+    }
+
     fun addGenerator(generator: ItemGenerator) {
         generators.add(generator)
         generator.countdownTasks.forEach { tasks.add(it.schedule()) }
@@ -33,17 +44,48 @@ class ItemGeneratorsModule(generators: MutableList<ItemGenerator> = mutableListO
 
     override fun deinitialize() {
         tasks.forEach { it.cancel() }
+        generators.forEach { it.removeHolograms() }
     }
 
-    data class ItemGenerator(val instance: Instance, val location: Pos, val items: Map<ItemStack, Int>) {
+    data class ItemGenerator(val instance: Instance, val location: Pos, val items: Map<ItemStack, Int>, val hasHologram: Boolean = items.size == 1) {
         val countdownTasks = mutableListOf<Task.Builder>()
+        private lateinit var hologram: Hologram
+        private lateinit var staticHologram: Hologram
+        private var secondsLeft: Int = 0
+
         init {
-            items.forEach {
+            items.forEach { (itemStack, interval) ->
                 countdownTasks.add(MinecraftServer.getSchedulerManager().buildTask {
-                    val item = ItemEntity(it.key)
+                    val item = ItemEntity(itemStack)
                     item.setInstance(instance, location)
-                }.repeat(Duration.ofSeconds(it.value.toLong())))
+                }.repeat(Duration.ofSeconds(interval.toLong())))
             }
+            if(hasHologram) {
+                // Create a static hologram showing the kind of generator
+                staticHologram = Hologram(instance, location.add(0.0, 2.0, 0.0),
+                    Component.translatable(items.keys.first().material().registry().translationKey(), ALT_COLOR_1) +
+                            Component.text(" Generator", ALT_COLOR_1)
+                )
+                // Create a dynamic hologram that updates every second
+                hologram = Hologram(instance, location.add(0.0, 1.75, 0.0), Component.empty())
+                countdownTasks.add(MinecraftServer.getSchedulerManager().buildTask {
+                    secondsLeft --
+                    if(secondsLeft < 0) secondsLeft = items.values.first()
+                    updateHologram()
+                }.repeat(Duration.ofSeconds(1)))
+                updateHologram()
+            }
+        }
+
+        internal fun removeHolograms() {
+            if(hasHologram) {
+                staticHologram.remove()
+                hologram.remove()
+            }
+        }
+
+        private fun updateHologram() {
+            hologram.text = Component.text("Spawning in ") + Component.text("${secondsLeft}s")
         }
     }
 }

@@ -5,7 +5,6 @@ import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.GameModule
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
-import net.minestom.server.MinecraftServer
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.*
 import net.minestom.server.entity.metadata.PlayerMeta
@@ -15,10 +14,8 @@ import net.minestom.server.event.EventNode
 import net.minestom.server.event.player.PlayerEntityInteractEvent
 import net.minestom.server.event.player.PlayerMoveEvent
 import net.minestom.server.instance.Instance
-import net.minestom.server.network.ConnectionState
 import net.minestom.server.network.packet.server.play.EntityTeleportPacket
 import net.minestom.server.network.packet.server.play.PlayerInfoPacket
-import java.time.Duration
 import java.util.*
 import java.util.function.Consumer
 
@@ -53,6 +50,21 @@ class NPCModule : GameModule() {
     fun addNPC(instance: Instance = parent.getInstance(), position: Pos, npc: NPC) {
         npc.setInstance(instance, position)
         npcList.add(npc)
+    }
+
+    fun addNPC(
+        instance: Instance = parent.getInstance(),
+        positions: Collection<Pos>,
+        uuid: UUID = UUID.randomUUID(),
+        customName: Component = Component.text("NPC"),
+        skin: PlayerSkin? = null,
+        entityType: EntityType = EntityType.PLAYER,
+        interaction: Consumer<NPCInteraction>? = null,
+        customNameVisible: Boolean = true
+    ) {
+        positions.forEach { pos ->
+            addNPC(instance, pos, NPC(uuid, customName, skin, entityType, interaction, customNameVisible))
+        }
     }
 
     fun addNPC(
