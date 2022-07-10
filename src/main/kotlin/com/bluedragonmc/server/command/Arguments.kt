@@ -2,7 +2,6 @@ package com.bluedragonmc.server.command
 
 import net.kyori.adventure.text.Component
 import net.minestom.server.MinecraftServer
-import net.minestom.server.command.builder.NodeMaker
 import net.minestom.server.command.builder.arguments.*
 import net.minestom.server.command.builder.arguments.minecraft.ArgumentEntity
 import net.minestom.server.command.builder.arguments.minecraft.ArgumentUUID
@@ -59,9 +58,7 @@ class ArgumentInstance(id: String) : Argument<Instance>(id) {
         return MinecraftServer.getInstanceManager().getInstance(uuid) ?: throw ArgumentSyntaxException("Instance not found", uuid.toString(), INVALID_INSTANCE)
     }
 
-    override fun processNodes(nodeMaker: NodeMaker, executable: Boolean) {
-        backingArgument.processNodes(nodeMaker, executable)
-    }
+    override fun parser(): String = backingArgument.parser()
 }
 
 object LiteralArgument : ArgumentTypeDelegation<String>(::ArgumentLiteral)
