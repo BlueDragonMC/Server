@@ -14,6 +14,7 @@ import net.minestom.server.event.player.PlayerSpawnEvent
 /**
  * A module that allows players to spawn in designated locations.
  * A `SpawnpointProvider` is used to determine the spawn location for a specific player.
+ * This module does not automatically teleport the player when they join the game. That is the queue's reponsibility.
  */
 class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule() {
 
@@ -21,9 +22,7 @@ class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule(
         logger.info("Initializing spawnpoint provider: ${spawnpointProvider::class.simpleName}")
         spawnpointProvider.initialize(parent)
         eventNode.addListener(PlayerSpawnEvent::class.java) { event ->
-            logger.info("Finding spawnpoint for player ${event.player.username} using provider ${spawnpointProvider::class.simpleName}")
             event.player.respawnPoint = spawnpointProvider.getSpawnpoint(event.player)
-            event.player.respawn()
         }
     }
 
@@ -49,7 +48,10 @@ class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule(
         }
     }
 
-    class SingleSpawnpointModule(val spawn: Pos) : SpawnpointProvider {
+    /**
+     * Spawns all players at a single location.
+     */
+    class SingleSpawnpointProvider(val spawn: Pos) : SpawnpointProvider {
         override fun initialize(game: Game) {}
 
         override fun getSpawnpoint(player: Player): Pos {
@@ -78,6 +80,46 @@ class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule(
             if (!iterator.hasNext()) iterator = mapData.spawnpoints.iterator()
             cachedSpawnpoints[player] = iterator.next()
             return getSpawnpoint(player)
+        }
+
+    }
+
+    /**
+     * Gets spawnpoints from the database.
+     * Every team has one spawnpoint. All players spawn at the same location.
+     * If a player's spawnpoint is requested and they are not on a team yet, they are spawned at the first spawnpoint in the database.
+     * If they are on a team, they will be given their team's spawnpoint.
+     * Requires the [TeamModule] to work properly.
+     */
+    class TeamDatabaseSpawnpointProvider(private val callback: () -> Unit) : SpawnpointProvider {
+        private lateinit var game: Game
+        lateinit var mapData: MapData
+        lateinit var iterator: Iterator<Pos>
+        private val cachedSpawnpoints = hashMapOf<TeamModule.Team, Pos>()
+        override fun initialize(game: Game) {
+            this.game = game
+            DatabaseModule.IO.launch {
+                mapData = game.getModule<DatabaseModule>().getMap(game.mapName)
+                iterator = mapData.spawnpoints.iterator()
+                callback()
+            }
+        }
+
+        override fun getSpawnpoint(player: Player): Pos {
+            val playerTeam = game.getModule<TeamModule>().getTeam(player)
+            if (playerTeam != null) {
+                if (cachedSpawnpoints.containsKey(playerTeam)) return cachedSpawnpoints[playerTeam]!!
+                if (!iterator.hasNext()) iterator = mapData.spawnpoints.iterator()
+                cachedSpawnpoints[playerTeam] = iterator.next()
+                return getSpawnpoint(player)
+            } else return mapData.spawnpoints[0]
+        }
+
+        fun getSpawnpoint(team: TeamModule.Team): Pos {
+            if (cachedSpawnpoints.containsKey(team)) return cachedSpawnpoints[team]!!
+            if (!iterator.hasNext()) iterator = mapData.spawnpoints.iterator()
+            cachedSpawnpoints[team] = iterator.next()
+            return getSpawnpoint(team)
         }
 
     }
