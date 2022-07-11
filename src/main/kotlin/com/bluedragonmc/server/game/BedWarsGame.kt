@@ -75,6 +75,7 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
         use(NPCModule())
         use(GuiModule())
         use(ItemPickupModule())
+        use(ChestModule())
         use(ItemDropModule(dropAllOnDeath = true))
         use(
             KitsModule(
@@ -91,10 +92,10 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
                     ),
                     KitsModule.Kit(
                         Component.text("Swordsman", NamedTextColor.YELLOW),
-                        "When the game starts, receive the following items:\n- Iron Sword\n- Leather Tunic\n- Leather Pants",
-                        Material.IRON_SWORD,
+                        "When the game starts, receive the following items:\n- Diamond Sword\n- Leather Tunic\n- Leather Pants",
+                        Material.DIAMOND_SWORD,
                         items = hashMapOf(
-                            0 to ItemStack.builder(Material.IRON_SWORD).build(),
+                            0 to ItemStack.builder(Material.DIAMOND_SWORD).build(),
                             PlayerInventoryUtils.CHESTPLATE_SLOT to ItemStack.builder(Material.LEATHER_CHESTPLATE)
                                 .build(),
                             PlayerInventoryUtils.LEGGINGS_SLOT to ItemStack.builder(Material.LEATHER_LEGGINGS).build()
@@ -102,11 +103,11 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
                     ),
                     KitsModule.Kit(
                         Component.text("Builder", NamedTextColor.YELLOW),
-                        "When the game starts, receive the following items:\n- Wooden Sword\n- 32 Wool\n- Leather Tunic\n- Leather Pants",
+                        "When the game starts, receive the following items:\n- Wooden Sword\n- 48 Wool\n- Leather Tunic\n- Leather Pants",
                         Material.WHITE_WOOL,
                         items = hashMapOf(
                             0 to ItemStack.builder(Material.WOODEN_SWORD).build(),
-                            1 to ItemStack.builder(Material.WHITE_WOOL).amount(32).build(),
+                            1 to ItemStack.builder(Material.WHITE_WOOL).amount(48).build(),
                             PlayerInventoryUtils.CHESTPLATE_SLOT to ItemStack.builder(Material.LEATHER_CHESTPLATE)
                                 .build(),
                             PlayerInventoryUtils.LEGGINGS_SLOT to ItemStack.builder(Material.LEATHER_LEGGINGS).build()
@@ -137,6 +138,14 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
                 val teamModule = parent.getModule<TeamModule>()
 
                 lateinit var sidebarTeamsSection: SidebarModule.ScoreboardBinding
+
+                val combatStatus = hashMapOf<Player, Int>()
+
+                eventNode.addListener(OldCombatModule.PlayerAttackEvent::class.java) { event ->
+                    if (event.target !is Player) return@addListener
+                    combatStatus[event.attacker] = 0
+                    combatStatus[event.target] = 0
+                }
 
                 eventNode.addListener(GameStartEvent::class.java) {
                     val spectatorModule = parent.getModule<SpectatorModule>()
@@ -252,7 +261,8 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
                         instance = getInstance(),
                         positions = mainShopkeepers,
                         customName = Component.text("Shop", NamedTextColor.YELLOW, TextDecoration.BOLD),
-                        entityType = EntityType.VILLAGER,
+                        skin = NPCModule.NPCSkins.WEIRD_FARMER.skin,
+                        entityType = EntityType.PLAYER,
                         interaction = {
                             openShop(it.player)
                     })
@@ -261,10 +271,19 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
                         instance = getInstance(),
                         positions = teamUpgradeShopkeepers,
                         customName = Component.text("Upgrades", NamedTextColor.YELLOW, TextDecoration.BOLD),
-                        entityType = EntityType.VILLAGER,
+                        skin = NPCModule.NPCSkins.WEIRD_FARMER.skin,
+                        entityType = EntityType.PLAYER,
                         interaction = {
                             openTeamUpgradeShop(it.player)
                     })
+
+                    players.forEach { combatStatus[it] = 0 }
+                    MinecraftServer.getSchedulerManager().buildTask {
+                        for (s in combatStatus) {
+                            combatStatus[s.key] = combatStatus.getOrDefault(s.key, 0) + 1
+                            if (combatStatus[s.key]!! >= 15) s.key.health += 0.5f
+                        }
+                    }.repeat(Duration.ofSeconds(1)).schedule()
                 }
 
                 DatabaseModule.IO.launch {
@@ -278,7 +297,7 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
         val removeSuccess = player.inventory.takeItemStack(ItemStack.of(currency, price), TransactionOption.ALL_OR_NOTHING)
         val addSuccess = player.inventory.addItemStack(item, TransactionOption.DRY_RUN)
         if (!removeSuccess) {
-            player.sendMessage(Component.text("You do not have enough ${currency.displayName(NamedTextColor.RED)} to buy this item.", NamedTextColor.RED))
+            player.sendMessage(Component.text("You do not have enough ", NamedTextColor.RED).append(currency.displayName(NamedTextColor.RED)).append(Component.text("to buy this item.", NamedTextColor.RED)))
             return
         }
         if (!addSuccess) {
