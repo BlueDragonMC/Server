@@ -11,6 +11,7 @@ version = "1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
+    mavenLocal()
     maven("https://jitpack.io")
 }
 
@@ -25,6 +26,10 @@ dependencies {
 
     // Database support
     implementation("org.litote.kmongo:kmongo-coroutine-serialization:4.6.1")
+
+    // Messaging
+    implementation("com.github.bluedragonmc:messagingsystem:2836a1f6f3")
+    implementation("com.github.bluedragonmc:messages:5d3dd0d240")
 }
 
 tasks.test {

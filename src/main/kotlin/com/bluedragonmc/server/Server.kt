@@ -3,7 +3,7 @@ package com.bluedragonmc.server
 import com.bluedragonmc.server.command.*
 import com.bluedragonmc.server.game.Lobby
 import com.bluedragonmc.server.module.gameplay.SpawnpointModule
-import com.bluedragonmc.server.queue.TestQueue
+import com.bluedragonmc.server.queue.IPCQueue
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.JoinConfiguration
 import net.kyori.adventure.text.format.NamedTextColor
@@ -13,7 +13,7 @@ import net.minestom.server.event.player.PlayerChatEvent
 import net.minestom.server.event.player.PlayerLoginEvent
 import net.minestom.server.extras.lan.OpenToLAN
 
-val queue = TestQueue()
+val queue = IPCQueue
 lateinit var lobby: Game
 
 /**

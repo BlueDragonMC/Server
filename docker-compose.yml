@@ -11,3 +11,8 @@ services:
     image: mongo
     ports:
       - "27017:27017"
+  rabbitmq:
+    image: rabbitmq
+    ports:
+      - "15692:15692" # monitoring interface
+      - "5672:5672" # AQMP port
