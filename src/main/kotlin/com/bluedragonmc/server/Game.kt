@@ -1,10 +1,12 @@
 package com.bluedragonmc.server
 
+import com.bluedragonmc.messages.GameStateUpdateMessage
+import com.bluedragonmc.messages.GameType
 import com.bluedragonmc.server.event.GameEvent
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.database.DatabaseModule
-import com.bluedragonmc.server.module.gameplay.SpawnpointModule
 import com.bluedragonmc.server.module.instance.InstanceModule
+import com.bluedragonmc.server.module.messaging.MessagingModule
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.MinecraftServer
@@ -13,12 +15,12 @@ import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventFilter
 import net.minestom.server.event.EventNode
+import net.minestom.server.event.player.PlayerDisconnectEvent
 import net.minestom.server.event.player.PlayerSpawnEvent
 import net.minestom.server.event.trait.InstanceEvent
 import org.slf4j.LoggerFactory
 import java.time.Duration
-import java.util.concurrent.CompletableFuture
-import kotlin.reflect.full.createInstance
+import java.util.UUID
 
 open class Game(val name: String, val mapName: String) : PacketGroupingAudience {
 
@@ -28,7 +30,8 @@ open class Game(val name: String, val mapName: String) : PacketGroupingAudience 
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
     init {
-        // Initialize mandatory modules
+
+        // Initialize mandatory modules with no requirements
         use(DatabaseModule())
 
         // Ensure the game was registered with `ready()` method
@@ -73,6 +76,23 @@ open class Game(val name: String, val mapName: String) : PacketGroupingAudience 
     }
 
     fun ready() {
+        // Initialize mandatory modules which require an InstanceModule
+        use(MessagingModule())
+        use(object : GameModule() {
+            override fun initialize(parent: Game, eventNode: EventNode<Event>) {
+                eventNode.addListener(PlayerSpawnEvent::class.java) {
+                    MinecraftServer.getSchedulerManager().scheduleNextTick {
+                        MessagingModule.publish(getGameStateUpdateMessage())
+                    }
+                }
+                eventNode.addListener(PlayerDisconnectEvent::class.java) {
+                    MinecraftServer.getSchedulerManager().scheduleNextTick {
+                        MessagingModule.publish(getGameStateUpdateMessage())
+                    }
+                }
+            }
+        })
+
         games.add(this)
         state = GameState.WAITING
     }
@@ -82,6 +102,12 @@ open class Game(val name: String, val mapName: String) : PacketGroupingAudience 
     }
 
     fun getInstance() = getModule<InstanceModule>().getInstance()
+    private val instanceId by lazy {
+        getInstance().uniqueId
+    }
+    open val maxPlayers = 8
+
+    fun getGameStateUpdateMessage() = GameStateUpdateMessage(instanceId, if(state.canPlayersJoin) maxPlayers - players.size else 0)
 
     val isJoinable
         get() = state.canPlayersJoin
@@ -96,29 +122,45 @@ open class Game(val name: String, val mapName: String) : PacketGroupingAudience 
     }
 
     var state: GameState = GameState.SERVER_STARTING
-        protected set
+        set(value) {
+            field = value
+            MessagingModule.publish(getGameStateUpdateMessage())
+        }
 
     override fun getPlayers(): MutableCollection<Player> = players
 
     fun endGame(delay: Duration = Duration.ZERO) {
+        state = GameState.ENDING
         games.remove(this)
         MinecraftServer.getSchedulerManager().buildTask {
-            val instance = getInstance()
-            while (modules.isNotEmpty()) unregister(modules.first())
-            sendActionBar(Component.text("This game is ending. You will be sent to a new game shortly.", NamedTextColor.GREEN))
-            players.forEach {
-                queue.queue(it, name)
-            }
-            MinecraftServer.getSchedulerManager().buildTask {
-                MinecraftServer.getInstanceManager().unregisterInstance(instance)
-            }.delay(Duration.ofSeconds(30)).schedule() // TODO make this happen automatically when nobody is left in instance
-
+            endGameInstantly()
         }.delay(delay).schedule()
+    }
+
+    private fun endGameInstantly() {
+        val instance = getInstance()
+        while (modules.isNotEmpty()) unregister(modules.first())
+        sendActionBar(Component.text("This game is ending. You will be sent to a new game shortly.", NamedTextColor.GREEN))
+        players.forEach {
+            queue.queue(it, GameType(name, null, null))
+        }
+        MinecraftServer.getSchedulerManager().buildTask {
+            MinecraftServer.getInstanceManager().unregisterInstance(instance)
+        }.delay(Duration.ofSeconds(30)).schedule() // TODO make this happen automatically when nobody is left in instance
     }
 
     companion object {
         val games = mutableListOf<Game>()
 
         fun findGame(player: Player): Game? = games.find { player in it.players }
+        fun findGame(instanceId: UUID): Game? = games.find { it.instanceId == instanceId }
+
+        init {
+            MinecraftServer.getSchedulerManager().buildShutdownTask {
+                games.forEach { game ->
+                    game.endGameInstantly()
+                }
+            }
+        }
     }
 }

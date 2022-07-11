@@ -1,6 +1,7 @@
 package com.bluedragonmc.server.module.minigame
 
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.GameState
 import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.module.GameModule
 import net.kyori.adventure.text.Component
@@ -36,6 +37,7 @@ class CountdownModule(
             if (countdownEnded) return@addListener
             if (threshold > 0 && parent.players.size >= threshold && countdown == null) {
                 countdown = createCountdownTask(parent, 10)
+                parent.state = GameState.STARTING
             }
         }
 
@@ -64,6 +66,7 @@ class CountdownModule(
                         Title.Times.times(Duration.ZERO, Duration.ofSeconds(5), Duration.ofSeconds(1))
                     )
                 )
+                parent.state = GameState.WAITING
             }
         }
         eventNode.addListener(PlayerMoveEvent::class.java) { event ->
@@ -100,6 +103,7 @@ class CountdownModule(
                 cancelCountdown()
                 for (module in useOnStart) parent.use(module)
                 parent.callEvent(GameStartEvent(parent))
+                parent.state = GameState.INGAME
                 countdownEnded = true
             }
         }

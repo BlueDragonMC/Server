@@ -9,6 +9,8 @@ import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.text.minimessage.MiniMessage
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
+import net.minestom.server.MinecraftServer
+import net.minestom.server.adventure.audience.PacketGroupingAudience
 import net.minestom.server.item.Material
 
 private val separator
@@ -36,6 +38,9 @@ fun Material.displayName() = Component.translatable(registry().translationKey())
 fun Material.displayName(color: TextColor) = Component.translatable(registry().translationKey(), color)
 
 fun Component.noItalic() = decoration(TextDecoration.ITALIC, false)
+
+fun broadcast(msg: Component) =
+    PacketGroupingAudience.of(MinecraftServer.getConnectionManager().onlinePlayers).sendMessage(msg)
 
 class ComponentBuilder {
 
