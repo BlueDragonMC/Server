@@ -29,7 +29,7 @@ import net.minestom.server.item.Material
  * }
  * ```
  */
-class GuiModule : GameModule() {
+open class GuiModule : GameModule() {
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {}
 
     fun createMenu(

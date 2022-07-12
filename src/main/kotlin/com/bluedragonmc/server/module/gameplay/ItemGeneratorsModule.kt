@@ -70,7 +70,7 @@ class ItemGeneratorsModule(generators: MutableList<ItemGenerator> = mutableListO
                 hologram = Hologram(instance, location.add(0.0, 1.75, 0.0), Component.empty())
                 countdownTasks.add(MinecraftServer.getSchedulerManager().buildTask {
                     secondsLeft --
-                    if(secondsLeft < 0) secondsLeft = items.values.first()
+                    if(secondsLeft <= 0) secondsLeft = items.values.first()
                     updateHologram()
                 }.repeat(Duration.ofSeconds(1)))
                 updateHologram()
