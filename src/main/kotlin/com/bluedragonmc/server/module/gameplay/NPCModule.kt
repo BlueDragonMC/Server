@@ -132,17 +132,14 @@ class NPCModule : GameModule() {
         }
 
         override fun updateNewViewer(player: Player) {
-            // if(skin == null || entityType != EntityType.PLAYER) return
-
             player.sendPacket(addPlayerPacket)
+            super.updateNewViewer(player)
 
-            /* This does not work properly if the NPC is in line of sight when the player loads in. todo research further
             // If the player can see the entity, it can be removed from the tablist as its skin is already being loaded.
             if(hasLineOfSight(player, true) || skin == null) {
                 player.sendPacket(removePlayerPacket)
                 return
             }
-             */
             val parent = player.eventNode()
             val child = EventNode.event(
                 "temp-npc-register",
@@ -162,8 +159,6 @@ class NPCModule : GameModule() {
                 player.sendPacket(EntityTeleportPacket(entityId, position, onGround))
                 player.sendPacket(removePlayerPacket)
             }
-
-            super.updateNewViewer(player)
         }
 
     }
