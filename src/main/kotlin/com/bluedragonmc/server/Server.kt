@@ -33,6 +33,7 @@ val BRAND_COLOR_PRIMARY_3 = TextColor.color(0x3336f4) // Very dark
 val ALT_COLOR_1 = NamedTextColor.YELLOW
 const val SERVER_IP = "bluedragonmc.com"
 fun main() {
+    println("Woohoo!")
     val minecraftServer = MinecraftServer.init()
 
     // Create a test instance
