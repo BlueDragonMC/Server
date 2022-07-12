@@ -61,7 +61,9 @@ fun main() {
         LobbyCommand("lobby", "/lobby", "l", "hub"),
         TeleportCommand("tp", "/tp <player> | /tp <x> <y> <z>"),
         FlyCommand("fly"),
-        GameModeCommand("gamemode", "/gamemode <survival|creative|adventure|spectator> [player]", "gm")
+        GameModeCommand("gamemode", "/gamemode <survival|creative|adventure|spectator> [player]", "gm"),
+
+        PartyCommand("party", "/party <invite|kick|promote|warp|chat|list> ...")
     ).forEach(MinecraftServer.getCommandManager()::register)
 
     // Set a custom player provider, so we can easily add fields to the Player class
