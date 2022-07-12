@@ -20,43 +20,39 @@ import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.title.Title
-import net.minestom.server.MinecraftServer
-import net.minestom.server.coordinate.Point
 import net.minestom.server.entity.EntityType
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.player.PlayerBlockBreakEvent
-import net.minestom.server.event.player.PlayerBlockPlaceEvent
 import net.minestom.server.event.player.PlayerDeathEvent
 import net.minestom.server.instance.block.Block
 import net.minestom.server.instance.block.BlockFace
-import net.minestom.server.inventory.InventoryType
-import net.minestom.server.inventory.TransactionOption
-import net.minestom.server.item.Enchantment
-import net.minestom.server.item.ItemMeta
-import net.minestom.server.item.ItemStack
-import net.minestom.server.item.Material
+import net.minestom.server.item.*
 import net.minestom.server.potion.Potion
 import net.minestom.server.potion.PotionEffect
-import net.minestom.server.scoreboard.Team
 import net.minestom.server.utils.inventory.PlayerInventoryUtils
 import java.nio.file.Paths
-import java.time.Duration
 import java.util.*
 
 
 class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
+
+    val otherTeamBedDestroyedSound = Sound.sound(Key.key("entity.ender_dragon.growl"), Sound.Source.HOSTILE, 1.0f, 1.0f)
+    val bedDestroyedSound = Sound.sound(Key.key("entity.wither.death"), Sound.Source.HOSTILE, 1.0f, 1.0f)
+
     init {
         use(AnvilFileMapProviderModule(Paths.get("worlds/$name/$mapName")))
         use(InstanceContainerModule())
         use(VoidDeathModule(32.0))
         use(
             CountdownModule(
-                2, true,
+                2,
+                true,
                 OldCombatModule(allowDamage = true, allowKnockback = true),
-                SpectatorModule(spectateOnDeath = false)
+                SpectatorModule(spectateOnDeath = false),
+                TimedRespawnModule(seconds = 5)
             )
         )
         use(WinModule(WinModule.WinCondition.LAST_TEAM_ALIVE) { player, winningTeam ->
@@ -76,9 +72,10 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
         use(AwardsModule())
         use(SidebarModule(name))
         use(NPCModule())
-        use(GuiModule())
+        use(ShopModule())
         use(ItemPickupModule())
         use(ChestModule())
+        use(NaturalRegenerationModule())
         use(ItemDropModule(dropAllOnDeath = true))
         use(
             KitsModule(
@@ -92,8 +89,7 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
                             PlayerInventoryUtils.CHESTPLATE_SLOT to ItemStack.builder(Material.IRON_CHESTPLATE).build(),
                             PlayerInventoryUtils.LEGGINGS_SLOT to ItemStack.builder(Material.IRON_LEGGINGS).build()
                         )
-                    ),
-                    KitsModule.Kit(
+                    ), KitsModule.Kit(
                         Component.text("Swordsman", NamedTextColor.YELLOW),
                         "When the game starts, receive the following items:\n- Diamond Sword\n- Leather Tunic\n- Leather Pants",
                         Material.DIAMOND_SWORD,
@@ -103,8 +99,7 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
                                 .build(),
                             PlayerInventoryUtils.LEGGINGS_SLOT to ItemStack.builder(Material.LEATHER_LEGGINGS).build()
                         )
-                    ),
-                    KitsModule.Kit(
+                    ), KitsModule.Kit(
                         Component.text("Builder", NamedTextColor.YELLOW),
                         "When the game starts, receive the following items:\n- Wooden Sword\n- 48 Wool\n- Leather Tunic\n- Leather Pants",
                         Material.WHITE_WOOL,
@@ -115,8 +110,7 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
                                 .build(),
                             PlayerInventoryUtils.LEGGINGS_SLOT to ItemStack.builder(Material.LEATHER_LEGGINGS).build()
                         )
-                    ),
-                    KitsModule.Kit(
+                    ), KitsModule.Kit(
                         Component.text("Trader", NamedTextColor.YELLOW),
                         "When the game starts, receive the following items:\n- Wooden Sword\n- 32 Iron\n- Leather Tunic\n- Leather Pants",
                         Material.IRON_INGOT,
@@ -133,7 +127,6 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
         )
         use(object : GameModule() {
             private lateinit var mapData: MapData
-            val playerPlacedBlocks = mutableListOf<Point>()
 
             override fun initialize(parent: Game, eventNode: EventNode<Event>) {
 
@@ -142,40 +135,25 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
 
                 lateinit var sidebarTeamsSection: SidebarModule.ScoreboardBinding
 
-                val combatStatus = hashMapOf<Player, Int>()
-
-                eventNode.addListener(OldCombatModule.PlayerAttackEvent::class.java) { event ->
-                    if (event.target !is Player) return@addListener
-                    combatStatus[event.attacker] = 0
-                    combatStatus[event.target] = 0
-                }
-
                 eventNode.addListener(GameStartEvent::class.java) {
                     val spectatorModule = parent.getModule<SpectatorModule>()
                     sidebarTeamsSection = sidebar.bind {
                         teamModule.teams.map { t ->
-                            "team-status-${t.name.toPlainText()}" to
-                                    (t.name + Component.text(": ", NamedTextColor.GRAY) +
-                                            (if (bedWarsTeamInfo[t]?.bedIntact != false) Component.text(
-                                                "✔",
-                                                NamedTextColor.GREEN
-                                            )
-                                            else Component.text(
-                                                t.players.count { !spectatorModule.isSpectating(it) },
-                                                NamedTextColor.RED
-                                            )))
+                            "team-status-${t.name.toPlainText()}" to (t.name + Component.text(
+                                ": ",
+                                NamedTextColor.GRAY
+                            ) + (if (bedWarsTeamInfo[t]?.bedIntact != false) Component.text(
+                                "✔", NamedTextColor.GREEN
+                            )
+                            else Component.text(
+                                t.players.count { !spectatorModule.isSpectating(it) }, NamedTextColor.RED
+                            )))
                         }
                     }
                     for (team in parent.getModule<TeamModule>().teams) {
                         bedWarsTeamInfo[team] = BedWarsTeamInfo(bedIntact = true)
                     }
                     sidebarTeamsSection.update()
-                }
-
-                // Without this it is possible to break your own bed, making you invincible
-                eventNode.addListener(PlayerBlockPlaceEvent::class.java) { event ->
-                    if (!getInstance().getBlock(event.blockPosition).isAir) event.isCancelled = true
-                    playerPlacedBlocks.add(event.blockPosition)
                 }
 
                 eventNode.addListener(PlayerBlockBreakEvent::class.java) { event ->
@@ -197,11 +175,7 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
                         )
                         for (player in parent.players) {
                             if (!team.players.contains(player)) {
-                                player.playSound(
-                                    Sound.sound(
-                                        Key.key("entity.ender_dragon.growl"), Sound.Source.HOSTILE, 1.0f, 1.0f
-                                    )
-                                )
+                                player.playSound(otherTeamBedDestroyedSound)
                             } else {
                                 player.showTitle(
                                     Title.title(
@@ -209,14 +183,7 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
                                         Component.text("You can no longer respawn!", NamedTextColor.RED)
                                     )
                                 )
-                                player.playSound(
-                                    Sound.sound(
-                                        Key.key("entity.wither.death"),
-                                        Sound.Source.HOSTILE,
-                                        1.0f,
-                                        1.0f
-                                    )
-                                )
+                                player.playSound(bedDestroyedSound)
                             }
                         }
 
@@ -226,16 +193,6 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
                         event.instance.setBlock(event.blockPosition.relative(facing), Block.AIR)
 
                         return@addListener
-                    }
-                    if (playerPlacedBlocks.contains(event.blockPosition)) playerPlacedBlocks.remove(event.blockPosition)
-                    else {
-                        event.player.sendMessage(
-                            Component.text(
-                                "You can only break blocks placed by a player!",
-                                NamedTextColor.RED
-                            )
-                        )
-                        event.isCancelled = true
                     }
                 }
 
@@ -247,30 +204,16 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
                         parent.getModule<SpectatorModule>().addSpectator(event.player)
                         sidebarTeamsSection.update()
                     }
-
-                    MinecraftServer.getSchedulerManager().buildTask {
-                        if (parent.getModule<SpectatorModule>().isSpectating(event.player)) return@buildTask
-                        event.player.respawn()
-                        logger.info("Player ${event.player.username} respawned in BedWars")
-                        event.player.gameMode = GameMode.SPECTATOR
-                        event.player.showTitle(
-                            Title.title(
-                                Component.text("YOU DIED", NamedTextColor.RED),
-                                Component.text("Respawning in 5 seconds...", NamedTextColor.RED)
-                            )
-                        )
-                        MinecraftServer.getSchedulerManager().buildTask {
-                            event.player.inventory.clear()
-                            event.player.inventory.chestplate = ItemStack.of(Material.LEATHER_CHESTPLATE)
-                            event.player.inventory.leggings = ItemStack.of(Material.LEATHER_LEGGINGS)
-                            event.player.inventory.setItemStack(0, ItemStack.of(Material.WOODEN_SWORD))
-                            event.player.gameMode = GameMode.SURVIVAL
-                            event.player.teleport(event.player.respawnPoint)
-                        }.delay(Duration.ofSeconds(5)).schedule()
-                    }.delay(Duration.ofMillis(20)).schedule()
                 }
 
-                eventNode.addListener(GameStartEvent::class.java) { event ->
+                eventNode.addListener(TimedRespawnModule.TimedRespawnEvent::class.java) { event ->
+                    event.player.inventory.clear()
+                    event.player.inventory.chestplate = ItemStack.of(Material.LEATHER_CHESTPLATE)
+                    event.player.inventory.leggings = ItemStack.of(Material.LEATHER_LEGGINGS)
+                    event.player.inventory.setItemStack(0, ItemStack.of(Material.WOODEN_SWORD))
+                }
+
+                eventNode.addListener(GameStartEvent::class.java) {
                     val generatorsModule = getModule<ItemGeneratorsModule>()
                     val (spawnGenerators, diamondGenerators, emeraldGenerators, mainShopkeepers, teamUpgradeShopkeepers) = mapData.additionalLocations
                     generatorsModule.addGenerator(
@@ -290,8 +233,7 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
                         )
                     )
 
-                    getModule<NPCModule>().addNPC(
-                        instance = getInstance(),
+                    getModule<NPCModule>().addNPC(instance = getInstance(),
                         positions = mainShopkeepers,
                         customName = Component.text("Shop", NamedTextColor.YELLOW, TextDecoration.BOLD),
                         skin = NPCModule.NPCSkins.WEIRD_FARMER.skin,
@@ -300,23 +242,14 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
                             openShop(it.player)
                         })
 
-                    getModule<NPCModule>().addNPC(
-                        instance = getInstance(),
+                    getModule<NPCModule>().addNPC(instance = getInstance(),
                         positions = teamUpgradeShopkeepers,
                         customName = Component.text("Upgrades", NamedTextColor.YELLOW, TextDecoration.BOLD),
                         skin = NPCModule.NPCSkins.WEIRD_FARMER.skin,
                         entityType = EntityType.PLAYER,
                         interaction = {
-                            openTeamUpgradeShop(it.player)
+                            openUpgradesMenu(it.player)
                         })
-
-                    players.forEach { combatStatus[it] = 0 }
-                    MinecraftServer.getSchedulerManager().buildTask {
-                        for (s in combatStatus) {
-                            combatStatus[s.key] = combatStatus.getOrDefault(s.key, 0) + 1
-                            if (combatStatus[s.key]!! >= 15) s.key.health += 0.5f
-                        }
-                    }.repeat(Duration.ofSeconds(1)).schedule()
                 }
 
                 DatabaseModule.IO.launch {
@@ -326,141 +259,53 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
         })
     }
 
-    private fun buyItem(player: Player, item: ItemStack, price: Int, currency: Material) {
-        val removeSuccess =
-            player.inventory.takeItemStack(ItemStack.of(currency, price), TransactionOption.ALL_OR_NOTHING)
-        val addSuccess = player.inventory.addItemStack(item, TransactionOption.DRY_RUN)
-        if (!removeSuccess) {
-            player.sendMessage(
-                Component.text("You do not have enough ", NamedTextColor.RED)
-                    .append(currency.displayName(NamedTextColor.RED))
-                    .append(Component.text("s to buy this item.", NamedTextColor.RED))
-            )
-            return
-        }
-        if (!addSuccess) {
-            player.sendMessage(
-                Component.text(
-                    "You do not have enough space in your inventory for this item.",
-                    NamedTextColor.RED
-                )
-            )
-            return
-        }
-        player.inventory.addItemStack(item, TransactionOption.ALL)
-    }
-
-    private fun GuiModule.ItemsBuilder.slotShopItem(slotNumber: Int, item: ItemStack, price: Int, currency: Material) {
-        slot(slotNumber, item.material(), {
-            displayName(
-                item.material().displayName(NamedTextColor.WHITE).noItalic()
-                        + Component.text(" x${item.amount()}", NamedTextColor.GRAY).noItalic()
-            )
-
-            lore(
-                Component.text("Price: ", NamedTextColor.GRAY).noItalic()
-                        + Component.text("$price ", NamedTextColor.WHITE).noItalic()
-                        + currency.displayName(NamedTextColor.WHITE).noItalic()
-            )
-
-            meta { metaBuilder ->
-                metaBuilder.enchantments(item.meta().enchantmentMap)
-            }
-        }) {
-            buyItem(this.player, item, price, currency)
-        }
-    }
-
     private val shop by lazy {
-        getModule<GuiModule>().createMenu(Component.text("Shop"), InventoryType.CHEST_6_ROW, isPerPlayer = false) {
-            slotShopItem(0, ItemStack.of(Material.WHITE_WOOL, 16), 10, Material.IRON_INGOT)
-            slotShopItem(1, ItemStack.of(Material.OAK_WOOD, 8), 10, Material.GOLD_INGOT)
-            slotShopItem(2, ItemStack.of(Material.END_STONE, 8), 50, Material.IRON_INGOT)
+        getModule<ShopModule>().createShop("Shop") {
+            item(1, 1, Material.WHITE_WOOL, 16, 10, Material.IRON_INGOT)
+            item(1, 2, Material.OAK_WOOD, 8, 10, Material.GOLD_INGOT)
+            item(1, 3, Material.END_STONE, 8, 50, Material.IRON_INGOT)
 
-            slotShopItem(pos(2, 1), ItemStack.of(Material.SHEARS, 1), 50, Material.IRON_INGOT)
-            slotShopItem(pos(2, 2), ItemStack.of(Material.STONE_PICKAXE, 1), 50, Material.IRON_INGOT)
-            slotShopItem(pos(2, 3), ItemStack.of(Material.STONE_AXE, 1), 50, Material.IRON_INGOT)
-            slotShopItem(pos(2, 4), ItemStack.of(Material.IRON_PICKAXE, 1), 20, Material.GOLD_INGOT)
-            slotShopItem(pos(2, 5), ItemStack.of(Material.IRON_AXE, 1), 20, Material.GOLD_INGOT)
+            item(2, 1, Material.SHEARS, 1, 50, Material.IRON_INGOT)
+            item(2, 2, Material.STONE_PICKAXE, 1, 50, Material.IRON_INGOT)
+            item(2, 3, Material.STONE_AXE, 1, 50, Material.IRON_INGOT)
+            item(2, 4, Material.IRON_PICKAXE, 1, 20, Material.GOLD_INGOT)
+            item(2, 5, Material.IRON_AXE, 1, 20, Material.GOLD_INGOT)
 
-            slotShopItem(pos(3, 1), ItemStack.of(Material.STONE_SWORD, 1), 15, Material.IRON_INGOT)
-            slotShopItem(pos(3, 2), ItemStack.of(Material.IRON_SWORD, 1), 10, Material.GOLD_INGOT)
-            slotShopItem(pos(3, 3), ItemStack.of(Material.DIAMOND_SWORD, 1), 5, Material.EMERALD)
+            item(3, 1, Material.STONE_SWORD, 1, 15, Material.IRON_INGOT)
+            item(3, 2, Material.IRON_SWORD, 1, 10, Material.GOLD_INGOT)
+            item(3, 3, Material.DIAMOND_SWORD, 1, 5, Material.EMERALD)
 
-            slotShopItem(pos(4, 1), ItemStack.of(Material.IRON_HELMET, 1), 20, Material.GOLD_INGOT)
-            slotShopItem(pos(4, 2), ItemStack.of(Material.IRON_CHESTPLATE, 1), 5, Material.EMERALD)
-            slotShopItem(pos(4, 3), ItemStack.of(Material.IRON_LEGGINGS, 1), 5, Material.EMERALD)
-            slotShopItem(pos(4, 4), ItemStack.of(Material.IRON_BOOTS, 1), 20, Material.GOLD_INGOT)
+            item(4, 1, Material.IRON_HELMET, 1, 20, Material.GOLD_INGOT)
+            item(4, 2, Material.IRON_CHESTPLATE, 1, 5, Material.EMERALD)
+            item(4, 3, Material.IRON_LEGGINGS, 1, 5, Material.EMERALD)
+            item(4, 4, Material.IRON_BOOTS, 1, 20, Material.GOLD_INGOT)
             val stickItem = ItemStack.builder(Material.STICK).displayName(Component.text("Knockback Stick"))
                 .lore(Component.text("Use this to wack your enemies"), Component.text("off the map!"))
                 .meta { metaBuilder: ItemMeta.Builder ->
                     metaBuilder.enchantment(Enchantment.KNOCKBACK, 3)
                 }.build()
-            slotShopItem(pos(3, 4), stickItem, 3, Material.EMERALD)
+            item(3, 4, stickItem, 3, Material.EMERALD)
+        }
+    }
+
+    // There's no way we're keeping these names
+    private val fastFeet = ShopModule.TeamUpgrade(
+        "Fast Feet", "Gives Speed I to all members on your team.", Material.IRON_BOOTS
+    ) { player, _ -> player.addEffect(Potion(PotionEffect.SPEED, 1, Integer.MAX_VALUE, Potion.ICON_FLAG)) }
+
+    private val miningMalarky = ShopModule.TeamUpgrade(
+        "Mining Malarkey", "Gives Haste I to all members on your team.", Material.IRON_PICKAXE
+    ) { player, _ -> player.addEffect(Potion(PotionEffect.HASTE, 1, Integer.MAX_VALUE, Potion.ICON_FLAG)) }
+
+    private val upgrades by lazy {
+        getModule<ShopModule>().createShop("Team Upgrades") {
+            teamUpgrade(1, 1, 3, Material.DIAMOND, fastFeet)
+            teamUpgrade(1, 2, 5, Material.DIAMOND, miningMalarky)
         }
     }
 
     fun openShop(player: Player) = shop.open(player)
-
-    private fun buyUpgrade(player: Player, team: TeamModule.Team?, upgrade: String, price: Int, currency: Material, successCallback: (team: TeamModule.Team) -> Unit) {
-        if (team == null) {
-            player.sendMessage(Component.text("You must be on a team to buy this item!", NamedTextColor.RED))
-            return
-        }
-        if (bedWarsTeamInfo[team]!!.ownedUpgrades.contains(upgrade)) {
-            player.sendMessage(Component.text("You already own this upgrade!", NamedTextColor.RED))
-        }
-        val removeSuccess =
-            player.inventory.takeItemStack(ItemStack.of(currency, price), TransactionOption.ALL_OR_NOTHING)
-        if (!removeSuccess) {
-            player.sendMessage(
-                Component.text("You do not have enough ", NamedTextColor.RED)
-                    .append(currency.displayName(NamedTextColor.RED))
-                    .append(Component.text("s to buy this item.", NamedTextColor.RED))
-            )
-            return
-        }
-        bedWarsTeamInfo[team]!!.ownedUpgrades.add(upgrade)
-        team.sendMessage(player.name.append(Component.text(" purchased $upgrade for the entire team!", NamedTextColor.GREEN)))
-        successCallback(team)
-    }
-
-    private fun GuiModule.ItemsBuilder.slotUpgradeItem(
-        slotNumber: Int,
-        name: String,
-        description: String,
-        icon: Material,
-        team: TeamModule.Team?,
-        price: Int,
-        currency: Material,
-        successCallback: (team: TeamModule.Team) -> Unit
-    ) {
-        if (team == null || bedWarsTeamInfo[team]!!.ownedUpgrades.contains(name)) return
-        slot(slotNumber, icon, {
-            displayName(Component.text(name, NamedTextColor.WHITE).noItalic())
-
-            lore(
-                Component.text(description, NamedTextColor.GRAY).noItalic()
-                    + Component.text("Price: ", NamedTextColor.GRAY).noItalic()
-                    + Component.text("$price ", NamedTextColor.WHITE).noItalic()
-                    + currency.displayName(NamedTextColor.WHITE).noItalic()
-            )
-        }) {
-            buyUpgrade(this.player, team, name, price, currency, successCallback)
-        }
-    }
-
-    fun openTeamUpgradeShop(player: Player) {
-        val team = getModule<TeamModule>().getTeam(player)!!
-        getModule<GuiModule>().createMenu(Component.text("Team Upgrades"), InventoryType.CHEST_6_ROW, isPerPlayer = true) {
-            slotUpgradeItem(0, "Fast Feet", "Gives Speed I to all members on your team.", Material.IRON_BOOTS, team, 3, Material.DIAMOND) {
-                team.players.forEach { it.addEffect(Potion(PotionEffect.SPEED, 1, Integer.MAX_VALUE, Potion.ICON_FLAG)) }
-            }
-            slotUpgradeItem(1, "Mining Malarkey", "Gives Haste I to all members on your team.", Material.IRON_PICKAXE, team, 5, Material.DIAMOND) {
-                team.players.forEach { it.addEffect(Potion(PotionEffect.HASTE, 1, Integer.MAX_VALUE, Potion.ICON_FLAG)) }
-            }
-        }
-    }
+    fun openUpgradesMenu(player: Player) = upgrades.open(player)
 
     private val bedBlockToTeam = mapOf(
         Material.RED_BED to NamedTextColor.RED,
@@ -486,6 +331,6 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
      */
     val bedWarsTeamInfo = hashMapOf<TeamModule.Team, BedWarsTeamInfo>()
 
-    inner class BedWarsTeamInfo(var bedIntact: Boolean = true, val ownedUpgrades: MutableList<String> = mutableListOf())
+    inner class BedWarsTeamInfo(var bedIntact: Boolean = true)
 
 }

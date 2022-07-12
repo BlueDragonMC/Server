@@ -1,6 +1,7 @@
 package com.bluedragonmc.server
 
 import com.bluedragonmc.server.module.database.PlayerDocument
+import com.bluedragonmc.server.module.gameplay.ShopModule
 import net.minestom.server.entity.Entity
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
@@ -14,6 +15,8 @@ class CustomPlayer(uuid: UUID, username: String, playerConnection: PlayerConnect
 
     internal var isSpectating = false
     internal var lastNPCInteractionTime = 0L
+
+    internal var virtualItems = mutableListOf<ShopModule.VirtualItem>()
 
     internal lateinit var data: PlayerDocument
 

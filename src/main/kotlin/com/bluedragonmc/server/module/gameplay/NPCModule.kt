@@ -14,6 +14,8 @@ import net.minestom.server.event.EventNode
 import net.minestom.server.event.player.PlayerEntityInteractEvent
 import net.minestom.server.event.player.PlayerMoveEvent
 import net.minestom.server.instance.Instance
+import net.minestom.server.network.packet.server.play.EntityHeadLookPacket
+import net.minestom.server.network.packet.server.play.EntityRotationPacket
 import net.minestom.server.network.packet.server.play.EntityTeleportPacket
 import net.minestom.server.network.packet.server.play.PlayerInfoPacket
 import java.util.*
@@ -75,9 +77,10 @@ class NPCModule : GameModule() {
         skin: PlayerSkin? = null,
         entityType: EntityType = EntityType.PLAYER,
         interaction: Consumer<NPCInteraction>? = null,
-        customNameVisible: Boolean = true
+        customNameVisible: Boolean = true,
+        lookAtPlayer: Boolean = true
     ) {
-        addNPC(instance, position, NPC(uuid, customName, skin, entityType, interaction, customNameVisible))
+        addNPC(instance, position, NPC(uuid, customName, skin, entityType, interaction, customNameVisible, lookAtPlayer))
     }
 
     class NPC(
@@ -87,7 +90,7 @@ class NPCModule : GameModule() {
         entityType: EntityType = EntityType.PLAYER,
         val interaction: Consumer<NPCInteraction>? = null,
         private val customNameVisible: Boolean = true,
-
+        private val lookAtPlayer: Boolean = true
         ) : LivingEntity(entityType, uuid) {
 
         private val addPlayerPacket: PlayerInfoPacket = PlayerInfoPacket(
@@ -129,6 +132,15 @@ class NPCModule : GameModule() {
             meta.isRightSleeveEnabled = true
             meta.customName = customName
             meta.isCustomNameVisible = customNameVisible
+        }
+
+        override fun tick(time: Long) {
+            if(!lookAtPlayer) return
+            instance.getNearbyEntities(position, 5.0).filterIsInstance<Player>().forEach {
+                val pos = position.withY(position.y() + eyeHeight).withLookAt(it.position)
+                sendPacketToViewersAndSelf(EntityHeadLookPacket(entityId, pos.yaw))
+                sendPacketToViewersAndSelf(EntityRotationPacket(entityId, pos.yaw, pos.pitch, onGround))
+            }
         }
 
         override fun updateNewViewer(player: Player) {
