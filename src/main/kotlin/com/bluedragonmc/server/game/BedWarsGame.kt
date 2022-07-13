@@ -76,6 +76,7 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
         use(ItemPickupModule())
         use(ChestModule())
         use(NaturalRegenerationModule())
+        use(WorldPermissionsModule(allowBlockBreak = true, allowBlockPlace = true, allowBlockInteract = true, allowBreakMap = false))
         use(ItemDropModule(dropAllOnDeath = true))
         use(
             KitsModule(

@@ -42,6 +42,9 @@ class WorldPermissionsModule(
         }
         eventNode.addListener(PlayerBlockPlaceEvent::class.java) { event ->
             event.isCancelled = !allowBlockPlace
+
+            if(!event.instance.getBlock(event.blockPosition).isAir)
+                event.isCancelled = true
         }
         eventNode.addListener(PlayerBlockInteractEvent::class.java) { event ->
             event.isCancelled = !allowBlockInteract
