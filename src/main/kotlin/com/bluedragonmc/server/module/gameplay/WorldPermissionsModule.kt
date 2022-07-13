@@ -28,30 +28,28 @@ class WorldPermissionsModule(
         eventNode.addListener(PlayerBlockBreakEvent::class.java) { event ->
             event.isCancelled = !allowBlockBreak
 
-            if (allowBreakMap) return@addListener
-            if (playerPlacedBlocks.contains(event.blockPosition)) playerPlacedBlocks.remove(event.blockPosition)
-            else {
-                event.player.sendMessage(
-                    Component.text(
-                        "You can only break blocks placed by a player!",
-                        NamedTextColor.RED
+            if (!allowBreakMap) {
+                if (playerPlacedBlocks.contains(event.blockPosition)) {
+                    playerPlacedBlocks.remove(event.blockPosition)
+                } else {
+                    event.player.sendMessage(
+                        Component.text(
+                            "You can only break blocks placed by a player!", NamedTextColor.RED
+                        )
                     )
-                )
-                event.isCancelled = true
+                    event.isCancelled = true
+                }
             }
         }
         eventNode.addListener(PlayerBlockPlaceEvent::class.java) { event ->
             event.isCancelled = !allowBlockPlace
 
-            if(!event.instance.getBlock(event.blockPosition).isAir)
-                event.isCancelled = true
+            if (!event.instance.getBlock(event.blockPosition).isAir) event.isCancelled = true
+
+            if (!allowBreakMap) playerPlacedBlocks.add(event.blockPosition)
         }
         eventNode.addListener(PlayerBlockInteractEvent::class.java) { event ->
             event.isCancelled = !allowBlockInteract
-
-            if (allowBreakMap) return@addListener
-            if (event.instance.getBlock(event.blockPosition).isAir) event.isCancelled = true
-            playerPlacedBlocks.add(event.blockPosition)
         }
     }
 }

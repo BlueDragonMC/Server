@@ -1,35 +1,23 @@
 package com.bluedragonmc.server.queue
 
+import com.bluedragonmc.messages.GameType
 import com.bluedragonmc.server.Game
-import com.bluedragonmc.server.game.BedWarsGame
-import com.bluedragonmc.server.game.Lobby
-import com.bluedragonmc.server.game.TeamDeathmatchGame
-import com.bluedragonmc.server.game.WackyMazeGame
 import com.bluedragonmc.server.module.gameplay.SpawnpointModule
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.event.HoverEvent
-import net.kyori.adventure.text.event.HoverEventSource
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.MinecraftServer
 import net.minestom.server.entity.Player
 import java.io.File
 import java.time.Duration
-import java.util.function.Predicate
 import kotlin.random.Random
-import kotlin.reflect.full.primaryConstructor
 
 /**
  * A temporary queue system that exists only on the current Minestom server.
  * This is not a fully fledged queue system, but it will work fine for now.
  */
-class TestQueue {
+class TestQueue : Queue() {
     private val queuedPlayers: HashMap<Player, String> = hashMapOf()
-
-    val gameClasses = hashMapOf(
-        "WackyMaze" to WackyMazeGame::class.java,
-        "TeamDeathmatch" to TeamDeathmatchGame::class.java,
-        "BedWars" to BedWarsGame::class.java,
-    )
 
     /**
      * Adds the player to the queue.
@@ -37,13 +25,13 @@ class TestQueue {
      * @param gameFilter Used to find existing games to add the player to.
      * @param idealGame If no games already exist, start a new one of this type. If this is null, the queue will not start a new game.
      */
-    fun queue(player: Player, gameType: String) {
+    override fun queue(player: Player, gameType: GameType) {
         if (queuedPlayers.contains(player)) {
             player.sendMessage(Component.text("Removing you from the queue..."))
             queuedPlayers.remove(player)
             return
         }
-        queuedPlayers[player] = gameType
+        queuedPlayers[player] = gameType.name
         player.sendMessage(Component.text("You are now in the queue.", NamedTextColor.GREEN).hoverEvent(HoverEvent.showText(Component.text("Test queue debug information\nGame type: $gameType"))))
     }
 
@@ -61,7 +49,7 @@ class TestQueue {
 
 
     var instanceStarting = false // only one instance is allowed to start per queue cycle
-    fun start() {
+    override fun start() {
         MinecraftServer.getSchedulerManager().buildTask {
             try {
                 val playersToRemove = mutableListOf<Player>()
@@ -90,7 +78,7 @@ class TestQueue {
                     )
                     val map = randomMap(gameType)
                     println("Map chosen: $map")
-                    gameClasses[gameType]!!.kotlin.primaryConstructor!!.call(map)
+                    gameClasses[gameType]!!.call(map)
                     instanceStarting = true
                 }
                 playersToRemove.forEach { queuedPlayers.remove(it) }

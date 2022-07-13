@@ -15,13 +15,9 @@ import net.minestom.server.event.trait.CancellableEvent
 import net.minestom.server.event.trait.PlayerInstanceEvent
 import net.minestom.server.instance.Instance
 import net.minestom.server.item.Enchantment
-import net.minestom.server.item.ItemStack
 import net.minestom.server.network.packet.server.play.EntityAnimationPacket
 import net.minestom.server.network.packet.server.play.EntityAnimationPacket.Animation
-import kotlin.math.cos
 import kotlin.math.hypot
-import kotlin.math.sin
-import kotlin.random.Random
 
 class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boolean = true) : GameModule() {
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
@@ -29,8 +25,9 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
         eventNode.addListener(EntityTickEvent::class.java) { event ->
             if (event.entity is LivingEntity) {
                 val livingEntity = event.entity as LivingEntity
-                if (livingEntity.hurtResistantTime > 0) {
-                    livingEntity.hurtResistantTime--
+                val value = livingEntity.getTag(HURT_RESISTANT_TIME)
+                if (value > 0) {
+                    livingEntity.setTag(HURT_RESISTANT_TIME, value - 1)
                 }
             }
         }
@@ -38,14 +35,18 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
         eventNode.addListener(EntityAttackEvent::class.java) { event ->
             if (event.entity !is Player) return@addListener
 
-            val playerAttackEvent = PlayerAttackEvent(event.instance, event.entity as Player, event.target)
-                .apply(MinecraftServer.getGlobalEventHandler()::call)
+            val playerAttackEvent = PlayerAttackEvent(
+                event.instance,
+                event.entity as Player,
+                event.target
+            ).apply(MinecraftServer.getGlobalEventHandler()::call)
             if (playerAttackEvent.isCancelled) return@addListener
 
             val player = event.entity as CustomPlayer
             val target = event.target
 
-            if (player.gameMode == GameMode.SPECTATOR) return@addListener // Players in spectator mode should never be able to attack
+            // Spectators can't attack, and spectators and players in creative mode can't take damage
+            if (player.gameMode == GameMode.SPECTATOR || (target is Player && (target.gameMode == GameMode.SPECTATOR || target.gameMode == GameMode.CREATIVE))) return@addListener
 
             // The player's base attack damage
             var dmgAttribute =
@@ -69,21 +70,24 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
             var damage = if (allowDamage) dmgAttribute + damageModifier else 0.0f
             if (target is Player) damage = EnumArmorToughness.ArmorToughness.getReducedDamage(damage, target)
 
+            target.entityMeta.setNotifyAboutChanges(false)
+            player.entityMeta.setNotifyAboutChanges(false)
+
             if (target is LivingEntity) {
-                if (target.hurtResistantTime > target.maxHurtResistantTime / 2.0f) {
+                if (target.getTag(HURT_RESISTANT_TIME) > target.getTag(MAX_HURT_RESISTANT_TIME) / 2.0f) {
                     // If this target has been attacked recently, and this interaction causes more damage
                     // than the previous hit, deal the difference in damage to the target.
                     // see the minecraft wiki: https://minecraft.fandom.com/wiki/Damage#Immunity
-                    if (damage > target.lastDamage) {
-                        target.damage(DamageType.fromPlayer(player), damage - target.lastDamage)
-                        target.lastDamage = damage
+                    val lastDamage = target.getTag(LAST_DAMAGE)
+                    if (damage > lastDamage) {
+                        target.damage(DamageType.fromPlayer(player), damage - lastDamage)
+                        target.setTag(LAST_DAMAGE, damage)
                     } else return@addListener
                 } else {
                     // The target has not been hit in the past (by default) 10 ticks.
                     target.damage(DamageType.fromPlayer(player), damage)
-                    target.lastDamage = damage
-                    target.hurtResistantTime = target.maxHurtResistantTime
-                    target.sendPacketToViewersAndSelf(EntityAnimationPacket(target.entityId, Animation.TAKE_DAMAGE))
+                    target.setTag(LAST_DAMAGE, damage)
+                    target.setTag(HURT_RESISTANT_TIME, target.getTag(MAX_HURT_RESISTANT_TIME))
                 }
             }
 
@@ -109,53 +113,32 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
                 val horizontal = MinecraftServer.TICK_PER_SECOND * 0.8 * 0.4
                 val vertical = (0.4 - 0.04) * MinecraftServer.TICK_PER_SECOND
                 val verticalLimit = 0.4 * MinecraftServer.TICK_PER_SECOND
+                val extra = knockback + 1.0
+
+                if (knockback > 0.0) player.isSprinting = false
 
                 target.velocity = target.velocity.apply { x, y, z ->
                     Vec(
-                        x / 2.0 - (xKnockback / magnitude * horizontal),
+                        x / 2.0 - (xKnockback / magnitude * horizontal) * extra,
                         (y / 2.0 + vertical).coerceAtMost(verticalLimit),
-                        z / 2.0 - (zKnockback / magnitude * horizontal)
+                        z / 2.0 - (zKnockback / magnitude * horizontal) * extra
                     )
                 }
-            }
-
-            if (knockback > 0) {
-                if (target is LivingEntity) {
-                    // TODO Horrible hacky quick fix
-                    if (player.isSprinting) {
-                        target.takeKnockback(
-                            knockback * 0.5f,
-                            -sin(Math.toRadians(player.position.yaw.toDouble() + 180.0)),
-                            cos(Math.toRadians(player.position.yaw.toDouble() + 180.0))
-                        )
-                    } else {
-                        target.takeKnockback(
-                            knockback * 0.5f,
-                            sin(Math.toRadians(player.position.yaw.toDouble() + 180.0)),
-                            -cos(Math.toRadians(player.position.yaw.toDouble() + 180.0))
-                        )
-                    }
-                } else {
-                    target.velocity = target.velocity.add(
-                        -sin(Math.toRadians(player.position.yaw.toDouble())) * knockback * 0.5f,
-                        0.1,
-                        cos(Math.toRadians(player.position.yaw.toDouble())) * knockback * 0.5f
-                    )
-                }
-                player.isSprinting = false
             }
 
             // Send crit particles
-            if (shouldCrit)
-                player.sendPacketToViewersAndSelf(EntityAnimationPacket(target.entityId, Animation.CRITICAL_EFFECT))
-
-            if (dmgAttribute > 0.0f)
-                player.sendPacketToViewersAndSelf(
-                    EntityAnimationPacket(
-                        target.entityId,
-                        Animation.MAGICAL_CRITICAL_EFFECT
-                    )
+            if (shouldCrit) player.sendPacketToViewersAndSelf(
+                EntityAnimationPacket(
+                    target.entityId,
+                    Animation.CRITICAL_EFFECT
                 )
+            )
+
+            if (dmgAttribute > 0.0f) player.sendPacketToViewersAndSelf(
+                EntityAnimationPacket(
+                    target.entityId, Animation.MAGICAL_CRITICAL_EFFECT
+                )
+            )
 
             if (target is Player) {
                 val armor = listOf(
@@ -173,6 +156,9 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
                     }
                 }
             }
+
+            target.entityMeta.setNotifyAboutChanges(true)
+            player.entityMeta.setNotifyAboutChanges(true)
 
             // MC 1.8 subtracts 0.3 from the player's food here; we will have to make our own tracker because Minestom keeps track of food as an integer
         }

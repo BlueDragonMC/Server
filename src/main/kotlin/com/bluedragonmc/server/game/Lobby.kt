@@ -29,14 +29,25 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
 
         // NPCs
         use(NPCModule())
-        // 0.5, 62.5, -35.5, 0.0, 0.0 CENTER
-        getModule<NPCModule>().addNPC(instance = this.getInstance(), position = Pos(0.5, 62.5, -35.5, 0F, 0F), customName = Component.text("WackyMaze", NamedTextColor.YELLOW, TextDecoration.BOLD), skin = NPCModule.NPCSkins.EX4.skin, interaction = {
-            queue.queue(it.player, GameType("WackyMaze", null, "Islands"))
-        })
-        // -3.5, 62.5, -34.5, 0.0, 0.0 LEFT OF CENTER
-        getModule<NPCModule>().addNPC(instance = this.getInstance(), position = Pos(-3.5, 62.5, -34.5, 0F, 0F), customName = Component.text("BedWars", NamedTextColor.YELLOW, TextDecoration.BOLD), skin = NPCModule.NPCSkins.SKY.skin, interaction = {
-            queue.queue(it.player, GameType("BedWars", null, "Caves"))
-        })
+        getModule<NPCModule>().apply {
+            // 0.5, 62.5, -35.5, 0.0, 0.0 CENTER
+            addNPC(instance = this@Lobby.getInstance(),
+                position = Pos(0.5, 62.5, -35.5, 0F, 0F),
+                customName = Component.text("WackyMaze", NamedTextColor.YELLOW, TextDecoration.BOLD),
+                skin = NPCModule.NPCSkins.EX4.skin,
+                interaction = {
+                    queue.queue(it.player, GameType("WackyMaze", null, "Islands"))
+                })
+            // -3.5, 62.5, -34.5, 0.0, 0.0 LEFT OF CENTER
+            addNPC(instance = this@Lobby.getInstance(),
+                position = Pos(-3.5, 62.5, -34.5, 0F, 0F),
+                customName = Component.text("BedWars", NamedTextColor.YELLOW, TextDecoration.BOLD),
+                skin = NPCModule.NPCSkins.SKY.skin,
+                interaction = {
+                    queue.queue(it.player, GameType("BedWars", null, "Caves"))
+                })
+        }
+
         ready()
     }
 }

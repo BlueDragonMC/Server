@@ -52,33 +52,23 @@ class ItemDropModule(var dropBlocksOnBreak: Boolean = true, var dropAllOnDeath: 
         itemEntity.setInstance(instance, player.position.add(0.0, player.eyeHeight - 0.3, 0.0))
         itemEntity.setPickupDelay(2, ChronoUnit.SECONDS)
         if(throwRandomly) {
-            val multiplier = Random.nextFloat() * 0.5f
+            val multiplier = Random.nextFloat() * 4f
             val angle = Random.nextFloat() * Math.PI * 2f
             itemEntity.velocity = Vec(-sin(angle) * multiplier, 0.2, cos(angle) * multiplier)
         } else {
-            val horizontalMultiplier = cos(Math.toRadians(player.position.pitch.toDouble()))
-            val x = sin(Math.toRadians(player.position.yaw.toDouble()))
-            val y = sin(Math.toRadians(player.position.pitch.toDouble()))
-            val z = cos(Math.toRadians(player.position.yaw.toDouble()))
-            val angle = Random.nextFloat() * Math.PI * 2.0
-            val randomMultiplier = 0.02 * Random.nextDouble()
-            itemEntity.velocity = Vec(
-                (-x * horizontalMultiplier * 0.3f) + cos(angle) * randomMultiplier,
-                -y * 0.3f + 0.1f + (Random.nextFloat() - Random.nextFloat()) * 0.1f,
-                (z * horizontalMultiplier * 0.3f) + sin(angle) * randomMultiplier
-            )
+            itemEntity.velocity = player.position.direction().mul(5.0)
         }
     }
 
     private fun dropItem(item: ItemStack, instance: Instance, position: Pos) {
         val itemEntity = ItemEntity(item)
-        itemEntity.setPickupDelay(2, ChronoUnit.SECONDS)
+        itemEntity.setPickupDelay(300, ChronoUnit.MILLIS)
 
         // Apply random velocity because we don't have a yaw or pitch
-        val multiplier = Random.nextFloat() * 0.5f
+        val multiplier = Random.nextFloat() * 4f
         val angle = Random.nextFloat() * Math.PI * 2f
         itemEntity.velocity = Vec(-sin(angle) * multiplier, 0.2, cos(angle) * multiplier)
 
-        itemEntity.setInstance(instance, position)
+        itemEntity.setInstance(instance, position.add(0.5, 0.5, 0.5))
     }
 }
