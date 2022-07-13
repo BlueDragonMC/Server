@@ -2,9 +2,6 @@ package com.bluedragonmc.server.queue
 
 import com.bluedragonmc.messages.*
 import com.bluedragonmc.server.Game
-import com.bluedragonmc.server.game.BedWarsGame
-import com.bluedragonmc.server.game.TeamDeathmatchGame
-import com.bluedragonmc.server.game.WackyMazeGame
 import com.bluedragonmc.server.module.gameplay.SpawnpointModule
 import com.bluedragonmc.server.module.messaging.MessagingModule
 import com.bluedragonmc.server.utils.broadcast
@@ -16,24 +13,18 @@ import org.slf4j.LoggerFactory
 import java.io.File
 import kotlin.random.Random
 
-object IPCQueue {
+object IPCQueue : Queue() {
     private val logger = LoggerFactory.getLogger(IPCQueue::class.java)
-
-    internal val gameClasses = hashMapOf(
-        "WackyMaze" to ::WackyMazeGame,
-        "TeamDeathmatch" to ::TeamDeathmatchGame,
-        "BedWars" to ::BedWarsGame,
-    )
 
     private val queuedPlayers = mutableListOf<Player>()
 
-    fun queue(player: Player, gameType: GameType) {
+    override fun queue(player: Player, gameType: GameType) {
         player.sendMessage(Component.text("Adding you to the queue...", NamedTextColor.DARK_GRAY))
         if(queuedPlayers.contains(player)) MessagingModule.publish(RequestRemoveFromQueueMessage(player.uuid))
         else MessagingModule.publish(RequestAddToQueueMessage(player.uuid, gameType))
     }
 
-    fun start() {
+    override fun start() {
         MessagingModule.subscribe(RequestCreateInstanceMessage::class) { message ->
             if (message.containerId == MessagingModule.containerId) {
                 val constructor = gameClasses[message.gameType.name] ?: return@subscribe

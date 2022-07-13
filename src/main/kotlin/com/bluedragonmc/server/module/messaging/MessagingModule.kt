@@ -3,7 +3,9 @@ package com.bluedragonmc.server.module.messaging
 import com.bluedragonmc.messages.*
 import com.bluedragonmc.messagingsystem.AMQPClient
 import com.bluedragonmc.messagingsystem.message.Message
+import com.bluedragonmc.messagingsystem.message.RPCErrorMessage
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.messagingDisabled
 import com.bluedragonmc.server.module.GameModule
 import net.kyori.adventure.key.Key
 import net.kyori.adventure.sound.Sound
@@ -20,16 +22,28 @@ class MessagingModule : GameModule() {
     companion object {
         // TODO for testing only, we are using a random UUID as the container's ID.
         val containerId: UUID = UUID.randomUUID() //UUID.fromString(System.getenv("container_id"))
-        private val client: AMQPClient = AMQPClient(polymorphicModuleBuilder = polymorphicModuleBuilder)
+        private val client: AMQPClient by lazy {
+            AMQPClient(polymorphicModuleBuilder = polymorphicModuleBuilder)
+        }
 
         fun findPlayer(uuid: UUID) = MinecraftServer.getConnectionManager().getPlayer(uuid)
         fun UUID.asPlayer() = findPlayer(this)
 
-        fun publish(message: Message) = client.publish(message)
-        suspend fun send(message: Message): Message = client.publishAndReceive(message)
+        fun publish(message: Message) {
+            if(!messagingDisabled) client.publish(message)
+        }
 
-        fun <T : Message> subscribe(type: KClass<T>, listener: (T) -> Unit) = client.subscribe(type, listener)
-        fun <T : Message> consume(type: KClass<T>, listener: (T) -> Message) = client.subscribeRPC(type, listener)
+        suspend fun send(message: Message): Message {
+            return if(!messagingDisabled) client.publishAndReceive(message)
+            else RPCErrorMessage("Messaging disabled")
+        }
+
+        fun <T : Message> subscribe(type: KClass<T>, listener: (T) -> Unit) {
+            if(!messagingDisabled) client.subscribe(type, listener)
+        }
+        fun <T : Message> consume(type: KClass<T>, listener: (T) -> Message) {
+            if(!messagingDisabled) client.subscribeRPC(type, listener)
+        }
 
         init {
             publish(

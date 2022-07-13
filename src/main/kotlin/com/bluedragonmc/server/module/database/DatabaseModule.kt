@@ -5,6 +5,7 @@ package com.bluedragonmc.server.module.database
 import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.GameModule
+import com.bluedragonmc.server.mongoHostname
 import com.github.jershell.kbson.FlexibleDecoder
 import com.mongodb.ConnectionString
 import kotlinx.coroutines.*
@@ -40,7 +41,7 @@ class DatabaseModule : GameModule() {
         }
 
         private val client: CoroutineClient by lazy {
-            KMongo.createClient(ConnectionString("mongodb://mongo")).coroutine
+            KMongo.createClient(ConnectionString("mongodb://$mongoHostname")).coroutine
         }
         val database: CoroutineDatabase by lazy {
             client.getDatabase("bluedragon")
