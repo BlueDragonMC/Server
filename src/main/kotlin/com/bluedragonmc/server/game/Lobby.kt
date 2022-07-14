@@ -65,6 +65,8 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
             }
 
         })
+        use(DoubleJumpModule)
+
         ready()
     }
 
