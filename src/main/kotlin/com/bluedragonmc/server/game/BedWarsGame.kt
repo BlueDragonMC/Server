@@ -1,5 +1,6 @@
 package com.bluedragonmc.server.game
 
+import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.module.GameModule
@@ -174,8 +175,8 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
                         else bedWarsTeamInfo[team]!!.bedIntact = false
                         sidebarTeamsSection.update()
                         sendMessage(
-                            team.name.append(Component.text(" bed was broken by ", NamedTextColor.AQUA))
-                                .append(event.player.name).surroundWithSeparators()
+                            team.name + Component.text(" bed was broken by ", BRAND_COLOR_PRIMARY_2)
+                                + event.player.name.surroundWithSeparators()
                         )
                         for (player in parent.players) {
                             if (!team.players.contains(player)) {
@@ -320,7 +321,7 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
     private val fastFeet = ShopModule.TeamUpgrade(
         "Fast Feet", "Gives Speed I to all members on your team.", Material.IRON_BOOTS
     ) { player, _ ->
-        player.getAttribute(Attribute.MOVEMENT_SPEED).addModifier(AttributeModifier("bluedragon:fastfeet", 1.3f, AttributeOperation.MULTIPLY_BASE)) }
+        player.getAttribute(Attribute.MOVEMENT_SPEED).addModifier(AttributeModifier("bluedragon:fastfeet", 1.1f, AttributeOperation.MULTIPLY_BASE)) }
 
     private val miningMalarkey = ShopModule.TeamUpgrade(
         "Mining Malarkey", "Gives Haste I to all members on your team.", Material.IRON_PICKAXE

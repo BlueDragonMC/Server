@@ -74,7 +74,7 @@ fun main() {
     queue.start()
 
     // Enable Mojang authentication (if we add a proxy, disable this)
-    MojangAuth.init()
+    // MojangAuth.init()
 
     // Start the server & bind to port 25565
     minecraftServer.start("0.0.0.0", 25565)
