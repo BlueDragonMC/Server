@@ -16,6 +16,7 @@ import net.minestom.server.event.Event
 import net.minestom.server.event.EventFilter
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.player.PlayerDisconnectEvent
+import net.minestom.server.event.player.PlayerPacketOutEvent
 import net.minestom.server.event.player.PlayerSpawnEvent
 import net.minestom.server.event.trait.CancellableEvent
 import net.minestom.server.event.trait.InstanceEvent
@@ -57,6 +58,9 @@ open class Game(val name: String, val mapName: String) : PacketGroupingAudience 
                 is PlayerSpawnEvent -> {
                     // Workaround for PlayerSpawnEvent not being an InstanceEvent
                     hasModule<InstanceModule>() && event.spawnInstance == getInstance()
+                }
+                is PlayerPacketOutEvent -> {
+                    hasModule<InstanceModule>() && event.player.instance == getInstance()
                 }
                 else -> false
             }
