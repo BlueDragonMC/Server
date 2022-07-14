@@ -54,4 +54,21 @@ class CustomPlayer(uuid: UUID, username: String, playerConnection: PlayerConnect
 
     fun isBlind() = activeEffects.any { it.potion.effect == PotionEffect.BLINDNESS }
 
+    companion object {
+        /**
+         * Gets the XP level based on the total number of XP specified.
+         */
+        fun getXpLevel(experience: Int): Int {
+            return (experience / 5000F).toInt()
+        }
+
+        /**
+         * Given the total number of XP the player has, gets their progress to levelling up.
+         * At 0% (0), they have just levelled up. At 100% (1), the player will level up.
+         */
+        fun getXpPercent(experience: Int): Float {
+            return experience % 5000F / 5000F
+        }
+    }
+
 }

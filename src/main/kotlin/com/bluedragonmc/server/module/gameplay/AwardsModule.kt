@@ -23,6 +23,7 @@ class AwardsModule : GameModule() {
         require(player.isDataInitialized()) { "Player's data has not loaded!" }
         DatabaseModule.IO.launch {
             player.data.compute(PlayerDocument::coins) { it + amount }
+            player.data.compute(PlayerDocument::experience) { it + amount }
         }
         player.sendMessage(Component.text("+$amount coins (", NamedTextColor.GOLD).append(reason)
             .append(Component.text(")", NamedTextColor.GOLD)))

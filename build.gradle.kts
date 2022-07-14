@@ -29,7 +29,7 @@ dependencies {
 
     // Messaging
     implementation("com.github.bluedragonmc:messagingsystem:2836a1f6f3")
-    implementation("com.github.bluedragonmc:messages:5d3dd0d240")
+    implementation("com.github.bluedragonmc:messages:e8603cb")
 }
 
 tasks.test {

@@ -18,6 +18,7 @@ import kotlin.reflect.KMutableProperty1
 data class PlayerDocument(
     @SerialName("_id") @Serializable(with = DatabaseModule.UUIDSerializer::class) val uuid: UUID,
     var coins: Int = 0,
+    var experience: Int = 0,
     val groups: List<String> = emptyList(),
     val punishments: List<Punishment> = emptyList(),
     val statistics: List<Statistic> = emptyList(),

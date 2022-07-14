@@ -12,6 +12,7 @@ import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.MinecraftServer
 import net.minestom.server.event.player.PlayerChatEvent
 import net.minestom.server.event.player.PlayerLoginEvent
+import net.minestom.server.extras.MojangAuth
 import net.minestom.server.extras.lan.OpenToLAN
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -71,6 +72,9 @@ fun main() {
 
     // Start the queue loop, which runs every 2 seconds and handles the players in queue
     queue.start()
+
+    // Enable Mojang authentication (if we add a proxy, disable this)
+    MojangAuth.init()
 
     // Start the server & bind to port 25565
     minecraftServer.start("0.0.0.0", 25565)
