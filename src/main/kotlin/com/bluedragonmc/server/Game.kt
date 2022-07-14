@@ -17,6 +17,7 @@ import net.minestom.server.event.EventFilter
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.player.PlayerDisconnectEvent
 import net.minestom.server.event.player.PlayerSpawnEvent
+import net.minestom.server.event.trait.CancellableEvent
 import net.minestom.server.event.trait.InstanceEvent
 import org.slf4j.LoggerFactory
 import java.time.Duration
@@ -99,6 +100,13 @@ open class Game(val name: String, val mapName: String) : PacketGroupingAudience 
 
     fun callEvent(event: Event) {
         modules.forEach { it.eventNode?.call(event) }
+    }
+
+    fun callCancellable(event: Event, successCallback: () -> Unit) {
+        modules.forEach {
+            it.eventNode?.call(event)
+        }
+        if (event is CancellableEvent && !event.isCancelled) successCallback()
     }
 
     fun getInstance() = getModule<InstanceModule>().getInstance()

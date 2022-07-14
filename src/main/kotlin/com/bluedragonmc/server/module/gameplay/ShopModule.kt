@@ -79,7 +79,7 @@ class ShopModule : GuiModule() {
 
                 if (virtualItem != null && virtualItem is TeamUpgrade) {
                     // Display team upgrade descriptions if applicable
-                    lore(listOf(Component.text(virtualItem.description)) + lore)
+                    lore(listOf(Component.text(virtualItem.description, NamedTextColor.WHITE).noItalic()) + lore)
                 } else lore(lore)
 
                 meta { metaBuilder ->

@@ -5,11 +5,13 @@ import com.bluedragonmc.server.module.GameModule
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.coordinate.Point
+import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.player.PlayerBlockBreakEvent
 import net.minestom.server.event.player.PlayerBlockInteractEvent
 import net.minestom.server.event.player.PlayerBlockPlaceEvent
+import net.minestom.server.instance.block.Block
 
 /**
  * This module can prevent the player from placing, breaking, or interacting with blocks in the world.
@@ -32,12 +34,14 @@ class WorldPermissionsModule(
                 if (playerPlacedBlocks.contains(event.blockPosition)) {
                     playerPlacedBlocks.remove(event.blockPosition)
                 } else {
-                    event.player.sendMessage(
-                        Component.text(
-                            "You can only break blocks placed by a player!", NamedTextColor.RED
+                    parent.callCancellable(PreventPlayerBreakMapEvent(event.player, event.block, event.resultBlock, event.blockPosition)) {
+                        event.player.sendMessage(
+                            Component.text(
+                                "You can only break blocks placed by a player!", NamedTextColor.RED
+                            )
                         )
-                    )
-                    event.isCancelled = true
+                        event.isCancelled = true
+                    }
                 }
             }
         }
@@ -52,4 +56,10 @@ class WorldPermissionsModule(
             event.isCancelled = !allowBlockInteract
         }
     }
+
+    /**
+     * Called when a player breaks a non-player-placed block when they are not supposed to be allowed to.
+     * If this event is cancelled, the player will be allowed to break the block.
+     */
+    class PreventPlayerBreakMapEvent(player: Player, block: Block, resultBlock: Block, blockPosition: Point) : PlayerBlockBreakEvent(player, block, resultBlock, blockPosition)
 }
