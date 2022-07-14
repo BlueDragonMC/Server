@@ -10,6 +10,9 @@ import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import java.time.Duration
 
+/**
+ * Regenerates a player's health by 0.5 every second when they have been out of combat for at least 15 seconds.
+ */
 class NaturalRegenerationModule : GameModule() {
 
     private val combatStatus = hashMapOf<Player, Int>()

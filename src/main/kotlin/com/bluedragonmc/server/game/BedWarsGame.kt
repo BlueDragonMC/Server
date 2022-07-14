@@ -3,7 +3,6 @@ package com.bluedragonmc.server.game
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.module.GameModule
-import com.bluedragonmc.server.module.GuiModule
 import com.bluedragonmc.server.module.combat.OldCombatModule
 import com.bluedragonmc.server.module.database.DatabaseModule
 import com.bluedragonmc.server.module.database.MapData
@@ -20,12 +19,16 @@ import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.title.Title
+import net.minestom.server.attribute.Attribute
+import net.minestom.server.attribute.AttributeModifier
+import net.minestom.server.attribute.AttributeOperation
 import net.minestom.server.entity.EntityType
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.player.PlayerBlockBreakEvent
+import net.minestom.server.event.player.PlayerBlockPlaceEvent
 import net.minestom.server.event.player.PlayerDeathEvent
 import net.minestom.server.instance.block.Block
 import net.minestom.server.instance.block.BlockFace
@@ -197,6 +200,12 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
                     }
                 }
 
+                eventNode.addListener(PlayerBlockPlaceEvent::class.java) { event ->
+                    val team = parent.getModule<TeamModule>().getTeam(event.player) ?: return@addListener
+                    if (event.block.registry().material() == Material.WHITE_WOOL)
+                        event.instance.setBlock(event.blockPosition, teamToWoolBlock.getOrDefault(team.name.color(), Block.WHITE_WOOL))
+                }
+
                 eventNode.addListener(PlayerDeathEvent::class.java) { event ->
                     val team = parent.getModule<TeamModule>().getTeam(event.player)
                     if (!bedWarsTeamInfo[team]!!.bedIntact && !parent.getModule<SpectatorModule>()
@@ -253,6 +262,10 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
                         })
                 }
 
+                eventNode.addListener(WorldPermissionsModule.PreventPlayerBreakMapEvent::class.java) { event ->
+                    event.isCancelled = bedBlockToTeam.containsKey(event.block.registry().material())
+                }
+
                 DatabaseModule.IO.launch {
                     mapData = getModule<DatabaseModule>().getMap(mapName)
                 }
@@ -289,19 +302,34 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
         }
     }
 
+    private val teamToWoolBlock = mapOf(
+        NamedTextColor.RED to Block.RED_WOOL,
+        NamedTextColor.BLUE to Block.BLUE_WOOL,
+        NamedTextColor.GREEN to Block.GREEN_WOOL,
+        NamedTextColor.AQUA to Block.CYAN_WOOL,
+        NamedTextColor.LIGHT_PURPLE to Block.PINK_WOOL,
+        NamedTextColor.WHITE to Block.WHITE_WOOL,
+        NamedTextColor.GRAY to Block.GRAY_WOOL,
+        NamedTextColor.YELLOW to Block.YELLOW_WOOL,
+        NamedTextColor.GOLD to Block.ORANGE_WOOL,
+        NamedTextColor.DARK_PURPLE to Block.PURPLE_WOOL
+    )
+
     // There's no way we're keeping these names
+    // Some team upgrades need to be registered so they reapply when you respawn (look in the TimedRespawnEvent handler above)
     private val fastFeet = ShopModule.TeamUpgrade(
         "Fast Feet", "Gives Speed I to all members on your team.", Material.IRON_BOOTS
-    ) { player, _ -> player.addEffect(Potion(PotionEffect.SPEED, 1, Integer.MAX_VALUE, Potion.ICON_FLAG)) }
+    ) { player, _ ->
+        player.getAttribute(Attribute.MOVEMENT_SPEED).addModifier(AttributeModifier("bluedragon:fastfeet", 1.3f, AttributeOperation.MULTIPLY_BASE)) }
 
-    private val miningMalarky = ShopModule.TeamUpgrade(
+    private val miningMalarkey = ShopModule.TeamUpgrade(
         "Mining Malarkey", "Gives Haste I to all members on your team.", Material.IRON_PICKAXE
     ) { player, _ -> player.addEffect(Potion(PotionEffect.HASTE, 1, Integer.MAX_VALUE, Potion.ICON_FLAG)) }
 
     private val upgrades by lazy {
         getModule<ShopModule>().createShop("Team Upgrades") {
             teamUpgrade(1, 1, 3, Material.DIAMOND, fastFeet)
-            teamUpgrade(1, 2, 5, Material.DIAMOND, miningMalarky)
+            teamUpgrade(1, 2, 5, Material.DIAMOND, miningMalarkey)
         }
     }
 
