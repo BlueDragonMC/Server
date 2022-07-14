@@ -1,5 +1,6 @@
 package com.bluedragonmc.server.module.minigame
 
+import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.GameEvent
 import com.bluedragonmc.server.module.GameModule
@@ -63,7 +64,7 @@ class WinModule(
      */
     fun declareWinner(team: TeamModule.Team) {
         MinecraftServer.getGlobalEventHandler().callCancellable(WinnerDeclaredEvent(parent, team)) {
-            parent.sendMessage(team.name.append(Component.text(" won the game!", NamedTextColor.DARK_AQUA))
+            parent.sendMessage(team.name.append(Component.text(" won the game!", BRAND_COLOR_PRIMARY_2))
                 .surroundWithSeparators())
             for (p in parent.players) {
                 if (team.players.contains(p)) p.showTitle(Title.title(Component.text("VICTORY!",

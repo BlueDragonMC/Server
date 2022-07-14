@@ -1,9 +1,12 @@
 package com.bluedragonmc.server.module.gameplay
 
+import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.GameEvent
+import com.bluedragonmc.server.event.PlayerLeaveGameEvent
 import com.bluedragonmc.server.module.GameModule
+import net.kyori.adventure.text.Component
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
@@ -14,7 +17,7 @@ import net.minestom.server.event.player.PlayerDeathEvent
 /**
  * A simple module to manage spectators in a game.
  */
-class SpectatorModule(var spectateOnDeath: Boolean) : GameModule() {
+class SpectatorModule(var spectateOnDeath: Boolean, var spectateOnLeave: Boolean = true) : GameModule() {
     private val spectators = mutableListOf<Player>()
     private lateinit var parent: Game
 
@@ -29,6 +32,13 @@ class SpectatorModule(var spectateOnDeath: Boolean) : GameModule() {
                 if (player.gameMode == GameMode.SPECTATOR) {
                     player.spectate(event.target)
                 }
+            }
+        }
+
+        eventNode.addListener(PlayerLeaveGameEvent::class.java) { event ->
+            if (spectateOnLeave) {
+                parent.sendMessage(event.player.name.append(Component.text(" disconnected and was removed from the game.", BRAND_COLOR_PRIMARY_2)))
+                addSpectator(event.player)
             }
         }
     }

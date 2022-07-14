@@ -1,5 +1,6 @@
 package com.bluedragonmc.server.module.minigame
 
+import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.GameState
 import com.bluedragonmc.server.event.GameStartEvent
@@ -90,7 +91,7 @@ class CountdownModule(
             if (seconds > 0) {
                 parent.showTitle(
                     Title.title(
-                        Component.text(seconds, NamedTextColor.DARK_AQUA),
+                        Component.text(seconds, BRAND_COLOR_PRIMARY_2),
                         Component.empty(),
                         Title.Times.times(Duration.ZERO, Duration.ofSeconds(2), Duration.ZERO)
                     )

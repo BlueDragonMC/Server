@@ -3,6 +3,7 @@ package com.bluedragonmc.server
 import com.bluedragonmc.messages.GameStateUpdateMessage
 import com.bluedragonmc.messages.GameType
 import com.bluedragonmc.server.event.GameEvent
+import com.bluedragonmc.server.event.PlayerLeaveGameEvent
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.database.DatabaseModule
 import com.bluedragonmc.server.module.instance.InstanceModule
@@ -15,6 +16,7 @@ import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventFilter
 import net.minestom.server.event.EventNode
+import net.minestom.server.event.instance.RemoveEntityFromInstanceEvent
 import net.minestom.server.event.player.PlayerDisconnectEvent
 import net.minestom.server.event.player.PlayerPacketOutEvent
 import net.minestom.server.event.player.PlayerSpawnEvent
@@ -42,6 +44,17 @@ open class Game(val name: String, val mapName: String) : PacketGroupingAudience 
                 logger.warn("Game was not registered after 5 seconds! Games MUST call the ready() method after they are constructed or they will not be joinable.")
             }
         }.delay(Duration.ofSeconds(5)).schedule()
+
+        use(object : GameModule() {
+            override fun initialize(parent: Game, eventNode: EventNode<Event>) {
+                eventNode.addListener(RemoveEntityFromInstanceEvent::class.java) { event ->
+                    if (event.entity is Player) {
+                        callEvent(PlayerLeaveGameEvent(parent, event.entity as Player))
+                        players.remove(event.entity)
+                    }
+                }
+            }
+        })
     }
 
     fun use(module: GameModule) {
