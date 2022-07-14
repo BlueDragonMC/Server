@@ -1,6 +1,7 @@
 package com.bluedragonmc.server.game
 
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
+import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.module.GameModule
@@ -80,7 +81,11 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
         use(ItemPickupModule())
         use(ChestModule())
         use(NaturalRegenerationModule())
-        use(WorldPermissionsModule(allowBlockBreak = true, allowBlockPlace = true, allowBlockInteract = true, allowBreakMap = false))
+        use(
+            WorldPermissionsModule(
+                allowBlockBreak = true, allowBlockPlace = true, allowBlockInteract = true, allowBreakMap = false
+            )
+        )
         use(ItemDropModule(dropAllOnDeath = true))
         use(
             KitsModule(
@@ -145,8 +150,7 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
                     sidebarTeamsSection = sidebar.bind {
                         teamModule.teams.map { t ->
                             "team-status-${t.name.toPlainText()}" to (t.name + Component.text(
-                                ": ",
-                                NamedTextColor.GRAY
+                                ": ", NamedTextColor.GRAY
                             ) + (if (bedWarsTeamInfo[t]?.bedIntact != false) Component.text(
                                 "✔", NamedTextColor.GREEN
                             )
@@ -175,8 +179,9 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
                         else bedWarsTeamInfo[team]!!.bedIntact = false
                         sidebarTeamsSection.update()
                         sendMessage(
-                            team.name + Component.text(" bed was broken by ", BRAND_COLOR_PRIMARY_2)
-                                + event.player.name.surroundWithSeparators()
+                            team.name + Component.text(
+                                " bed was broken by ", BRAND_COLOR_PRIMARY_2
+                            ) + event.player.name.surroundWithSeparators()
                         )
                         for (player in parent.players) {
                             if (!team.players.contains(player)) {
@@ -203,8 +208,8 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
 
                 eventNode.addListener(PlayerBlockPlaceEvent::class.java) { event ->
                     val team = parent.getModule<TeamModule>().getTeam(event.player) ?: return@addListener
-                    if (event.block.registry().material() == Material.WHITE_WOOL)
-                        event.block = teamToWoolBlock[team.name.color()] ?: Block.WHITE_WOOL
+                    if (event.block.registry().material() == Material.WHITE_WOOL) event.block =
+                        teamToWoolBlock[team.name.color()] ?: Block.WHITE_WOOL
                 }
 
                 eventNode.addListener(PlayerDeathEvent::class.java) { event ->
@@ -222,6 +227,13 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
                     event.player.inventory.chestplate = ItemStack.of(Material.LEATHER_CHESTPLATE)
                     event.player.inventory.leggings = ItemStack.of(Material.LEATHER_LEGGINGS)
                     event.player.inventory.setItemStack(0, ItemStack.of(Material.WOODEN_SWORD))
+
+                    // Re-add team upgrades every time the player respawns
+                    // because status effects and other modifications are cleared on death
+                    (event.player as CustomPlayer).virtualItems.filterIsInstance<ShopModule.TeamUpgrade>()
+                        .forEach { upgrade ->
+                            upgrade.baseObtainedCallback(event.player, upgrade)
+                        }
                 }
 
                 eventNode.addListener(GameStartEvent::class.java) {
@@ -317,11 +329,13 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
     )
 
     // There's no way we're keeping these names
-    // Some team upgrades need to be registered so they reapply when you respawn (look in the TimedRespawnEvent handler above)
+    // Some team upgrades need to be registered, so they reapply when you respawn (look in the TimedRespawnEvent handler above)
     private val fastFeet = ShopModule.TeamUpgrade(
         "Fast Feet", "Gives Speed I to all members on your team.", Material.IRON_BOOTS
     ) { player, _ ->
-        player.getAttribute(Attribute.MOVEMENT_SPEED).addModifier(AttributeModifier("bluedragon:fastfeet", 1.1f, AttributeOperation.MULTIPLY_BASE)) }
+        player.getAttribute(Attribute.MOVEMENT_SPEED)
+            .addModifier(AttributeModifier("bluedragon:fastfeet", 1.1f, AttributeOperation.MULTIPLY_BASE))
+    }
 
     private val miningMalarkey = ShopModule.TeamUpgrade(
         "Mining Malarkey", "Gives Haste I to all members on your team.", Material.IRON_PICKAXE

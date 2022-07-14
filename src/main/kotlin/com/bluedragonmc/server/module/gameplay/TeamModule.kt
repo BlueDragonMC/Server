@@ -2,6 +2,7 @@ package com.bluedragonmc.server.module.gameplay
 
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.GameStartEvent
+import com.bluedragonmc.server.event.PlayerLeaveGameEvent
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.combat.OldCombatModule
 import com.bluedragonmc.server.utils.toPlainText
@@ -15,6 +16,7 @@ import net.minestom.server.adventure.audience.PacketGroupingAudience
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
+import net.minestom.server.scoreboard.Team
 
 /**
  * A module that provides team support.
@@ -76,6 +78,7 @@ class TeamModule(
                 team.players.forEach { player ->
                     scoreboardTeam.addMember(player.username)
                 }
+                team.scoreboardTeam = scoreboardTeam
             }
         }
         eventNode.addListener(OldCombatModule.PlayerAttackEvent::class.java) { event ->
@@ -86,6 +89,19 @@ class TeamModule(
                 if (attackerTeam.allowFriendlyFire) return@addListener
                 val targetTeam = teams.find { it.players.contains(event.target) } ?: return@addListener
                 if (attackerTeam == targetTeam) event.isCancelled = true
+            }
+        }
+        eventNode.addListener(PlayerLeaveGameEvent::class.java) { event ->
+            // Remove the player from their scoreboard team when they leave
+            event.player.team.removeMember(event.player.username)
+        }
+    }
+
+    override fun deinitialize() {
+        // Remove all scoreboard teams when the game ends
+        teams.forEach { team ->
+            if (team.hasScoreboardTeam()) {
+                MinecraftServer.getTeamManager().deleteTeam(team.scoreboardTeam)
             }
         }
     }
@@ -188,6 +204,10 @@ class TeamModule(
         val players: MutableList<Player> = mutableListOf(),
         val allowFriendlyFire: Boolean = false
     ) : PacketGroupingAudience {
+        lateinit var scoreboardTeam: net.minestom.server.scoreboard.Team
+
+        fun hasScoreboardTeam() = ::scoreboardTeam.isInitialized
+
         override fun getPlayers(): MutableCollection<Player> = players
 
         override fun toString(): String =

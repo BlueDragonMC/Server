@@ -147,11 +147,11 @@ class ShopModule : GuiModule() {
         name: String,
         val description: String,
         val displayItem: Material,
-        obtainedCallback: (Player, VirtualItem) -> Unit
+        val baseObtainedCallback: (Player, VirtualItem) -> Unit
     ) : VirtualItem(name, { player, item ->
         val team = Game.findGame(player)?.getModule<TeamModule>()?.getTeam(player)
         team?.players?.forEach {
-            obtainedCallback(it, item)
+            baseObtainedCallback(it, item)
             (it as CustomPlayer).virtualItems.add(item)
         }
         team?.sendMessage(

@@ -33,10 +33,7 @@ open class GuiModule : GameModule() {
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {}
 
     fun createMenu(
-        title: Component,
-        inventoryType: InventoryType,
-        isPerPlayer: Boolean = true,
-        items: ItemsBuilder.() -> Unit = {}
+        title: Component, inventoryType: InventoryType, isPerPlayer: Boolean = true, items: ItemsBuilder.() -> Unit = {}
     ): Menu {
         val builder = ItemsBuilder(inventoryType)
         items(builder)
@@ -62,6 +59,11 @@ open class GuiModule : GameModule() {
                             if (slot == item.index) {
                                 item.action.invoke(SlotClickEvent(player, this@Menu, item, clickType))
                                 inventoryConditionResult.isCancel = item.cancelClicks
+
+                                // If the click was cancelled, re-render the slot
+                                if (item.cancelClicks) setItemStack(
+                                    item.index, item.itemStackBuilder(ItemStack.builder(item.material), player).build()
+                                )
                             }
                         })
                     }
