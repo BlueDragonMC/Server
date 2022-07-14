@@ -203,7 +203,7 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
                 eventNode.addListener(PlayerBlockPlaceEvent::class.java) { event ->
                     val team = parent.getModule<TeamModule>().getTeam(event.player) ?: return@addListener
                     if (event.block.registry().material() == Material.WHITE_WOOL)
-                        event.instance.setBlock(event.blockPosition, teamToWoolBlock.getOrDefault(team.name.color(), Block.WHITE_WOOL))
+                        event.block = teamToWoolBlock[team.name.color()] ?: Block.WHITE_WOOL
                 }
 
                 eventNode.addListener(PlayerDeathEvent::class.java) { event ->
