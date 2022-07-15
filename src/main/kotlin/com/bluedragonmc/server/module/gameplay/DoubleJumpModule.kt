@@ -14,6 +14,10 @@ import kotlin.math.sin
 
 object DoubleJumpModule : GameModule() {
 
+    private const val strength = 25.0
+    private const val pitchInfluence = 0.08
+    private const val verticalStrength = 10.0
+
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         eventNode.addListener(PlayerPacketOutEvent::class.java) { event ->
             if (event.packet is ChangeGameStatePacket) {
@@ -29,12 +33,11 @@ object DoubleJumpModule : GameModule() {
             if (event.player.gameMode == GameMode.CREATIVE || event.player.gameMode == GameMode.SPECTATOR) return@addListener
             event.player.isFlying = false
             event.player.isAllowFlying = false
-            val strength = 25.0
             val x = -sin(Math.toRadians(event.player.position.yaw.toDouble())) * strength
             val z = cos(Math.toRadians(event.player.position.yaw.toDouble())) * strength
             event.player.velocity = event.player.velocity.add(
-                x, 15.0, z
-            )
+                x, 0.0, z
+            ).withY(verticalStrength + pitchInfluence * (-event.player.position.pitch.toDouble()).coerceAtLeast(0.0))
         }
     }
 }
