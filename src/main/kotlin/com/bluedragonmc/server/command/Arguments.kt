@@ -3,6 +3,7 @@ package com.bluedragonmc.server.command
 import net.kyori.adventure.text.Component
 import net.minestom.server.MinecraftServer
 import net.minestom.server.command.builder.arguments.*
+import net.minestom.server.command.builder.arguments.minecraft.ArgumentBlockState
 import net.minestom.server.command.builder.arguments.minecraft.ArgumentEntity
 import net.minestom.server.command.builder.arguments.minecraft.ArgumentUUID
 import net.minestom.server.command.builder.arguments.minecraft.registry.ArgumentEntityType
@@ -12,6 +13,7 @@ import net.minestom.server.command.builder.exception.ArgumentSyntaxException
 import net.minestom.server.command.builder.suggestion.SuggestionEntry
 import net.minestom.server.entity.EntityType
 import net.minestom.server.instance.Instance
+import net.minestom.server.instance.block.Block
 import net.minestom.server.utils.entity.EntityFinder
 import net.minestom.server.utils.location.RelativeVec
 import kotlin.reflect.KFunction
@@ -66,6 +68,7 @@ object IntArgument : ArgumentTypeDelegation<Int>(::ArgumentInteger)
 object StringArgument : ArgumentTypeDelegation<String>(::ArgumentString)
 object StringArrayArgument : ArgumentTypeDelegation<Array<String>>(::ArgumentStringArray)
 object BlockPosArgument : ArgumentTypeDelegation<RelativeVec>(::ArgumentRelativeBlockPosition)
+object BlockStateArgument : ArgumentTypeDelegation<Block>(::ArgumentBlockState)
 object EntityTypeArgument : ArgumentTypeDelegation<EntityType>(::ArgumentEntityType)
 object EntitySelectorArgument : ArgumentTypeDelegation<EntityFinder>(::ArgumentEntity)
 object WordArgument : ArgumentTypeDelegation<String>(::ArgumentWord)

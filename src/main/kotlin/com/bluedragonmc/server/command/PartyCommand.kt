@@ -4,7 +4,6 @@ import com.bluedragonmc.messages.*
 import com.bluedragonmc.server.module.messaging.MessagingModule
 import net.kyori.adventure.text.minimessage.MiniMessage
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder
-import net.minestom.server.command.builder.arguments.ArgumentStringArray
 
 class PartyCommand(name: String, usage: String, vararg aliases: String) : BlueDragonCommand(name, aliases, {
     requirePlayers()
@@ -34,6 +33,7 @@ class PartyCommand(name: String, usage: String, vararg aliases: String) : BlueDr
     subcommand("chat") {
         val chatArgument by StringArrayArgument
         syntax(chatArgument) {
+            // Escape the chat message to prevent players using MiniMessage tags in party chat messages
             val component = MiniMessage.miniMessage().deserialize("<msg>", Placeholder.unparsed("msg", get(chatArgument).joinToString(separator = " ")))
             MessagingModule.publish(PartyChatMessage(player.uuid, MiniMessage.miniMessage().serialize(component)))
         }

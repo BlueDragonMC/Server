@@ -50,6 +50,10 @@ class ComponentBuilder {
         list.add(this)
     }
 
+    operator fun Pair<String, TextColor>.unaryPlus() {
+        list.add(Component.text(first, second))
+    }
+
     fun build() = Component.join(JoinConfiguration.noSeparators(), list)
 }
 

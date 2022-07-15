@@ -12,7 +12,6 @@ import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.MinecraftServer
 import net.minestom.server.event.player.PlayerChatEvent
 import net.minestom.server.event.player.PlayerLoginEvent
-import net.minestom.server.extras.MojangAuth
 import net.minestom.server.extras.lan.OpenToLAN
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -63,7 +62,7 @@ fun main() {
         FlyCommand("fly"),
         GameModeCommand("gamemode", "/gamemode <survival|creative|adventure|spectator> [player]", "gm"),
         KillCommand("kill", "/kill [player]"),
-
+        SetBlockCommand("setblock", "/setblock <x> <y> <z> <block>"),
         PartyCommand("party", "/party <invite|kick|promote|warp|chat|list> ...", "p")
     ).forEach(MinecraftServer.getCommandManager()::register)
 
