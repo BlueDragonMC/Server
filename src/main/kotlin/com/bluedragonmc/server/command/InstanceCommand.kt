@@ -53,21 +53,17 @@ class InstanceCommand(name: String, usageString: String, vararg aliases: String?
     subcommand("join") {
         syntax(instanceArgument) {
             val instance = get(instanceArgument)
-            player.sendMessage(Component.text("Sending you to ${instance.uniqueId}...", NamedTextColor.YELLOW))
+            player.sendMessage(formatMessage("Sending you to {}...", instance.uniqueId))
             try {
                 player.setInstance(instance).whenCompleteAsync { _, throwable ->
                     // Send a generic error message
                     throwable?.let {
-                        player.sendMessage(
-                            Component.text(
-                                "There was an error sending you to ${instance.uniqueId}!", NamedTextColor.RED
-                            )
-                        )
+                        player.sendMessage(formatErrorMessage("There was an error sending you to {}!", instance.uniqueId))
                     }
                 }
             } catch (exception: IllegalArgumentException) {
                 // The player can not re-join its current instance.
-                player.sendMessage(Component.text("You are already in this instance!", NamedTextColor.RED))
+                player.sendMessage(formatErrorMessage("You are already in this instance!"))
             }
         }.requirePlayers()
     }
@@ -76,11 +72,11 @@ class InstanceCommand(name: String, usageString: String, vararg aliases: String?
         syntax(instanceArgument) {
             val instance = get(instanceArgument)
             if (instance.players.isNotEmpty()) {
-                player.sendMessage(Component.text("Instances with players cannot be removed.", NamedTextColor.RED))
+                player.sendMessage(formatErrorMessage("Instances with players cannot be removed."))
                 return@syntax
             }
             MinecraftServer.getInstanceManager().unregisterInstance(instance)
-            player.sendMessage(Component.text("Removed instance ${instance.uniqueId}.", NamedTextColor.GREEN))
+            player.sendMessage(formatMessage("Removed instance {}.", instance.uniqueId))
         }
     }
 })

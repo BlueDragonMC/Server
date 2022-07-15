@@ -63,7 +63,8 @@ fun main() {
         GameModeCommand("gamemode", "/gamemode <survival|creative|adventure|spectator> [player]", "gm"),
         KillCommand("kill", "/kill [player]"),
         SetBlockCommand("setblock", "/setblock <x> <y> <z> <block>"),
-        PartyCommand("party", "/party <invite|kick|promote|warp|chat|list> ...", "p")
+        PartyCommand("party", "/party <invite|kick|promote|warp|chat|list> ...", "p"),
+        GiveCommand("give", "/give [player] <item>")
     ).forEach(MinecraftServer.getCommandManager()::register)
 
     // Set a custom player provider, so we can easily add fields to the Player class
