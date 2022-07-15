@@ -17,9 +17,17 @@ import net.minestom.server.instance.Instance
 import net.minestom.server.item.Enchantment
 import net.minestom.server.network.packet.server.play.EntityAnimationPacket
 import net.minestom.server.network.packet.server.play.EntityAnimationPacket.Animation
+import net.minestom.server.tag.Tag
 import kotlin.math.hypot
 
 class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boolean = true) : GameModule() {
+
+    companion object {
+        val HURT_RESISTANT_TIME = Tag.Integer("hurt_resistant_time").defaultValue(0)
+        val MAX_HURT_RESISTANT_TIME = Tag.Integer("max_hurt_resistant_time").defaultValue(20)
+        val LAST_DAMAGE = Tag.Float("last_damage").defaultValue(0.0f)
+    }
+
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
 
         eventNode.addListener(EntityTickEvent::class.java) { event ->

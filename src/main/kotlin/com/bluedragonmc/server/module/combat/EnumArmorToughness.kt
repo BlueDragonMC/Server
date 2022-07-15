@@ -43,7 +43,7 @@ enum class EnumArmorToughness(val armorToughness: Int, val defensePoints: Int, v
             it.material to (it.armorToughness to it.defensePoints)
         }
 
-        private fun Player.getArmor() = listOf(helmet, chestplate, leggings, boots)
+        fun Player.getArmor() = listOf(helmet, chestplate, leggings, boots)
         private fun ItemStack.getArmorToughness() = armorDataMap[this.material()]?.first ?: 0
         private fun ItemStack.getDefensePoints() = armorDataMap[this.material()]?.second ?: 0
 
