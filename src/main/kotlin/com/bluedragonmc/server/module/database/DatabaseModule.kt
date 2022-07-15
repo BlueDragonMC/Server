@@ -76,9 +76,13 @@ class DatabaseModule : GameModule() {
         }
     }
 
+    private val cachedMapData = hashMapOf<String, MapData>()
     suspend fun getMap(mapName: String): MapData {
+        if (cachedMapData.containsKey(mapName)) return cachedMapData[mapName]!!
         val col = getMapsCollection()
-        return col.findOneById(mapName)!!
+        val mapData = col.findOneById(mapName)!!
+        cachedMapData[mapName] = mapData
+        return mapData
     }
 
     open class ToStringSerializer<T>(
