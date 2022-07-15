@@ -19,31 +19,38 @@ object FallDamageModule : GameModule() {
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         eventNode.addListener(PlayerMoveEvent::class.java) { event ->
-            val block = event.instance.getBlock(event.player.position)
+            val player = event.player
+            val block = event.instance.getBlock(player.position)
 
             if (block.compare(Block.WATER) || block.compare(Block.COBWEB)) {
                 // Water resets fall distance
-                event.player.removeTag(FALL_START_TAG)
-            } else if (block.compare(Block.LAVA) && event.player.hasTag(FALL_START_TAG)) {
+                player.removeTag(FALL_START_TAG)
+            } else if (block.compare(Block.LAVA) && player.hasTag(FALL_START_TAG)) {
                 // Lava decreases fall distance by half each tick
-                event.player.setTag(FALL_START_TAG, event.player.getTag(FALL_START_TAG) / 2.0)
+                player.setTag(FALL_START_TAG, player.getTag(FALL_START_TAG) / 2.0)
+            }
+
+            if (player.isFlyingWithElytra && player.velocity.y >= -0.5) {
+                // Fall distance is reset to 1 block when a player is flying level,
+                // upwards, or downwards at a rate <= 0.5 blocks per tick.
+                player.setTag(FALL_START_TAG, event.newPosition.y + 1.0)
             }
 
             if (!event.isOnGround) {
                 // If the player does not have the tag, and they are falling, add the fall start tag.
-                if (!event.player.hasTag(FALL_START_TAG) && event.player.velocity.y < 0.0) {
-                    event.player.setTag(FALL_START_TAG, event.newPosition.y)
+                if (!player.hasTag(FALL_START_TAG) && player.velocity.y < 0.0) {
+                    player.setTag(FALL_START_TAG, event.newPosition.y)
                 }
             } else {
                 // When the player touches the ground, compare their fall start to their current y-position.
-                if (event.player.hasTag(FALL_START_TAG)) {
-                    val fallStart = event.player.getTag(FALL_START_TAG)
-                    event.player.removeTag(FALL_START_TAG)
+                if (player.hasTag(FALL_START_TAG)) {
+                    val fallStart = player.getTag(FALL_START_TAG)
+                    player.removeTag(FALL_START_TAG)
                     val fallDamage = getReducedDamage(
-                        event.player, fallStart - event.newPosition.y - 3 - getJumpBoostLevel(event.player)
+                        player, fallStart - event.newPosition.y - 3 - getJumpBoostLevel(player)
                     )
                     if (fallDamage > 0.0) {
-                        event.player.damage(DamageType.GRAVITY, fallDamage.toFloat())
+                        player.damage(DamageType.GRAVITY, fallDamage.toFloat())
                     }
                 }
             }
