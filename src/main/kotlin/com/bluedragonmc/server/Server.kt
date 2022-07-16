@@ -1,5 +1,7 @@
 package com.bluedragonmc.server
 
+import com.bluedragonmc.server.Environment.messagingDisabled
+import com.bluedragonmc.server.Environment.queue
 import com.bluedragonmc.server.command.*
 import com.bluedragonmc.server.game.Lobby
 import com.bluedragonmc.server.module.gameplay.SpawnpointModule
@@ -24,15 +26,8 @@ import java.net.InetAddress
 import java.nio.charset.Charset
 import kotlin.reflect.jvm.internal.impl.descriptors.Named
 
-/**
- * If in a develoment environment, the test queue is used.
- * If inside a Docker container, the IPCQueue is used.
- */
-val queue: Queue = if (File("/server").exists()) IPCQueue else TestQueue()
-val messagingDisabled = queue is TestQueue
-val mongoHostname = if (messagingDisabled) "localhost" else "mongo"
 lateinit var lobby: Game
-
+val queue = Environment.queue
 private val logger = LoggerFactory.getLogger("ServerKt")
 
 fun main() {
@@ -103,6 +98,5 @@ fun main() {
     // Start the server & bind to port 25565
     minecraftServer.start("0.0.0.0", 25565)
 
-    OpenToLAN.open()
-
+    if(Environment.isDev()) OpenToLAN.open()
 }

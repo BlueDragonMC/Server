@@ -4,8 +4,8 @@ import com.bluedragonmc.messages.*
 import com.bluedragonmc.messagingsystem.AMQPClient
 import com.bluedragonmc.messagingsystem.message.Message
 import com.bluedragonmc.messagingsystem.message.RPCErrorMessage
+import com.bluedragonmc.server.Environment
 import com.bluedragonmc.server.Game
-import com.bluedragonmc.server.messagingDisabled
 import com.bluedragonmc.server.module.GameModule
 import net.kyori.adventure.key.Key
 import net.kyori.adventure.sound.Sound
@@ -30,19 +30,19 @@ class MessagingModule : GameModule() {
         fun UUID.asPlayer() = findPlayer(this)
 
         fun publish(message: Message) {
-            if(!messagingDisabled) client.publish(message)
+            if(!Environment.isDev()) client.publish(message)
         }
 
         suspend fun send(message: Message): Message {
-            return if(!messagingDisabled) client.publishAndReceive(message)
+            return if(!Environment.isDev()) client.publishAndReceive(message)
             else RPCErrorMessage("Messaging disabled")
         }
 
         fun <T : Message> subscribe(type: KClass<T>, listener: (T) -> Unit) {
-            if(!messagingDisabled) client.subscribe(type, listener)
+            if(!Environment.isDev()) client.subscribe(type, listener)
         }
         fun <T : Message> consume(type: KClass<T>, listener: (T) -> Message) {
-            if(!messagingDisabled) client.subscribeRPC(type, listener)
+            if(!Environment.isDev()) client.subscribeRPC(type, listener)
         }
 
         init {
@@ -53,7 +53,6 @@ class MessagingModule : GameModule() {
                     )
                 )
             )
-            println("Published startup ping")
             subscribe(SendChatMessage::class) { message ->
                 val player = message.targetPlayer.asPlayer() ?: return@subscribe
                 val msg = MiniMessage.miniMessage().deserialize(message.message)

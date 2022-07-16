@@ -3,13 +3,15 @@
 package com.bluedragonmc.server.module.database
 
 import com.bluedragonmc.server.CustomPlayer
+import com.bluedragonmc.server.Environment
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.GameModule
-import com.bluedragonmc.server.mongoHostname
 import com.github.jershell.kbson.FlexibleDecoder
 import com.mongodb.ConnectionString
 import kotlinx.coroutines.*
-import kotlinx.serialization.*
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
@@ -41,9 +43,9 @@ class DatabaseModule : GameModule() {
         }
 
         private val client: CoroutineClient by lazy {
-            KMongo.createClient(ConnectionString("mongodb://$mongoHostname")).coroutine
+            KMongo.createClient(ConnectionString("mongodb://${Environment.mongoHostname}")).coroutine
         }
-        val database: CoroutineDatabase by lazy {
+        private val database: CoroutineDatabase by lazy {
             client.getDatabase("bluedragon")
         }
 
@@ -63,7 +65,7 @@ class DatabaseModule : GameModule() {
         }
     }
 
-    suspend fun getPlayerDocument(player: Player): PlayerDocument {
+    private suspend fun getPlayerDocument(player: Player): PlayerDocument {
         val col = getPlayersCollection()
         val foundDocument = col.findOneById(player.uuid.toString())
         return if (foundDocument == null) {
