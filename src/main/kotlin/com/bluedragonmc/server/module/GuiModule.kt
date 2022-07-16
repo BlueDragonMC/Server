@@ -2,6 +2,7 @@ package com.bluedragonmc.server.module
 
 import com.bluedragonmc.server.Game
 import net.kyori.adventure.text.Component
+import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
@@ -45,18 +46,23 @@ open class GuiModule : GameModule() {
     }
 
     fun createMenu(
-        title: Component, inventoryType: InventoryType, isPerPlayer: Boolean = true, items: ItemsBuilder.() -> Unit = {}
+        title: Component,
+        inventoryType: InventoryType,
+        isPerPlayer: Boolean = true,
+        allowSpectatorClicks: Boolean = false,
+        items: ItemsBuilder.() -> Unit = {},
     ): Menu {
         val builder = ItemsBuilder(inventoryType)
         items(builder)
-        return Menu(title, inventoryType, builder.build(), isPerPlayer)
+        return Menu(title, inventoryType, builder.build(), isPerPlayer, allowSpectatorClicks)
     }
 
     data class Menu(
         val title: Component,
         val inventoryType: InventoryType,
         private val items: List<Slot>,
-        private val isPerPlayer: Boolean
+        private val isPerPlayer: Boolean,
+        private val allowSpectatorClicks: Boolean,
     ) {
 
         private lateinit var cachedInventory: Inventory
@@ -71,20 +77,18 @@ open class GuiModule : GameModule() {
                     setItemStack(item.index, item.itemStackBuilder(ItemStack.builder(item.material), player).build())
                     if (item.action != null) {
                         this.inventoryConditions.add(InventoryCondition { player, slot, clickType, inventoryConditionResult ->
-                            if (slot == item.index) {
+                            if (slot == item.index && (allowSpectatorClicks || player.gameMode != GameMode.SPECTATOR)) {
                                 item.action.invoke(SlotClickEvent(player, this@Menu, item, clickType))
                                 inventoryConditionResult.isCancel = item.cancelClicks
 
                                 // If the click was cancelled, re-render the slot
-                                if (item.cancelClicks) setItemStack(
-                                    item.index, item.itemStackBuilder(ItemStack.builder(item.material), player).build()
-                                )
+                                if (item.cancelClicks) setItemStack(item.index,
+                                    item.itemStackBuilder(ItemStack.builder(item.material), player).build())
                             }
                         })
                     }
                 }
                 inventories[windowId] = this@Menu
-                println("inventories[$windowId] = ${this@Menu}")
             }.also { inventory ->
                 if (!isPerPlayer) cachedInventory = inventory
             }
@@ -119,7 +123,7 @@ open class GuiModule : GameModule() {
                 require(!isPerPlayer) { "Per-player inventories are not supported" }
                 return if (::cachedInventory.isInitialized) {
                     cachedInventory.viewers
-                } else emptyList<Player>()
+                } else emptyList()
             }
     }
 
@@ -138,7 +142,7 @@ open class GuiModule : GameModule() {
         fun border(
             material: Material,
             itemStackBuilder: ItemStack.Builder.(player: Player) -> ItemStack.Builder,
-            action: (SlotClickEvent.() -> Unit)? = null
+            action: (SlotClickEvent.() -> Unit)? = null,
         ) {
             require(inventoryType.size % 9 == 0) { "InventoryType does not have a multiple of 9 slots." }
             require(inventoryType.size >= 9) { "InventoryType has less than 9 slots." }
@@ -156,7 +160,7 @@ open class GuiModule : GameModule() {
             slotNumber: Int,
             material: Material,
             itemStackBuilder: ItemStack.Builder.(player: Player) -> ItemStack.Builder,
-            action: (SlotClickEvent.() -> Unit)? = null
+            action: (SlotClickEvent.() -> Unit)? = null,
         ) {
             items.add(Slot(slotNumber, material, itemStackBuilder, true, action))
         }
@@ -169,7 +173,7 @@ open class GuiModule : GameModule() {
             slotNumber: Int,
             material: Material,
             itemStackBuilder: ItemStack.Builder.(player: Player) -> ItemStack.Builder,
-            action: (SlotClickEvent.() -> Unit)? = null
+            action: (SlotClickEvent.() -> Unit)? = null,
         ) {
             items.add(Slot(slotNumber, material, itemStackBuilder, false, action))
         }
@@ -185,7 +189,7 @@ open class GuiModule : GameModule() {
         val material: Material,
         val itemStackBuilder: ItemStack.Builder.(player: Player) -> ItemStack.Builder,
         val cancelClicks: Boolean = true,
-        val action: (SlotClickEvent.() -> Unit)?
+        val action: (SlotClickEvent.() -> Unit)?,
     )
 
 }
