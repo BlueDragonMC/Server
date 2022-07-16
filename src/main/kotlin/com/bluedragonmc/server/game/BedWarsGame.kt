@@ -13,9 +13,10 @@ import com.bluedragonmc.server.module.instance.InstanceContainerModule
 import com.bluedragonmc.server.module.map.AnvilFileMapProviderModule
 import com.bluedragonmc.server.module.minigame.CountdownModule
 import com.bluedragonmc.server.module.minigame.WinModule
-import com.bluedragonmc.server.utils.*
+import com.bluedragonmc.server.utils.plus
+import com.bluedragonmc.server.utils.surroundWithSeparators
+import com.bluedragonmc.server.utils.toPlainText
 import kotlinx.coroutines.launch
-import net.kyori.adventure.key.Key
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -34,9 +35,13 @@ import net.minestom.server.event.player.PlayerBlockPlaceEvent
 import net.minestom.server.event.player.PlayerDeathEvent
 import net.minestom.server.instance.block.Block
 import net.minestom.server.instance.block.BlockFace
-import net.minestom.server.item.*
+import net.minestom.server.item.Enchantment
+import net.minestom.server.item.ItemMeta
+import net.minestom.server.item.ItemStack
+import net.minestom.server.item.Material
 import net.minestom.server.potion.Potion
 import net.minestom.server.potion.PotionEffect
+import net.minestom.server.sound.SoundEvent
 import net.minestom.server.utils.inventory.PlayerInventoryUtils
 import java.nio.file.Paths
 import java.util.*
@@ -44,8 +49,8 @@ import java.util.*
 
 class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
 
-    val otherTeamBedDestroyedSound = Sound.sound(Key.key("entity.ender_dragon.growl"), Sound.Source.HOSTILE, 1.0f, 1.0f)
-    val bedDestroyedSound = Sound.sound(Key.key("entity.wither.death"), Sound.Source.HOSTILE, 1.0f, 1.0f)
+    val otherTeamBedDestroyedSound = Sound.sound(SoundEvent.ENTITY_ENDER_DRAGON_DEATH, Sound.Source.HOSTILE, 1.0f, 1.0f)
+    val bedDestroyedSound = Sound.sound(SoundEvent.ENTITY_WITHER_DEATH, Sound.Source.HOSTILE, 1.0f, 1.0f)
 
     init {
         use(AnvilFileMapProviderModule(Paths.get("worlds/$name/$mapName")))

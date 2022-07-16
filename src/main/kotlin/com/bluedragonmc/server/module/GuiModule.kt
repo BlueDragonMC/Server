@@ -5,6 +5,7 @@ import net.kyori.adventure.text.Component
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
+import net.minestom.server.event.inventory.InventoryCloseEvent
 import net.minestom.server.inventory.Inventory
 import net.minestom.server.inventory.InventoryType
 import net.minestom.server.inventory.click.ClickType
@@ -30,7 +31,18 @@ import net.minestom.server.item.Material
  * ```
  */
 open class GuiModule : GameModule() {
-    override fun initialize(parent: Game, eventNode: EventNode<Event>) {}
+
+    companion object {
+        internal val inventories = mutableMapOf<Byte, Menu>()
+    }
+
+    override fun initialize(parent: Game, eventNode: EventNode<Event>) {
+        eventNode.addListener(InventoryCloseEvent::class.java) { event ->
+            inventories[event.inventory?.windowId]?.let {
+                it.onClosedAction?.invoke(event.player)
+            }
+        }
+    }
 
     fun createMenu(
         title: Component, inventoryType: InventoryType, isPerPlayer: Boolean = true, items: ItemsBuilder.() -> Unit = {}
@@ -48,6 +60,9 @@ open class GuiModule : GameModule() {
     ) {
 
         private lateinit var cachedInventory: Inventory
+
+        internal var onClosedAction: ((Player) -> Unit)? = null
+        private var onOpenedAction: ((Player) -> Unit)? = null
 
         private fun getInventory(player: Player): Inventory {
             if (!isPerPlayer && this::cachedInventory.isInitialized) return cachedInventory
@@ -68,6 +83,8 @@ open class GuiModule : GameModule() {
                         })
                     }
                 }
+                inventories[windowId] = this@Menu
+                println("inventories[$windowId] = ${this@Menu}")
             }.also { inventory ->
                 if (!isPerPlayer) cachedInventory = inventory
             }
@@ -77,6 +94,7 @@ open class GuiModule : GameModule() {
             val inventory = getInventory(player)
             if (player.openInventory != inventory) {
                 player.openInventory(inventory)
+                onOpenedAction?.invoke(player)
             }
         }
 
@@ -87,6 +105,22 @@ open class GuiModule : GameModule() {
         fun setItemStack(player: Player, slot: Int, stack: ItemStack) {
             getInventory(player).setItemStack(slot, stack)
         }
+
+        fun onOpened(function: (Player) -> Unit) {
+            onOpenedAction = function
+        }
+
+        fun onClosed(function: (Player) -> Unit) {
+            onClosedAction = function
+        }
+
+        val viewers: Collection<Player>
+            get() {
+                require(!isPerPlayer) { "Per-player inventories are not supported" }
+                return if (::cachedInventory.isInitialized) {
+                    cachedInventory.viewers
+                } else emptyList<Player>()
+            }
     }
 
     class ItemsBuilder(private val inventoryType: InventoryType) {

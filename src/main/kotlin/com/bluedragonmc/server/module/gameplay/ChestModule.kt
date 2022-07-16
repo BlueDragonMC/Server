@@ -3,6 +3,8 @@ package com.bluedragonmc.server.module.gameplay
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.GuiModule
+import com.bluedragonmc.server.utils.SoundUtils
+import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
 import net.minestom.server.MinecraftServer
 import net.minestom.server.coordinate.Point
@@ -14,6 +16,7 @@ import net.minestom.server.event.trait.CancellableEvent
 import net.minestom.server.event.trait.PlayerInstanceEvent
 import net.minestom.server.inventory.InventoryType
 import net.minestom.server.item.Material
+import net.minestom.server.sound.SoundEvent
 
 /**
  * Assigns a [Menu] to every chest in the world and allows them to be accessed by interacting with the chest.
@@ -38,6 +41,17 @@ class ChestModule : GameModule() {
                             if (inventoryType == InventoryType.CHEST_6_ROW) "Large Chest" else "Chest"
                         ), inventoryType, isPerPlayer = false
                     )
+                    menu.onClosed {
+                        if (menu.viewers.size <= 1) {
+                            // Set the chest's viewers to 0 to display the chest as closed.
+                            event.instance.sendBlockAction(event.blockPosition, 0x1, 0x0)
+                            SoundUtils.playSoundInWorld(
+                                Sound.sound(
+                                    SoundEvent.BLOCK_CHEST_CLOSE, Sound.Source.BLOCK, 1f, 1f
+                                ), event.instance, event.blockPosition
+                            )
+                        }
+                    }
                     MinecraftServer.getGlobalEventHandler().call(
                         ChestPopulateEvent(
                             event.player, event.blockPosition, pos, inventoryType, menu
@@ -49,6 +63,14 @@ class ChestModule : GameModule() {
                     ChestOpenEvent(event.player, event.blockPosition, pos, inventoryType, menus[pos]!!)
                 ) {
                     menus[pos]!!.open(event.player)
+                    MinecraftServer.getSchedulerManager().scheduleNextTick {
+                        event.instance.sendBlockAction(event.blockPosition, 0x1, menus[pos]!!.viewers.size.toByte())
+                    }
+                    SoundUtils.playSoundInWorld(
+                        Sound.sound(SoundEvent.BLOCK_CHEST_OPEN, Sound.Source.BLOCK, 1f, 1f),
+                        event.instance,
+                        event.blockPosition
+                    )
                 }
                 event.isBlockingItemUse = true
             }
@@ -66,7 +88,8 @@ class ChestModule : GameModule() {
             instance.getBlock(adjacent).registry().material() == Material.CHEST
         }
         val inventoryType = if (nearbyChests.isNotEmpty()) InventoryType.CHEST_6_ROW else InventoryType.CHEST_3_ROW
-        val rootPosition = nearbyChests.filter { menus.containsKey(it) }.sortedBy { it.blockX() }.maxBy { it.blockZ() }
+        val rootPosition =
+            nearbyChests.filter { menus.containsKey(it) }.sortedBy { it.blockX() }.maxByOrNull { it.blockZ() } ?: pos
         return inventoryType to rootPosition
     }
 
