@@ -4,6 +4,9 @@ import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.command.BlueDragonCommand.Companion.errorColor
+import com.bluedragonmc.server.utils.component1
+import com.bluedragonmc.server.utils.component2
+import com.bluedragonmc.server.utils.component3
 import com.bluedragonmc.server.utils.withColor
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.JoinConfiguration
@@ -14,6 +17,7 @@ import net.minestom.server.command.ConsoleSender
 import net.minestom.server.command.builder.Command
 import net.minestom.server.command.builder.CommandContext
 import net.minestom.server.command.builder.arguments.Argument
+import net.minestom.server.coordinate.Point
 import net.minestom.server.entity.Player
 import net.minestom.server.utils.entity.EntityFinder
 
@@ -61,6 +65,10 @@ open class BlueDragonCommand(
 
     private fun buildMessage(block: MessageBuilder.() -> Unit) = MessageBuilder().apply(block).get()
 
+    fun formatPos(pos: Point): String {
+        val (x, y, z) = pos
+        return String.format("(%.1f, %.1f, %.1f)", x, y, z)
+    }
     fun formatMessage(string: String, vararg fields: Any): Component = formatMessage(string, messageColor, fieldColor, *fields)
     fun formatErrorMessage(string: String, vararg fields: Any): Component = formatMessage(string, errorColor, errorFieldColor, *fields)
 

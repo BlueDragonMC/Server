@@ -16,7 +16,7 @@ class TeleportCommand(name: String, usageString: String, vararg aliases: String?
     syntax(coordsArgument) {
         val pos = get(coordsArgument).fromSender(sender).asPosition()
         player.teleport(pos)
-        sender.sendMessage(formatMessage("{} were teleported to {}.", "You", "(${pos.x}, ${pos.y}, ${pos.z})"))
+        sender.sendMessage(formatMessage("{} were teleported to {}.", "You", formatPos(pos)))
     }.requirePlayers()
 
     syntax(playerArgument) {
@@ -29,7 +29,7 @@ class TeleportCommand(name: String, usageString: String, vararg aliases: String?
         val other = getFirstPlayer(playerArgument)
         val pos = get(coordsArgument).fromSender(sender).asPosition()
         other.teleport(pos)
-        sender.sendMessage(formatMessage("{} was teleported to {}.", other.name, "(${pos.x}, ${pos.y}, ${pos.z})"))
+        sender.sendMessage(formatMessage("{} was teleported to {}.", other.name, formatPos(pos)))
     }
 
     syntax(playerArgument, player2Argument) {
