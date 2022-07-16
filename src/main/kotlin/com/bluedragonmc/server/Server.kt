@@ -6,15 +6,23 @@ import com.bluedragonmc.server.module.gameplay.SpawnpointModule
 import com.bluedragonmc.server.queue.IPCQueue
 import com.bluedragonmc.server.queue.Queue
 import com.bluedragonmc.server.queue.TestQueue
+import com.bluedragonmc.server.utils.*
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.JoinConfiguration
 import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.TextDecoration
 import net.minestom.server.MinecraftServer
 import net.minestom.server.event.player.PlayerChatEvent
 import net.minestom.server.event.player.PlayerLoginEvent
+import net.minestom.server.event.server.ServerListPingEvent
+import net.minestom.server.extras.MojangAuth
 import net.minestom.server.extras.lan.OpenToLAN
+import org.apache.commons.net.util.Base64
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.net.InetAddress
+import java.nio.charset.Charset
+import kotlin.reflect.jvm.internal.impl.descriptors.Named
 
 /**
  * If in a develoment environment, the test queue is used.
@@ -52,6 +60,22 @@ fun main() {
         }
     }
 
+    MinecraftServer.getGlobalEventHandler().addListener(ServerListPingEvent::class.java) { event ->
+        event.responseData.description = buildComponent {
+            +("Blue" withColor BRAND_COLOR_PRIMARY_2 withDecoration TextDecoration.BOLD)
+            +("Dragon" withColor BRAND_COLOR_PRIMARY_1 withDecoration TextDecoration.BOLD)
+            +(" [" withColor NamedTextColor.DARK_GRAY)
+            if (messagingDisabled) {
+                +("Dev on ${InetAddress.getLocalHost().hostName}" withColor NamedTextColor.RED)
+            } else {
+                +(event.responseData.version withColor NamedTextColor.GREEN)
+            }
+            +("]\n" withColor NamedTextColor.DARK_GRAY)
+            +SERVER_NEWS
+        }
+        event.responseData.favicon = "data:image/png;base64," + String(Base64.encodeBase64(File("favicon_64.png").readBytes()), Charset.forName("UTF-8"))
+    }
+
     // Initialize commands
     listOf(
         JoinCommand("join", "/join <game>"),
@@ -74,7 +98,7 @@ fun main() {
     queue.start()
 
     // Enable Mojang authentication (if we add a proxy, disable this)
-    // MojangAuth.init()
+    MojangAuth.init()
 
     // Start the server & bind to port 25565
     minecraftServer.start("0.0.0.0", 25565)
