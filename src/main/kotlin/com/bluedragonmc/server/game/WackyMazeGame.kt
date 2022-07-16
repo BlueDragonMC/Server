@@ -34,7 +34,7 @@ class WackyMazeGame(mapName: String) : Game("WackyMaze", mapName) {
         use(InstantRespawnModule())
         use(WorldPermissionsModule(allowBlockBreak = false, allowBlockPlace = false, allowBlockInteract = false))
         use(PlayerResetModule(defaultGameMode = GameMode.ADVENTURE))
-        use(SpawnpointModule(SpawnpointModule.DatabaseSpawnpointProvider(/*Pos(-6.5, 64.0, 7.5), Pos(8.5, 64.0, -3.5)*/ callback = { ready() })))
+        use(SpawnpointModule(SpawnpointModule.DatabaseSpawnpointProvider(/*Pos(-6.5, 64.0, 7.5), Pos(8.5, 64.0, -3.5)*/ allowRandomOrder = true, callback = { ready() })))
         use(InventoryPermissionsModule(allowDropItem = false, allowMoveItem = false, forcedItemSlot = 0))
         use(TeamModule(true, TeamModule.AutoTeamMode.PLAYER_COUNT, 1))
         use(WackyMazeStickModule())

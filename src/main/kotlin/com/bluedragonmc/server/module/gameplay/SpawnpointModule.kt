@@ -17,7 +17,6 @@ import net.minestom.server.event.player.PlayerSpawnEvent
  * This module does not automatically teleport the player when they join the game. That is the queue's reponsibility.
  */
 class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule() {
-
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         logger.info("Initializing spawnpoint provider: ${spawnpointProvider::class.simpleName}")
         spawnpointProvider.initialize(parent)
@@ -63,21 +62,29 @@ class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule(
     /**
      * Gets spawnpoints from the database.
      */
-    class DatabaseSpawnpointProvider(private val callback: () -> Unit) : SpawnpointProvider {
+    class DatabaseSpawnpointProvider(private val allowRandomOrder: Boolean = true, private val callback: () -> Unit) : SpawnpointProvider {
         lateinit var mapData: MapData
         lateinit var iterator: Iterator<Pos>
         private val cachedSpawnpoints = hashMapOf<Player, Pos>()
         override fun initialize(game: Game) {
             DatabaseModule.IO.launch {
                 mapData = game.getModule<DatabaseModule>().getMap(game.mapName)
-                iterator = mapData.spawnpoints.iterator()
+                iterator = if (allowRandomOrder)
+                    mapData.spawnpoints.shuffled().iterator()
+                else
+                    mapData.spawnpoints.iterator()
                 callback()
             }
         }
 
         override fun getSpawnpoint(player: Player): Pos {
             if (cachedSpawnpoints.containsKey(player)) return cachedSpawnpoints[player]!!
-            if (!iterator.hasNext()) iterator = mapData.spawnpoints.iterator()
+
+            if (!iterator.hasNext()) iterator = if (allowRandomOrder)
+                mapData.spawnpoints.shuffled().iterator()
+            else
+                mapData.spawnpoints.iterator()
+
             cachedSpawnpoints[player] = iterator.next()
             return getSpawnpoint(player)
         }
@@ -91,7 +98,7 @@ class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule(
      * If they are on a team, they will be given their team's spawnpoint.
      * Requires the [TeamModule] to work properly.
      */
-    class TeamDatabaseSpawnpointProvider(private val callback: () -> Unit) : SpawnpointProvider {
+    class TeamDatabaseSpawnpointProvider(private val allowRandomOrder: Boolean = false, private val callback: () -> Unit) : SpawnpointProvider {
         private lateinit var game: Game
         lateinit var mapData: MapData
         lateinit var iterator: Iterator<Pos>
@@ -100,7 +107,10 @@ class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule(
             this.game = game
             DatabaseModule.IO.launch {
                 mapData = game.getModule<DatabaseModule>().getMap(game.mapName)
-                iterator = mapData.spawnpoints.iterator()
+                iterator = if (allowRandomOrder)
+                    mapData.spawnpoints.shuffled().iterator()
+                else
+                    mapData.spawnpoints.iterator()
                 callback()
             }
         }
@@ -109,7 +119,12 @@ class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule(
             val playerTeam = game.getModule<TeamModule>().getTeam(player)
             if (playerTeam != null) {
                 if (cachedSpawnpoints.containsKey(playerTeam)) return cachedSpawnpoints[playerTeam]!!
-                if (!iterator.hasNext()) iterator = mapData.spawnpoints.iterator()
+
+                if (!iterator.hasNext()) iterator = if (allowRandomOrder)
+                    mapData.spawnpoints.shuffled().iterator()
+                else
+                    mapData.spawnpoints.iterator()
+
                 cachedSpawnpoints[playerTeam] = iterator.next()
                 return getSpawnpoint(player)
             } else return mapData.spawnpoints[0]

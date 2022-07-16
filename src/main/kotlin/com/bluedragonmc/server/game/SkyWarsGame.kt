@@ -46,7 +46,7 @@ class SkyWarsGame(mapName: String) : Game("SkyWars", mapName) {
         use(ItemPickupModule())
         use(WorldPermissionsModule(allowBlockBreak = true, allowBlockPlace = true, allowBlockInteract = true))
         use(PlayerResetModule(defaultGameMode = GameMode.SURVIVAL))
-        use(SpawnpointModule(SpawnpointModule.TeamDatabaseSpawnpointProvider(callback = { ready() })))
+        use(SpawnpointModule(SpawnpointModule.TeamDatabaseSpawnpointProvider(allowRandomOrder = true, callback = { ready() })))
         use(FallDamageModule)
         use(NaturalRegenerationModule())
         use(InventoryPermissionsModule(allowDropItem = true, allowMoveItem = true, forcedItemSlot = null))
