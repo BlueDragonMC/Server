@@ -1,9 +1,7 @@
 package com.bluedragonmc.server.queue
 
 import com.bluedragonmc.messages.GameType
-import com.bluedragonmc.server.game.BedWarsGame
-import com.bluedragonmc.server.game.TeamDeathmatchGame
-import com.bluedragonmc.server.game.WackyMazeGame
+import com.bluedragonmc.server.game.*
 import net.minestom.server.entity.Player
 
 abstract class Queue {
@@ -12,6 +10,7 @@ abstract class Queue {
         "WackyMaze" to ::WackyMazeGame,
         "TeamDeathmatch" to ::TeamDeathmatchGame,
         "BedWars" to ::BedWarsGame,
+        "SkyWars" to ::SkyWarsGame,
     )
 
     abstract fun start()

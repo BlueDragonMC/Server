@@ -93,7 +93,7 @@ class TeamModule(
         }
         eventNode.addListener(PlayerLeaveGameEvent::class.java) { event ->
             // Remove the player from their scoreboard team when they leave
-            event.player.team.removeMember(event.player.username)
+            event.player.team?.removeMember(event.player.username)
         }
     }
 

@@ -51,10 +51,19 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
             addNPC(instance = this@Lobby.getInstance(),
                 position = Pos(-3.5, 62.5, -34.5, 0F, 0F),
                 customName = Component.text("BedWars", NamedTextColor.YELLOW, TextDecoration.BOLD),
-                skin = NPCModule.NPCSkins.SKY.skin,
+                skin = NPCModule.NPCSkins.BED_HEAD.skin,
                 interaction = {
                     queue.queue(it.player, GameType("BedWars", null, "Caves"))
                 })
+            // 4.5, 62.5, -34.5, 0.0, 0.0 RIGHT OF CENTER
+            addNPC(instance = this@Lobby.getInstance(),
+                position = Pos(4.5, 62.5, -34.5, 0F, 0F),
+                customName = Component.text("SkyWars", NamedTextColor.YELLOW, TextDecoration.BOLD),
+                skin = NPCModule.NPCSkins.SKY.skin,
+                interaction = {
+                    queue.queue(it.player, GameType("SkyWars", null, null))
+                })
+
         }
 
         use(object : GameModule() {
