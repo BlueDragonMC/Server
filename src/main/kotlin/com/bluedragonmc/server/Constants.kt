@@ -6,6 +6,9 @@ import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
+import org.apache.commons.net.util.Base64
+import java.io.File
+import java.nio.charset.Charset
 
 /**
  * Light color, often used for emphasis.
@@ -38,3 +41,8 @@ const val SERVER_IP = "bluedragonmc.com"
 val SERVER_NEWS = Component.text("              NEW GAME", NamedTextColor.GOLD, TextDecoration.BOLD) +
         Component.text(" - ", NamedTextColor.GRAY).noBold() +
         Component.text("SKYWARS", NamedTextColor.YELLOW, TextDecoration.BOLD)
+
+/**
+ * A base64-encoded PNG image of the server's favicon shown on clients' server lists.
+ */
+val FAVICON = "data:image/png;base64," + String(Base64.encodeBase64(File("favicon_64.png").readBytes()), Charset.forName("UTF-8"))

@@ -5,10 +5,9 @@ import com.bluedragonmc.server.Environment.queue
 import com.bluedragonmc.server.command.*
 import com.bluedragonmc.server.game.Lobby
 import com.bluedragonmc.server.module.gameplay.SpawnpointModule
-import com.bluedragonmc.server.queue.IPCQueue
-import com.bluedragonmc.server.queue.Queue
-import com.bluedragonmc.server.queue.TestQueue
-import com.bluedragonmc.server.utils.*
+import com.bluedragonmc.server.utils.buildComponent
+import com.bluedragonmc.server.utils.withColor
+import com.bluedragonmc.server.utils.withDecoration
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.JoinConfiguration
 import net.kyori.adventure.text.format.NamedTextColor
@@ -19,12 +18,9 @@ import net.minestom.server.event.player.PlayerLoginEvent
 import net.minestom.server.event.server.ServerListPingEvent
 import net.minestom.server.extras.MojangAuth
 import net.minestom.server.extras.lan.OpenToLAN
-import org.apache.commons.net.util.Base64
+import net.minestom.server.ping.ServerListPingType
 import org.slf4j.LoggerFactory
-import java.io.File
 import java.net.InetAddress
-import java.nio.charset.Charset
-import kotlin.reflect.jvm.internal.impl.descriptors.Named
 
 lateinit var lobby: Game
 val queue = Environment.queue
@@ -65,10 +61,13 @@ fun main() {
             } else {
                 +(event.responseData.version withColor NamedTextColor.GREEN)
             }
-            +("]\n" withColor NamedTextColor.DARK_GRAY)
-            +SERVER_NEWS
+            +("]" withColor NamedTextColor.DARK_GRAY)
+            if(event.pingType != ServerListPingType.OPEN_TO_LAN) { // Newlines are disallowed in Open To LAN pings
+                +Component.newline()
+                +SERVER_NEWS
+            }
         }
-        event.responseData.favicon = "data:image/png;base64," + String(Base64.encodeBase64(File("favicon_64.png").readBytes()), Charset.forName("UTF-8"))
+        event.responseData.favicon = FAVICON
     }
 
     // Initialize commands
