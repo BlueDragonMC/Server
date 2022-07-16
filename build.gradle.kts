@@ -19,7 +19,11 @@ dependencies {
     testImplementation(kotlin("test"))
 
     // Minestom
-    implementation("com.github.Minestom:Minestom:e713cf62a7") // Old commit: a04012d9bf
+
+    // Update history:
+    // Originally: a04012d9bf
+    // July 9th, 2022: e713cf62a7
+    implementation("com.github.Minestom:Minestom:e713cf62a7")
 
     // MiniMessage
     implementation("net.kyori:adventure-text-minimessage:4.11.0")

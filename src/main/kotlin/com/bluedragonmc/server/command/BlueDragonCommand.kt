@@ -4,6 +4,8 @@ import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.command.BlueDragonCommand.Companion.errorColor
+import com.bluedragonmc.server.module.database.DatabaseModule
+import com.bluedragonmc.server.module.database.PlayerDocument
 import com.bluedragonmc.server.utils.component1
 import com.bluedragonmc.server.utils.component2
 import com.bluedragonmc.server.utils.component3
@@ -12,6 +14,7 @@ import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.JoinConfiguration
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextColor
+import net.minestom.server.MinecraftServer
 import net.minestom.server.command.CommandSender
 import net.minestom.server.command.ConsoleSender
 import net.minestom.server.command.builder.Command
@@ -69,10 +72,19 @@ open class BlueDragonCommand(
         val (x, y, z) = pos
         return String.format("(%.1f, %.1f, %.1f)", x, y, z)
     }
-    fun formatMessage(string: String, vararg fields: Any): Component = formatMessage(string, messageColor, fieldColor, *fields)
-    fun formatErrorMessage(string: String, vararg fields: Any): Component = formatMessage(string, errorColor, errorFieldColor, *fields)
 
-    private fun formatMessage(string: String, messageColor: TextColor, fieldColor: TextColor, vararg fields: Any): Component {
+    fun formatMessage(string: String, vararg fields: Any): Component =
+        formatMessage(string, messageColor, fieldColor, *fields)
+
+    fun formatErrorMessage(string: String, vararg fields: Any): Component =
+        formatMessage(string, errorColor, errorFieldColor, *fields)
+
+    private fun formatMessage(
+        string: String,
+        messageColor: TextColor,
+        fieldColor: TextColor,
+        vararg fields: Any,
+    ): Component {
         val split = string.split("{}")
 
         if (split.size == 1) return string withColor messageColor
@@ -113,6 +125,9 @@ open class BlueDragonCommand(
         val game by lazy { Game.findGame(player)!! }
 
         fun <T> get(argument: Argument<T>): T = ctx.get(argument)
+        fun getPlayer(argument: Argument<PlayerDocument>): Player? =
+            MinecraftServer.getConnectionManager().getPlayer(get(argument).uuid)
+
         fun getFirstPlayer(argument: Argument<EntityFinder>): Player =
             ctx.get(argument).findFirstPlayer(sender) ?: run {
                 sender.sendMessage("That player was not found!" withColor errorColor)
@@ -169,9 +184,7 @@ interface ConditionHolder {
     fun requireInGame() {
         conditions.add {
             if (sender !is Player || Game.findGame(sender) == null) {
-                sender.sendMessage(
-                    "You are not in a game! Join a game in order to run this command." withColor errorColor
-                )
+                sender.sendMessage("You are not in a game! Join a game in order to run this command." withColor errorColor)
                 false
             } else true
         }

@@ -1,6 +1,7 @@
 package com.bluedragonmc.server
 
 import com.bluedragonmc.server.module.database.PlayerDocument
+import com.bluedragonmc.server.module.database.PunishmentType
 import com.bluedragonmc.server.module.gameplay.ShopModule
 import net.minestom.server.entity.Entity
 import net.minestom.server.entity.GameMode
@@ -23,6 +24,10 @@ class CustomPlayer(uuid: UUID, username: String, playerConnection: PlayerConnect
     internal lateinit var data: PlayerDocument
 
     fun isDataInitialized() = ::data.isInitialized
+
+    fun getFirstMute() = data.punishments.firstOrNull { it.type == PunishmentType.MUTE && it.isInEffect() }
+
+    fun getFirstBan() = data.punishments.firstOrNull { it.type == PunishmentType.BAN && it.isInEffect() }
 
     override fun spectate(entity: Entity) {
         super.spectate(entity)
