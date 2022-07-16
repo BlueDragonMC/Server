@@ -6,10 +6,12 @@ import com.bluedragonmc.server.command.*
 import com.bluedragonmc.server.game.Lobby
 import com.bluedragonmc.server.module.gameplay.SpawnpointModule
 import com.bluedragonmc.server.utils.buildComponent
+import com.bluedragonmc.server.utils.plus
 import com.bluedragonmc.server.utils.withColor
 import com.bluedragonmc.server.utils.withDecoration
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.JoinConfiguration
+import net.kyori.adventure.text.event.HoverEvent
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
 import net.minestom.server.MinecraftServer
@@ -41,9 +43,16 @@ fun main() {
 
     // Chat formatting
     MinecraftServer.getGlobalEventHandler().addListener(PlayerChatEvent::class.java) { event ->
+        val experience = (event.player as CustomPlayer).data.experience
+        val level = CustomPlayer.getXpLevel(experience)
+        val xpToNextLevel = CustomPlayer.getXpToNextLevel(level, experience).toInt()
         event.setChatFormat {
             Component.join(
                 JoinConfiguration.noSeparators(),
+                Component.text("[", NamedTextColor.DARK_GRAY),
+                Component.text(level.toInt(), BRAND_COLOR_PRIMARY_1).hoverEvent(
+                    HoverEvent.showText(event.player.name + Component.text(" has a total of $experience experience,\nand needs $xpToNextLevel XP to reach level ${level.toInt()+1}."))),
+                Component.text("] ", NamedTextColor.DARK_GRAY),
                 event.player.name,
                 Component.text(": ", NamedTextColor.DARK_GRAY),
                 Component.text(event.message, NamedTextColor.WHITE)

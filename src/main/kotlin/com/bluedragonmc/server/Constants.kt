@@ -31,6 +31,11 @@ val BRAND_COLOR_PRIMARY_3 = TextColor.color(0x3336f4) // Very dark
 val ALT_COLOR_1 = NamedTextColor.YELLOW
 
 /**
+ * A secondary alternate color that complements [ALT_COLOR_1].
+ */
+val ALT_COLOR_2 = NamedTextColor.GOLD
+
+/**
  * The hostname of the server, used in the scoreboard footer.
  */
 const val SERVER_IP = "bluedragonmc.com"

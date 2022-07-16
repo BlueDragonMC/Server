@@ -85,8 +85,9 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
             val player = player as CustomPlayer
             if (!player.isDataInitialized()) return@buildTask
             val playerXP = player.data.experience
-            player.exp = CustomPlayer.getXpPercent(playerXP)
-            player.level = CustomPlayer.getXpLevel(playerXP)
+            val level = CustomPlayer.getXpLevel(playerXP)
+            player.exp = CustomPlayer.getXpPercent(level)
+            player.level = level.toInt()
             loadXPTask.cancel()
         }.repeat(Duration.ofMillis(20)).schedule()
     }

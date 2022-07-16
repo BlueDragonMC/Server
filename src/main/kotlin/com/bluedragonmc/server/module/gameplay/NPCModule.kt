@@ -168,8 +168,8 @@ class NPCModule : GameModule() {
             MinecraftServer.getSchedulerManager().scheduleNextTick {
                 // Why is this necessary when the super function sends this packet? I have no idea.
                 player.sendPacket(passengersPacket)
+                if (customNameVisible) hologram.addViewer(player)
             }
-            if (customNameVisible) hologram.addViewer(player)
         }
 
         override fun updateOldViewer(player: Player) {
