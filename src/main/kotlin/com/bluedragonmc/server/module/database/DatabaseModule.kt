@@ -8,6 +8,7 @@ import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.GameModule
 import com.github.jershell.kbson.FlexibleDecoder
 import com.mongodb.ConnectionString
+import com.mongodb.client.model.Filters
 import kotlinx.coroutines.*
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -18,12 +19,16 @@ import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.MinecraftServer
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
+import net.minestom.server.event.player.PlayerPacketOutEvent
 import net.minestom.server.event.player.PlayerSpawnEvent
+import net.minestom.server.event.trait.CancellableEvent
 import net.minestom.server.event.trait.PlayerEvent
 import net.minestom.server.permission.Permission
 import org.bson.BsonType
@@ -32,6 +37,7 @@ import org.litote.kmongo.coroutine.CoroutineCollection
 import org.litote.kmongo.coroutine.CoroutineDatabase
 import org.litote.kmongo.coroutine.coroutine
 import org.litote.kmongo.eq
+import org.litote.kmongo.path
 import org.litote.kmongo.reactivestreams.KMongo
 import java.util.*
 import kotlin.coroutines.CoroutineContext
@@ -62,6 +68,13 @@ class DatabaseModule : GameModule() {
             }
             return getPlayersCollection().findOne(PlayerDocument::usernameLower eq username.lowercase())
         }
+
+        internal suspend fun getPlayerDocument(uuid: UUID): PlayerDocument? {
+            MinecraftServer.getConnectionManager().getPlayer(uuid)?.let {
+                return (it as CustomPlayer).data
+            }
+            return getPlayersCollection().findOne(Filters.eq(PlayerDocument::uuid.path(), uuid.toString()))
+        }
     }
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
@@ -69,19 +82,31 @@ class DatabaseModule : GameModule() {
             // Load players' data from the database when they spawn
             val player = event.player as CustomPlayer
             if (!player.isDataInitialized()) IO.launch {
-                player.data = getPlayerDocument(player)
+                try {
+                    player.data = getPlayerDocument(player)
+                } catch (e: Throwable) {
+                    MinecraftServer.getExceptionManager().handleException(e)
+                    player.kick(Component.text("Your player data was not loaded! Wait a moment and try to reconnect.",
+                        NamedTextColor.RED))
+                }
                 if (player.username != player.data.username || player.data.username.isBlank()) {
                     // Keep an up-to-date record of player usernames
                     player.data.update(PlayerDocument::username, player.username)
                     player.data.update(PlayerDocument::usernameLower, player.username.lowercase())
                     logger.info("Updated username for ${player.uuid}: ${player.data.username} -> ${player.username}")
                 }
-                if(player.data.usernameLower != player.username.lowercase()) {
+                if (player.data.usernameLower != player.username.lowercase()) {
                     player.data.update(PlayerDocument::usernameLower, player.username.lowercase())
                 }
                 MinecraftServer.getGlobalEventHandler().call(DataLoadedEvent(player))
                 logger.info("Loaded player data for ${player.username}")
             }
+        }
+
+        eventNode.addListener(PlayerEvent::class.java) { event ->
+            // Prevent player actions until data is loaded
+            if (event is CancellableEvent && event !is PlayerPacketOutEvent)
+                if (!(event.player as CustomPlayer).isDataInitialized()) event.isCancelled = true
         }
     }
 

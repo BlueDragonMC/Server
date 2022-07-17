@@ -3,11 +3,10 @@ package com.bluedragonmc.server
 import com.bluedragonmc.server.Environment.messagingDisabled
 import com.bluedragonmc.server.Environment.queue
 import com.bluedragonmc.server.command.*
-import com.bluedragonmc.server.command.punishment.PardonCommand
-import com.bluedragonmc.server.command.punishment.PunishCommand
-import com.bluedragonmc.server.command.punishment.ViewPunishmentsCommand
+import com.bluedragonmc.server.command.punishment.*
 import com.bluedragonmc.server.game.Lobby
 import com.bluedragonmc.server.module.database.DatabaseModule
+import com.bluedragonmc.server.module.database.Punishment
 import com.bluedragonmc.server.module.gameplay.SpawnpointModule
 import com.bluedragonmc.server.utils.*
 import net.kyori.adventure.text.Component
@@ -47,18 +46,7 @@ fun main() {
     eventNode.addListener(PlayerChatEvent::class.java) { event ->
         (event.player as CustomPlayer).getFirstMute()?.let { mute ->
             event.isCancelled = true
-            event.player.sendMessage(buildComponent {
-                +("You are currently muted!" withColor NamedTextColor.RED withDecoration TextDecoration.UNDERLINED)
-                +Component.newline()
-                +("Reason: " withColor NamedTextColor.RED)
-                +(mute.reason withColor NamedTextColor.WHITE)
-                +Component.newline()
-                +("Expires in " withColor NamedTextColor.RED)
-                +(mute.getTimeRemaining() withColor NamedTextColor.WHITE)
-                +Component.newline()
-                +("Punishment ID: " withColor NamedTextColor.RED)
-                +(mute.id.toString().substringBefore("-") withColor NamedTextColor.WHITE)
-            }.surroundWithSeparators())
+            event.player.sendMessage(getPunishmentMessage(mute, "currently muted").surroundWithSeparators())
             return@addListener
         }
         val experience = (event.player as CustomPlayer).data.experience
@@ -99,18 +87,7 @@ fun main() {
         val player = event.player as CustomPlayer
         val ban = player.getFirstBan()
         if (ban != null) {
-            player.kick(buildComponent {
-                +("You are banned from this server!" withColor NamedTextColor.RED withDecoration TextDecoration.UNDERLINED)
-                +Component.newline()
-                +("Reason: " withColor NamedTextColor.RED)
-                +(ban.reason withColor NamedTextColor.WHITE)
-                +Component.newline()
-                +("Expires in " withColor NamedTextColor.RED)
-                +(ban.getTimeRemaining() withColor NamedTextColor.WHITE)
-                +Component.newline()
-                +("Ban ID: " withColor NamedTextColor.RED)
-                +(ban.id.toString().substringBefore("-") withColor NamedTextColor.WHITE)
-            })
+            player.kick(getPunishmentMessage(ban, "currently banned from this server"))
         }
     }
 
@@ -119,7 +96,7 @@ fun main() {
         InstanceCommand("instance", "/instance <list|add|remove> ...", "in"),
         GameCommand("game", "/game <start|end>"),
         LobbyCommand("lobby", "/lobby", "l", "hub"),
-        TeleportCommand("tp", "/tp <player> | /tp <x> <y> <z>"),
+        TeleportCommand("tp", "/tp <player|<x> <y> <z>> [player|<x> <y> <z>]"),
         FlyCommand("fly"),
         GameModeCommand("gamemode", "/gamemode <survival|creative|adventure|spectator> [player]", "gm"),
         KillCommand("kill", "/kill [player]"),
@@ -127,8 +104,10 @@ fun main() {
         PartyCommand("party", "/party <invite|kick|promote|warp|chat|list> ...", "p"),
         GiveCommand("give", "/give [player] <item>"),
         PunishCommand("ban", "/<ban|mute> <player> <duration> <reason>", "mute"),
+        KickCommand("kick", "/kick <player> <reason>"),
         PardonCommand("pardon", "/pardon <player|ban ID>", "unban", "unmute"),
-        ViewPunishmentsCommand("punishments", "/punishments <player>", "vps"),
+        ViewPunishmentsCommand("punishments", "/punishments <player>", "vps", "history"),
+        ViewPunishmentCommand("punishment", "/punishment <id>", "vp"),
     ).forEach(MinecraftServer.getCommandManager()::register)
 
     // Set a custom player provider, so we can easily add fields to the Player class
@@ -144,4 +123,18 @@ fun main() {
     minecraftServer.start("0.0.0.0", 25565)
 
     if (Environment.isDev()) OpenToLAN.open()
+}
+
+fun getPunishmentMessage(punishment: Punishment, state: String) = buildComponent {
+    +("You are $state!" withColor NamedTextColor.RED withDecoration TextDecoration.UNDERLINED)
+    +Component.newline()
+    +Component.newline()
+    +("Reason: " withColor NamedTextColor.RED)
+    +(punishment.reason withColor NamedTextColor.WHITE)
+    +Component.newline()
+    +("Expires in " withColor NamedTextColor.RED)
+    +(punishment.getTimeRemaining() withColor NamedTextColor.WHITE)
+    +Component.newline()
+    +("Punishment ID: " withColor NamedTextColor.RED)
+    +(punishment.id.toString().substringBefore("-") withColor NamedTextColor.WHITE)
 }

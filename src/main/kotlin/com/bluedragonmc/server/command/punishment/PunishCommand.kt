@@ -4,6 +4,7 @@ import com.bluedragonmc.server.command.BlueDragonCommand
 import com.bluedragonmc.server.command.OfflinePlayerArgument
 import com.bluedragonmc.server.command.StringArrayArgument
 import com.bluedragonmc.server.command.WordArgument
+import com.bluedragonmc.server.getPunishmentMessage
 import com.bluedragonmc.server.module.database.DatabaseModule
 import com.bluedragonmc.server.module.database.PlayerDocument
 import com.bluedragonmc.server.module.database.Punishment
@@ -26,22 +27,27 @@ class PunishCommand(name: String, usageString: String, vararg aliases: String) :
         val duration = parseDuration(get(durationArgument))
         val reason = get(reasonArgument)
         val type = if (ctx.commandName.contains("ban")) PunishmentType.BAN else PunishmentType.MUTE
+        val punishment = Punishment(type,
+            UUID.randomUUID(),
+            Date(),
+            Date(System.currentTimeMillis() + duration),
+            player.uuid,
+            reason.joinToString(" "),
+            active = true)
 
         DatabaseModule.IO.launch {
             document.compute(PlayerDocument::punishments) { punishments ->
-                punishments.add(Punishment(type,
-                    UUID.randomUUID(),
-                    Date(),
-                    Date(System.currentTimeMillis() + duration),
-                    player.uuid,
-                    reason.joinToString(" "),
-                    active = true))
+                punishments.add(punishment)
                 punishments
             }
             val target = getPlayer(playerArgument)
             target?.let {
                 // If the player is on the server, call the DataLoadedEvent to send them the ban message
                 MinecraftServer.getGlobalEventHandler().call(DatabaseModule.DataLoadedEvent(target))
+                if(type == PunishmentType.MUTE) {
+                    // Send a chat message telling the player they were muted.
+                    it.sendMessage(getPunishmentMessage(punishment, "muted"))
+                }
             }
             player.sendMessage(formatMessage("{} was ${if (type == PunishmentType.BAN) "banned" else "muted"} for {} for '{}'.",
                 target?.name ?: document.username,
