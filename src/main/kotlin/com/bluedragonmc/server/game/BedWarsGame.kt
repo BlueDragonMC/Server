@@ -183,10 +183,10 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
                         if (!bedWarsTeamInfo.containsKey(team)) bedWarsTeamInfo[team] = BedWarsTeamInfo(false)
                         else bedWarsTeamInfo[team]!!.bedIntact = false
                         sidebarTeamsSection.update()
-                        sendMessage(
+                        sendMessage((
                             team.name + Component.text(
                                 " bed was broken by ", BRAND_COLOR_PRIMARY_2
-                            ) + event.player.name.surroundWithSeparators()
+                            ) + event.player.name).surroundWithSeparators()
                         )
                         for (player in parent.players) {
                             if (!team.players.contains(player)) {
