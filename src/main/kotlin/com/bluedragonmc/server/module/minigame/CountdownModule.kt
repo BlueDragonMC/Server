@@ -52,7 +52,6 @@ class CountdownModule(
 
         eventNode.addListener(RemoveEntityFromInstanceEvent::class.java) { event ->
             if (event.entity !is Player) return@addListener
-            parent.players.remove(event.entity) // todo this is temporary, this should really be in the Game class
             if (threshold > 0 && countdown != null && parent.players.size < threshold) {
                 // Stop the countdown
                 countdownRunning = false
@@ -106,6 +105,9 @@ class CountdownModule(
                 parent.callEvent(GameStartEvent(parent))
                 parent.state = GameState.INGAME
                 countdownEnded = true
+                parent.players.forEach { player ->
+                    player.askSynchronization()
+                }
             }
         }
     }
