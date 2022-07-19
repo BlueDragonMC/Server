@@ -21,6 +21,8 @@ import net.minestom.server.event.server.ServerListPingEvent
 import net.minestom.server.extras.MojangAuth
 import net.minestom.server.extras.lan.OpenToLAN
 import net.minestom.server.ping.ServerListPingType
+import net.minestom.server.utils.NamespaceID
+import net.minestom.server.world.DimensionType
 import org.slf4j.LoggerFactory
 import java.net.InetAddress
 
@@ -96,6 +98,9 @@ fun main() {
 
     // Set a custom player provider, so we can easily add fields to the Player class
     MinecraftServer.getConnectionManager().setPlayerProvider(::CustomPlayer)
+
+    // Register custom dimension types
+    MinecraftServer.getDimensionTypeManager().addDimension(DimensionType.builder(NamespaceID.from("bluedragon:fullbright_dimension")).ambientLight(1.0F).build())
 
     // Start the queue loop, which runs every 2 seconds and handles the players in queue
     queue.start()
