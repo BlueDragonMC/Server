@@ -7,12 +7,23 @@ services:
       - "0.0.0.0:25565:25565"
     volumes:
       - ./worlds:/server/worlds
+    networks:
+      - puffin_network
   mongo:
     image: mongo
     ports:
       - "27017:27017"
+    hostname: mongo
+    networks:
+      - puffin_network
   rabbitmq:
     image: rabbitmq
     ports:
       - "15692:15692" # monitoring interface
       - "5672:5672" # AQMP port
+    hostname: rabbitmq
+    networks:
+      - puffin_network
+networks:
+  puffin_network:
+    external: true

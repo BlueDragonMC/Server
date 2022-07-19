@@ -14,14 +14,22 @@ import net.kyori.adventure.title.TitlePart
 import net.minestom.server.MinecraftServer
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
+import org.slf4j.LoggerFactory
 import java.util.*
 import kotlin.reflect.KClass
 
 class MessagingModule : GameModule() {
 
     companion object {
-        // TODO for testing only, we are using a random UUID as the container's ID.
-        val containerId: UUID = UUID.randomUUID() //UUID.fromString(System.getenv("container_id"))
+
+        private val logger = LoggerFactory.getLogger(Companion::class.java)
+
+        val containerId: UUID = runCatching {
+            UUID.fromString(System.getenv("container_id"))
+        }.onFailure {
+            logger.error("No container ID found. If this instance is not in a development environment, this is a severe error.")
+        }.getOrElse { UUID.randomUUID() }
+
         private val client: AMQPClient by lazy {
             AMQPClient(polymorphicModuleBuilder = polymorphicModuleBuilder)
         }
@@ -48,11 +56,10 @@ class MessagingModule : GameModule() {
         init {
             publish(
                 PingMessage(
-                    containerId, mapOf(
-                        "initializedAt" to System.currentTimeMillis().toString()
-                    )
+                    containerId, System.getenv()
                 )
             )
+            logger.info("Published ping message.")
             subscribe(SendChatMessage::class) { message ->
                 val player = message.targetPlayer.asPlayer() ?: return@subscribe
                 val msg = MiniMessage.miniMessage().deserialize(message.message)
