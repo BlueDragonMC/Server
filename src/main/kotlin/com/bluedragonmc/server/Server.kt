@@ -20,6 +20,7 @@ import net.minestom.server.event.player.PlayerLoginEvent
 import net.minestom.server.event.server.ServerListPingEvent
 import net.minestom.server.extras.MojangAuth
 import net.minestom.server.extras.lan.OpenToLAN
+import net.minestom.server.extras.velocity.VelocityProxy
 import net.minestom.server.ping.ServerListPingType
 import net.minestom.server.utils.NamespaceID
 import net.minestom.server.world.DimensionType
@@ -106,8 +107,14 @@ fun main() {
     // Start the queue loop, which runs every 2 seconds and handles the players in queue
     queue.start()
 
-    // Enable Mojang authentication (if we add a proxy, disable this)
-    MojangAuth.init()
+    // Enable Mojang authentication OR enable Velocity modern forwarding
+    runCatching {
+        VelocityProxy.enable(System.getenv("velocity_secret"))
+        logger.info("Velocity modern forwarding enabled.")
+    }.onFailure {
+        logger.warn("Velocity secret not found, enabling online mode.")
+        MojangAuth.init()
+    }
 
     // Start the server & bind to port 25565
     minecraftServer.start("0.0.0.0", 25565)
