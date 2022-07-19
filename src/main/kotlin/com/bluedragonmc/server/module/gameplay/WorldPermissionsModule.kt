@@ -21,16 +21,18 @@ class WorldPermissionsModule(
     var allowBlockBreak: Boolean = false,
     var allowBlockPlace: Boolean = false,
     var allowBlockInteract: Boolean = false,
-    var allowBreakMap: Boolean = false
+    var allowBreakMap: Boolean = false,
+    val exceptions: List<Block> = listOf()
 ) : GameModule() {
 
     private val playerPlacedBlocks = mutableListOf<Point>()
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         eventNode.addListener(PlayerBlockBreakEvent::class.java) { event ->
+            if (exceptions.contains(event.block)) return@addListener
             event.isCancelled = !allowBlockBreak
 
-            if (!allowBreakMap) {
+            if (allowBlockBreak && !allowBreakMap) {
                 if (playerPlacedBlocks.contains(event.blockPosition)) {
                     playerPlacedBlocks.remove(event.blockPosition)
                 } else {
@@ -46,6 +48,7 @@ class WorldPermissionsModule(
             }
         }
         eventNode.addListener(PlayerBlockPlaceEvent::class.java) { event ->
+            if (exceptions.contains(event.block)) return@addListener
             event.isCancelled = !allowBlockPlace
 
             if (!event.instance.getBlock(event.blockPosition).isAir) event.isCancelled = true
@@ -53,6 +56,7 @@ class WorldPermissionsModule(
             if (!allowBreakMap) playerPlacedBlocks.add(event.blockPosition)
         }
         eventNode.addListener(PlayerBlockInteractEvent::class.java) { event ->
+            if (exceptions.contains(event.block)) return@addListener
             event.isCancelled = !allowBlockInteract
         }
     }

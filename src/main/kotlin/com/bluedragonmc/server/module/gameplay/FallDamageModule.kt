@@ -64,7 +64,7 @@ object FallDamageModule : GameModule() {
 
     private fun getReducedDamage(player: Player, originalDamage: Double): Double {
         var blockBelow: Block? = null
-        var y: Double = player.position.y
+        var y: Double = player.position.y - 0.2
         while((blockBelow == null || blockBelow.isAir) && y >= player.instance!!.dimensionType.minY) {
             blockBelow = player.instance!!.getBlock(player.position.withY(y))
             y -= 0.2

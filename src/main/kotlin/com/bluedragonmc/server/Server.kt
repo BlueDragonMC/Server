@@ -39,6 +39,7 @@ fun main() {
 
     // Make players spawn in the test instance
     MinecraftServer.getGlobalEventHandler().addListener(PlayerLoginEvent::class.java) { event ->
+        event.player.displayName = Component.text(event.player.username, BRAND_COLOR_PRIMARY_1) // TODO change this color when we get a rank system
         event.player.respawnPoint = lobby.getModule<SpawnpointModule>().spawnpointProvider.getSpawnpoint(event.player)
         event.setSpawningInstance(lobby.getInstance())
     }
