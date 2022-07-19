@@ -70,7 +70,7 @@ object FallDamageModule : GameModule() {
             // Beds reduce fall damage by 50%
             blockBelow.compare(Block.RED_BED, Block.Comparator.ID) -> 0.5
             // Sweet berry bushes and cobwebs negate all fall damage
-            blockBelow.compare(Block.SWEET_BERRY_BUSH) || blockBelow.compare(Block.COBWEB) -> 1.0
+            blockBelow.compare(Block.SWEET_BERRY_BUSH) || blockBelow.compare(Block.COBWEB) || (blockBelow.compare(Block.SLIME_BLOCK) && !player.isSneaking) -> 1.0
             else -> 0.0
         }
         // Feather falling reduces fall damage by 12% per level

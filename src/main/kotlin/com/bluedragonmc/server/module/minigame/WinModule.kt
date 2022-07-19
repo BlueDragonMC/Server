@@ -26,6 +26,8 @@ class WinModule(
 ) : GameModule() {
     private lateinit var parent: Game
 
+    private var winnerDeclared = false
+
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         this.parent = parent
         eventNode.addListener(SpectatorModule.StartSpectatingEvent::class.java) {
@@ -52,7 +54,7 @@ class WinModule(
             }
         }
         if (winCondition == WinCondition.TOUCH_EMERALD) eventNode.addListener(PlayerMoveEvent::class.java) { event ->
-            if (event.player.instance?.getBlock(event.player.position.sub(0.0, 2.0, 0.0)) == Block.EMERALD_BLOCK) {
+            if (!winnerDeclared && event.player.instance?.getBlock(event.player.position.sub(0.0, 1.0, 0.0)) == Block.EMERALD_BLOCK) {
                 declareWinner(event.player)
             }
         }
@@ -64,6 +66,7 @@ class WinModule(
      */
     fun declareWinner(team: TeamModule.Team) {
         MinecraftServer.getGlobalEventHandler().callCancellable(WinnerDeclaredEvent(parent, team)) {
+            winnerDeclared = true
             parent.sendMessage(team.name.append(Component.text(" won the game!", BRAND_COLOR_PRIMARY_2))
                 .surroundWithSeparators())
             for (p in parent.players) {
