@@ -63,7 +63,13 @@ object FallDamageModule : GameModule() {
             .sumOf { it.potion.amplifier.toInt() }
 
     private fun getReducedDamage(player: Player, originalDamage: Double): Double {
-        val blockBelow = player.instance!!.getBlock(player.position.sub(0.0, 0.50, 0.0))
+        var blockBelow: Block? = null
+        var y: Double = player.position.y
+        while((blockBelow == null || blockBelow.isAir) && y >= player.instance!!.dimensionType.minY) {
+            blockBelow = player.instance!!.getBlock(player.position.withY(y))
+            y -= 0.2
+        }
+        if(blockBelow == null) return 0.0
         val blockBelowReduction = when {
             // Honey blocks and hay bales reduce fall damage by 20%
             blockBelow.compare(Block.HAY_BLOCK) || blockBelow.compare(Block.HONEY_BLOCK) -> 0.2
