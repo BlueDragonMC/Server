@@ -15,4 +15,5 @@ FROM eclipse-temurin:17
 EXPOSE 25565
 WORKDIR /server
 COPY --from=build /work/build/libs/Server-*-all.jar /server/server.jar
+COPY favicon_64.png /server/favicon_64.png
 CMD ["java", "-jar", "/server/server.jar"]
