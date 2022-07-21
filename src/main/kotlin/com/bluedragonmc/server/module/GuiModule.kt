@@ -75,18 +75,17 @@ open class GuiModule : GameModule() {
             return Inventory(inventoryType, title).apply {
                 items.forEach { item ->
                     setItemStack(item.index, item.itemStackBuilder(ItemStack.builder(item.material), player).build())
-                    if (item.action != null) {
-                        this.inventoryConditions.add(InventoryCondition { player, slot, clickType, inventoryConditionResult ->
-                            if (slot == item.index && (allowSpectatorClicks || player.gameMode != GameMode.SPECTATOR)) {
-                                item.action.invoke(SlotClickEvent(player, this@Menu, item, clickType))
-                                inventoryConditionResult.isCancel = item.cancelClicks
+                    if (item.action == null) return@forEach
+                    this.inventoryConditions.add(InventoryCondition { player, slot, clickType, result ->
+                        if (slot == item.index && (allowSpectatorClicks || player.gameMode != GameMode.SPECTATOR)) {
+                            item.action.invoke(SlotClickEvent(player, this@Menu, item, clickType))
+                            result.isCancel = item.cancelClicks
 
-                                // If the click was cancelled, re-render the slot
-                                if (item.cancelClicks) setItemStack(item.index,
-                                    item.itemStackBuilder(ItemStack.builder(item.material), player).build())
-                            }
-                        })
-                    }
+                            // If the click was cancelled, re-render the slot
+                            if (item.cancelClicks) setItemStack(item.index,
+                                item.itemStackBuilder(ItemStack.builder(item.material), player).build())
+                        }
+                    })
                 }
                 inventories[windowId] = this@Menu
             }.also { inventory ->

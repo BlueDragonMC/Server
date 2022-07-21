@@ -32,8 +32,11 @@ class PlayerResetModule(val defaultGameMode: GameMode? = null) : GameModule() {
     fun resetPlayer(player: Player, gameMode: GameMode? = defaultGameMode) {
         player.gameMode = gameMode ?: player.gameMode
         player.inventory.clear()
-        player.getAttribute(Attribute.MAX_HEALTH).modifiers.clear()
-        player.getAttribute(Attribute.MOVEMENT_SPEED).modifiers.clear()
+        Attribute.values().forEach { attribute ->
+            player.getAttribute(attribute).modifiers.forEach { modifier ->
+                player.getAttribute(attribute).removeModifier(modifier)
+            }
+        }
         player.health = player.maxHealth
         player.food = 20
         player.clearEffects()

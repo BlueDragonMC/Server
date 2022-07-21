@@ -1,5 +1,6 @@
 package com.bluedragonmc.server.module.gameplay
 
+import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.combat.EnumArmorToughness.ArmorToughness.getArmor
@@ -22,7 +23,7 @@ object FallDamageModule : GameModule() {
             val player = event.player
             val block = event.instance.getBlock(player.position)
 
-            if (block.compare(Block.WATER) || block.compare(Block.COBWEB)) {
+            if (block.compare(Block.WATER) || block.compare(Block.COBWEB) || (player as CustomPlayer).isOnLadder()) {
                 // Water resets fall distance
                 player.removeTag(FALL_START_TAG)
             } else if (block.compare(Block.LAVA) && player.hasTag(FALL_START_TAG)) {
@@ -62,14 +63,20 @@ object FallDamageModule : GameModule() {
             .sumOf { it.potion.amplifier.toInt() }
 
     private fun getReducedDamage(player: Player, originalDamage: Double): Double {
-        val blockBelow = player.instance!!.getBlock(player.position.sub(0.0, 0.50, 0.0))
+        var blockBelow: Block? = null
+        var y: Double = player.position.y - 0.2
+        while((blockBelow == null || blockBelow.isAir) && y >= player.instance!!.dimensionType.minY) {
+            blockBelow = player.instance!!.getBlock(player.position.withY(y))
+            y -= 0.2
+        }
+        if(blockBelow == null) return 0.0
         val blockBelowReduction = when {
             // Honey blocks and hay bales reduce fall damage by 20%
             blockBelow.compare(Block.HAY_BLOCK) || blockBelow.compare(Block.HONEY_BLOCK) -> 0.2
             // Beds reduce fall damage by 50%
             blockBelow.compare(Block.RED_BED, Block.Comparator.ID) -> 0.5
             // Sweet berry bushes and cobwebs negate all fall damage
-            blockBelow.compare(Block.SWEET_BERRY_BUSH) || blockBelow.compare(Block.COBWEB) -> 1.0
+            blockBelow.compare(Block.SWEET_BERRY_BUSH) || blockBelow.compare(Block.COBWEB) || (blockBelow.compare(Block.SLIME_BLOCK) && !player.isSneaking) -> 1.0
             else -> 0.0
         }
         // Feather falling reduces fall damage by 12% per level

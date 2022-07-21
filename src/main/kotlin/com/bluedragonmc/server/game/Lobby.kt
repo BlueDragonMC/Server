@@ -64,6 +64,15 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
                     queue.queue(it.player, GameType("SkyWars", null, null))
                 })
 
+            // -5.5, 62.5, -32.5, 0.0, 0.0 LEFT OF LEFT OF CENTER
+            addNPC(instance = this@Lobby.getInstance(),
+                position = Pos(-5.5, 62.5, -32.5, 0F, 0F),
+                customName = Component.text("FastFall", NamedTextColor.YELLOW, TextDecoration.BOLD),
+                skin = NPCModule.NPCSkins.STUMBLE_GUY.skin,
+                interaction = {
+                    queue.queue(it.player, GameType("FastFall", null, null))
+                })
+
         }
 
         use(object : GameModule() {

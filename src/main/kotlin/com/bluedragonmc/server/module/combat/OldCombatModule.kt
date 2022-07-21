@@ -1,6 +1,8 @@
 package com.bluedragonmc.server.module.combat
 
-import com.bluedragonmc.server.*
+import com.bluedragonmc.server.CustomPlayer
+import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.event.PlayerLeaveGameEvent
 import com.bluedragonmc.server.module.GameModule
 import net.minestom.server.MinecraftServer
 import net.minestom.server.attribute.Attribute
@@ -11,6 +13,7 @@ import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.entity.EntityAttackEvent
 import net.minestom.server.event.entity.EntityTickEvent
+import net.minestom.server.event.player.PlayerSpawnEvent
 import net.minestom.server.event.trait.CancellableEvent
 import net.minestom.server.event.trait.PlayerInstanceEvent
 import net.minestom.server.instance.Instance
@@ -23,9 +26,9 @@ import kotlin.math.hypot
 class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boolean = true) : GameModule() {
 
     companion object {
-        val HURT_RESISTANT_TIME = Tag.Integer("hurt_resistant_time").defaultValue(0)
-        val MAX_HURT_RESISTANT_TIME = Tag.Integer("max_hurt_resistant_time").defaultValue(20)
-        val LAST_DAMAGE = Tag.Float("last_damage").defaultValue(0.0f)
+        val HURT_RESISTANT_TIME: Tag<Int> = Tag.Integer("hurt_resistant_time").defaultValue(0)
+        val MAX_HURT_RESISTANT_TIME: Tag<Int> = Tag.Integer("max_hurt_resistant_time").defaultValue(20)
+        val LAST_DAMAGE: Tag<Float> = Tag.Float("last_damage").defaultValue(0.0f)
     }
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
@@ -38,6 +41,18 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
                     livingEntity.setTag(HURT_RESISTANT_TIME, value - 1)
                 }
             }
+        }
+
+        eventNode.addListener(PlayerSpawnEvent::class.java) { event ->
+            // Hint to client that there is no attack cooldown
+            event.player.getAttribute(Attribute.ATTACK_SPEED).baseValue = 100f
+            event.player.getAttribute(Attribute.ATTACK_DAMAGE).baseValue = 1.0f
+        }
+
+        eventNode.addListener(PlayerLeaveGameEvent::class.java) { event ->
+            // Reset attributes to default
+            event.player.getAttribute(Attribute.ATTACK_SPEED).baseValue = event.player.getAttribute(Attribute.ATTACK_SPEED).attribute.defaultValue
+            event.player.getAttribute(Attribute.ATTACK_DAMAGE).baseValue = event.player.getAttribute(Attribute.ATTACK_DAMAGE).attribute.defaultValue
         }
 
         eventNode.addListener(EntityAttackEvent::class.java) { event ->

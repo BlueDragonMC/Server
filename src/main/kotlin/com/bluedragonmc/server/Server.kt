@@ -1,5 +1,6 @@
 package com.bluedragonmc.server
 
+import com.bluedragonmc.messages.SendPlayerToInstanceMessage
 import com.bluedragonmc.server.Environment.messagingDisabled
 import com.bluedragonmc.server.Environment.queue
 import com.bluedragonmc.server.command.*
@@ -9,6 +10,7 @@ import com.bluedragonmc.server.module.database.DatabaseModule
 import com.bluedragonmc.server.module.database.Punishment
 import com.bluedragonmc.server.module.gameplay.SpawnpointModule
 import com.bluedragonmc.server.utils.*
+import com.bluedragonmc.server.module.messaging.MessagingModule
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.JoinConfiguration
 import net.kyori.adventure.text.event.HoverEvent
@@ -20,9 +22,14 @@ import net.minestom.server.event.player.PlayerLoginEvent
 import net.minestom.server.event.server.ServerListPingEvent
 import net.minestom.server.extras.MojangAuth
 import net.minestom.server.extras.lan.OpenToLAN
+import net.minestom.server.extras.velocity.VelocityProxy
+import net.minestom.server.instance.Instance
 import net.minestom.server.ping.ServerListPingType
+import net.minestom.server.utils.NamespaceID
+import net.minestom.server.world.DimensionType
 import org.slf4j.LoggerFactory
 import java.net.InetAddress
+import java.util.*
 
 lateinit var lobby: Game
 val queue = Environment.queue
@@ -36,10 +43,26 @@ fun main() {
     // Create a test instance
     lobby = Lobby()
 
-    // Make players spawn in the test instance
-    eventNode.addListener(PlayerLoginEvent::class.java) { event ->
-        event.player.respawnPoint = lobby.getModule<SpawnpointModule>().spawnpointProvider.getSpawnpoint(event.player)
-        event.setSpawningInstance(lobby.getInstance())
+    // Send players to the instance they are supposed to join instead of the lobby,
+    // if a SendPlayerToInstanceMessage was received before they joined.
+    val futureInstances = mutableMapOf<UUID, Instance>()
+
+    MessagingModule.subscribe(SendPlayerToInstanceMessage::class) { message ->
+        val instance = MinecraftServer.getInstanceManager().getInstance(message.instance)
+        if(instance != null && MinecraftServer.getConnectionManager().getPlayer(message.player) == null) {
+            futureInstances[message.player] = instance
+        }
+    }
+
+    // Make players spawn in the correct instance
+    MinecraftServer.getGlobalEventHandler().addListener(PlayerLoginEvent::class.java) { event ->
+        val instance = futureInstances[event.player.uuid] ?: lobby.getInstance()
+        val game = Game.findGame(instance.uniqueId)
+        event.player.displayName = Component.text(event.player.username, BRAND_COLOR_PRIMARY_1) // TODO change this color when we get a rank system
+        event.setSpawningInstance(instance)
+        if(game != null && game.hasModule<SpawnpointModule>()) {
+            event.player.respawnPoint = game.getModule<SpawnpointModule>().spawnpointProvider.getSpawnpoint(event.player)
+        }
     }
 
     // Chat formatting
@@ -110,14 +133,22 @@ fun main() {
         ViewPunishmentCommand("punishment", "/punishment <id>", "vp"),
     ).forEach(MinecraftServer.getCommandManager()::register)
 
+    // Create a per-instance tablist using custom packets
+    PerInstanceTabList.hook(MinecraftServer.getGlobalEventHandler())
+    PerInstanceChat.hook(MinecraftServer.getGlobalEventHandler())
+
     // Set a custom player provider, so we can easily add fields to the Player class
     MinecraftServer.getConnectionManager().setPlayerProvider(::CustomPlayer)
+
+    // Register custom dimension types
+    MinecraftServer.getDimensionTypeManager().addDimension(DimensionType.builder(NamespaceID.from("bluedragon:fullbright_dimension")).ambientLight(1.0F).build())
 
     // Start the queue loop, which runs every 2 seconds and handles the players in queue
     queue.start()
 
-    // Enable Mojang authentication (if we add a proxy, disable this)
-    MojangAuth.init()
+    // Enable Mojang authentication OR enable Velocity modern forwarding
+    val secret = System.getenv("velocity_secret")
+    secret?.let { VelocityProxy.enable(it) } ?: MojangAuth.init()
 
     // Start the server & bind to port 25565
     minecraftServer.start("0.0.0.0", 25565)

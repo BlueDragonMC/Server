@@ -334,12 +334,12 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
     )
 
     // There's no way we're keeping these names
-    // Some team upgrades need to be registered, so they reapply when you respawn (look in the TimedRespawnEvent handler above)
+    private val speedModifier = AttributeModifier("bluedragon:fastfeet", 1.02f, AttributeOperation.MULTIPLY_BASE)
     private val fastFeet = ShopModule.TeamUpgrade(
-        "Fast Feet", "Gives Speed I to all members on your team.", Material.IRON_BOOTS
+        "Fast Feet", "Gives Speed to all members on your team.", Material.IRON_BOOTS
     ) { player, _ ->
         player.getAttribute(Attribute.MOVEMENT_SPEED)
-            .addModifier(AttributeModifier("bluedragon:fastfeet", 1.1f, AttributeOperation.MULTIPLY_BASE))
+            .addModifier(speedModifier)
     }
 
     private val miningMalarkey = ShopModule.TeamUpgrade(
@@ -353,8 +353,13 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
         }
     }
 
-    fun openShop(player: Player) = shop.open(player)
-    fun openUpgradesMenu(player: Player) = upgrades.open(player)
+    fun openShop(player: Player) {
+        if(player.gameMode != GameMode.SPECTATOR) shop.open(player)
+    }
+
+    fun openUpgradesMenu(player: Player) {
+        if(player.gameMode != GameMode.SPECTATOR) upgrades.open(player)
+    }
 
     private val bedBlockToTeam = mapOf(
         Material.RED_BED to NamedTextColor.RED,

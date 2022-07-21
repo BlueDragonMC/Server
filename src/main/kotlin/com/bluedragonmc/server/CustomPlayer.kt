@@ -6,7 +6,7 @@ import com.bluedragonmc.server.module.gameplay.ShopModule
 import net.minestom.server.entity.Entity
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
-import net.minestom.server.item.Material
+import net.minestom.server.instance.block.Block
 import net.minestom.server.network.player.PlayerConnection
 import net.minestom.server.potion.PotionEffect
 import java.util.*
@@ -55,7 +55,13 @@ class CustomPlayer(uuid: UUID, username: String, playerConnection: PlayerConnect
         }
     }
 
-    fun isOnLadder() = instance!!.getBlock(position).registry().material() == Material.LADDER
+    fun isOnLadder() = listOf(
+        Block.LADDER,
+        Block.VINE,
+        Block.CAVE_VINES,
+        Block.TWISTING_VINES,
+        Block.WEEPING_VINES
+    ).any { instance!!.getBlock(position).compare(it) }
 
     fun isInWater() = instance!!.getBlock(position).isLiquid
 
@@ -66,7 +72,7 @@ class CustomPlayer(uuid: UUID, username: String, playerConnection: PlayerConnect
          * Gets the XP level based on the total number of XP specified.
          */
         fun getXpLevel(experience: Int): Double {
-            return if (experience < 45000) (log(experience/1000.0 + 1.0, 1.2) + 1)
+            return if (experience < 45000) (log(experience / 1000.0 + 1.0, 1.2) + 1)
             else experience / 10000.0 + 18.0
         }
 
@@ -84,7 +90,7 @@ class CustomPlayer(uuid: UUID, username: String, playerConnection: PlayerConnect
          * @param totalExperience The total amount of XP the player currently has.
          */
         fun getXpToNextLevel(currentLevel: Double, totalExperience: Int): Int {
-            return (getXpOfLevel((currentLevel+1).toInt()) - totalExperience)
+            return (getXpOfLevel((currentLevel + 1).toInt()) - totalExperience)
         }
 
         /**
