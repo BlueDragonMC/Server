@@ -9,8 +9,8 @@ import com.bluedragonmc.server.game.Lobby
 import com.bluedragonmc.server.module.database.DatabaseModule
 import com.bluedragonmc.server.module.database.Punishment
 import com.bluedragonmc.server.module.gameplay.SpawnpointModule
-import com.bluedragonmc.server.utils.*
 import com.bluedragonmc.server.module.messaging.MessagingModule
+import com.bluedragonmc.server.utils.*
 import com.bluedragonmc.server.utils.packet.PerInstanceChat
 import com.bluedragonmc.server.utils.packet.PerInstanceTabList
 import net.kyori.adventure.text.Component
@@ -61,10 +61,15 @@ fun main() {
         val instance = futureInstances[event.player.uuid] ?: lobby.getInstance()
         val game = Game.findGame(instance.uniqueId)
         event.player.displayName = Component.text(event.player.username, BRAND_COLOR_PRIMARY_1) // TODO change this color when we get a rank system
+        event.player.sendMessage(Component.text("Placing you in ${instance.uniqueId}...", NamedTextColor.DARK_GRAY))
         event.setSpawningInstance(instance)
-        if(game != null && game.hasModule<SpawnpointModule>()) {
-            event.player.respawnPoint = game.getModule<SpawnpointModule>().spawnpointProvider.getSpawnpoint(event.player)
+        if (game != null) {
+            game.players.add(event.player)
+            if (game.hasModule<SpawnpointModule>()) {
+                event.player.respawnPoint = game.getModule<SpawnpointModule>().spawnpointProvider.getSpawnpoint(event.player)
+            }
         }
+        futureInstances.remove(event.player.uuid)
     }
 
     // Chat formatting

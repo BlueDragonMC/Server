@@ -10,6 +10,7 @@ import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.title.Title
 import net.kyori.adventure.title.TitlePart
+import net.minestom.server.MinecraftServer
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
@@ -85,7 +86,9 @@ class CountdownModule(
         }
 
         eventNode.addListener(GameStartEvent::class.java) { event ->
-            for (module in useOnStart) parent.use(module)
+            MinecraftServer.getSchedulerManager().scheduleNextTick {
+                for (module in useOnStart) parent.use(module)
+            }
             parent.state = GameState.INGAME
             countdownEnded = true
             parent.players.forEach { player ->

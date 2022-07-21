@@ -6,6 +6,7 @@ import com.bluedragonmc.server.module.gameplay.ShopModule
 import net.minestom.server.entity.Entity
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
+import net.minestom.server.entity.metadata.PlayerMeta
 import net.minestom.server.instance.block.Block
 import net.minestom.server.network.player.PlayerConnection
 import net.minestom.server.potion.PotionEffect
@@ -53,6 +54,11 @@ class CustomPlayer(uuid: UUID, username: String, playerConnection: PlayerConnect
         if (isSpectating && prevGameMode == GameMode.SPECTATOR && gameMode != GameMode.SPECTATOR) {
             stopSpectating()
         }
+    }
+
+    override fun getAdditionalHearts(): Float {
+        return if(entityMeta !is PlayerMeta) 0f
+        else super.getAdditionalHearts()
     }
 
     fun isOnLadder() = listOf(

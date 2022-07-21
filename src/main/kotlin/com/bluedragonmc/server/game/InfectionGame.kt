@@ -59,6 +59,7 @@ class InfectionGame(mapName: String) : Game("Infection", mapName) {
         use(SidebarModule(name)) // TODO show all players and their infected status on sidebar
         use(SpawnpointModule(SpawnpointModule.DatabaseSpawnpointProvider(allowRandomOrder = true) { ready() }))
         use(TeamModule(autoTeams = false))
+        use(SpectatorModule(spectateOnDeath = false, spectateOnLeave = true))
         use(TimedRespawnModule(5))
         use(WorldPermissionsModule(allowBlockInteract = true))
 
