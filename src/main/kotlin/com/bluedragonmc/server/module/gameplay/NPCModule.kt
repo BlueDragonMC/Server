@@ -135,6 +135,7 @@ class NPCModule : GameModule() {
         }
 
         private fun enableFullSkin() {
+            if (entityType != EntityType.PLAYER) return
             val meta = this.entityMeta as PlayerMeta
             meta.setNotifyAboutChanges(false)
             meta.isCapeEnabled = true

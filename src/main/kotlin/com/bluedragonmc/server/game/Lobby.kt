@@ -13,6 +13,7 @@ import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
 import net.minestom.server.MinecraftServer
 import net.minestom.server.coordinate.Pos
+import net.minestom.server.entity.EntityType
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
@@ -73,6 +74,14 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
                     queue.queue(it.player, GameType("FastFall", null, null))
                 })
 
+            // 6.5, 62.5, -32.5, 0.0, 0.0 RIGHT OF RIGHT OF CENTER
+            addNPC(instance = this@Lobby.getInstance(),
+                position = Pos(6.5, 62.5, -32.5, 0F, 0F),
+                customName = Component.text("Infection", NamedTextColor.YELLOW, TextDecoration.BOLD),
+                entityType = EntityType.ZOMBIE,
+                interaction = {
+                    queue.queue(it.player, GameType("Infection", null, null))
+                })
         }
 
         use(object : GameModule() {

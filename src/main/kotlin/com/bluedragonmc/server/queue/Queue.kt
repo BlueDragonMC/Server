@@ -11,7 +11,8 @@ abstract class Queue {
         "TeamDeathmatch" to ::TeamDeathmatchGame,
         "BedWars" to ::BedWarsGame,
         "SkyWars" to ::SkyWarsGame,
-        "FastFall" to ::FastFallGame
+        "FastFall" to ::FastFallGame,
+        "Infection" to ::InfectionGame,
     )
 
     abstract fun start()
