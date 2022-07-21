@@ -18,6 +18,7 @@ import net.minestom.server.event.player.PlayerBlockBreakEvent
 import net.minestom.server.event.player.PlayerBlockPlaceEvent
 import net.minestom.server.event.player.PlayerMoveEvent
 import net.minestom.server.event.player.PlayerSpawnEvent
+import net.minestom.server.network.packet.server.play.PlayerPositionAndLookPacket
 import java.time.Duration
 import java.util.*
 import kotlin.concurrent.fixedRateTimer
@@ -54,27 +55,42 @@ class CountdownModule(
             if (event.entity !is Player) return@addListener
             if (threshold > 0 && countdown != null && parent.players.size < threshold) {
                 // Stop the countdown
-                countdownRunning = false
-                countdown?.cancel()
+                cancelCountdown()
                 parent.showTitle(
                     Title.title(
-                        Component.text("Cancelled!", NamedTextColor.RED),
-                        Component.text(
-                            "Not enough players to start (${parent.players.size}/$threshold)",
-                            NamedTextColor.RED
-                        ),
-                        Title.Times.times(Duration.ZERO, Duration.ofSeconds(5), Duration.ofSeconds(1))
+                        Component.text("Cancelled!", NamedTextColor.RED), Component.text(
+                            "Not enough players to start (${parent.players.size}/$threshold)", NamedTextColor.RED
+                        ), Title.Times.times(Duration.ZERO, Duration.ofSeconds(5), Duration.ofSeconds(1))
                     )
                 )
                 parent.state = GameState.WAITING
             }
         }
         eventNode.addListener(PlayerMoveEvent::class.java) { event ->
-            event.isCancelled =
-                countdownRunning && // Countdown started
-                        !countdownEnded && // Countdown not ended
-                        !allowMoveDuringCountdown &&
-                        (event.newPosition.x != event.player.position.x || event.newPosition.z != event.player.position.z)
+            if (countdownRunning && // Countdown started
+                !countdownEnded && // Countdown not ended
+                !allowMoveDuringCountdown && (event.newPosition.x != event.player.position.x || event.newPosition.z != event.player.position.z)
+            ) {
+                // Revert the player's position without forcing the player's facing direction
+                event.newPosition = event.player.position
+                event.player.sendPacket(
+                    PlayerPositionAndLookPacket(
+                        event.player.position.withView(0.0f, 0.0f),
+                        (0x08 or 0x10).toByte(), // flags - see https://wiki.vg/Protocol#Synchronize_Player_Position
+                        event.player.nextTeleportId,
+                        false
+                    )
+                )
+            }
+        }
+
+        eventNode.addListener(GameStartEvent::class.java) { event ->
+            for (module in useOnStart) parent.use(module)
+            parent.state = GameState.INGAME
+            countdownEnded = true
+            parent.players.forEach { player ->
+                player.askSynchronization()
+            }
         }
     }
 
@@ -101,13 +117,7 @@ class CountdownModule(
                     TitlePart.TITLE, Component.text("GO!", NamedTextColor.GREEN).decorate(TextDecoration.BOLD)
                 )
                 cancelCountdown()
-                for (module in useOnStart) parent.use(module)
                 parent.callEvent(GameStartEvent(parent))
-                parent.state = GameState.INGAME
-                countdownEnded = true
-                parent.players.forEach { player ->
-                    player.askSynchronization()
-                }
             }
         }
     }
