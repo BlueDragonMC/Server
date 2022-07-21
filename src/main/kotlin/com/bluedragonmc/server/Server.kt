@@ -127,13 +127,8 @@ fun main() {
     queue.start()
 
     // Enable Mojang authentication OR enable Velocity modern forwarding
-    runCatching {
-        VelocityProxy.enable(System.getenv("velocity_secret"))
-        logger.info("Velocity modern forwarding enabled.")
-    }.onFailure {
-        logger.warn("Velocity secret not found, enabling online mode.")
-        MojangAuth.init()
-    }
+    val secret = System.getenv("velocity_secret")
+    secret?.let { VelocityProxy.enable(it) } ?: MojangAuth.init()
 
     // Start the server & bind to port 25565
     minecraftServer.start("0.0.0.0", 25565)
