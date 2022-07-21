@@ -6,7 +6,7 @@ import com.bluedragonmc.server.module.combat.OldCombatModule
 import com.bluedragonmc.server.module.database.DatabaseModule
 import com.bluedragonmc.server.module.database.MapData
 import com.bluedragonmc.server.module.gameplay.*
-import com.bluedragonmc.server.module.instance.SharedInstanceModule
+import com.bluedragonmc.server.module.instance.InstanceContainerModule
 import com.bluedragonmc.server.module.map.AnvilFileMapProviderModule
 import com.bluedragonmc.server.module.minigame.CountdownModule
 import com.bluedragonmc.server.module.minigame.WinModule
@@ -28,7 +28,7 @@ import java.nio.file.Paths
 class SkyWarsGame(mapName: String) : Game("SkyWars", mapName) {
     init {
         use(AnvilFileMapProviderModule(Paths.get("worlds/$name/$mapName")))
-        use(SharedInstanceModule())
+        use(InstanceContainerModule())
         use(VoidDeathModule(32.0))
         use(
             CountdownModule(2, true,

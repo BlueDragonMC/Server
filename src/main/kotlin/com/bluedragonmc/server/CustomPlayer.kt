@@ -25,6 +25,10 @@ class CustomPlayer(uuid: UUID, username: String, playerConnection: PlayerConnect
 
     fun isDataInitialized() = ::data.isInitialized
 
+    fun getFirstMute() = data.punishments.firstOrNull { it.type == PunishmentType.MUTE && it.isInEffect() }
+
+    fun getFirstBan() = data.punishments.firstOrNull { it.type == PunishmentType.BAN && it.isInEffect() }
+
     override fun spectate(entity: Entity) {
         super.spectate(entity)
         isSpectating = true

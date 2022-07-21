@@ -1,5 +1,6 @@
 package com.bluedragonmc.server.utils
 
+import com.bluedragonmc.server.ALT_COLOR_1
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.JoinConfiguration
 import net.kyori.adventure.text.event.ClickEvent
@@ -32,7 +33,12 @@ fun Component.hoverEvent(text: String, color: NamedTextColor): Component =
 fun Component.clickEvent(command: String): Component =
     clickEvent(ClickEvent.clickEvent(ClickEvent.Action.RUN_COMMAND, command))
 
-fun Component.clickEvent(action: ClickEvent.Action, value: String) = clickEvent(ClickEvent.clickEvent(action, value))
+fun Component.clickEvent(action: ClickEvent.Action, value: String): Component {
+    if(action == ClickEvent.Action.COPY_TO_CLIPBOARD && hoverEvent() == null) {
+        return clickEvent(ClickEvent.clickEvent(action, value)).hoverEvent("Click to copy!", ALT_COLOR_1)
+    }
+    return clickEvent(ClickEvent.clickEvent(action, value))
+}
 
 fun Material.displayName() = Component.translatable(registry().translationKey())
 fun Material.displayName(color: TextColor) = Component.translatable(registry().translationKey(), color)

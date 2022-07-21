@@ -8,6 +8,7 @@ import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.GameModule
 import com.github.jershell.kbson.FlexibleDecoder
 import com.mongodb.ConnectionString
+import com.mongodb.client.model.Filters
 import kotlinx.coroutines.*
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -18,17 +19,25 @@ import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
+import net.minestom.server.MinecraftServer
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
+import net.minestom.server.event.player.PlayerPacketOutEvent
 import net.minestom.server.event.player.PlayerSpawnEvent
+import net.minestom.server.event.trait.CancellableEvent
+import net.minestom.server.event.trait.PlayerEvent
 import net.minestom.server.permission.Permission
 import org.bson.BsonType
 import org.litote.kmongo.coroutine.CoroutineClient
 import org.litote.kmongo.coroutine.CoroutineCollection
 import org.litote.kmongo.coroutine.CoroutineDatabase
 import org.litote.kmongo.coroutine.coroutine
+import org.litote.kmongo.eq
+import org.litote.kmongo.path
 import org.litote.kmongo.reactivestreams.KMongo
 import java.util.*
 import kotlin.coroutines.CoroutineContext
@@ -52,6 +61,20 @@ class DatabaseModule : GameModule() {
         internal fun getPlayersCollection(): CoroutineCollection<PlayerDocument> = database.getCollection("players")
         internal fun getGroupsCollection(): CoroutineCollection<PermissionGroup> = database.getCollection("groups")
         internal fun getMapsCollection(): CoroutineCollection<MapData> = database.getCollection("maps")
+
+        internal suspend fun getPlayerDocument(username: String): PlayerDocument? {
+            MinecraftServer.getConnectionManager().findPlayer(username)?.let {
+                return (it as CustomPlayer).data
+            }
+            return getPlayersCollection().findOne(PlayerDocument::usernameLower eq username.lowercase())
+        }
+
+        internal suspend fun getPlayerDocument(uuid: UUID): PlayerDocument? {
+            MinecraftServer.getConnectionManager().getPlayer(uuid)?.let {
+                return (it as CustomPlayer).data
+            }
+            return getPlayersCollection().findOne(Filters.eq(PlayerDocument::uuid.path(), uuid.toString()))
+        }
     }
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
@@ -59,9 +82,31 @@ class DatabaseModule : GameModule() {
             // Load players' data from the database when they spawn
             val player = event.player as CustomPlayer
             if (!player.isDataInitialized()) IO.launch {
-                player.data = getPlayerDocument(player)
+                try {
+                    player.data = getPlayerDocument(player)
+                } catch (e: Throwable) {
+                    MinecraftServer.getExceptionManager().handleException(e)
+                    player.kick(Component.text("Your player data was not loaded! Wait a moment and try to reconnect.",
+                        NamedTextColor.RED))
+                }
+                if (player.username != player.data.username || player.data.username.isBlank()) {
+                    // Keep an up-to-date record of player usernames
+                    player.data.update(PlayerDocument::username, player.username)
+                    player.data.update(PlayerDocument::usernameLower, player.username.lowercase())
+                    logger.info("Updated username for ${player.uuid}: ${player.data.username} -> ${player.username}")
+                }
+                if (player.data.usernameLower != player.username.lowercase()) {
+                    player.data.update(PlayerDocument::usernameLower, player.username.lowercase())
+                }
+                MinecraftServer.getGlobalEventHandler().call(DataLoadedEvent(player))
                 logger.info("Loaded player data for ${player.username}")
             }
+        }
+
+        eventNode.addListener(PlayerEvent::class.java) { event ->
+            // Prevent player actions until data is loaded
+            if (event is CancellableEvent && event !is PlayerPacketOutEvent)
+                if (!(event.player as CustomPlayer).isDataInitialized()) event.isCancelled = true
         }
     }
 
@@ -87,75 +132,77 @@ class DatabaseModule : GameModule() {
         return mapData
     }
 
-    open class ToStringSerializer<T>(
-        descriptorName: String,
-        private inline val toStringMethod: (T) -> String,
-        private inline val fromStringMethod: (String) -> T,
-    ) : KSerializer<T> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor(descriptorName, PrimitiveKind.STRING)
+    class DataLoadedEvent(private val player: Player) : PlayerEvent {
+        override fun getPlayer(): Player = player
+    }
+}
 
-        override fun deserialize(decoder: Decoder): T = fromStringMethod(decoder.decodeString())
+open class ToStringSerializer<T>(
+    descriptorName: String,
+    private inline val toStringMethod: (T) -> String,
+    private inline val fromStringMethod: (String) -> T,
+) : KSerializer<T> {
+    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor(descriptorName, PrimitiveKind.STRING)
 
-        override fun serialize(encoder: Encoder, value: T) {
-            encoder.encodeString(toStringMethod(value))
+    override fun deserialize(decoder: Decoder): T = fromStringMethod(decoder.decodeString())
+
+    override fun serialize(encoder: Encoder, value: T) {
+        encoder.encodeString(toStringMethod(value))
+    }
+}
+
+object UUIDSerializer : ToStringSerializer<UUID>("UUID", UUID::toString, UUID::fromString)
+object PermissionSerializer : ToStringSerializer<Permission>("Permission", Permission::getPermissionName, ::Permission)
+
+object DateSerializer : KSerializer<Date> {
+    override val descriptor = PrimitiveSerialDescriptor("Date", PrimitiveKind.LONG)
+    override fun serialize(encoder: Encoder, value: Date) = encoder.encodeLong(value.time)
+    override fun deserialize(decoder: Decoder): Date = Date(decoder.decodeLong())
+}
+
+object LenientDoubleArraySerializer : KSerializer<Array<Double>> {
+
+    val s = ListSerializer(LenientDoubleSerializer)
+
+    override val descriptor: SerialDescriptor
+        get() = SerialDescriptor("bluedragon.DoubleArray", s.descriptor)
+
+    override fun deserialize(decoder: Decoder): Array<Double> {
+        return s.deserialize(decoder).toTypedArray()
+    }
+
+    override fun serialize(encoder: Encoder, value: Array<Double>) {
+        s.serialize(encoder, value.toList())
+    }
+
+}
+
+object LenientDoubleSerializer : KSerializer<Double> {
+    override val descriptor: SerialDescriptor
+        get() = PrimitiveSerialDescriptor("bluedragon.Double", PrimitiveKind.DOUBLE)
+
+    override fun deserialize(decoder: Decoder): Double {
+        decoder as FlexibleDecoder
+        return when (decoder.reader.currentBsonType) {
+            BsonType.INT32 -> decoder.reader.readInt32().toDouble()
+            BsonType.DOUBLE -> decoder.reader.readDouble()
+            else -> throw SerializationException("Invalid BSON type: ${decoder.reader.currentBsonType}")
         }
     }
 
-    object UUIDSerializer : ToStringSerializer<UUID>("UUID", UUID::toString, UUID::fromString)
-    object PermissionSerializer :
-        ToStringSerializer<Permission>("Permission", Permission::getPermissionName, ::Permission)
+    override fun serialize(encoder: Encoder, value: Double) {
+        encoder.encodeDouble(value)
+    }
+}
 
-    object DateSerializer : KSerializer<Date> {
-        override val descriptor = PrimitiveSerialDescriptor("Date", PrimitiveKind.LONG)
-        override fun serialize(encoder: Encoder, value: Date) = encoder.encodeLong(value.time)
-        override fun deserialize(decoder: Decoder): Date = Date(decoder.decodeLong())
+object PosSerializer : KSerializer<Pos> {
+    private val delegateSerializer = LenientDoubleArraySerializer
+
+    override val descriptor: SerialDescriptor = delegateSerializer.descriptor
+    override fun deserialize(decoder: Decoder): Pos = decoder.decodeSerializableValue(delegateSerializer).let {
+        Pos(it[0], it[1], it[2], it[3].toFloat(), it[4].toFloat())
     }
 
-    object LenientDoubleArraySerializer : KSerializer<Array<Double>> {
-
-        val s = ListSerializer(LenientDoubleSerializer)
-
-        override val descriptor: SerialDescriptor
-            get() = SerialDescriptor("bluedragon.DoubleArray", s.descriptor)
-
-        override fun deserialize(decoder: Decoder): Array<Double> {
-            return s.deserialize(decoder).toTypedArray()
-        }
-
-        override fun serialize(encoder: Encoder, value: Array<Double>) {
-            s.serialize(encoder, value.toList())
-        }
-
-    }
-
-    object LenientDoubleSerializer : KSerializer<Double> {
-        override val descriptor: SerialDescriptor
-            get() = PrimitiveSerialDescriptor("bluedragon.Double", PrimitiveKind.DOUBLE)
-
-        override fun deserialize(decoder: Decoder): Double {
-            decoder as FlexibleDecoder
-            return when(decoder.reader.currentBsonType) {
-                BsonType.INT32 -> decoder.reader.readInt32().toDouble()
-                BsonType.DOUBLE -> decoder.reader.readDouble()
-                else -> throw SerializationException("Invalid BSON type: ${decoder.reader.currentBsonType}")
-            }
-        }
-
-        override fun serialize(encoder: Encoder, value: Double) {
-            encoder.encodeDouble(value)
-        }
-    }
-
-    object PosSerializer : KSerializer<Pos> {
-        private val delegateSerializer = LenientDoubleArraySerializer
-
-        override val descriptor: SerialDescriptor = delegateSerializer.descriptor
-        override fun deserialize(decoder: Decoder): Pos = decoder.decodeSerializableValue(delegateSerializer).let {
-            Pos(it[0], it[1], it[2], it[3].toFloat(), it[4].toFloat())
-        }
-
-        override fun serialize(encoder: Encoder, value: Pos) =
-            encoder.encodeSerializableValue(delegateSerializer, arrayOf(value.x, value.y, value.z, value.yaw.toDouble(), value.pitch.toDouble()))
-    }
-
+    override fun serialize(encoder: Encoder, value: Pos) = encoder.encodeSerializableValue(delegateSerializer,
+        arrayOf(value.x, value.y, value.z, value.yaw.toDouble(), value.pitch.toDouble()))
 }

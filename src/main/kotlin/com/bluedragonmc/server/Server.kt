@@ -4,15 +4,13 @@ import com.bluedragonmc.messages.SendPlayerToInstanceMessage
 import com.bluedragonmc.server.Environment.messagingDisabled
 import com.bluedragonmc.server.Environment.queue
 import com.bluedragonmc.server.command.*
+import com.bluedragonmc.server.command.punishment.*
 import com.bluedragonmc.server.game.Lobby
+import com.bluedragonmc.server.module.database.DatabaseModule
+import com.bluedragonmc.server.module.database.Punishment
 import com.bluedragonmc.server.module.gameplay.SpawnpointModule
+import com.bluedragonmc.server.utils.*
 import com.bluedragonmc.server.module.messaging.MessagingModule
-import com.bluedragonmc.server.utils.buildComponent
-import com.bluedragonmc.server.utils.packet.PerInstanceChat
-import com.bluedragonmc.server.utils.packet.PerInstanceTabList
-import com.bluedragonmc.server.utils.plus
-import com.bluedragonmc.server.utils.withColor
-import com.bluedragonmc.server.utils.withDecoration
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.JoinConfiguration
 import net.kyori.adventure.text.event.HoverEvent
@@ -40,6 +38,7 @@ private val logger = LoggerFactory.getLogger("ServerKt")
 fun main() {
     logger.info("Using queue type: ${queue::class.simpleName}")
     val minecraftServer = MinecraftServer.init()
+    val eventNode = MinecraftServer.getGlobalEventHandler()
 
     // Create a test instance
     lobby = Lobby()
@@ -67,25 +66,28 @@ fun main() {
     }
 
     // Chat formatting
-    MinecraftServer.getGlobalEventHandler().addListener(PlayerChatEvent::class.java) { event ->
+    eventNode.addListener(PlayerChatEvent::class.java) { event ->
+        (event.player as CustomPlayer).getFirstMute()?.let { mute ->
+            event.isCancelled = true
+            event.player.sendMessage(getPunishmentMessage(mute, "currently muted").surroundWithSeparators())
+            return@addListener
+        }
         val experience = (event.player as CustomPlayer).data.experience
         val level = CustomPlayer.getXpLevel(experience)
         val xpToNextLevel = CustomPlayer.getXpToNextLevel(level, experience).toInt()
         event.setChatFormat {
-            Component.join(
-                JoinConfiguration.noSeparators(),
+            Component.join(JoinConfiguration.noSeparators(),
                 Component.text("[", NamedTextColor.DARK_GRAY),
-                Component.text(level.toInt(), BRAND_COLOR_PRIMARY_1).hoverEvent(
-                    HoverEvent.showText(event.player.name + Component.text(" has a total of $experience experience,\nand needs $xpToNextLevel XP to reach level ${level.toInt()+1}."))),
+                Component.text(level.toInt(), BRAND_COLOR_PRIMARY_1)
+                    .hoverEvent(HoverEvent.showText(event.player.name + Component.text(" has a total of $experience experience,\nand needs $xpToNextLevel XP to reach level ${level.toInt() + 1}."))),
                 Component.text("] ", NamedTextColor.DARK_GRAY),
                 event.player.name,
                 Component.text(": ", NamedTextColor.DARK_GRAY),
-                Component.text(event.message, NamedTextColor.WHITE)
-            )
+                Component.text(event.message, NamedTextColor.WHITE))
         }
     }
 
-    MinecraftServer.getGlobalEventHandler().addListener(ServerListPingEvent::class.java) { event ->
+    eventNode.addListener(ServerListPingEvent::class.java) { event ->
         event.responseData.description = buildComponent {
             +("Blue" withColor BRAND_COLOR_PRIMARY_2 withDecoration TextDecoration.BOLD)
             +("Dragon" withColor BRAND_COLOR_PRIMARY_1 withDecoration TextDecoration.BOLD)
@@ -96,7 +98,7 @@ fun main() {
                 +(event.responseData.version withColor NamedTextColor.GREEN)
             }
             +("]" withColor NamedTextColor.DARK_GRAY)
-            if(event.pingType != ServerListPingType.OPEN_TO_LAN) { // Newlines are disallowed in Open To LAN pings
+            if (event.pingType != ServerListPingType.OPEN_TO_LAN) { // Newlines are disallowed in Open To LAN pings
                 +Component.newline()
                 +SERVER_NEWS
             }
@@ -104,19 +106,31 @@ fun main() {
         event.responseData.favicon = FAVICON
     }
 
+    eventNode.addListener(DatabaseModule.DataLoadedEvent::class.java) { event ->
+        val player = event.player as CustomPlayer
+        val ban = player.getFirstBan()
+        if (ban != null) {
+            player.kick(getPunishmentMessage(ban, "currently banned from this server"))
+        }
+    }
+
     // Initialize commands
-    listOf(
-        JoinCommand("join", "/join <game>"),
+    listOf(JoinCommand("join", "/join <game>"),
         InstanceCommand("instance", "/instance <list|add|remove> ...", "in"),
         GameCommand("game", "/game <start|end>"),
         LobbyCommand("lobby", "/lobby", "l", "hub"),
-        TeleportCommand("tp", "/tp <player> | /tp <x> <y> <z>"),
+        TeleportCommand("tp", "/tp <player|<x> <y> <z>> [player|<x> <y> <z>]"),
         FlyCommand("fly"),
         GameModeCommand("gamemode", "/gamemode <survival|creative|adventure|spectator> [player]", "gm"),
         KillCommand("kill", "/kill [player]"),
         SetBlockCommand("setblock", "/setblock <x> <y> <z> <block>"),
         PartyCommand("party", "/party <invite|kick|promote|warp|chat|list> ...", "p"),
-        GiveCommand("give", "/give [player] <item>")
+        GiveCommand("give", "/give [player] <item>"),
+        PunishCommand("ban", "/<ban|mute> <player> <duration> <reason>", "mute"),
+        KickCommand("kick", "/kick <player> <reason>"),
+        PardonCommand("pardon", "/pardon <player|ban ID>", "unban", "unmute"),
+        ViewPunishmentsCommand("punishments", "/punishments <player>", "vps", "history"),
+        ViewPunishmentCommand("punishment", "/punishment <id>", "vp"),
     ).forEach(MinecraftServer.getCommandManager()::register)
 
     // Create a per-instance tablist using custom packets
@@ -139,5 +153,19 @@ fun main() {
     // Start the server & bind to port 25565
     minecraftServer.start("0.0.0.0", 25565)
 
-    if(Environment.isDev()) OpenToLAN.open()
+    if (Environment.isDev()) OpenToLAN.open()
+}
+
+fun getPunishmentMessage(punishment: Punishment, state: String) = buildComponent {
+    +("You are $state!" withColor NamedTextColor.RED withDecoration TextDecoration.UNDERLINED)
+    +Component.newline()
+    +Component.newline()
+    +("Reason: " withColor NamedTextColor.RED)
+    +(punishment.reason withColor NamedTextColor.WHITE)
+    +Component.newline()
+    +("Expires in " withColor NamedTextColor.RED)
+    +(punishment.getTimeRemaining() withColor NamedTextColor.WHITE)
+    +Component.newline()
+    +("Punishment ID: " withColor NamedTextColor.RED)
+    +(punishment.id.toString().substringBefore("-") withColor NamedTextColor.WHITE)
 }
