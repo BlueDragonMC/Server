@@ -56,7 +56,7 @@ class MessagingModule : GameModule() {
         init {
             publish(
                 PingMessage(
-                    containerId, System.getenv()
+                    containerId, emptyMap()
                 )
             )
             logger.info("Published ping message.")
