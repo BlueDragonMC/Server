@@ -116,11 +116,11 @@ open class Game(val name: String, val mapName: String) : PacketGroupingAudience 
     }
 
     fun callEvent(event: Event) {
-        modules.forEach { it.eventNode?.call(event) }
+        ArrayList(modules).forEach { it.eventNode?.call(event) }
     }
 
     fun callCancellable(event: Event, successCallback: () -> Unit) {
-        modules.forEach {
+        ArrayList(modules).forEach {
             it.eventNode?.call(event)
         }
         if (event is CancellableEvent && !event.isCancelled) successCallback()

@@ -94,7 +94,7 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
             if (target is Player) damage = EnumArmorToughness.ArmorToughness.getReducedDamage(damage, target)
 
             target.entityMeta.setNotifyAboutChanges(false)
-            player.entityMeta.setNotifyAboutChanges(false)
+            (player as Entity).entityMeta.setNotifyAboutChanges(false)
 
             if (target is LivingEntity) {
                 if (target.getTag(HURT_RESISTANT_TIME) > target.getTag(MAX_HURT_RESISTANT_TIME) / 2.0f) {
@@ -181,7 +181,7 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
             }
 
             target.entityMeta.setNotifyAboutChanges(true)
-            player.entityMeta.setNotifyAboutChanges(true)
+            (player as Entity).entityMeta.setNotifyAboutChanges(true)
 
             // MC 1.8 subtracts 0.3 from the player's food here; we will have to make our own tracker because Minestom keeps track of food as an integer
         }
