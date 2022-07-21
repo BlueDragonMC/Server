@@ -8,6 +8,8 @@ import com.bluedragonmc.server.game.Lobby
 import com.bluedragonmc.server.module.gameplay.SpawnpointModule
 import com.bluedragonmc.server.module.messaging.MessagingModule
 import com.bluedragonmc.server.utils.buildComponent
+import com.bluedragonmc.server.utils.packet.PerInstanceChat
+import com.bluedragonmc.server.utils.packet.PerInstanceTabList
 import com.bluedragonmc.server.utils.plus
 import com.bluedragonmc.server.utils.withColor
 import com.bluedragonmc.server.utils.withDecoration
@@ -116,6 +118,10 @@ fun main() {
         PartyCommand("party", "/party <invite|kick|promote|warp|chat|list> ...", "p"),
         GiveCommand("give", "/give [player] <item>")
     ).forEach(MinecraftServer.getCommandManager()::register)
+
+    // Create a per-instance tablist using custom packets
+    PerInstanceTabList.hook(MinecraftServer.getGlobalEventHandler())
+    PerInstanceChat.hook(MinecraftServer.getGlobalEventHandler())
 
     // Set a custom player provider, so we can easily add fields to the Player class
     MinecraftServer.getConnectionManager().setPlayerProvider(::CustomPlayer)
