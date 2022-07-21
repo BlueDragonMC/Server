@@ -1,10 +1,12 @@
 package com.bluedragonmc.server
 
+import com.bluedragonmc.messages.SendPlayerToInstanceMessage
 import com.bluedragonmc.server.Environment.messagingDisabled
 import com.bluedragonmc.server.Environment.queue
 import com.bluedragonmc.server.command.*
 import com.bluedragonmc.server.game.Lobby
 import com.bluedragonmc.server.module.gameplay.SpawnpointModule
+import com.bluedragonmc.server.module.messaging.MessagingModule
 import com.bluedragonmc.server.utils.buildComponent
 import com.bluedragonmc.server.utils.plus
 import com.bluedragonmc.server.utils.withColor
@@ -21,11 +23,13 @@ import net.minestom.server.event.server.ServerListPingEvent
 import net.minestom.server.extras.MojangAuth
 import net.minestom.server.extras.lan.OpenToLAN
 import net.minestom.server.extras.velocity.VelocityProxy
+import net.minestom.server.instance.Instance
 import net.minestom.server.ping.ServerListPingType
 import net.minestom.server.utils.NamespaceID
 import net.minestom.server.world.DimensionType
 import org.slf4j.LoggerFactory
 import java.net.InetAddress
+import java.util.*
 
 lateinit var lobby: Game
 val queue = Environment.queue
@@ -38,11 +42,26 @@ fun main() {
     // Create a test instance
     lobby = Lobby()
 
-    // Make players spawn in the test instance
+    // Send players to the instance they are supposed to join instead of the lobby,
+    // if a SendPlayerToInstanceMessage was received before they joined.
+    val futureInstances = mutableMapOf<UUID, Instance>()
+
+    MessagingModule.subscribe(SendPlayerToInstanceMessage::class) { message ->
+        val instance = MinecraftServer.getInstanceManager().getInstance(message.instance)
+        if(instance != null && MinecraftServer.getConnectionManager().getPlayer(message.player) == null) {
+            futureInstances[message.player] = instance
+        }
+    }
+
+    // Make players spawn in the correct instance
     MinecraftServer.getGlobalEventHandler().addListener(PlayerLoginEvent::class.java) { event ->
+        val instance = futureInstances[event.player.uuid] ?: lobby.getInstance()
+        val game = Game.findGame(instance.uniqueId)
         event.player.displayName = Component.text(event.player.username, BRAND_COLOR_PRIMARY_1) // TODO change this color when we get a rank system
-        event.player.respawnPoint = lobby.getModule<SpawnpointModule>().spawnpointProvider.getSpawnpoint(event.player)
-        event.setSpawningInstance(lobby.getInstance())
+        event.setSpawningInstance(instance)
+        if(game != null && game.hasModule<SpawnpointModule>()) {
+            event.player.respawnPoint = game.getModule<SpawnpointModule>().spawnpointProvider.getSpawnpoint(event.player)
+        }
     }
 
     // Chat formatting
