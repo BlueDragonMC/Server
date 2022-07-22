@@ -8,6 +8,7 @@ import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.database.DatabaseModule
 import com.bluedragonmc.server.module.instance.InstanceModule
 import com.bluedragonmc.server.module.messaging.MessagingModule
+import com.bluedragonmc.server.module.packet.PerInstanceChatModule
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.MinecraftServer
@@ -37,6 +38,7 @@ open class Game(val name: String, val mapName: String) : PacketGroupingAudience 
 
         // Initialize mandatory modules with no requirements
         use(DatabaseModule())
+        use(PerInstanceChatModule)
 
         // Ensure the game was registered with `ready()` method
         MinecraftServer.getSchedulerManager().buildTask {

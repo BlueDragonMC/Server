@@ -11,7 +11,6 @@ import com.bluedragonmc.server.module.database.Punishment
 import com.bluedragonmc.server.module.gameplay.SpawnpointModule
 import com.bluedragonmc.server.module.messaging.MessagingModule
 import com.bluedragonmc.server.utils.*
-import com.bluedragonmc.server.utils.packet.PerInstanceChat
 import com.bluedragonmc.server.utils.packet.PerInstanceTabList
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.JoinConfiguration
@@ -142,7 +141,6 @@ fun main() {
 
     // Create a per-instance tablist using custom packets
     PerInstanceTabList.hook(MinecraftServer.getGlobalEventHandler())
-    PerInstanceChat.hook(MinecraftServer.getGlobalEventHandler())
 
     // Set a custom player provider, so we can easily add fields to the Player class
     MinecraftServer.getConnectionManager().setPlayerProvider(::CustomPlayer)

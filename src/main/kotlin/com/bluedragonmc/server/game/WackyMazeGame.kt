@@ -3,6 +3,7 @@ package com.bluedragonmc.server.game
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.module.GameModule
+import com.bluedragonmc.server.module.combat.CustomDeathMessageModule
 import com.bluedragonmc.server.module.combat.OldCombatModule
 import com.bluedragonmc.server.module.gameplay.*
 import com.bluedragonmc.server.module.instance.SharedInstanceModule
@@ -24,6 +25,7 @@ class WackyMazeGame(mapName: String) : Game("WackyMaze", mapName) {
         use(AnvilFileMapProviderModule(Paths.get("worlds/$name/$mapName")))
         use(SharedInstanceModule())
         use(VoidDeathModule(32.0))
+        use(CustomDeathMessageModule())
         use(CountdownModule(2, false,
             OldCombatModule(allowDamage = false, allowKnockback = true),
             SpectatorModule(spectateOnDeath = true)))
