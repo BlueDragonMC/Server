@@ -3,12 +3,13 @@ package com.bluedragonmc.server.module.gameplay
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.database.DatabaseModule
-import com.bluedragonmc.server.module.database.MapData
-import kotlinx.coroutines.launch
+import com.bluedragonmc.server.utils.CircularList
+import kotlinx.coroutines.runBlocking
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
+import net.minestom.server.event.player.PlayerRespawnEvent
 import net.minestom.server.event.player.PlayerSpawnEvent
 
 /**
@@ -18,10 +19,14 @@ import net.minestom.server.event.player.PlayerSpawnEvent
  */
 class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule() {
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
-        logger.info("Initializing spawnpoint provider: ${spawnpointProvider::class.simpleName}")
         spawnpointProvider.initialize(parent)
+        logger.info("Initialized spawnpoint provider: ${spawnpointProvider::class.simpleName}")
         eventNode.addListener(PlayerSpawnEvent::class.java) { event ->
             event.player.respawnPoint = spawnpointProvider.getSpawnpoint(event.player)
+        }
+        eventNode.addListener(PlayerRespawnEvent::class.java) { event ->
+            val pos = spawnpointProvider.getSpawnpoint(event.player)
+            event.respawnPosition = pos
         }
     }
 
@@ -30,6 +35,7 @@ class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule(
          * Called when the spawnpoint module is loaded.
          */
         fun initialize(game: Game)
+
         /**
          * Returns a spawnpoint for the specified player.
          */
@@ -62,33 +68,21 @@ class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule(
     /**
      * Gets spawnpoints from the database.
      */
-    class DatabaseSpawnpointProvider(private val allowRandomOrder: Boolean = true, private val callback: () -> Unit) : SpawnpointProvider {
-        lateinit var mapData: MapData
-        lateinit var iterator: Iterator<Pos>
+    class DatabaseSpawnpointProvider(private val allowRandomOrder: Boolean = true) : SpawnpointProvider {
+
         private val cachedSpawnpoints = hashMapOf<Player, Pos>()
+        private lateinit var spawnpoints: CircularList<Pos>
+        private var n = 0
+
         override fun initialize(game: Game) {
-            DatabaseModule.IO.launch {
-                mapData = game.getModule<DatabaseModule>().getMap(game.mapName)
-                iterator = if (allowRandomOrder)
-                    mapData.spawnpoints.shuffled().iterator()
-                else
-                    mapData.spawnpoints.iterator()
-                callback()
+            runBlocking {
+                val mapData = game.getModule<DatabaseModule>().getMap(game.mapName)
+                spawnpoints = CircularList(if(allowRandomOrder) mapData.spawnpoints.shuffled() else mapData.spawnpoints)
             }
         }
 
-        override fun getSpawnpoint(player: Player): Pos {
-            if (cachedSpawnpoints.containsKey(player)) return cachedSpawnpoints[player]!!
-
-            if (!iterator.hasNext()) iterator = if (allowRandomOrder)
-                mapData.spawnpoints.shuffled().iterator()
-            else
-                mapData.spawnpoints.iterator()
-
-            cachedSpawnpoints[player] = iterator.next()
-            return getSpawnpoint(player)
-        }
-
+        override fun getSpawnpoint(player: Player) = cachedSpawnpoints[player] ?: findSpawnpoint(player)
+        private fun findSpawnpoint(player: Player) = spawnpoints[n++].also { cachedSpawnpoints[player] = it }
     }
 
     /**
@@ -98,44 +92,37 @@ class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule(
      * If they are on a team, they will be given their team's spawnpoint.
      * Requires the [TeamModule] to work properly.
      */
-    class TeamDatabaseSpawnpointProvider(private val allowRandomOrder: Boolean = false, private val callback: () -> Unit) : SpawnpointProvider {
-        private lateinit var game: Game
-        lateinit var mapData: MapData
-        lateinit var iterator: Iterator<Pos>
+    class TeamDatabaseSpawnpointProvider(
+        private val allowRandomOrder: Boolean = false,
+    ) : SpawnpointProvider {
+
+        private lateinit var spawnpoints: CircularList<Pos>
         private val cachedSpawnpoints = hashMapOf<TeamModule.Team, Pos>()
+
+        /**
+         * Counter for the index in `spawnpoints`, incremented every time a non-cached spawnpoint is requested for a team.
+         */
+        private var n = 0
+
+        /**
+         * Counter for the index in `spawnpoints` that is incremented every time a spawnpoint is requested for a player with no team.
+         */
+        private var m = 0
+
+        private lateinit var teamModule: TeamModule
+
         override fun initialize(game: Game) {
-            this.game = game
-            DatabaseModule.IO.launch {
-                mapData = game.getModule<DatabaseModule>().getMap(game.mapName)
-                iterator = if (allowRandomOrder)
-                    mapData.spawnpoints.shuffled().iterator()
-                else
-                    mapData.spawnpoints.iterator()
-                callback()
+            this.teamModule = game.getModule()
+            runBlocking {
+                val mapData = game.getModule<DatabaseModule>().getMap(game.mapName)
+                spawnpoints = CircularList(if(allowRandomOrder) mapData.spawnpoints.shuffled() else mapData.spawnpoints)
             }
         }
 
-        override fun getSpawnpoint(player: Player): Pos {
-            val playerTeam = game.getModule<TeamModule>().getTeam(player)
-            if (playerTeam != null) {
-                if (cachedSpawnpoints.containsKey(playerTeam)) return cachedSpawnpoints[playerTeam]!!
+        private fun teamOf(player: Player) = teamModule.getTeam(player)
+        override fun getSpawnpoint(player: Player) = teamOf(player)?.let { cachedSpawnpoints[it] ?: findSpawnpoint(it) } ?: spawnpoints[m++]
 
-                if (!iterator.hasNext()) iterator = if (allowRandomOrder)
-                    mapData.spawnpoints.shuffled().iterator()
-                else
-                    mapData.spawnpoints.iterator()
-
-                cachedSpawnpoints[playerTeam] = iterator.next()
-                return getSpawnpoint(player)
-            } else return mapData.spawnpoints[0]
-        }
-
-        fun getSpawnpoint(team: TeamModule.Team): Pos {
-            if (cachedSpawnpoints.containsKey(team)) return cachedSpawnpoints[team]!!
-            if (!iterator.hasNext()) iterator = mapData.spawnpoints.iterator()
-            cachedSpawnpoints[team] = iterator.next()
-            return getSpawnpoint(team)
-        }
+        private fun findSpawnpoint(team: TeamModule.Team) = spawnpoints[n++].also { cachedSpawnpoints[team] = it}
 
     }
 }

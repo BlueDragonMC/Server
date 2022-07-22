@@ -127,7 +127,7 @@ class DatabaseModule : GameModule() {
     suspend fun getMap(mapName: String): MapData {
         if (cachedMapData.containsKey(mapName)) return cachedMapData[mapName]!!
         val col = getMapsCollection()
-        val mapData = col.findOneById(mapName)!!
+        val mapData = col.findOneById(mapName) ?: error("No map data found for name $mapName.")
         cachedMapData[mapName] = mapData
         return mapData
     }

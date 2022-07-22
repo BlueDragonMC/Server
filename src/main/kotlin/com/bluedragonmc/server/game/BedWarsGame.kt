@@ -49,7 +49,7 @@ import java.util.*
 
 class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
 
-    val otherTeamBedDestroyedSound = Sound.sound(SoundEvent.ENTITY_ENDER_DRAGON_DEATH, Sound.Source.HOSTILE, 1.0f, 1.0f)
+    val otherTeamBedDestroyedSound = Sound.sound(SoundEvent.ENTITY_ENDER_DRAGON_GROWL, Sound.Source.HOSTILE, 1.0f, 1.0f)
     val bedDestroyedSound = Sound.sound(SoundEvent.ENTITY_WITHER_DEATH, Sound.Source.HOSTILE, 1.0f, 1.0f)
 
     init {
@@ -68,7 +68,7 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
         use(WinModule(WinModule.WinCondition.LAST_TEAM_ALIVE) { player, winningTeam ->
             if (player in winningTeam.players) 500 else 50
         })
-        use(SpawnpointModule(SpawnpointModule.TeamDatabaseSpawnpointProvider { ready() }))
+        use(SpawnpointModule(SpawnpointModule.TeamDatabaseSpawnpointProvider()))
         use(MOTDModule(Component.text("Collect resources at generators around the map.\n" + "When your team's bed is broken, you cannot respawn.")))
         use(PlayerResetModule(defaultGameMode = GameMode.SURVIVAL))
         use(TeamModule(true, TeamModule.AutoTeamMode.PLAYER_COUNT, 1, teamsAutoAssignedCallback = {
@@ -289,6 +289,8 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
                 }
             }
         })
+
+        ready()
     }
 
     private val shop by lazy {

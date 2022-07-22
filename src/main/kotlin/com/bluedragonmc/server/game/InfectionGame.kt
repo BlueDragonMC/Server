@@ -57,7 +57,7 @@ class InfectionGame(mapName: String) : Game("Infection", mapName) {
         use(NaturalRegenerationModule())
         use(PlayerResetModule(defaultGameMode = GameMode.ADVENTURE))
         use(SidebarModule(name)) // TODO show all players and their infected status on sidebar
-        use(SpawnpointModule(SpawnpointModule.DatabaseSpawnpointProvider(allowRandomOrder = true) { ready() }))
+        use(SpawnpointModule(SpawnpointModule.DatabaseSpawnpointProvider(allowRandomOrder = true)))
         use(TeamModule(autoTeams = false))
         use(SpectatorModule(spectateOnDeath = false, spectateOnLeave = true))
         use(TimedRespawnModule(5))
@@ -68,5 +68,7 @@ class InfectionGame(mapName: String) : Game("Infection", mapName) {
         use(WinModule(winCondition = WinModule.WinCondition.MANUAL) { player, winningTeam ->
             if (player in winningTeam.players) 100 else 10
         })
+
+        ready()
     }
 }
