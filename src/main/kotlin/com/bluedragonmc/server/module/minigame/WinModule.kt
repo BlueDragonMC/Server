@@ -42,7 +42,7 @@ class WinModule(
                     declareWinner(remainingTeams.first())
                 }
             } else if (winCondition == WinCondition.LAST_PLAYER_ALIVE && parent.players.size - spectatorModule.spectatorCount() <= 1) {
-                declareWinner(parent.players.first { player -> !spectatorModule.isSpectating(player) })
+                parent.players.firstOrNull { player -> !spectatorModule.isSpectating(player) }?.let { declareWinner(it) }
             }
         }
         eventNode.addListener(WinnerDeclaredEvent::class.java) { event ->

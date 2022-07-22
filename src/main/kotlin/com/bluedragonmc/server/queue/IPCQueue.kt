@@ -2,7 +2,6 @@ package com.bluedragonmc.server.queue
 
 import com.bluedragonmc.messages.*
 import com.bluedragonmc.server.Game
-import com.bluedragonmc.server.module.gameplay.SpawnpointModule
 import com.bluedragonmc.server.module.messaging.MessagingModule
 import com.bluedragonmc.server.utils.broadcast
 import net.kyori.adventure.text.Component
@@ -47,10 +46,7 @@ object IPCQueue : Queue() {
                 player.sendMessage(Component.text("There was an error sending you to the instance! (No game found)", NamedTextColor.RED))
                 return@subscribe
             }
-            game.players.add(player)
-            if (game.hasModule<SpawnpointModule>())
-                player.setInstance(instance, game.getModule<SpawnpointModule>().spawnpointProvider.getSpawnpoint(player))
-            else player.setInstance(instance)
+            game.addPlayer(player)
         }
     }
 

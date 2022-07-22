@@ -19,13 +19,13 @@ import net.minestom.server.event.EventFilter
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.instance.RemoveEntityFromInstanceEvent
 import net.minestom.server.event.player.PlayerDisconnectEvent
-import net.minestom.server.event.player.PlayerPacketOutEvent
 import net.minestom.server.event.player.PlayerSpawnEvent
 import net.minestom.server.event.trait.CancellableEvent
 import net.minestom.server.event.trait.InstanceEvent
+import net.minestom.server.event.trait.PlayerEvent
 import org.slf4j.LoggerFactory
 import java.time.Duration
-import java.util.UUID
+import java.util.*
 
 open class Game(val name: String, val mapName: String) : PacketGroupingAudience {
 
@@ -74,12 +74,13 @@ open class Game(val name: String, val mapName: String) : PacketGroupingAudience 
                     // Workaround for PlayerSpawnEvent not being an InstanceEvent
                     hasModule<InstanceModule>() && event.spawnInstance == getInstance()
                 }
-                is PlayerPacketOutEvent -> {
+                is PlayerEvent -> {
                     hasModule<InstanceModule>() && event.player.instance == getInstance()
                 }
                 else -> false
             }
         }
+        eventNode.priority = module.eventPriority
 
         MinecraftServer.getGlobalEventHandler().addChild(eventNode)
         module.eventNode = eventNode
@@ -134,18 +135,28 @@ open class Game(val name: String, val mapName: String) : PacketGroupingAudience 
     }
     open val maxPlayers = 8
 
-    fun getGameStateUpdateMessage() = GameStateUpdateMessage(instanceId, if(state.canPlayersJoin) maxPlayers - players.size else 0)
+    fun getGameStateUpdateMessage() = GameStateUpdateMessage(instanceId, if(isJoinable) maxPlayers - players.size else 0)
 
-    val isJoinable
+    private val isJoinable
         get() = state.canPlayersJoin
+
+    fun addPlayer(player: Player) {
+        findGame(player)?.players?.remove(player)
+        players.add(player)
+        player.setInstance(getInstance())
+    }
 
     internal inline fun <reified T : GameModule> hasModule(): Boolean = modules.any { it is T }
 
     internal inline fun <reified T : GameModule> getModule(): T {
+        return getModuleOrNull() ?: error("No module found of type ${T::class.simpleName} on game $this.")
+    }
+
+    internal inline fun <reified T : GameModule> getModuleOrNull(): T? {
         for (module in modules) {
             if (module is T) return module
         }
-        error("No module found of type ${T::class.simpleName} on game $this.")
+        return null
     }
 
     var state: GameState = GameState.SERVER_STARTING

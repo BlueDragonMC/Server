@@ -2,12 +2,12 @@ package com.bluedragonmc.server.queue
 
 import com.bluedragonmc.messages.GameType
 import com.bluedragonmc.server.Game
-import com.bluedragonmc.server.module.gameplay.SpawnpointModule
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.event.HoverEvent
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.MinecraftServer
 import net.minestom.server.entity.Player
+import org.slf4j.LoggerFactory
 import java.io.File
 import java.time.Duration
 import kotlin.random.Random
@@ -18,6 +18,8 @@ import kotlin.random.Random
  */
 class TestQueue : Queue() {
     private val queuedPlayers: HashMap<Player, String> = hashMapOf()
+
+    private val logger = LoggerFactory.getLogger(TestQueue::class.java)
 
     /**
      * Adds the player to the queue.
@@ -32,7 +34,10 @@ class TestQueue : Queue() {
             return
         }
         queuedPlayers[player] = gameType.name
-        player.sendMessage(Component.text("You are now in the queue.", NamedTextColor.GREEN).hoverEvent(HoverEvent.showText(Component.text("Test queue debug information\nGame type: $gameType"))))
+        player.sendMessage(
+            Component.text("You are now in the queue.", NamedTextColor.GREEN)
+                .hoverEvent(HoverEvent.showText(Component.text("Test queue debug information\nGame type: $gameType")))
+        )
     }
 
     /**
@@ -40,13 +45,8 @@ class TestQueue : Queue() {
      */
     fun join(player: Player, game: Game) {
         player.sendMessage(Component.text("You are being sent to a game.", NamedTextColor.GREEN))
-        game.players.add(player)
-        if (!game.hasModule<SpawnpointModule>())
-            player.setInstance(game.getInstance())
-        else
-            player.setInstance(game.getInstance(), game.getModule<SpawnpointModule>().spawnpointProvider.getSpawnpoint(player))
+        game.addPlayer(player)
     }
-
 
     var instanceStarting = false // only one instance is allowed to start per queue cycle
     override fun start() {
@@ -56,28 +56,31 @@ class TestQueue : Queue() {
                 instanceStarting = false
                 queuedPlayers.forEach { (player, gameType) ->
                     if (!gameClasses.containsKey(gameType)) {
-                        player.sendMessage(Component.text("Invalid game type. Removing you from the queue.", NamedTextColor.RED))
+                        player.sendMessage(
+                            Component.text(
+                                "Invalid game type. Removing you from the queue.", NamedTextColor.RED
+                            )
+                        )
                         playersToRemove.add(player)
                         return@forEach
                     }
                     for (game in Game.games) {
                         if (game.name == gameType) {
-                            println("Found a good game for ${player.username} to join")
+                            logger.info("Found a good game for ${player.username} to join")
                             playersToRemove.add(player)
                             join(player, game)
                             return@forEach
                         }
                     }
                     if (instanceStarting) return@forEach
-                    println("Starting a new instance for ${player.username}")
+                    logger.info("Starting a new instance for ${player.username}")
                     player.sendMessage(
                         Component.text(
-                            "No joinable instance found. Creating a new instance for you.",
-                            NamedTextColor.GREEN
+                            "No joinable instance found. Creating a new instance for you.", NamedTextColor.GREEN
                         )
                     )
                     val map = randomMap(gameType)
-                    println("Map chosen: $map")
+                    logger.info("Map chosen: $map")
                     gameClasses[gameType]!!.call(map)
                     instanceStarting = true
                 }

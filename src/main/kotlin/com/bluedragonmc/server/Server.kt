@@ -8,7 +8,6 @@ import com.bluedragonmc.server.command.punishment.*
 import com.bluedragonmc.server.game.Lobby
 import com.bluedragonmc.server.module.database.DatabaseModule
 import com.bluedragonmc.server.module.database.Punishment
-import com.bluedragonmc.server.module.gameplay.SpawnpointModule
 import com.bluedragonmc.server.module.messaging.MessagingModule
 import com.bluedragonmc.server.utils.*
 import com.bluedragonmc.server.utils.packet.PerInstanceTabList
@@ -50,7 +49,7 @@ fun main() {
 
     MessagingModule.subscribe(SendPlayerToInstanceMessage::class) { message ->
         val instance = MinecraftServer.getInstanceManager().getInstance(message.instance)
-        if(instance != null && MinecraftServer.getConnectionManager().getPlayer(message.player) == null) {
+        if (instance != null && MinecraftServer.getConnectionManager().getPlayer(message.player) == null) {
             futureInstances[message.player] = instance
         }
     }
@@ -59,16 +58,20 @@ fun main() {
     MinecraftServer.getGlobalEventHandler().addListener(PlayerLoginEvent::class.java) { event ->
         val instance = futureInstances[event.player.uuid] ?: lobby.getInstance()
         val game = Game.findGame(instance.uniqueId)
-        event.player.displayName = Component.text(event.player.username, BRAND_COLOR_PRIMARY_1) // TODO change this color when we get a rank system
+        event.player.displayName = Component.text(
+            event.player.username,
+            BRAND_COLOR_PRIMARY_1
+        ) // TODO change this color when we get a rank system
         event.player.sendMessage(Component.text("Placing you in ${instance.uniqueId}...", NamedTextColor.DARK_GRAY))
         event.setSpawningInstance(instance)
-        if (game != null) {
-            game.players.add(event.player)
-            if (game.hasModule<SpawnpointModule>()) {
-                event.player.respawnPoint = game.getModule<SpawnpointModule>().spawnpointProvider.getSpawnpoint(event.player)
-            }
-        }
+        game?.players?.add(event.player)
         futureInstances.remove(event.player.uuid)
+    }
+
+    MinecraftServer.getGlobalEventHandler().addListener(PlayerLoginEvent::class.java) {
+        if (it.player.username == "crazyshark321") {
+            it.player.kick(Component.text("Disconnected"))
+        }
     }
 
     // Chat formatting
@@ -82,14 +85,16 @@ fun main() {
         val level = CustomPlayer.getXpLevel(experience)
         val xpToNextLevel = CustomPlayer.getXpToNextLevel(level, experience).toInt()
         event.setChatFormat {
-            Component.join(JoinConfiguration.noSeparators(),
+            Component.join(
+                JoinConfiguration.noSeparators(),
                 Component.text("[", NamedTextColor.DARK_GRAY),
                 Component.text(level.toInt(), BRAND_COLOR_PRIMARY_1)
                     .hoverEvent(HoverEvent.showText(event.player.name + Component.text(" has a total of $experience experience,\nand needs $xpToNextLevel XP to reach level ${level.toInt() + 1}."))),
                 Component.text("] ", NamedTextColor.DARK_GRAY),
                 event.player.name,
                 Component.text(": ", NamedTextColor.DARK_GRAY),
-                Component.text(event.message, NamedTextColor.WHITE))
+                Component.text(event.message, NamedTextColor.WHITE)
+            )
         }
     }
 
@@ -121,7 +126,8 @@ fun main() {
     }
 
     // Initialize commands
-    listOf(JoinCommand("join", "/join <game>"),
+    listOf(
+        JoinCommand("join", "/join <game>"),
         InstanceCommand("instance", "/instance <list|add|remove> ...", "in"),
         GameCommand("game", "/game <start|end>"),
         LobbyCommand("lobby", "/lobby", "l", "hub"),
@@ -146,7 +152,9 @@ fun main() {
     MinecraftServer.getConnectionManager().setPlayerProvider(::CustomPlayer)
 
     // Register custom dimension types
-    MinecraftServer.getDimensionTypeManager().addDimension(DimensionType.builder(NamespaceID.from("bluedragon:fullbright_dimension")).ambientLight(1.0F).build())
+    MinecraftServer.getDimensionTypeManager().addDimension(
+        DimensionType.builder(NamespaceID.from("bluedragon:fullbright_dimension")).ambientLight(1.0F).build()
+    )
 
     // Start the queue loop, which runs every 2 seconds and handles the players in queue
     queue.start()
