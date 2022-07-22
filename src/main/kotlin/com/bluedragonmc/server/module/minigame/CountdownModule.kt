@@ -69,7 +69,7 @@ class CountdownModule(
         eventNode.addListener(PlayerMoveEvent::class.java) { event ->
             if (countdownRunning && // Countdown started
                 !countdownEnded && // Countdown not ended
-                !allowMoveDuringCountdown && (event.newPosition.x != event.player.position.x || event.newPosition.z != event.player.position.z)
+                !allowMoveDuringCountdown
             ) {
                 // Revert the player's position without forcing the player's facing direction
                 event.newPosition = event.player.position
