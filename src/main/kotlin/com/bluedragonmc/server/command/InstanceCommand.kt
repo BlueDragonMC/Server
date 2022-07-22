@@ -1,5 +1,6 @@
 package com.bluedragonmc.server.command
 
+import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.utils.buildComponent
 import com.bluedragonmc.server.utils.clickEvent
 import com.bluedragonmc.server.utils.hoverEvent
@@ -28,13 +29,17 @@ class InstanceCommand(name: String, usageString: String, vararg aliases: String?
                 for (instance in MinecraftServer.getInstanceManager().instances) {
                     +Component.newline()
                     +Component.text(instance.uniqueId.toString(), NamedTextColor.DARK_GRAY)
-                        .hoverEvent("Click to copy!", NamedTextColor.YELLOW)
                         .clickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, instance.uniqueId.toString())
-                    +Component.space()
+                    +Component.text(" · ", NamedTextColor.GRAY)
                     +Component.text(instance::class.simpleName ?: "null", NamedTextColor.AQUA)
                     +Component.newline()
-                    +Component.text("- ", NamedTextColor.GRAY)
-                    +Component.text("${instance.players.size} players online", NamedTextColor.GRAY)
+                    +Component.text(" → ", NamedTextColor.GRAY)
+                    val game = Game.findGame(instance.uniqueId)
+                    +Component.text(game?.name ?: "No game", NamedTextColor.YELLOW)
+                    +Component.text(" · ", NamedTextColor.GRAY)
+                    +Component.text(game?.mapName ?: "No map", NamedTextColor.GOLD)
+                    +Component.text(" · ", NamedTextColor.GRAY)
+                    +Component.text("${instance.players.size} online", NamedTextColor.GRAY)
                     +Component.space()
                     val connectButtonColor =
                         if (sender is Player && sender.instance != instance) NamedTextColor.YELLOW else NamedTextColor.GRAY
