@@ -3,14 +3,17 @@ package com.bluedragonmc.server
 import com.bluedragonmc.server.module.database.PlayerDocument
 import com.bluedragonmc.server.module.database.PunishmentType
 import com.bluedragonmc.server.module.gameplay.ShopModule
+import com.bluedragonmc.server.module.gameplay.SpawnpointModule
 import net.minestom.server.entity.Entity
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
 import net.minestom.server.entity.metadata.PlayerMeta
+import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
 import net.minestom.server.network.player.PlayerConnection
 import net.minestom.server.potion.PotionEffect
 import java.util.*
+import java.util.concurrent.CompletableFuture
 import kotlin.math.log
 import kotlin.math.pow
 
@@ -56,8 +59,26 @@ class CustomPlayer(uuid: UUID, username: String, playerConnection: PlayerConnect
         }
     }
 
+    public override fun refreshHealth() {
+        super.refreshHealth()
+    }
+
+    public override fun refreshAfterTeleport() {
+        super.refreshAfterTeleport()
+    }
+
+    override fun setInstance(instance: Instance): CompletableFuture<Void> {
+        Game.findGame(this)?.apply {
+            val spawnpoint = getModuleOrNull<SpawnpointModule>()?.spawnpointProvider?.getSpawnpoint(this@CustomPlayer)
+            if (spawnpoint != null) {
+                return super.setInstance(instance, spawnpoint)
+            }
+        }
+        return super.setInstance(instance, if (this.instance != null) getPosition() else respawnPoint)
+    }
+
     override fun getAdditionalHearts(): Float {
-        return if(entityMeta !is PlayerMeta) 0f
+        return if (entityMeta !is PlayerMeta) 0f
         else super.getAdditionalHearts()
     }
 
@@ -72,6 +93,7 @@ class CustomPlayer(uuid: UUID, username: String, playerConnection: PlayerConnect
     fun isInWater() = instance!!.getBlock(position).isLiquid
 
     fun isBlind() = activeEffects.any { it.potion.effect == PotionEffect.BLINDNESS }
+    fun setDead(dead: Boolean) = refreshIsDead(dead)
 
     companion object {
         /**

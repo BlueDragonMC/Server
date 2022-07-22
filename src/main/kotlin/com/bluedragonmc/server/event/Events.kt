@@ -5,8 +5,17 @@ import net.minestom.server.entity.Player
 import net.minestom.server.event.trait.CancellableEvent
 import net.minestom.server.event.trait.PlayerEvent
 
-abstract class GameEvent(val game: Game) : CancellableEvent {
+abstract class Cancellable : CancellableEvent {
+    private var cancelled = false
 
+    override fun isCancelled(): Boolean = cancelled
+
+    override fun setCancelled(cancel: Boolean) {
+        cancelled = cancel
+    }
+}
+
+abstract class CancellablePlayerEvent(private val player: Player) : Cancellable(), PlayerEvent {
     private var cancelled = false
 
     override fun isCancelled(): Boolean = cancelled
@@ -15,7 +24,10 @@ abstract class GameEvent(val game: Game) : CancellableEvent {
         cancelled = cancel
     }
 
+    override fun getPlayer() = player
 }
+
+abstract class GameEvent(val game: Game) : Cancellable()
 
 class GameStartEvent(game: Game) : GameEvent(game)
 
@@ -26,5 +38,4 @@ class PlayerLeaveGameEvent(game: Game, private val p: Player) : GameEvent(game),
     override fun getPlayer(): Player {
         return p
     }
-
 }
