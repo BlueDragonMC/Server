@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalSerializationApi::class)
-
 package com.bluedragonmc.server.module.database
 
 import com.bluedragonmc.server.CustomPlayer
@@ -11,7 +9,6 @@ import com.mongodb.ConnectionString
 import com.mongodb.MongoClientSettings
 import com.mongodb.client.model.Filters
 import kotlinx.coroutines.*
-import kotlinx.serialization.ExperimentalSerializationApi
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.MinecraftServer
@@ -75,6 +72,14 @@ class DatabaseModule : GameModule() {
                 return (it as CustomPlayer).data
             }
             return getPlayersCollection().findOne(Filters.eq(PlayerDocument::uuid.path(), uuid.toString()))
+        }
+
+        internal suspend fun getAllGroups(): List<PermissionGroup> {
+            val result = mutableListOf<PermissionGroup>()
+            getGroupsCollection().find().consumeEach {
+                result.add(it)
+            }
+            return result
         }
     }
 

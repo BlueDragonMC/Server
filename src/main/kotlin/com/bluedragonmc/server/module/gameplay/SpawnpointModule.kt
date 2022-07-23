@@ -18,6 +18,9 @@ import net.minestom.server.event.player.PlayerSpawnEvent
  * This module does not automatically teleport the player when they join the game. That is the queue's reponsibility.
  */
 class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule() {
+
+    override val dependencies = if(spawnpointProvider is TeamDatabaseSpawnpointProvider) listOf(TeamModule::class) else emptyList()
+
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         spawnpointProvider.initialize(parent)
         logger.info("Initialized spawnpoint provider: ${spawnpointProvider::class.simpleName}")

@@ -2,14 +2,15 @@ package com.bluedragonmc.server.command
 
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
+import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.command.BlueDragonCommand.Companion.errorColor
-import com.bluedragonmc.server.module.database.DatabaseModule
 import com.bluedragonmc.server.module.database.PlayerDocument
 import com.bluedragonmc.server.utils.component1
 import com.bluedragonmc.server.utils.component2
 import com.bluedragonmc.server.utils.component3
 import com.bluedragonmc.server.utils.withColor
+import kotlinx.coroutines.runBlocking
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.JoinConfiguration
 import net.kyori.adventure.text.format.NamedTextColor
@@ -40,7 +41,7 @@ open class BlueDragonCommand(
         val errorFieldColor: TextColor = NamedTextColor.DARK_RED
     }
 
-    private class MessageBuilder {
+    internal class MessageBuilder {
         private val components = mutableListOf<Component>()
 
         fun message(string: String) {
@@ -66,7 +67,7 @@ open class BlueDragonCommand(
         fun get() = Component.join(JoinConfiguration.noSeparators(), components)
     }
 
-    private fun buildMessage(block: MessageBuilder.() -> Unit) = MessageBuilder().apply(block).get()
+    internal fun buildMessage(block: MessageBuilder.() -> Unit) = MessageBuilder().apply(block).get()
 
     fun formatPos(pos: Point): String {
         val (x, y, z) = pos
@@ -116,13 +117,27 @@ open class BlueDragonCommand(
     }
 
     fun subcommand(name: String, block: BlueDragonCommand.() -> Unit) =
-        addSubcommand(BlueDragonCommand(name, emptyArray(), block))
+        addSubcommand(constructSubcommand(name, block))
+
+    fun constructSubcommand(name: String, block: BlueDragonCommand.() -> Unit) =
+        BlueDragonCommand(name, emptyArray(), block)
 
     fun syntax(vararg args: Argument<*>, block: CommandCtx.() -> Unit) = Syntax(this, args.toList(), block)
+    fun suspendSyntax(vararg args: Argument<*>, block: suspend CommandCtx.() -> Unit) =
+        BlockingSyntax(this, args.toList(), block)
 
-    data class CommandCtx(val sender: CommandSender, val ctx: CommandContext) {
+    fun userSuspendSyntax(vararg args: Argument<*>, block: suspend UserCommandCtx.() -> Unit) = suspendSyntax(*args, block = {
+        block(UserCommandCtx(sender, ctx, args.first() as ArgumentOfflinePlayer))
+    })
+
+    class UserCommandCtx(sender: CommandSender, ctx: CommandContext, userArgument: Argument<PlayerDocument>) : CommandCtx(sender, ctx) {
+        val doc = get(userArgument)
+    }
+
+    open class CommandCtx(val sender: CommandSender, val ctx: CommandContext) {
         val player by lazy { sender as Player }
         val game by lazy { Game.findGame(player)!! }
+        val playerName by lazy { (sender as? Player)?.name ?: Component.text("Console") }
 
         fun <T> get(argument: Argument<T>): T = ctx.get(argument)
         fun getPlayer(argument: Argument<PlayerDocument>): Player? =
@@ -137,7 +152,7 @@ open class BlueDragonCommand(
 
     data class ConditionCtx(val sender: CommandSender, val ctx: CommandContext)
 
-    data class Syntax(val parent: Command, val args: List<Argument<*>>, val handler: CommandCtx.() -> Unit) :
+    open class Syntax(val parent: Command, val args: List<Argument<*>>, val handler: CommandCtx.() -> Unit) :
         ConditionHolder {
         override val conditions: MutableList<ConditionCtx.() -> Boolean> = mutableListOf()
 
@@ -154,6 +169,13 @@ open class BlueDragonCommand(
             }, *args.toTypedArray())
         }
     }
+
+    class BlockingSyntax(parent: Command, args: List<Argument<*>>, handler: suspend CommandCtx.() -> Unit) :
+        Syntax(parent, args, {
+            runBlocking {
+                handler()
+            }
+        })
 
     class SilentCommandException(message: String?) : RuntimeException(message)
 }

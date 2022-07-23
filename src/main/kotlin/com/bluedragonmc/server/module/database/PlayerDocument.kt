@@ -9,7 +9,6 @@ import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextColor
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.item.Material
-import net.minestom.server.permission.Permission
 import org.litote.kmongo.setTo
 import org.litote.kmongo.setValue
 import java.time.Duration
@@ -25,12 +24,14 @@ data class PlayerDocument @OptIn(ExperimentalSerializationApi::class) constructo
     @EncodeDefault var usernameLower: String = username.lowercase(),
     var coins: Int = 0,
     var experience: Int = 0,
-    var groups: List<String> = emptyList(),
+    var groups: MutableList<String> = mutableListOf(),
     var punishments: MutableList<Punishment> = mutableListOf(),
     var statistics: List<Statistic> = emptyList(),
     var achievements: List<Achievement> = emptyList(),
     var ownedCosmetics: List<Cosmetic> = emptyList(),
+    var permissions: MutableList<String> = mutableListOf(),
 ) {
+
     suspend fun getGroups(): List<PermissionGroup> {
         val col = DatabaseModule.getGroupsCollection()
         return groups.mapNotNull {
@@ -38,12 +39,12 @@ data class PlayerDocument @OptIn(ExperimentalSerializationApi::class) constructo
         }.toList()
     }
 
-    suspend fun getAllPermissions(): List<Permission> =
-        getGroups().map { it.permissions }.flatten().distinctBy { it.permissionName }
+    suspend fun getAllPermissions(): List<String> =
+        permissions + getGroups().map { it.permissions }.flatten().distinct()
 
     suspend fun <T> update(field: KMutableProperty<T>, value: T) {
         DatabaseModule.getPlayersCollection().updateOneById(uuid.toString(), setValue(field, value))
-        field.setTo(value)
+        field.setter.call(this, value)
     }
 
     suspend fun <T> compute(field: KMutableProperty1<PlayerDocument, T>, block: (T) -> T) {
@@ -105,8 +106,17 @@ data class PermissionGroup(
     @SerialName("_id") val name: String,
     val color: TextColor = NamedTextColor.WHITE,
     val prefix: Component = Component.empty(),
-    val permissions: List<@Serializable(with = PermissionSerializer::class) Permission> = emptyList(),
-)
+    val permissions: MutableList<String> = mutableListOf(),
+    val inheritsFrom: List<String> = emptyList()
+) {
+    suspend fun getChildGroups(): List<PermissionGroup?> {
+        return inheritsFrom.map { DatabaseModule.getGroupsCollection().findOneById(it) }
+    }
+
+    suspend fun getAllPermissions(): List<String> {
+        return permissions + getChildGroups().map { getAllPermissions() }.flatten()
+    }
+}
 
 @Serializable
 data class MapData(

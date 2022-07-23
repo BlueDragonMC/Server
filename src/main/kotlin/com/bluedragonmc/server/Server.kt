@@ -146,6 +146,7 @@ fun main() {
         ViewPunishmentsCommand("punishments", "/punishments <player>", "vps", "history"),
         ViewPunishmentCommand("punishment", "/punishment <id>", "vp"),
         UpdateCommand("update", "/update <repo> <branch>"),
+        PermissionCommand("permission", "/permission ...", "lp", "perm"),
     ).forEach(MinecraftServer.getCommandManager()::register)
 
     // Create a per-instance tablist using custom packets
