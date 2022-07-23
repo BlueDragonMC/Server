@@ -218,7 +218,6 @@ interface ConditionHolder {
 
     fun requirePermission(permission: String) {
         conditions.add {
-            println("Player permission status: ${Permissions.hasPermission((sender as CustomPlayer).data, permission)}")
             if (sender is CustomPlayer && !Permissions.hasPermission(sender.data, permission)) {
                 sender.sendMessage("You do not have permission to execute this command." withColor errorColor)
                 false
