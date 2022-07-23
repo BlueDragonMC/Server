@@ -28,8 +28,7 @@ class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule(
             event.player.respawnPoint = spawnpointProvider.getSpawnpoint(event.player)
         }
         eventNode.addListener(PlayerRespawnEvent::class.java) { event ->
-            val pos = spawnpointProvider.getSpawnpoint(event.player)
-            event.respawnPosition = pos
+            event.respawnPosition = spawnpointProvider.getSpawnpoint(event.player)
         }
     }
 
@@ -85,7 +84,12 @@ class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule(
         }
 
         override fun getSpawnpoint(player: Player) = cachedSpawnpoints[player] ?: findSpawnpoint(player)
-        private fun findSpawnpoint(player: Player) = spawnpoints[n++].also { cachedSpawnpoints[player] = it }
+        private fun findSpawnpoint(player: Player): Pos {
+            val pos = spawnpoints[n++]
+            if(cachedSpawnpoints.containsValue(pos)) return findSpawnpoint(player) // Prevent players from spawning inside each other
+            cachedSpawnpoints[player] = pos
+            return pos
+        }
     }
 
     /**

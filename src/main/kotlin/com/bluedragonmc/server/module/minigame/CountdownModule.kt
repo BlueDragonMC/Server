@@ -5,6 +5,7 @@ import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.GameState
 import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.module.GameModule
+import com.bluedragonmc.server.module.gameplay.SpawnpointModule
 import com.bluedragonmc.server.utils.packet.PacketUtils
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -16,11 +17,7 @@ import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.instance.RemoveEntityFromInstanceEvent
-import net.minestom.server.event.player.PlayerBlockBreakEvent
-import net.minestom.server.event.player.PlayerBlockInteractEvent
-import net.minestom.server.event.player.PlayerBlockPlaceEvent
-import net.minestom.server.event.player.PlayerMoveEvent
-import net.minestom.server.event.player.PlayerSpawnEvent
+import net.minestom.server.event.player.*
 import java.time.Duration
 import java.util.*
 import kotlin.concurrent.fixedRateTimer
@@ -77,6 +74,13 @@ class CountdownModule(
                 !countdownEnded && // Countdown not ended
                 !allowMoveDuringCountdown
             ) {
+                parent.getModuleOrNull<SpawnpointModule>()?.spawnpointProvider?.getSpawnpoint(event.player)?.let { sp ->
+                    if(event.newPosition.distanceSquared(sp) > 4.0) {
+                        event.isCancelled = true
+                        event.player.teleport(sp)
+                        return@addListener
+                    }
+                }
                 // Revert the player's position without forcing the player's facing direction
                 event.newPosition = event.player.position
                 event.player.sendPacket(
