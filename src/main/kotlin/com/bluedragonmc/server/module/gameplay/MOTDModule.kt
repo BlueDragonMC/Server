@@ -28,7 +28,7 @@ class MOTDModule(val motd: Component) : GameModule() {
         mapData = MapData(parent.mapName)
         val databaseModule = parent.getModule<DatabaseModule>()
         DatabaseModule.IO.launch {
-            mapData = databaseModule.getMap(parent.mapName)
+            mapData = databaseModule.getMapOrNull(parent.mapName) ?: MapData(parent.mapName)
         }
         eventNode.addListener(PlayerSpawnEvent::class.java) { event ->
             event.player.sendMessage(

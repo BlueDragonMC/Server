@@ -113,6 +113,7 @@ data class MapData(
     @SerialName("_id") val name: String,
     val author: String = "BlueDragon Build Team",
     val description: String = "An awesome map!",
+    val time: Int? = null,
     val spawnpoints: List<@Serializable(with = PosSerializer::class) Pos> = emptyList(),
     /**
      * A list of lists of positions. Use this to store game-specific locations like loot generators or NPCs.

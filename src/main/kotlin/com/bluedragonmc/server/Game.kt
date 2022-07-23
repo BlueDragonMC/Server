@@ -11,6 +11,7 @@ import com.bluedragonmc.server.module.messaging.MessagingModule
 import com.bluedragonmc.server.module.packet.PerInstanceChatModule
 import com.bluedragonmc.server.utils.Node
 import com.bluedragonmc.server.utils.Root
+import kotlinx.coroutines.runBlocking
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.MinecraftServer
@@ -182,6 +183,19 @@ open class Game(val name: String, val mapName: String) : PacketGroupingAudience 
         }
         logger.debug("Initializing game with modules: ${modules.map { it.value?.type?.simpleName ?: "<Anonymous module>" }}")
         logger.debug(dependencyTree.toString())
+
+        // Set time of day according to the MapData
+        runBlocking {
+            val mapData = getModule<DatabaseModule>().getMapOrNull(mapName) ?: return@runBlocking
+            val time = mapData.time
+            if (time != null && time >= 0) {
+                val instance = getInstance()
+                instance.timeRate = 0
+                instance.time = time.toLong()
+            }
+        }
+
+        // Let the queue system send players to the game
         games.add(this)
         state = GameState.WAITING
     }
