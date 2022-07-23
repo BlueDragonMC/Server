@@ -16,8 +16,10 @@ import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.MinecraftServer
 import net.minestom.server.entity.EntityType
 import net.minestom.server.entity.Player
+import net.minestom.server.entity.PlayerSkin
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
+import net.minestom.server.event.player.PlayerSpawnEvent
 import java.time.Duration
 
 /**
@@ -34,6 +36,7 @@ class InfectionModule : GameModule() {
         TeamModule.Team(Component.text("Survivors", NamedTextColor.GREEN), allowFriendlyFire = true)
     private val infectedTeam =
         TeamModule.Team(Component.text("Infected", NamedTextColor.RED), allowFriendlyFire = false)
+    private val skins = hashMapOf<Player, PlayerSkin?>()
 
     override val dependencies = listOf(DatabaseModule::class, SpawnpointModule::class, TeamModule::class, TimedRespawnModule::class, WinModule::class)
 
@@ -42,6 +45,10 @@ class InfectionModule : GameModule() {
 
         DatabaseModule.IO.launch {
             mapData = parent.getModule<DatabaseModule>().getMap(parent.mapName)
+        }
+
+        eventNode.addListener(PlayerSpawnEvent::class.java) { event ->
+            skins[event.player] = event.player.skin
         }
 
         eventNode.addListener(GameStartEvent::class.java) {
@@ -61,13 +68,17 @@ class InfectionModule : GameModule() {
         }
     }
 
+    override fun deinitialize() {
+        while (infectedTeam.players.isNotEmpty()) disinfect(infectedTeam.players.first())
+    }
+
     fun infectRandomPlayer() {
         infect(parent.players.random())
     }
 
     fun infect(player: Player) {
         parent.sendMessage(player.name + Component.text(" is now infected!", BRAND_COLOR_PRIMARY_2))
-        player.switchEntityType(EntityType.ZOMBIE)
+        player.skin = NPCModule.NPCSkins.ZOMBIE.skin
         survivorsTeam.players.remove(player)
         infectedTeam.players.add(player)
         player.respawnPoint = mapData.additionalLocations[0][0]
@@ -77,7 +88,7 @@ class InfectionModule : GameModule() {
     }
 
     fun disinfect(player: Player) {
-        player.switchEntityType(EntityType.PLAYER)
+        player.skin = skins[player]
         infectedTeam.players.remove(player)
         survivorsTeam.players.add(player)
         player.respawnPoint = parent.getModule<SpawnpointModule>().spawnpointProvider.getSpawnpoint(player)
