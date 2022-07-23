@@ -6,8 +6,9 @@ import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.Environment
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.GameModule
-import com.github.jershell.kbson.FlexibleDecoder
+import com.bluedragonmc.server.utils.packet.PacketUtils
 import com.mongodb.ConnectionString
+import com.mongodb.MongoClientSettings
 import com.mongodb.client.model.Filters
 import kotlinx.coroutines.*
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -17,7 +18,8 @@ import net.minestom.server.MinecraftServer
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
-import net.minestom.server.event.player.PlayerPacketOutEvent
+import net.minestom.server.event.player.PlayerChatEvent
+import net.minestom.server.event.player.PlayerMoveEvent
 import net.minestom.server.event.player.PlayerSpawnEvent
 import net.minestom.server.event.trait.CancellableEvent
 import net.minestom.server.event.trait.PlayerEvent
@@ -29,6 +31,7 @@ import org.litote.kmongo.eq
 import org.litote.kmongo.path
 import org.litote.kmongo.reactivestreams.KMongo
 import java.util.*
+import java.util.concurrent.TimeUnit
 import kotlin.coroutines.CoroutineContext
 
 class DatabaseModule : GameModule() {
@@ -41,7 +44,16 @@ class DatabaseModule : GameModule() {
         }
 
         private val client: CoroutineClient by lazy {
-            KMongo.createClient(ConnectionString("mongodb://${Environment.mongoHostname}")).coroutine
+            KMongo.createClient(MongoClientSettings.builder()
+                .applyConnectionString(ConnectionString("mongodb://${Environment.mongoHostname}"))
+                .applyToSocketSettings { block ->
+                    block.connectTimeout(5, TimeUnit.SECONDS)
+                }
+                .applyToClusterSettings { block ->
+                    block.serverSelectionTimeout(5, TimeUnit.SECONDS)
+                }
+                .build()
+            ).coroutine
         }
         private val database: CoroutineDatabase by lazy {
             client.getDatabase("bluedragon")
@@ -74,6 +86,7 @@ class DatabaseModule : GameModule() {
                 try {
                     player.data = getPlayerDocument(player)
                 } catch (e: Throwable) {
+                    logger.error("Player data for ${player.username} failed to load.")
                     MinecraftServer.getExceptionManager().handleException(e)
                     player.kick(Component.text("Your player data was not loaded! Wait a moment and try to reconnect.",
                         NamedTextColor.RED))
@@ -92,11 +105,21 @@ class DatabaseModule : GameModule() {
             }
         }
 
-        eventNode.addListener(PlayerEvent::class.java) { event ->
-            // Prevent player actions until data is loaded
-            if (event is CancellableEvent && event !is PlayerPacketOutEvent)
-                if (!(event.player as CustomPlayer).isDataInitialized()) event.isCancelled = true
+        // Prevent player actions until data is loaded
+        eventNode.addListener(PlayerMoveEvent::class.java) { event ->
+            if (!(event.player as CustomPlayer).isDataInitialized()) {
+                event.newPosition = event.player.position
+                event.player.sendPacket(
+                    PacketUtils.getRelativePosLookPacket(event.player, event.player.position)
+                )
+            }
         }
+        eventNode.addListener(PlayerChatEvent::class.java, ::preventIfDataNotLoaded)
+    }
+
+    private fun preventIfDataNotLoaded(event: PlayerEvent) {
+        event as CancellableEvent
+        if (!(event.player as CustomPlayer).isDataInitialized()) event.isCancelled = true
     }
 
     private suspend fun getPlayerDocument(player: Player): PlayerDocument {

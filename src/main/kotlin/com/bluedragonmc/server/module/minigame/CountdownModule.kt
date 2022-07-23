@@ -5,6 +5,7 @@ import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.GameState
 import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.module.GameModule
+import com.bluedragonmc.server.utils.packet.PacketUtils
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
@@ -18,7 +19,6 @@ import net.minestom.server.event.player.PlayerBlockBreakEvent
 import net.minestom.server.event.player.PlayerBlockPlaceEvent
 import net.minestom.server.event.player.PlayerMoveEvent
 import net.minestom.server.event.player.PlayerSpawnEvent
-import net.minestom.server.network.packet.server.play.PlayerPositionAndLookPacket
 import java.time.Duration
 import java.util.*
 import kotlin.concurrent.fixedRateTimer
@@ -74,12 +74,7 @@ class CountdownModule(
                 // Revert the player's position without forcing the player's facing direction
                 event.newPosition = event.player.position
                 event.player.sendPacket(
-                    PlayerPositionAndLookPacket(
-                        event.player.position.withView(0.0f, 0.0f),
-                        (0x08 or 0x10).toByte(), // flags - see https://wiki.vg/Protocol#Synchronize_Player_Position
-                        event.player.nextTeleportId,
-                        false
-                    )
+                    PacketUtils.getRelativePosLookPacket(event.player, event.player.position)
                 )
             }
         }
