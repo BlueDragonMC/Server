@@ -32,8 +32,8 @@ dependencies {
     implementation("org.litote.kmongo:kmongo-coroutine-serialization:4.6.1")
 
     // Messaging
-    implementation("com.github.bluedragonmc:messagingsystem:2836a1f6f3")
-    implementation("com.github.bluedragonmc:messages:e8603cb")
+    implementation("com.github.bluedragonmc:messagingsystem:3abc4b8a49")
+    implementation("com.github.bluedragonmc:messages:072cb9d7d3")
 }
 
 tasks.test {
@@ -47,10 +47,6 @@ tasks.withType<KotlinCompile> {
 tasks.jar {
     dependsOn(tasks.shadowJar)
     manifest {
-        attributes(
-            mapOf(
-                "Main-Class" to "com.bluedragonmc.server.ServerKt"
-            )
-        )
+        attributes["Main-Class"] = "com.bluedragonmc.server.ServerKt"
     }
 }

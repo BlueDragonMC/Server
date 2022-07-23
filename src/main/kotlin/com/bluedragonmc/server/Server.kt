@@ -1,5 +1,6 @@
 package com.bluedragonmc.server
 
+import com.bluedragonmc.messages.ReportErrorMessage
 import com.bluedragonmc.messages.SendPlayerToInstanceMessage
 import com.bluedragonmc.server.Environment.messagingDisabled
 import com.bluedragonmc.server.Environment.queue
@@ -11,6 +12,7 @@ import com.bluedragonmc.server.module.database.Punishment
 import com.bluedragonmc.server.module.messaging.MessagingModule
 import com.bluedragonmc.server.utils.*
 import com.bluedragonmc.server.utils.packet.PerInstanceTabList
+import kotlinx.coroutines.launch
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.JoinConfiguration
 import net.kyori.adventure.text.event.HoverEvent
@@ -81,7 +83,7 @@ fun main() {
             event.player.sendMessage(getPunishmentMessage(mute, "currently muted").surroundWithSeparators())
             return@addListener
         }
-        val experience = (event.player as CustomPlayer).data.experience
+        val experience = (event.player as CustomPlayer).run { if(isDataInitialized()) data.experience else 0 }
         val level = CustomPlayer.getXpLevel(experience)
         val xpToNextLevel = CustomPlayer.getXpToNextLevel(level, experience).toInt()
         event.setChatFormat {
@@ -151,6 +153,22 @@ fun main() {
     // Set a custom player provider, so we can easily add fields to the Player class
     MinecraftServer.getConnectionManager().setPlayerProvider(::CustomPlayer)
 
+    // Automatically report errors to Puffin in addition to logging them
+    MinecraftServer.getExceptionManager().setExceptionHandler { e ->
+        e.printStackTrace()
+        DatabaseModule.IO.launch {
+            MessagingModule.publish(
+                ReportErrorMessage(
+                    MessagingModule.containerId,
+                    null,
+                    e.message.orEmpty(),
+                    e.stackTraceToString(),
+                    getDebugContext()
+                )
+            )
+        }
+    }
+
     // Register custom dimension types
     MinecraftServer.getDimensionTypeManager().addDimension(
         DimensionType.builder(NamespaceID.from("bluedragon:fullbright_dimension")).ambientLight(1.0F).build()
@@ -159,9 +177,8 @@ fun main() {
     // Start the queue loop, which runs every 2 seconds and handles the players in queue
     queue.start()
 
-    // Enable Mojang authentication OR enable Velocity modern forwarding
-    val secret = System.getenv("velocity_secret")
-    secret?.let { VelocityProxy.enable(it) } ?: MojangAuth.init()
+    // Enable Velocity modern forwarding OR enable Mojang authentication
+    System.getenv("velocity_secret")?.let { VelocityProxy.enable(it) } ?: MojangAuth.init()
 
     // Start the server & bind to port 25565
     minecraftServer.start("0.0.0.0", 25565)
@@ -182,3 +199,10 @@ fun getPunishmentMessage(punishment: Punishment, state: String) = buildComponent
     +("Punishment ID: " withColor NamedTextColor.RED)
     +(punishment.id.toString().substringBefore("-") withColor NamedTextColor.WHITE)
 }
+
+fun getDebugContext() = mapOf(
+    "Container ID" to MessagingModule.containerId.toString(),
+    "All Running Instances" to MinecraftServer.getInstanceManager().instances.joinToString { it.uniqueId.toString() },
+    "Running Games" to Game.games.joinToString { it.toString() },
+    "Online Players" to MinecraftServer.getConnectionManager().onlinePlayers.joinToString { it.username }
+)
