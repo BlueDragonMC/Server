@@ -6,6 +6,7 @@ import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.game.InfectionGame
 import com.bluedragonmc.server.module.GameModule
+import com.bluedragonmc.server.module.combat.OldCombatModule
 import com.bluedragonmc.server.module.database.DatabaseModule
 import com.bluedragonmc.server.module.database.MapData
 import com.bluedragonmc.server.module.minigame.WinModule
@@ -33,9 +34,9 @@ class InfectionModule(val scoreboardBinding: SidebarModule.ScoreboardBinding? = 
     private lateinit var parent: Game
     private lateinit var mapData: MapData
     private val survivorsTeam =
-        TeamModule.Team(Component.text("Survivors", NamedTextColor.GREEN), allowFriendlyFire = true)
+        TeamModule.Team(Component.text("Survivors", NamedTextColor.GREEN), allowFriendlyFire = false)
     private val infectedTeam =
-        TeamModule.Team(Component.text("Infected", NamedTextColor.RED), allowFriendlyFire = false)
+        TeamModule.Team(Component.text("Infected", NamedTextColor.RED), allowFriendlyFire = true)
     private val skins = hashMapOf<Player, PlayerSkin?>()
 
     override val dependencies = listOf(DatabaseModule::class, SpawnpointModule::class, TeamModule::class, TimedRespawnModule::class, WinModule::class)
@@ -66,6 +67,11 @@ class InfectionModule(val scoreboardBinding: SidebarModule.ScoreboardBinding? = 
 
         eventNode.addListener(TimedRespawnModule.TimedRespawnEvent::class.java) { event ->
             if (survivorsTeam.players.contains(event.player)) infect(event.player)
+        }
+
+        eventNode.addListener(OldCombatModule.PlayerAttackEvent::class.java) { event ->
+            if (event.target is Player && survivorsTeam.players.contains(event.target) && infectedTeam.players.contains(event.attacker))
+                event.target.kill()
         }
     }
 

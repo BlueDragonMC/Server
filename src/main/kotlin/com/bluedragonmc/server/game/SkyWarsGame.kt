@@ -11,11 +11,15 @@ import com.bluedragonmc.server.module.instance.InstanceContainerModule
 import com.bluedragonmc.server.module.map.AnvilFileMapProviderModule
 import com.bluedragonmc.server.module.minigame.CountdownModule
 import com.bluedragonmc.server.module.minigame.WinModule
+import com.bluedragonmc.server.utils.noItalic
 import kotlinx.coroutines.launch
 import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.coordinate.Point
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.GameMode
+import net.minestom.server.item.Enchantment
+import net.minestom.server.item.ItemMeta
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import java.nio.file.Paths
@@ -94,7 +98,7 @@ class SkyWarsGame(mapName: String) : Game("SkyWars", mapName) {
     class NormalSkyWarsLootProvider(game: Game) : SkyWarsLootProvider(game) {
         override fun getSpawnLoot(): Collection<ItemStack> {
             val loot = arrayListOf<ItemStack>()
-            loot += ItemStack.of(Material.WHITE_WOOL, (4 .. 8).random())
+            loot += ItemStack.of(Material.WHITE_WOOL, (12 .. 24).random())
             loot += ItemStack.of(Material.COOKED_BEEF, (0 .. 1).random())
 
             loot += ItemStack.of(Material.STONE_SWORD, (0 .. 1).random())
@@ -113,24 +117,35 @@ class SkyWarsGame(mapName: String) : Game("SkyWars", mapName) {
             return loot
         }
 
+        private val stickItem = ItemStack.builder(Material.STICK).displayName(Component.text("Knockback Stick"))
+            .lore(
+                Component.text("Use this to wack your enemies", NamedTextColor.GRAY).noItalic(),
+                Component.text("off the map!", NamedTextColor.GRAY).noItalic()
+            )
+            .meta { metaBuilder: ItemMeta.Builder ->
+                metaBuilder.enchantment(Enchantment.KNOCKBACK, 2)
+            }.build()
+
         override fun getMidLoot(): Collection<ItemStack> {
             val loot = arrayListOf<ItemStack>()
 
             loot += ItemStack.of(Material.WHITE_WOOL, (8 .. 16).random())
-            loot += ItemStack.of(Material.GOLDEN_APPLE, (0 .. 1).random())
+            loot += ItemStack.of(Material.GOLDEN_APPLE, (0 .. 2).random())
 
             loot += ItemStack.of(Material.IRON_SWORD, (0 .. 1).random())
             loot += ItemStack.of(Material.DIAMOND_SWORD, (0 .. 1).random())
 
-            if ((0 .. 6).random() == 0) loot += ItemStack.of(Material.CHAINMAIL_HELMET)
-            if ((0 .. 6).random() == 0) loot += ItemStack.of(Material.CHAINMAIL_CHESTPLATE)
-            if ((0 .. 6).random() == 0) loot += ItemStack.of(Material.CHAINMAIL_LEGGINGS)
-            if ((0 .. 6).random() == 0) loot += ItemStack.of(Material.CHAINMAIL_BOOTS)
+            if ((0 .. 4).random() == 0) loot += ItemStack.of(Material.IRON_HELMET)
+            if ((0 .. 4).random() == 0) loot += ItemStack.of(Material.IRON_CHESTPLATE)
+            if ((0 .. 4).random() == 0) loot += ItemStack.of(Material.IRON_LEGGINGS)
+            if ((0 .. 4).random() == 0) loot += ItemStack.of(Material.IRON_BOOTS)
 
-            if ((0 .. 10).random() == 0) loot += ItemStack.of(Material.IRON_HELMET)
-            if ((0 .. 10).random() == 0) loot += ItemStack.of(Material.IRON_CHESTPLATE)
-            if ((0 .. 10).random() == 0) loot += ItemStack.of(Material.IRON_LEGGINGS)
-            if ((0 .. 10).random() == 0) loot += ItemStack.of(Material.IRON_BOOTS)
+            if ((0 .. 7).random() == 0) loot += ItemStack.of(Material.DIAMOND_HELMET)
+            if ((0 .. 7).random() == 0) loot += ItemStack.of(Material.DIAMOND_CHESTPLATE)
+            if ((0 .. 7).random() == 0) loot += ItemStack.of(Material.DIAMOND_LEGGINGS)
+            if ((0 .. 7).random() == 0) loot += ItemStack.of(Material.DIAMOND_BOOTS)
+
+            if ((0 .. 5).random() == 0) loot += stickItem
 
             return loot
         }

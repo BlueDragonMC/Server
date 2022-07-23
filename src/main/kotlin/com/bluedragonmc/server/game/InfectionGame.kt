@@ -37,7 +37,7 @@ class InfectionGame(mapName: String) : Game("Infection", mapName) {
         use(SharedInstanceModule())
 
         // COMBAT
-        use(OldCombatModule(allowDamage = true, allowKnockback = true))
+        use(OldCombatModule(allowDamage = false, allowKnockback = true))
 
         // GAMEPLAY
         use(AwardsModule())
