@@ -5,6 +5,7 @@ import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.JoinConfiguration
 import net.kyori.adventure.text.event.ClickEvent
 import net.kyori.adventure.text.event.HoverEvent
+import net.kyori.adventure.text.flattener.ComponentFlattener
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
@@ -45,12 +46,49 @@ fun Material.displayName(color: TextColor) = Component.translatable(registry().t
 
 fun Component.noItalic() = decoration(TextDecoration.ITALIC, false)
 fun Component.noBold() = decoration(TextDecoration.BOLD, false)
+fun Component.withTransition(phase: Float, vararg colors: TextColor) = color(getColor(phase, *colors))
+fun Component.withGradient(vararg colors: TextColor): Component {
+    val split = splitComponentToCharacters(this)
+    val size = split.children().size + 1
+    var component = Component.empty()
+    split.children().forEachIndexed { index, child ->
+        val phase = index.toFloat() / size.toFloat()
+        component = component.append(child.withTransition(phase, *colors))
+    }
+    return component
+}
 infix fun String.withColor(color: TextColor) = Component.text(this, color)
 infix fun Component.withColor(color: TextColor) = colorIfAbsent(color)
 infix fun Component.withDecoration(decoration: TextDecoration) = decorate(decoration)
 
 fun broadcast(msg: Component) =
     PacketGroupingAudience.of(MinecraftServer.getConnectionManager().onlinePlayers).sendMessage(msg)
+
+fun splitComponentToCharacters(component: Component): Component {
+    return buildComponent {
+        ComponentFlattener.textOnly().flatten(component) { str ->
+            str.forEach { c ->
+                +Component.text(c, component.style())
+            }
+        }
+        component.children().forEach { child ->
+            +splitComponentToCharacters(child)
+        }
+    }
+}
+private fun getColor(phase: Float, vararg colors: TextColor): TextColor {
+    val steps = 1f / (colors.size - 1)
+    var colorIndex = 1
+    while(colorIndex < colors.size) {
+        val value = colorIndex * steps
+        if(value >= phase) {
+            val factor = 1 + (phase - value) * (colors.size - 1)
+            return TextColor.lerp(factor, colors[colorIndex - 1], colors[colorIndex])
+        }
+        colorIndex ++
+    }
+    return NamedTextColor.WHITE
+}
 
 class ComponentBuilder {
 

@@ -102,8 +102,7 @@ fun main() {
 
     eventNode.addListener(ServerListPingEvent::class.java) { event ->
         event.responseData.description = buildComponent {
-            +("Blue" withColor BRAND_COLOR_PRIMARY_2 withDecoration TextDecoration.BOLD)
-            +("Dragon" withColor BRAND_COLOR_PRIMARY_1 withDecoration TextDecoration.BOLD)
+            +Component.text("BlueDragon").withDecoration(TextDecoration.BOLD).withGradient(BRAND_COLOR_PRIMARY_2, BRAND_COLOR_PRIMARY_3)
             +(" [" withColor NamedTextColor.DARK_GRAY)
             if (messagingDisabled) {
                 +("Dev on ${InetAddress.getLocalHost().hostName}" withColor NamedTextColor.RED)
