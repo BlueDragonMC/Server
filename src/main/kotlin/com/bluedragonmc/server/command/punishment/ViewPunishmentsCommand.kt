@@ -11,7 +11,7 @@ import net.kyori.adventure.text.event.ClickEvent
 import net.kyori.adventure.text.format.NamedTextColor
 
 class ViewPunishmentsCommand(name: String, usageString: String, vararg aliases: String) :
-    BlueDragonCommand(name, aliases, {
+    BlueDragonCommand(name, aliases, block = {
 
         usage(usageString)
 

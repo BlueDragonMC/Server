@@ -6,7 +6,7 @@ import com.bluedragonmc.server.module.database.DatabaseModule
 import com.bluedragonmc.server.module.database.PlayerDocument
 import kotlinx.coroutines.launch
 
-class PardonCommand(name: String, usageString: String, vararg aliases: String) : BlueDragonCommand(name, aliases, {
+class PardonCommand(name: String, usageString: String, vararg aliases: String) : BlueDragonCommand(name, aliases, block = {
 
     /*
     TODO: Make another syntax that receives a punishment ID instead of an offline player, using the following query:

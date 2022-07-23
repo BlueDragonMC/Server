@@ -3,6 +3,7 @@ package com.bluedragonmc.server.game
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.database.AwardsModule
 import com.bluedragonmc.server.module.gameplay.*
 import com.bluedragonmc.server.module.instance.CustomGeneratorInstanceModule
@@ -15,6 +16,8 @@ import net.minestom.server.coordinate.Point
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.coordinate.Vec
 import net.minestom.server.entity.GameMode
+import net.minestom.server.event.Event
+import net.minestom.server.event.EventNode
 import net.minestom.server.instance.block.Block
 import net.minestom.server.instance.generator.GenerationUnit
 import net.minestom.server.instance.generator.Generator
@@ -52,6 +55,16 @@ class FastFallGame(mapName: String?) : Game("FastFall", "Chaos") {
         use(SpawnpointModule(SpawnpointModule.SingleSpawnpointProvider(Pos(0.5, 257.0, 0.5))))
         use(VoidDeathModule(threshold = 0.0, respawnMode = true))
         use(WorldPermissionsModule(exceptions = listOf(Block.GLASS)))
+        use(object : GameModule() {
+            override fun initialize(parent: Game, eventNode: EventNode<Event>) {
+                eventNode.addListener(WinModule.WinnerDeclaredEvent::class.java) { event ->
+                    event.winningTeam.players.forEach {
+                        if (it.health == it.maxHealth) parent.getModule<AwardsModule>().awardCoins(it, 50, "No Damage Taken")
+                    }
+                }
+            }
+
+        })
 
         // MINIGAME MODULES
         use(CountdownModule(threshold = 1, allowMoveDuringCountdown = false))

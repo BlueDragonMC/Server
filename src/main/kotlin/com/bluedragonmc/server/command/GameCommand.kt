@@ -13,7 +13,7 @@ import java.time.Duration
  * Usage:
  * /game <start|end>
  */
-class GameCommand(name: String, usageString: String, vararg aliases: String?) : BlueDragonCommand(name, aliases, {
+class GameCommand(name: String, usageString: String, vararg aliases: String?) : BlueDragonCommand(name, aliases, block = {
     requirePlayers()
     usage(usageString)
 

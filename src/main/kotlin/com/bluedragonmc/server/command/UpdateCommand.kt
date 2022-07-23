@@ -5,7 +5,7 @@ import com.bluedragonmc.server.module.messaging.MessagingModule
 import net.minestom.server.entity.Player
 import java.util.*
 
-class UpdateCommand(name: String, usageString: String, vararg aliases: String) : BlueDragonCommand(name, aliases, {
+class UpdateCommand(name: String, usageString: String, vararg aliases: String) : BlueDragonCommand(name, aliases, block = {
     usage(usageString)
 
     val repoArgument by StringArgument

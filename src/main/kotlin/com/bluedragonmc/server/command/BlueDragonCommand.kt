@@ -5,6 +5,7 @@ import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.command.BlueDragonCommand.Companion.errorColor
+import com.bluedragonmc.server.module.database.Permissions
 import com.bluedragonmc.server.module.database.PlayerDocument
 import com.bluedragonmc.server.utils.component1
 import com.bluedragonmc.server.utils.component2
@@ -31,6 +32,7 @@ import net.minestom.server.utils.entity.EntityFinder
 open class BlueDragonCommand(
     name: String,
     aliases: Array<out String?> = emptyArray(),
+    val permission: String? = "command.$name",
     block: BlueDragonCommand.() -> Unit,
 ) : Command(name, *aliases), ConditionHolder {
 
@@ -120,7 +122,7 @@ open class BlueDragonCommand(
         addSubcommand(constructSubcommand(name, block))
 
     fun constructSubcommand(name: String, block: BlueDragonCommand.() -> Unit) =
-        BlueDragonCommand(name, emptyArray(), block)
+        BlueDragonCommand(name, emptyArray(), permission, block)
 
     fun syntax(vararg args: Argument<*>, block: CommandCtx.() -> Unit) = Syntax(this, args.toList(), block)
     fun suspendSyntax(vararg args: Argument<*>, block: suspend CommandCtx.() -> Unit) =
@@ -157,6 +159,8 @@ open class BlueDragonCommand(
         override val conditions: MutableList<ConditionCtx.() -> Boolean> = mutableListOf()
 
         init {
+            val permission = (parent as BlueDragonCommand).permission
+            if (permission != null) this.requirePermission(permission)
             parent.addSyntax({ sender, context ->
                 try {
                     if (!conditionsPass(ConditionCtx(sender, context))) return@addSyntax
@@ -209,6 +213,16 @@ interface ConditionHolder {
                 sender.sendMessage("You are not in a game! Join a game in order to run this command." withColor errorColor)
                 false
             } else true
+        }
+    }
+
+    fun requirePermission(permission: String) {
+        conditions.add {
+            println("Player permission status: ${Permissions.hasPermission((sender as CustomPlayer).data, permission)}")
+            if (sender is CustomPlayer && !Permissions.hasPermission(sender.data, permission)) {
+                sender.sendMessage("You do not have permission to execute this command." withColor errorColor)
+                false
+            } else true // Console always has permission
         }
     }
 

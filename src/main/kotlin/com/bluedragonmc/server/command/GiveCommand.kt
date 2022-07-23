@@ -2,7 +2,7 @@ package com.bluedragonmc.server.command
 
 import net.kyori.adventure.text.Component
 
-class GiveCommand(name: String, usageString: String, vararg aliases: String) : BlueDragonCommand(name, aliases, {
+class GiveCommand(name: String, usageString: String, vararg aliases: String) : BlueDragonCommand(name, aliases, block = {
     usage(usageString)
 
     val itemArgument by ItemStackArgument

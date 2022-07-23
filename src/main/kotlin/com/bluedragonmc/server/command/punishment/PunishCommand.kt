@@ -14,7 +14,7 @@ import net.minestom.server.MinecraftServer
 import net.minestom.server.command.builder.exception.ArgumentSyntaxException
 import java.util.*
 
-class PunishCommand(name: String, usageString: String, vararg aliases: String) : BlueDragonCommand(name, aliases, {
+class PunishCommand(name: String, usageString: String, vararg aliases: String) : BlueDragonCommand(name, aliases, block = {
 
     usage(usageString)
 

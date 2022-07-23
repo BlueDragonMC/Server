@@ -1,6 +1,7 @@
 package com.bluedragonmc.server.command
 
-class FlyCommand(name: String, vararg aliases: String) : BlueDragonCommand(name, aliases, {
+class FlyCommand(name: String, vararg aliases: String) : BlueDragonCommand(name, aliases, block = {
+
     val playerArgument by PlayerArgument
 
     syntax {

@@ -6,7 +6,7 @@ class SetBlockCommand(
     name: String,
     usageString: String,
     vararg aliases: String = emptyArray(),
-) : BlueDragonCommand(name, aliases, {
+) : BlueDragonCommand(name, aliases, block = {
 
     usage(usageString)
 

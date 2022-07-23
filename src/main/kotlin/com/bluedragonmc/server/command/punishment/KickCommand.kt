@@ -9,7 +9,7 @@ import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.entity.Player
 
-class KickCommand(name: String, usageString: String, vararg aliases: String) : BlueDragonCommand(name, aliases, {
+class KickCommand(name: String, usageString: String, vararg aliases: String) : BlueDragonCommand(name, aliases, block = {
 
     usage(usageString)
 

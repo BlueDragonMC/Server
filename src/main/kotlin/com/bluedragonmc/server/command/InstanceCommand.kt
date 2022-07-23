@@ -17,7 +17,7 @@ import net.minestom.server.entity.Player
  * - /instance list
  * - /instance join <Instance UUID>
  */
-class InstanceCommand(name: String, usageString: String, vararg aliases: String?) : BlueDragonCommand(name, aliases, {
+class InstanceCommand(name: String, usageString: String, vararg aliases: String?) : BlueDragonCommand(name, aliases, block = {
     usage(usageString)
     subcommand("list") {
         syntax {

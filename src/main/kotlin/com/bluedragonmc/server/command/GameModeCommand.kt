@@ -3,7 +3,7 @@ package com.bluedragonmc.server.command
 import net.minestom.server.command.builder.arguments.ArgumentWord
 import net.minestom.server.entity.GameMode
 
-class GameModeCommand(name: String, usageString: String, vararg aliases: String) : BlueDragonCommand(name, aliases, {
+class GameModeCommand(name: String, usageString: String, vararg aliases: String) : BlueDragonCommand(name, aliases, block = {
     val gameModeArgument = ArgumentWord("gameMode").from("survival", "creative", "adventure", "spectator")
     val playerArgument by PlayerArgument
 

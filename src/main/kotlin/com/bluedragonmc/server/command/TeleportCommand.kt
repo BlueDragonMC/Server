@@ -6,7 +6,7 @@ package com.bluedragonmc.server.command
  * /tp <x> <y> <z>
  * /tp <player> <other>
  */
-class TeleportCommand(name: String, usageString: String, vararg aliases: String?) : BlueDragonCommand(name, aliases, {
+class TeleportCommand(name: String, usageString: String, vararg aliases: String?) : BlueDragonCommand(name, aliases, block = {
     val coordsArgument by BlockPosArgument
     val playerArgument by PlayerArgument
     val player2Argument by PlayerArgument

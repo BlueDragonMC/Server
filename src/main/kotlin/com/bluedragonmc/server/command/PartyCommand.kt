@@ -5,7 +5,7 @@ import com.bluedragonmc.server.module.messaging.MessagingModule
 import net.kyori.adventure.text.minimessage.MiniMessage
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder
 
-class PartyCommand(name: String, usage: String, vararg aliases: String) : BlueDragonCommand(name, aliases, {
+class PartyCommand(name: String, usage: String, vararg aliases: String) : BlueDragonCommand(name, aliases, null, block = {
     requirePlayers()
     /*
     invite <player>

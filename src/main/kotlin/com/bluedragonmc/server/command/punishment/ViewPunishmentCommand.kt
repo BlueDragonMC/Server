@@ -12,7 +12,7 @@ import org.litote.kmongo.elemMatch
 import org.litote.kmongo.path
 
 class ViewPunishmentCommand(name: String, usageString: String, vararg aliases: String) :
-    BlueDragonCommand(name, aliases, {
+    BlueDragonCommand(name, aliases, block = {
         usage(usageString)
 
         val punishmentIDArgument by WordArgument

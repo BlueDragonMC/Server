@@ -21,7 +21,7 @@ Future:
 permission contexts like LuckPerms?
 
  */
-class PermissionCommand(name: String, usageString: String, vararg aliases: String) : BlueDragonCommand(name, aliases, {
+class PermissionCommand(name: String, usageString: String, vararg aliases: String) : BlueDragonCommand(name, aliases, block = {
     usage(usageString)
 
     val permission by LiteralArgument
