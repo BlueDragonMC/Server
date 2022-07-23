@@ -40,7 +40,6 @@ class InfectionGame(mapName: String) : Game("Infection", mapName) {
 
         // GAMEPLAY
         use(AwardsModule())
-        use(InfectionModule())
         use(InventoryPermissionsModule(allowDropItem = false, allowMoveItem = false))
         use(
             KitsModule(
@@ -69,6 +68,8 @@ class InfectionGame(mapName: String) : Game("Infection", mapName) {
         use(WinModule(winCondition = WinModule.WinCondition.MANUAL) { player, winningTeam ->
             if (player in winningTeam.players) 100 else 10
         })
+
+        use(InfectionModule())
 
         ready()
     }

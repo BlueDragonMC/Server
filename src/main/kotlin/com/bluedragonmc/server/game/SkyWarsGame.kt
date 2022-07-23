@@ -47,10 +47,6 @@ class SkyWarsGame(mapName: String) : Game("SkyWars", mapName) {
         use(ItemPickupModule())
         use(WorldPermissionsModule(allowBlockBreak = true, allowBlockPlace = true, allowBlockInteract = true))
         use(PlayerResetModule(defaultGameMode = GameMode.SURVIVAL))
-        use(SpawnpointModule(SpawnpointModule.TeamDatabaseSpawnpointProvider(allowRandomOrder = true)))
-        use(FallDamageModule)
-        use(NaturalRegenerationModule())
-        use(InventoryPermissionsModule(allowDropItem = true, allowMoveItem = true, forcedItemSlot = null))
         use(TeamModule(autoTeams = true, autoTeamMode = TeamModule.AutoTeamMode.PLAYER_COUNT, autoTeamCount = 1, teamsAutoAssignedCallback = {
             val spawnpointProvider = getModule<SpawnpointModule>().spawnpointProvider
             players.forEach {
@@ -58,6 +54,10 @@ class SkyWarsGame(mapName: String) : Game("SkyWars", mapName) {
                 it.teleport(it.respawnPoint)
             }
         }))
+        use(SpawnpointModule(SpawnpointModule.TeamDatabaseSpawnpointProvider(allowRandomOrder = true)))
+        use(FallDamageModule)
+        use(NaturalRegenerationModule())
+        use(InventoryPermissionsModule(allowDropItem = true, allowMoveItem = true, forcedItemSlot = null))
         use(AwardsModule())
 
         use(GuiModule())

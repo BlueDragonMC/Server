@@ -69,9 +69,6 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
         use(WinModule(WinModule.WinCondition.LAST_TEAM_ALIVE) { player, winningTeam ->
             if (player in winningTeam.players) 500 else 50
         })
-        use(SpawnpointModule(SpawnpointModule.TeamDatabaseSpawnpointProvider()))
-        use(MOTDModule(Component.text("Collect resources at generators around the map.\n" + "When your team's bed is broken, you cannot respawn.")))
-        use(PlayerResetModule(defaultGameMode = GameMode.SURVIVAL))
         use(TeamModule(true, TeamModule.AutoTeamMode.PLAYER_COUNT, 1, teamsAutoAssignedCallback = {
             val spawnpointProvider = getModule<SpawnpointModule>().spawnpointProvider
             players.forEach {
@@ -79,6 +76,9 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
                 it.teleport(it.respawnPoint)
             }
         }))
+        use(SpawnpointModule(SpawnpointModule.TeamDatabaseSpawnpointProvider()))
+        use(MOTDModule(Component.text("Collect resources at generators around the map.\n" + "When your team's bed is broken, you cannot respawn.")))
+        use(PlayerResetModule(defaultGameMode = GameMode.SURVIVAL))
         use(ItemGeneratorsModule())
         use(AwardsModule())
         use(SidebarModule(name))

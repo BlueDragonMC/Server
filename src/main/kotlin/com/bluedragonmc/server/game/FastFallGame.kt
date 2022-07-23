@@ -48,7 +48,7 @@ class FastFallGame(mapName: String?) : Game("FastFall", "Chaos") {
                     "and stand on the emerald wins!")))
         use(PlayerResetModule(defaultGameMode = GameMode.SURVIVAL))
         use(SidebarModule(name))
-        use(SpawnpointModule(SpawnpointModule.SingleSpawnpointProvider(Pos(0.5, 258.0, 0.5))))
+        use(SpawnpointModule(SpawnpointModule.SingleSpawnpointProvider(Pos(0.5, 257.0, 0.5))))
         use(VoidDeathModule(threshold = 0.0, respawnMode = true))
         use(WorldPermissionsModule(exceptions = listOf(Block.GLASS)))
 
