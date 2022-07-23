@@ -163,7 +163,9 @@ open class Game(val name: String, val mapName: String) : PacketGroupingAudience 
         }.apply { priority = module.eventPriority }
 
     fun unregister(module: GameModule) {
+        logger.debug("Unregistering module $module")
         module.deinitialize()
+        modules.remove(module)
         if (module.eventNode != null) {
             val node = module.eventNode!!
             node.parent?.removeChild(node)
@@ -178,8 +180,8 @@ open class Game(val name: String, val mapName: String) : PacketGroupingAudience 
                 throw IllegalStateException("Game has unfilled module dependencies: Module '${dep.parent.value?.type}' requires a module of type '${dep.value?.type}', but none were found.")
             }
         }
-        logger.info("Initializing game with modules: ${modules.map { it.value?.type?.simpleName ?: "<Anonymous module>" }}")
-        logger.info(dependencyTree.toString())
+        logger.debug("Initializing game with modules: ${modules.map { it.value?.type?.simpleName ?: "<Anonymous module>" }}")
+        logger.debug(dependencyTree.toString())
         games.add(this)
         state = GameState.WAITING
     }

@@ -4,6 +4,7 @@ import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.GameModule
 import net.minestom.server.MinecraftServer
+import net.minestom.server.coordinate.Vec
 import net.minestom.server.entity.Entity
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
@@ -38,6 +39,7 @@ class InstantRespawnModule : GameModule() {
                     setFireForDuration(0)
                     isOnFire = false
                     pose = Entity.Pose.STANDING
+                    velocity = Vec.ZERO
 
                     val respawnEvent = PlayerRespawnEvent(this)
                     EventDispatcher.call(respawnEvent)
