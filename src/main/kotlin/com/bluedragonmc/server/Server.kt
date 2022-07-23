@@ -145,6 +145,7 @@ fun main() {
         PardonCommand("pardon", "/pardon <player|ban ID>", "unban", "unmute"),
         ViewPunishmentsCommand("punishments", "/punishments <player>", "vps", "history"),
         ViewPunishmentCommand("punishment", "/punishment <id>", "vp"),
+        UpdateCommand("update", "/update <repo> <branch>"),
     ).forEach(MinecraftServer.getCommandManager()::register)
 
     // Create a per-instance tablist using custom packets
