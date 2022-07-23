@@ -10,6 +10,9 @@ import net.minestom.server.instance.Instance
 import net.minestom.server.instance.InstanceContainer
 
 class InstanceContainerModule : InstanceModule() {
+
+    override val dependencies = listOf(AnvilFileMapProviderModule::class)
+
     private lateinit var instance: InstanceContainer
     override fun getInstance(): Instance = instance
 

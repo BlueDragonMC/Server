@@ -4,7 +4,7 @@ import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.GameEvent
 import com.bluedragonmc.server.module.GameModule
-import com.bluedragonmc.server.module.gameplay.AwardsModule
+import com.bluedragonmc.server.module.database.AwardsModule
 import com.bluedragonmc.server.module.gameplay.SpectatorModule
 import com.bluedragonmc.server.module.gameplay.TeamModule
 import com.bluedragonmc.server.utils.surroundWithSeparators

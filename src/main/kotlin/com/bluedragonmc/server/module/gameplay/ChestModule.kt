@@ -28,11 +28,10 @@ import java.awt.Menu
  */
 class ChestModule : GameModule() {
 
+    override val dependencies = listOf(GuiModule::class)
     private lateinit var parent: Game
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
-
-        require(parent.hasModule<GuiModule>()) { "GuiModule must be present to enable chests." }
         this.parent = parent
 
         eventNode.addListener(PlayerBlockInteractEvent::class.java) { event ->

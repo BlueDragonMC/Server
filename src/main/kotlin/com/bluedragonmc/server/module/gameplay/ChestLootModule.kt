@@ -9,6 +9,9 @@ import net.minestom.server.item.ItemStack
 import kotlin.random.Random
 
 class ChestLootModule(private val lootProvider: ChestLootProvider) : GameModule() {
+
+    override val dependencies = listOf(ChestModule::class)
+
     interface ChestLootProvider {
         fun getLoot(chestLocation: Point): Collection<ItemStack>
     }

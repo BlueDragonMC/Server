@@ -10,6 +10,8 @@ import net.minestom.server.instance.SharedInstance
 
 class SharedInstanceModule : InstanceModule() {
 
+    override val dependencies = listOf(AnvilFileMapProviderModule::class)
+
     private lateinit var instance: SharedInstance
 
     override fun getInstance(): Instance = instance

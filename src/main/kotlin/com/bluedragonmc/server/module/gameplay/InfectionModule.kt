@@ -35,6 +35,8 @@ class InfectionModule : GameModule() {
     private val infectedTeam =
         TeamModule.Team(Component.text("Infected", NamedTextColor.RED), allowFriendlyFire = false)
 
+    override val dependencies = listOf(DatabaseModule::class, SpawnpointModule::class, TeamModule::class, TimedRespawnModule::class, WinModule::class)
+
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         this.parent = parent
 

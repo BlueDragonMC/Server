@@ -15,6 +15,8 @@ import java.time.Duration
  */
 class NaturalRegenerationModule : GameModule() {
 
+    override val dependencies = listOf(OldCombatModule::class)
+
     private val combatStatus = hashMapOf<Player, Int>()
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {

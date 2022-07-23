@@ -20,6 +20,9 @@ import net.minestom.server.event.player.PlayerSpawnEvent
  * Displays a message to players when they join the game.
  */
 class MOTDModule(val motd: Component) : GameModule() {
+
+    override val dependencies = listOf(DatabaseModule::class)
+
     private lateinit var mapData: MapData
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         mapData = MapData(parent.mapName)

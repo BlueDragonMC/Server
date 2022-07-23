@@ -7,6 +7,7 @@ import com.bluedragonmc.messagingsystem.message.RPCErrorMessage
 import com.bluedragonmc.server.Environment
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.GameModule
+import com.bluedragonmc.server.module.instance.InstanceModule
 import net.kyori.adventure.key.Key
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.minimessage.MiniMessage
@@ -19,6 +20,8 @@ import java.util.*
 import kotlin.reflect.KClass
 
 class MessagingModule : GameModule() {
+
+    override val dependencies = listOf(InstanceModule::class)
 
     companion object {
 

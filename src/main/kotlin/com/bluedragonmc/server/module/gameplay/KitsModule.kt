@@ -25,6 +25,9 @@ import net.minestom.server.item.Material
  * When the module is unloaded, players keep their kits.
  */
 class KitsModule(val showMenu: Boolean = false, val giveKitsOnStart: Boolean = true, val selectableKits: List<Kit>) : GameModule() {
+
+    override val dependencies = listOf(GuiModule::class)
+
     private lateinit var parent: Game
 
     private val selectedKits = hashMapOf<Player, Kit>()
@@ -46,10 +49,6 @@ class KitsModule(val showMenu: Boolean = false, val giveKitsOnStart: Boolean = t
      * Displays the kit selection menu to the specified player.
      */
     fun selectKit(player: Player) {
-        if (!parent.hasModule<GuiModule>()) {
-            logger.warn("Kits module used without GUI module. Creating GUI module with default settings.")
-            parent.use(GuiModule())
-        }
         val menu = parent.getModule<GuiModule>().createMenu(title = Component.text("Select Kit"), inventoryType = InventoryType.CHEST_1_ROW, isPerPlayer = true) {
             for (selectableKit in selectableKits) {
                 val index = selectableKits.indexOf(selectableKit)
