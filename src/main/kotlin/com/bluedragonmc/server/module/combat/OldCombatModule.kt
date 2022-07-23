@@ -13,14 +13,19 @@ import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.entity.EntityAttackEvent
 import net.minestom.server.event.entity.EntityTickEvent
+import net.minestom.server.event.player.PlayerEatEvent
 import net.minestom.server.event.player.PlayerSpawnEvent
 import net.minestom.server.event.trait.CancellableEvent
 import net.minestom.server.event.trait.PlayerInstanceEvent
 import net.minestom.server.instance.Instance
 import net.minestom.server.item.Enchantment
+import net.minestom.server.item.Material
 import net.minestom.server.network.packet.server.play.EntityAnimationPacket
 import net.minestom.server.network.packet.server.play.EntityAnimationPacket.Animation
+import net.minestom.server.potion.Potion
+import net.minestom.server.potion.PotionEffect
 import net.minestom.server.tag.Tag
+import kotlin.experimental.or
 import kotlin.math.hypot
 
 class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boolean = true) : GameModule() {
@@ -41,6 +46,22 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
                     livingEntity.setTag(HURT_RESISTANT_TIME, value - 1)
                 }
             }
+            if(event.entity is Player) {
+                val player = event.entity as Player
+                player.activeEffects.forEach {
+                    when(it.potion.effect) {
+                        PotionEffect.REGENERATION -> {
+                            player.health = (player.health + 1.0f / (50.0f / it.potion.amplifier)).coerceAtMost(player.maxHealth)
+                        }
+                        PotionEffect.ABSORPTION -> {
+                            player.additionalHearts = 4.0f * it.potion.amplifier
+                        }
+                        else -> {}
+                    }
+                }
+                if(player.activeEffects.none { it.potion.effect == PotionEffect.ABSORPTION })
+                    player.additionalHearts = 0.0f
+            }
         }
 
         eventNode.addListener(PlayerSpawnEvent::class.java) { event ->
@@ -53,6 +74,29 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
             // Reset attributes to default
             event.player.getAttribute(Attribute.ATTACK_SPEED).baseValue = event.player.getAttribute(Attribute.ATTACK_SPEED).attribute.defaultValue
             event.player.getAttribute(Attribute.ATTACK_DAMAGE).baseValue = event.player.getAttribute(Attribute.ATTACK_DAMAGE).attribute.defaultValue
+        }
+
+        eventNode.addListener(PlayerEatEvent::class.java) { event ->
+            when(event.itemStack.material()) {
+                Material.GOLDEN_APPLE -> {
+                    event.player.addEffect(Potion(
+                        PotionEffect.ABSORPTION, 1, 120 * 20, Potion.ICON_FLAG or Potion.PARTICLES_FLAG
+                    ))
+                    event.player.addEffect(Potion(
+                        PotionEffect.REGENERATION, 2, 5 * 20, Potion.ICON_FLAG or Potion.PARTICLES_FLAG
+                    ))
+                }
+                Material.ENCHANTED_GOLDEN_APPLE -> {
+                    event.player.addEffect(Potion(
+                        PotionEffect.ABSORPTION, 4, 120, Potion.ICON_FLAG or Potion.PARTICLES_FLAG
+                    ))
+                    event.player.addEffect(Potion(
+                        PotionEffect.REGENERATION, 2, 5, Potion.ICON_FLAG or Potion.PARTICLES_FLAG
+                    ))
+                }
+                else -> return@addListener
+            }
+            event.player.setItemInHand(event.hand, event.itemStack.withAmount(event.itemStack.amount() - 1))
         }
 
         eventNode.addListener(EntityAttackEvent::class.java) { event ->
