@@ -34,7 +34,7 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
         use(InstantRespawnModule())
         use(SpawnpointModule(SpawnpointModule.SingleSpawnpointProvider(Pos(0.5, 64.0, 0.5, 180F, 0F))))
         use(PlayerResetModule(defaultGameMode = GameMode.ADVENTURE))
-        use(InventoryPermissionsModule(allowDropItem = false, allowMoveItem = false, forcedItemSlot = null))
+        use(InventoryPermissionsModule(allowDropItem = false, allowMoveItem = false))
         use(WorldPermissionsModule(allowBlockBreak = false, allowBlockPlace = false, allowBlockInteract = false))
 
         // NPCs

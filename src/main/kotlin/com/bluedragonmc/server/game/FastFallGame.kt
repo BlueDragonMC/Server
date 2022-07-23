@@ -4,6 +4,7 @@ import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.GameModule
+import com.bluedragonmc.server.module.combat.CustomDeathMessageModule
 import com.bluedragonmc.server.module.database.AwardsModule
 import com.bluedragonmc.server.module.gameplay.*
 import com.bluedragonmc.server.module.instance.CustomGeneratorInstanceModule
@@ -55,6 +56,7 @@ class FastFallGame(mapName: String?) : Game("FastFall", "Chaos") {
         use(SpawnpointModule(SpawnpointModule.SingleSpawnpointProvider(Pos(0.5, 257.0, 0.5))))
         use(VoidDeathModule(threshold = 0.0, respawnMode = true))
         use(WorldPermissionsModule(exceptions = listOf(Block.GLASS)))
+        use(CustomDeathMessageModule())
         use(object : GameModule() {
             override fun initialize(parent: Game, eventNode: EventNode<Event>) {
                 eventNode.addListener(WinModule.WinnerDeclaredEvent::class.java) { event ->

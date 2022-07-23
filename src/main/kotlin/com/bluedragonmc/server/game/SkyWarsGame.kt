@@ -2,6 +2,7 @@ package com.bluedragonmc.server.game
 
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.GuiModule
+import com.bluedragonmc.server.module.combat.CustomDeathMessageModule
 import com.bluedragonmc.server.module.combat.OldCombatModule
 import com.bluedragonmc.server.module.database.AwardsModule
 import com.bluedragonmc.server.module.database.DatabaseModule
@@ -48,6 +49,7 @@ class SkyWarsGame(mapName: String) : Game("SkyWars", mapName) {
         use(MOTDModule(Component.text("Each team spawns on their own island.\n" + "Collect items from your chests, and collect better\n" + "items at the middle island. Last team standing wins!")))
         use(InstantRespawnModule())
         use(ItemDropModule(dropBlocksOnBreak = true, dropAllOnDeath = true))
+        use(CustomDeathMessageModule())
         use(ItemPickupModule())
         use(WorldPermissionsModule(allowBlockBreak = true, allowBlockPlace = true, allowBlockInteract = true))
         use(PlayerResetModule(defaultGameMode = GameMode.SURVIVAL))
@@ -61,7 +63,7 @@ class SkyWarsGame(mapName: String) : Game("SkyWars", mapName) {
         use(SpawnpointModule(SpawnpointModule.TeamDatabaseSpawnpointProvider(allowRandomOrder = true)))
         use(FallDamageModule)
         use(NaturalRegenerationModule())
-        use(InventoryPermissionsModule(allowDropItem = true, allowMoveItem = true, forcedItemSlot = null))
+        use(InventoryPermissionsModule(allowDropItem = true, allowMoveItem = true))
         use(AwardsModule())
 
         use(GuiModule())

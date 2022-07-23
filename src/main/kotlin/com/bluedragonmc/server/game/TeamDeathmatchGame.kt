@@ -1,6 +1,7 @@
 package com.bluedragonmc.server.game
 
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.module.combat.CustomDeathMessageModule
 import com.bluedragonmc.server.module.combat.OldCombatModule
 import com.bluedragonmc.server.module.gameplay.*
 import com.bluedragonmc.server.module.instance.SharedInstanceModule
@@ -33,7 +34,8 @@ class TeamDeathmatchGame(mapName: String) : Game("Team Deathmatch", mapName) {
         use(PlayerResetModule(defaultGameMode = GameMode.ADVENTURE))
         use(SpawnpointModule(SpawnpointModule.TestSpawnpointProvider(Pos(8.5, 72.0, 11.5), Pos(11.5, 72.0, -2.5), Pos(40.5, 75.0, 12.5), Pos(21.5, 72.93750, 22.5))))
         use(TeamModule(autoTeams = true, autoTeamMode = TeamModule.AutoTeamMode.TEAM_COUNT, 2))
-        use(InventoryPermissionsModule(allowDropItem = false, allowMoveItem = false, forcedItemSlot = null))
+        use(CustomDeathMessageModule())
+        use(InventoryPermissionsModule(allowDropItem = false, allowMoveItem = false))
 
         val ironHelmet = ItemStack.builder(Material.IRON_HELMET).build()
         val ironChestplate = ItemStack.builder(Material.IRON_CHESTPLATE).build()

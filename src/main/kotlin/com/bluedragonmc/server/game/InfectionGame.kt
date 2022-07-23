@@ -1,6 +1,7 @@
 package com.bluedragonmc.server.game
 
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.module.combat.CustomDeathMessageModule
 import com.bluedragonmc.server.module.combat.OldCombatModule
 import com.bluedragonmc.server.module.database.AwardsModule
 import com.bluedragonmc.server.module.gameplay.*
@@ -38,6 +39,7 @@ class InfectionGame(mapName: String) : Game("Infection", mapName) {
 
         // COMBAT
         use(OldCombatModule(allowDamage = false, allowKnockback = true))
+        use(CustomDeathMessageModule())
 
         // GAMEPLAY
         use(AwardsModule())

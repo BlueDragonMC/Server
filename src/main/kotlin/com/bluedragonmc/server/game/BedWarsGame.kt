@@ -5,6 +5,7 @@ import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.module.GameModule
+import com.bluedragonmc.server.module.combat.CustomDeathMessageModule
 import com.bluedragonmc.server.module.combat.OldCombatModule
 import com.bluedragonmc.server.module.database.AwardsModule
 import com.bluedragonmc.server.module.database.DatabaseModule
@@ -87,6 +88,7 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
         use(ItemPickupModule())
         use(ChestModule())
         use(NaturalRegenerationModule())
+        use(CustomDeathMessageModule())
         use(
             WorldPermissionsModule(
                 allowBlockBreak = true, allowBlockPlace = true, allowBlockInteract = true, allowBreakMap = false
