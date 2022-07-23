@@ -15,7 +15,11 @@ class ItemPickupModule : GameModule() {
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         eventNode.addListener(PickupItemEvent::class.java) { event ->
             val entity = event.entity
-            if (entity !is Player || entity.gameMode == GameMode.SPECTATOR) return@addListener
+            if (entity !is Player) return@addListener
+            if(entity.gameMode == GameMode.SPECTATOR) {
+                event.isCancelled = true
+                return@addListener
+            }
             entity.inventory.addItemStack(event.itemStack)
         }
     }
