@@ -11,11 +11,13 @@ import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.title.Title
 import net.kyori.adventure.title.TitlePart
+import net.minestom.server.MinecraftServer
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.instance.RemoveEntityFromInstanceEvent
 import net.minestom.server.event.player.PlayerBlockBreakEvent
+import net.minestom.server.event.player.PlayerBlockInteractEvent
 import net.minestom.server.event.player.PlayerBlockPlaceEvent
 import net.minestom.server.event.player.PlayerMoveEvent
 import net.minestom.server.event.player.PlayerSpawnEvent
@@ -51,6 +53,10 @@ class CountdownModule(
             if (!countdownEnded) event.isCancelled = true
         }
 
+        eventNode.addListener(PlayerBlockInteractEvent::class.java) { event ->
+            if (!countdownEnded) event.isCancelled = true
+        }
+
         eventNode.addListener(RemoveEntityFromInstanceEvent::class.java) { event ->
             if (event.entity !is Player) return@addListener
             if (threshold > 0 && countdown != null && parent.players.size < threshold) {
@@ -82,7 +88,9 @@ class CountdownModule(
         eventNode.addListener(GameStartEvent::class.java) { event ->
             for (module in useOnStart) parent.use(module)
             parent.state = GameState.INGAME
-            countdownEnded = true
+            MinecraftServer.getSchedulerManager().scheduleNextTick {
+                countdownEnded = true
+            }
             parent.players.forEach { player ->
                 player.askSynchronization()
             }
