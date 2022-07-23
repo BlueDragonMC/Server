@@ -29,7 +29,7 @@ import java.time.Duration
  * Uses `additionalLocations[0][0]` in the map database for the single infected spawnpoint.
  * Requires on start: [DatabaseModule], [SpawnpointModule], [TeamModule], [TimedRespawnModule], [WinModule]
  */
-class InfectionModule : GameModule() {
+class InfectionModule(val scoreboardBinding: SidebarModule.ScoreboardBinding? = null) : GameModule() {
     private lateinit var parent: Game
     private lateinit var mapData: MapData
     private val survivorsTeam =
@@ -59,6 +59,7 @@ class InfectionModule : GameModule() {
                     BRAND_COLOR_PRIMARY_2
                 ) + Component.text("20", BRAND_COLOR_PRIMARY_1) + Component.text(" seconds!", BRAND_COLOR_PRIMARY_2)
             )
+            scoreboardBinding?.update()
             MinecraftServer.getSchedulerManager().buildTask { infectRandomPlayer() }.delay(Duration.ofSeconds(20))
                 .schedule()
         }
@@ -84,7 +85,7 @@ class InfectionModule : GameModule() {
         player.respawnPoint = mapData.additionalLocations[0][0]
         player.teleport(mapData.additionalLocations[0][0])
         if (survivorsTeam.players.size == 1) parent.getModule<WinModule>().declareWinner(survivorsTeam.players[0])
-
+        scoreboardBinding?.update()
     }
 
     fun disinfect(player: Player) {
@@ -92,6 +93,11 @@ class InfectionModule : GameModule() {
         infectedTeam.players.remove(player)
         survivorsTeam.players.add(player)
         player.respawnPoint = parent.getModule<SpawnpointModule>().spawnpointProvider.getSpawnpoint(player)
+        scoreboardBinding?.update()
+    }
+
+    fun isInfected(player: Player): Boolean {
+        return infectedTeam.players.contains(player)
     }
 
 }

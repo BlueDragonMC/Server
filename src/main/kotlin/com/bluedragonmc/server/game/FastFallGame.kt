@@ -39,6 +39,7 @@ class FastFallGame(mapName: String?) : Game("FastFall", "Chaos") {
         // GAMEPLAY MODULES
         use(AwardsModule())
         use(FallDamageModule)
+        use(HealthDisplayModule())
         use(InstantRespawnModule())
         use(MaxHealthModule(2.0F))
         use(MOTDModule(Component.text(

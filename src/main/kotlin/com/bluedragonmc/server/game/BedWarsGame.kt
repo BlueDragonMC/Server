@@ -351,7 +351,7 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
 
     private val upgrades by lazy {
         getModule<ShopModule>().createShop("Team Upgrades") {
-            teamUpgrade(1, 1, 3, Material.DIAMOND, fastFeet)
+            teamUpgrade(1, 1, 7, Material.DIAMOND, fastFeet)
             teamUpgrade(1, 2, 5, Material.DIAMOND, miningMalarkey)
         }
     }

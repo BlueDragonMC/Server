@@ -9,6 +9,7 @@ import com.bluedragonmc.server.module.map.AnvilFileMapProviderModule
 import com.bluedragonmc.server.module.minigame.CountdownModule
 import com.bluedragonmc.server.module.minigame.WinModule
 import com.bluedragonmc.server.utils.noItalic
+import com.bluedragonmc.server.utils.withColor
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.entity.GameMode
@@ -53,10 +54,22 @@ class InfectionGame(mapName: String) : Game("Infection", mapName) {
             )
         )
         use(MaxHealthModule(1.0F))
-        use(MOTDModule(Component.text("An EPIC game!")))
+        use(MOTDModule(Component.text(
+            "Use the first 20 seconds to hide.\n" +
+                    "After that, one random player will be chosen as infected.\n" +
+                    "The last player to avoid being infected wins!"
+        )))
         use(NaturalRegenerationModule())
         use(PlayerResetModule(defaultGameMode = GameMode.ADVENTURE))
-        use(SidebarModule(name)) // TODO show all players and their infected status on sidebar
+        val sidebarModule = SidebarModule(name)
+        val bind = sidebarModule.bind {
+            players.map {
+                "player-status-${it.uuid}" to it.name.withColor(
+                    if (hasModule<InfectionModule>() && getModule<InfectionModule>().isInfected(it))
+                        NamedTextColor.RED else NamedTextColor.GREEN
+                )
+            }
+        }
         use(SpawnpointModule(SpawnpointModule.DatabaseSpawnpointProvider(allowRandomOrder = true)))
         use(TeamModule(autoTeams = false))
         use(SpectatorModule(spectateOnDeath = false, spectateOnLeave = true))
@@ -69,7 +82,7 @@ class InfectionGame(mapName: String) : Game("Infection", mapName) {
             if (player in winningTeam.players) 100 else 10
         })
 
-        use(InfectionModule())
+        use(InfectionModule(scoreboardBinding = bind))
 
         ready()
     }
