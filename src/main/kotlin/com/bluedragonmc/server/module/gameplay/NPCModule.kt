@@ -179,7 +179,10 @@ class NPCModule : GameModule() {
         }
 
         override fun remove() {
-            if (customNameVisible) hologram.remove()
+            if (customNameVisible)
+                MinecraftServer.getSchedulerManager().scheduleNextTick {
+                    if(!hologram.isRemoved) hologram.remove()
+                }
             super.remove()
         }
 
