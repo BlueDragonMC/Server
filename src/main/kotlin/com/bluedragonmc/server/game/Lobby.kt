@@ -1,14 +1,20 @@
 package com.bluedragonmc.server.game
 
 import com.bluedragonmc.messages.GameType
-import com.bluedragonmc.server.CustomPlayer
-import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.*
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.gameplay.*
 import com.bluedragonmc.server.module.instance.SharedInstanceModule
 import com.bluedragonmc.server.module.map.AnvilFileMapProviderModule
-import com.bluedragonmc.server.queue
+import com.bluedragonmc.server.queue.Queue
+import com.bluedragonmc.server.utils.CircularList
+import com.bluedragonmc.server.utils.plus
+import com.bluedragonmc.server.utils.surroundWithSeparators
+import com.bluedragonmc.server.utils.withColor
+import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.event.ClickEvent
+import net.kyori.adventure.text.event.HoverEvent
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
 import net.minestom.server.MinecraftServer
@@ -19,6 +25,7 @@ import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.player.PlayerSpawnEvent
+import net.minestom.server.sound.SoundEvent
 import net.minestom.server.timer.Task
 import java.nio.file.Paths
 import java.time.Duration
@@ -82,6 +89,26 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
                 interaction = {
                     queue.queue(it.player, GameType("Infection", null, null))
                 })
+
+            // GAME SELECT (left)
+            addNPC(instance = this@Lobby.getInstance(),
+                position = Pos(-2.5, 61.0, -18.5, 0F, 0F),
+                customName = Component.text("All Games", NamedTextColor.YELLOW, TextDecoration.BOLD),
+                skin = NPCModule.NPCSkins.GAME_SELECT.skin,
+                lookAtPlayer = false,
+                interaction = {
+//                    queue.queue(it.player, GameType("Infection", null, null))
+                })
+
+            // RANDOM GAME (right)
+            addNPC(instance = this@Lobby.getInstance(),
+                position = Pos(3.5, 61.0, -18.5, 0F, 0F),
+                customName = Component.text("Random Game", NamedTextColor.YELLOW, TextDecoration.BOLD),
+                skin = NPCModule.NPCSkins.RANDOM_GAME.skin,
+                lookAtPlayer = false,
+                interaction = {
+                    queue.queue(it.player, GameType(Queue.gameClasses.keys.random(), null, null))
+                })
         }
 
         use(object : GameModule() {
@@ -93,6 +120,25 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
 
         })
         use(DoubleJumpModule)
+
+        val tips = CircularList(listOf(
+            Component.text("Click to join our community forum for announcements, giveaways, events, and discussions!", BRAND_COLOR_PRIMARY_2).clickEvent(
+                ClickEvent.openUrl("https://bluedragonmc.com")),
+            Component.text("Click to join our Discord server for announcements, giveaways, events, discussions, and sneak peeks!", BRAND_COLOR_PRIMARY_2).clickEvent(
+                ClickEvent.openUrl("https://discord.gg/3gvSPdW")),
+            ("Be sure to try out our newest game: " withColor BRAND_COLOR_PRIMARY_2) +
+                    ("Infection" withColor BRAND_COLOR_PRIMARY_1) +
+                    ("!" withColor BRAND_COLOR_PRIMARY_2),
+            "Did you know: You can now double jump in the lobby!" withColor BRAND_COLOR_PRIMARY_2,
+            "Did you know: Puffin is the name of our backend service." withColor BRAND_COLOR_PRIMARY_2,
+            "Did you know: BlueDragon started as a Minecraft clans server." withColor BRAND_COLOR_PRIMARY_2,
+        ).shuffled())
+        var index = 0
+        MinecraftServer.getSchedulerManager().buildTask {
+            sendMessage(tips[index++].surroundWithSeparators())
+            playSound(Sound.sound(SoundEvent.BLOCK_NOTE_BLOCK_PLING, Sound.Source.MASTER, 1.0F, 1.0F))
+        }.repeat(Duration.ofMinutes(5
+        )).schedule()
 
         ready()
     }

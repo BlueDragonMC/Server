@@ -67,8 +67,14 @@ class WinModule(
     fun declareWinner(team: TeamModule.Team) {
         MinecraftServer.getGlobalEventHandler().callCancellable(WinnerDeclaredEvent(parent, team)) {
             winnerDeclared = true
-            parent.sendMessage(team.name.append(Component.text(" won the game!", BRAND_COLOR_PRIMARY_2))
-                .surroundWithSeparators())
+            // Normal message
+            parent.filterAudience { if (it is Player) it.uuid.toString() != "110429e8-197f-4446-8bec-5d66f17be4d5" else true }
+                .sendMessage(team.name.append(Component.text(" won the game!", BRAND_COLOR_PRIMARY_2))
+                    .surroundWithSeparators())
+            // Message for wsad_ only
+            parent.filterAudience { if (it is Player) it.uuid.toString() == "110429e8-197f-4446-8bec-5d66f17be4d5" else false }
+                .sendMessage(team.name.append(Component.text(" won to you!", BRAND_COLOR_PRIMARY_2))
+                    .surroundWithSeparators())
             for (p in parent.players) {
                 if (team.players.contains(p)) p.showTitle(Title.title(Component.text("VICTORY!",
                     NamedTextColor.GOLD,

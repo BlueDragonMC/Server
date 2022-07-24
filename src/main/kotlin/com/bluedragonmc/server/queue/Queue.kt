@@ -6,14 +6,16 @@ import net.minestom.server.entity.Player
 
 abstract class Queue {
 
-    internal val gameClasses = hashMapOf(
-        "WackyMaze" to ::WackyMazeGame,
-        "TeamDeathmatch" to ::TeamDeathmatchGame,
-        "BedWars" to ::BedWarsGame,
-        "SkyWars" to ::SkyWarsGame,
-        "FastFall" to ::FastFallGame,
-        "Infection" to ::InfectionGame,
-    )
+    companion object {
+        internal val gameClasses = hashMapOf(
+            "WackyMaze" to ::WackyMazeGame,
+//            "TeamDeathmatch" to ::TeamDeathmatchGame,
+            "BedWars" to ::BedWarsGame,
+            "SkyWars" to ::SkyWarsGame,
+            "FastFall" to ::FastFallGame,
+            "Infection" to ::InfectionGame,
+        )
+    }
 
     abstract fun start()
     abstract fun queue(player: Player, gameType: GameType)
