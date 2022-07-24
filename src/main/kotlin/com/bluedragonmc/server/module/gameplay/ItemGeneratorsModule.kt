@@ -98,7 +98,7 @@ class ItemGeneratorsModule : GameModule() {
             val phase = secondsLeft.toFloat() / items.values.first().toFloat()
             hologram.text = Component.text("Spawning in ") +
                     Component.text("${secondsLeft}s")
-                        .withTransition(phase, NamedTextColor.DARK_GREEN, NamedTextColor.GREEN, NamedTextColor.YELLOW, NamedTextColor.RED, NamedTextColor.DARK_RED)
+                        .withTransition(phase, NamedTextColor.DARK_GREEN, NamedTextColor.GREEN, NamedTextColor.YELLOW, NamedTextColor.GOLD, NamedTextColor.RED, NamedTextColor.DARK_RED)
         }
     }
 }

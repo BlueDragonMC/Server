@@ -4,6 +4,7 @@ import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.GameStartEvent
+import com.bluedragonmc.server.event.PlayerLeaveGameEvent
 import com.bluedragonmc.server.game.InfectionGame
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.combat.OldCombatModule
@@ -73,10 +74,14 @@ class InfectionModule(val scoreboardBinding: SidebarModule.ScoreboardBinding? = 
             if (event.target is Player && survivorsTeam.players.contains(event.target) && infectedTeam.players.contains(event.attacker))
                 event.target.kill()
         }
+
+        eventNode.addListener(PlayerLeaveGameEvent::class.java) { event ->
+            disinfect(event.player)
+        }
     }
 
     override fun deinitialize() {
-        while (infectedTeam.players.isNotEmpty()) disinfect(infectedTeam.players.first())
+        infectedTeam.players.forEach { it.skin = skins[it] }
     }
 
     fun infectRandomPlayer() {
