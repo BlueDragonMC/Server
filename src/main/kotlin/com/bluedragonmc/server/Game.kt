@@ -31,7 +31,7 @@ import java.time.Duration
 import java.util.*
 import kotlin.reflect.KClass
 
-open class Game(val name: String, val mapName: String) : PacketGroupingAudience {
+open class Game(val name: String, val mapName: String, val mode: String? = null) : PacketGroupingAudience {
 
     internal val players = mutableListOf<Player>()
 
@@ -214,8 +214,9 @@ open class Game(val name: String, val mapName: String) : PacketGroupingAudience 
     fun getInstanceOrNull() = getModuleOrNull<InstanceModule>()?.getInstance()
     fun getInstance() = getInstanceOrNull() ?: error("No InstanceModule found.")
 
-    private var instanceId: UUID? = null
+    var instanceId: UUID? = null
         get() = field ?: getInstanceOrNull()?.uniqueId?.also { instanceId = it }
+        private set
 
     open val maxPlayers = 8
 

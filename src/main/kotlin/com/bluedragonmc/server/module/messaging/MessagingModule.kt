@@ -17,6 +17,7 @@ import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import org.slf4j.LoggerFactory
 import java.util.*
+import kotlin.concurrent.timer
 import kotlin.reflect.KClass
 
 class MessagingModule : GameModule() {
@@ -77,6 +78,12 @@ class MessagingModule : GameModule() {
                         )
                     )
                 }
+            }
+            timer("server-sync", daemon = true, period = 30_000) {
+                // Every 30 seconds, send a synchronization message
+                publish(ServerSyncMessage(containerId, Game.games.mapNotNull {
+                    RunningGameInfo(it.instanceId ?: return@mapNotNull null, GameType(it.name, it.mode, it.mapName), it.getGameStateUpdateMessage())
+                }))
             }
         }
     }
