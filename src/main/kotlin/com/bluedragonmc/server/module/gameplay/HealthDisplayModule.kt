@@ -24,8 +24,6 @@ class HealthDisplayModule : GameModule() {
         }
     }
 
-    fun getHealthPercent(player: Player): String {
-        return (player.health / player.maxHealth * 100).toString() + "%"
-    }
+    private fun getHealthPercent(player: Player) = String.format("%.1f%%", player.health / player.maxHealth * 100)
 
 }

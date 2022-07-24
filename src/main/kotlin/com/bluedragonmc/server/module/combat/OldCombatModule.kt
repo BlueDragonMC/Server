@@ -74,6 +74,7 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
             // Reset attributes to default
             event.player.getAttribute(Attribute.ATTACK_SPEED).baseValue = event.player.getAttribute(Attribute.ATTACK_SPEED).attribute.defaultValue
             event.player.getAttribute(Attribute.ATTACK_DAMAGE).baseValue = event.player.getAttribute(Attribute.ATTACK_DAMAGE).attribute.defaultValue
+            event.player.additionalHearts = 0.0f
         }
 
         eventNode.addListener(PlayerEatEvent::class.java) { event ->
