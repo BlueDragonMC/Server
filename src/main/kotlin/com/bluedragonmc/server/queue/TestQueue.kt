@@ -17,7 +17,7 @@ import kotlin.random.Random
  * This is not a fully fledged queue system, but it will work fine for now.
  */
 class TestQueue : Queue() {
-    private val queuedPlayers: HashMap<Player, String> = hashMapOf()
+    private val queuedPlayers: HashMap<Player, GameType> = hashMapOf()
 
     private val logger = LoggerFactory.getLogger(TestQueue::class.java)
 
@@ -33,7 +33,14 @@ class TestQueue : Queue() {
             queuedPlayers.remove(player)
             return
         }
-        queuedPlayers[player] = gameType.name
+        if (gameType.mapName != null) {
+            val mapExists = getMapNames(gameType.name).contains(gameType.mapName)
+            if (!mapExists) {
+                player.sendMessage(Component.text("That map does not exist.", NamedTextColor.RED))
+                return
+            }
+        }
+        queuedPlayers[player] = gameType
         player.sendMessage(
             Component.text("You are now in the queue.", NamedTextColor.GREEN)
                 .hoverEvent(HoverEvent.showText(Component.text("Test queue debug information\nGame type: $gameType")))
@@ -55,7 +62,7 @@ class TestQueue : Queue() {
                 val playersToRemove = mutableListOf<Player>()
                 instanceStarting = false
                 queuedPlayers.forEach { (player, gameType) ->
-                    if (!gameClasses.containsKey(gameType)) {
+                    if (!gameClasses.containsKey(gameType.name)) {
                         player.sendMessage(
                             Component.text(
                                 "Invalid game type. Removing you from the queue.", NamedTextColor.RED
@@ -65,7 +72,7 @@ class TestQueue : Queue() {
                         return@forEach
                     }
                     for (game in Game.games) {
-                        if (game.name == gameType) {
+                        if (game.name == gameType.name && (gameType.mapName == null || gameType.mapName == game.mapName)) {
                             logger.info("Found a good game for ${player.username} to join")
                             playersToRemove.add(player)
                             join(player, game)
@@ -79,9 +86,9 @@ class TestQueue : Queue() {
                             "No joinable instance found. Creating a new instance for you.", NamedTextColor.GREEN
                         )
                     )
-                    val map = randomMap(gameType)
+                    val map = gameType.mapName ?: randomMap(gameType.name)
                     logger.info("Map chosen: $map")
-                    gameClasses[gameType]!!.call(map)
+                    gameClasses[gameType.name]!!.call(map)
                     instanceStarting = true
                 }
                 playersToRemove.forEach { queuedPlayers.remove(it) }
