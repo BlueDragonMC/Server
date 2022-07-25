@@ -81,9 +81,7 @@ class NPCModule : GameModule() {
         interaction: Consumer<NPCInteraction>? = null,
         customNameVisible: Boolean = true,
         lookAtPlayer: Boolean = true,
-    ) {
-        addNPC(NPC(instance, position, customName, skin, entityType, interaction, customNameVisible, lookAtPlayer))
-    }
+    ): NPC = NPC(instance, position, customName, skin, entityType, interaction, customNameVisible, lookAtPlayer).also { addNPC(it) }
 
     class NPC(
         instance: Instance,

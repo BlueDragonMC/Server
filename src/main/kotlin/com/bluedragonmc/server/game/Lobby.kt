@@ -3,19 +3,17 @@ package com.bluedragonmc.server.game
 import com.bluedragonmc.messages.GameType
 import com.bluedragonmc.server.*
 import com.bluedragonmc.server.module.GameModule
+import com.bluedragonmc.server.module.GuiModule
 import com.bluedragonmc.server.module.gameplay.*
 import com.bluedragonmc.server.module.instance.SharedInstanceModule
 import com.bluedragonmc.server.module.map.AnvilFileMapProviderModule
 import com.bluedragonmc.server.queue.Queue
-import com.bluedragonmc.server.utils.CircularList
-import com.bluedragonmc.server.utils.plus
-import com.bluedragonmc.server.utils.surroundWithSeparators
-import com.bluedragonmc.server.utils.withColor
+import com.bluedragonmc.server.utils.*
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.event.ClickEvent
-import net.kyori.adventure.text.event.HoverEvent
 import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.Style
 import net.kyori.adventure.text.format.TextDecoration
 import net.minestom.server.MinecraftServer
 import net.minestom.server.coordinate.Pos
@@ -25,10 +23,13 @@ import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.player.PlayerSpawnEvent
+import net.minestom.server.inventory.InventoryType
+import net.minestom.server.item.Material
 import net.minestom.server.sound.SoundEvent
 import net.minestom.server.timer.Task
 import java.nio.file.Paths
 import java.time.Duration
+import java.util.*
 
 class Lobby : Game("Lobby", "lobbyv2.1") {
     init {
@@ -47,62 +48,70 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
         // NPCs
         use(NPCModule())
         getModule<NPCModule>().apply {
+
+            val center = Pos(0.5, 64.25, -31.5)
+
             // 0.5, 62.5, -35.5, 0.0, 0.0 CENTER
             addNPC(instance = this@Lobby.getInstance(),
-                position = Pos(0.5, 62.5, -35.5, 0F, 0F),
+                position = Pos(0.5, 62.5, -35.5),
                 customName = Component.text("WackyMaze", NamedTextColor.YELLOW, TextDecoration.BOLD),
                 skin = NPCModule.NPCSkins.EX4.skin,
+                lookAtPlayer = false,
                 interaction = {
                     queue.queue(it.player, GameType("WackyMaze", null, "Islands"))
-                })
+                }).lookAt(center)
             // -3.5, 62.5, -34.5, 0.0, 0.0 LEFT OF CENTER
             addNPC(instance = this@Lobby.getInstance(),
-                position = Pos(-3.5, 62.5, -34.5, 0F, 0F),
+                position = Pos(-3.5, 62.5, -34.5),
                 customName = Component.text("BedWars", NamedTextColor.YELLOW, TextDecoration.BOLD),
                 skin = NPCModule.NPCSkins.BED_HEAD.skin,
+                lookAtPlayer = false,
                 interaction = {
                     queue.queue(it.player, GameType("BedWars", null, "Caves"))
-                })
+                }).lookAt(center)
             // 4.5, 62.5, -34.5, 0.0, 0.0 RIGHT OF CENTER
             addNPC(instance = this@Lobby.getInstance(),
-                position = Pos(4.5, 62.5, -34.5, 0F, 0F),
+                position = Pos(4.5, 62.5, -34.5),
                 customName = Component.text("SkyWars", NamedTextColor.YELLOW, TextDecoration.BOLD),
                 skin = NPCModule.NPCSkins.SKY.skin,
+                lookAtPlayer = false,
                 interaction = {
                     queue.queue(it.player, GameType("SkyWars", null, null))
-                })
+                }).lookAt(center)
 
             // -5.5, 62.5, -32.5, 0.0, 0.0 LEFT OF LEFT OF CENTER
             addNPC(instance = this@Lobby.getInstance(),
-                position = Pos(-5.5, 62.5, -32.5, 0F, 0F),
+                position = Pos(-5.5, 62.5, -32.5),
                 customName = Component.text("FastFall", NamedTextColor.YELLOW, TextDecoration.BOLD),
                 skin = NPCModule.NPCSkins.STUMBLE_GUY.skin,
+                lookAtPlayer = false,
                 interaction = {
                     queue.queue(it.player, GameType("FastFall", null, null))
-                })
+                }).lookAt(center)
 
             // 6.5, 62.5, -32.5, 0.0, 0.0 RIGHT OF RIGHT OF CENTER
             addNPC(instance = this@Lobby.getInstance(),
-                position = Pos(6.5, 62.5, -32.5, 0F, 0F),
+                position = Pos(6.5, 62.5, -32.5),
                 customName = Component.text("Infection", NamedTextColor.YELLOW, TextDecoration.BOLD),
                 entityType = EntityType.ZOMBIE,
+                lookAtPlayer = false,
                 interaction = {
                     queue.queue(it.player, GameType("Infection", null, null))
-                })
+                }).lookAt(center)
 
             // GAME SELECT (left)
             addNPC(instance = this@Lobby.getInstance(),
-                position = Pos(-2.5, 61.0, -18.5, 0F, 0F),
+                position = Pos(-2.5, 61.0, -18.5),
                 customName = Component.text("All Games", NamedTextColor.YELLOW, TextDecoration.BOLD),
                 skin = NPCModule.NPCSkins.GAME_SELECT.skin,
                 lookAtPlayer = false,
                 interaction = {
-//                    queue.queue(it.player, GameType("Infection", null, null))
+                    gameSelect.open(it.player)
                 })
 
             // RANDOM GAME (right)
             addNPC(instance = this@Lobby.getInstance(),
-                position = Pos(3.5, 61.0, -18.5, 0F, 0F),
+                position = Pos(3.5, 61.0, -18.5),
                 customName = Component.text("Random Game", NamedTextColor.YELLOW, TextDecoration.BOLD),
                 skin = NPCModule.NPCSkins.RANDOM_GAME.skin,
                 lookAtPlayer = false,
@@ -117,9 +126,9 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
                     loadXPBar(event.player)
                 }
             }
-
         })
         use(DoubleJumpModule)
+        use(GuiModule())
 
         val tips = CircularList(listOf(
             Component.text("Click to join our community forum for announcements, giveaways, events, and discussions!", BRAND_COLOR_PRIMARY_2).clickEvent(
@@ -130,8 +139,8 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
                     ("Infection" withColor BRAND_COLOR_PRIMARY_1) +
                     ("!" withColor BRAND_COLOR_PRIMARY_2),
             "Did you know: You can now double jump in the lobby!" withColor BRAND_COLOR_PRIMARY_2,
-            "Did you know: Puffin is the name of our backend service." withColor BRAND_COLOR_PRIMARY_2,
             "Did you know: BlueDragon started as a Minecraft clans server." withColor BRAND_COLOR_PRIMARY_2,
+            "Tip: don't go in the blue bus on the Airport map in PvPMaster." withColor BRAND_COLOR_PRIMARY_2,
         ).shuffled())
         var index = 0
         MinecraftServer.getSchedulerManager().buildTask {
@@ -143,10 +152,35 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
         ready()
     }
 
+    private val gameSelect by lazy {
+        getModule<GuiModule>().createMenu(Component.text("Game Select"), InventoryType.CHEST_1_ROW,
+            isPerPlayer = false,
+            allowSpectatorClicks = true
+        ) {
+            val propertiesFile = javaClass.classLoader.getResourceAsStream("game_info.properties")
+            val properties = Properties()
+            properties.load(propertiesFile)
+            Queue.gameClasses.keys.forEachIndexed { index, key ->
+                val material = Material.fromNamespaceId(properties.getProperty("game_${key}_material") ?: "minecraft:paper") ?: Material.PAPER
+                val desc = properties.getProperty("game_${key}_description") ?: ""
+                val category = properties.getProperty("game_${key}_category") ?: "Misc"
+                slot(index, material, {
+                    displayName(Component.text(key, Style.style(TextDecoration.BOLD)).noItalic().withGradient(BRAND_COLOR_PRIMARY_1, BRAND_COLOR_PRIMARY_3))
+                    val lore = desc.split("\n").map { Component.text(it, NamedTextColor.YELLOW).noItalic() }.toMutableList()
+                    lore.add(0, Component.text(category, NamedTextColor.RED).noItalic())
+                    lore(lore)
+                }) {
+                    queue.queue(player, GameType(key))
+                    menu.close(player)
+                }
+            }
+        }
+    }
+
     fun loadXPBar(player: Player) {
         lateinit var loadXPTask: Task
         loadXPTask = MinecraftServer.getSchedulerManager().buildTask {
-            val player = player as CustomPlayer
+            player as CustomPlayer
             if (!player.isDataInitialized()) return@buildTask
             val playerXP = player.data.experience
             val level = CustomPlayer.getXpLevel(playerXP)

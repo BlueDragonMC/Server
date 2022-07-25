@@ -2,8 +2,9 @@ package com.bluedragonmc.server
 
 import com.bluedragonmc.messages.ReportErrorMessage
 import com.bluedragonmc.messages.SendPlayerToInstanceMessage
-import com.bluedragonmc.server.Environment.messagingDisabled
 import com.bluedragonmc.server.Environment.queue
+import com.bluedragonmc.server.block.SignHandler
+import com.bluedragonmc.server.block.SkullHandler
 import com.bluedragonmc.server.command.*
 import com.bluedragonmc.server.command.punishment.*
 import com.bluedragonmc.server.game.Lobby
@@ -70,12 +71,6 @@ fun main() {
         futureInstances.remove(event.player.uuid)
     }
 
-    MinecraftServer.getGlobalEventHandler().addListener(PlayerLoginEvent::class.java) {
-        if (it.player.username == "crazyshark321") {
-            it.player.kick(Component.text("Disconnected"))
-        }
-    }
-
     // Chat formatting
     eventNode.addListener(PlayerChatEvent::class.java) { event ->
         (event.player as CustomPlayer).getFirstMute()?.let { mute ->
@@ -85,7 +80,7 @@ fun main() {
         }
         val experience = (event.player as CustomPlayer).run { if(isDataInitialized()) data.experience else 0 }
         val level = CustomPlayer.getXpLevel(experience)
-        val xpToNextLevel = CustomPlayer.getXpToNextLevel(level, experience).toInt()
+        val xpToNextLevel = CustomPlayer.getXpToNextLevel(level, experience)
         event.setChatFormat {
             Component.join(
                 JoinConfiguration.noSeparators(),
@@ -102,9 +97,14 @@ fun main() {
 
     eventNode.addListener(ServerListPingEvent::class.java) { event ->
         event.responseData.description = buildComponent {
-            +Component.text("BlueDragon").withDecoration(TextDecoration.BOLD).withGradient(BRAND_COLOR_PRIMARY_2, BRAND_COLOR_PRIMARY_3)
+            val title = Component.text("BlueDragon").withDecoration(TextDecoration.BOLD)
+            if(event.pingType == ServerListPingType.OPEN_TO_LAN)
+                +title.withColor(BRAND_COLOR_PRIMARY_3)
+            else
+                +title.withGradient(BRAND_COLOR_PRIMARY_1, BRAND_COLOR_PRIMARY_3)
+
             +(" [" withColor NamedTextColor.DARK_GRAY)
-            if (messagingDisabled) {
+            if (Environment.isDev()) {
                 +("Dev on ${InetAddress.getLocalHost().hostName}" withColor NamedTextColor.RED)
             } else {
                 +(event.responseData.version withColor NamedTextColor.GREEN)
@@ -176,6 +176,9 @@ fun main() {
     MinecraftServer.getDimensionTypeManager().addDimension(
         DimensionType.builder(NamespaceID.from("bluedragon:fullbright_dimension")).ambientLight(1.0F).build()
     )
+
+    MinecraftServer.getBlockManager().registerHandler("minecraft:sign", ::SignHandler)
+    MinecraftServer.getBlockManager().registerHandler("minecraft:skull", ::SkullHandler)
 
     // Start the queue loop, which runs every 2 seconds and handles the players in queue
     queue.start()
