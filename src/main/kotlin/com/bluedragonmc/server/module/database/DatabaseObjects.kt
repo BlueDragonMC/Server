@@ -1,5 +1,7 @@
 package com.bluedragonmc.server.module.database
 
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
@@ -9,7 +11,7 @@ import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextColor
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.item.Material
-import org.litote.kmongo.setTo
+import org.litote.kmongo.Data
 import org.litote.kmongo.setValue
 import java.time.Duration
 import java.time.Instant
@@ -32,6 +34,12 @@ data class PlayerDocument @OptIn(ExperimentalSerializationApi::class) constructo
     var permissions: MutableList<String> = mutableListOf(),
 ) {
 
+    val highestGroup by lazy {
+        runBlocking {
+            getGroups().maxByOrNull { it.priority }
+        }
+    }
+
     suspend fun getGroups(): List<PermissionGroup> {
         val col = DatabaseModule.getGroupsCollection()
         return groups.mapNotNull {
@@ -51,6 +59,12 @@ data class PlayerDocument @OptIn(ExperimentalSerializationApi::class) constructo
         val newValue = block(field.get(this))
         DatabaseModule.getPlayersCollection().updateOneById(uuid.toString(), setValue(field, newValue))
         field.set(this, newValue)
+    }
+
+    init {
+        DatabaseModule.IO.launch {
+            highestGroup // Initialize the highest group async when the document is created
+        }
     }
 }
 
@@ -104,8 +118,9 @@ data class Achievement(
 @Serializable
 data class PermissionGroup(
     @SerialName("_id") val name: String,
-    val color: TextColor = NamedTextColor.WHITE,
-    val prefix: Component = Component.empty(),
+    @Serializable(with = TextColorSerializer::class) val color: TextColor = NamedTextColor.WHITE,
+    @Serializable(with = ComponentSerializer::class) val prefix: Component = Component.empty(),
+    val priority: Int = 0,
     val permissions: MutableList<String> = mutableListOf(),
     val inheritsFrom: List<String> = emptyList()
 ) {

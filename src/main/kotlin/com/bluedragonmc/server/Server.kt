@@ -9,6 +9,7 @@ import com.bluedragonmc.server.command.*
 import com.bluedragonmc.server.command.punishment.*
 import com.bluedragonmc.server.game.Lobby
 import com.bluedragonmc.server.module.database.DatabaseModule
+import com.bluedragonmc.server.module.database.PermissionGroup
 import com.bluedragonmc.server.module.database.Punishment
 import com.bluedragonmc.server.module.messaging.MessagingModule
 import com.bluedragonmc.server.utils.*
@@ -73,22 +74,28 @@ fun main() {
 
     // Chat formatting
     eventNode.addListener(PlayerChatEvent::class.java) { event ->
-        (event.player as CustomPlayer).getFirstMute()?.let { mute ->
+        val player = event.player as CustomPlayer
+        player.getFirstMute()?.let { mute ->
             event.isCancelled = true
             event.player.sendMessage(getPunishmentMessage(mute, "currently muted").surroundWithSeparators())
             return@addListener
         }
-        val experience = (event.player as CustomPlayer).run { if(isDataInitialized()) data.experience else 0 }
+        val experience = (player).run { if(isDataInitialized()) data.experience else 0 }
         val level = CustomPlayer.getXpLevel(experience)
-        val xpToNextLevel = CustomPlayer.getXpToNextLevel(level, experience)
+        val xpToNextLevel = CustomPlayer.getXpToNextLevel(level, experience).toInt()
+
+        val group = player.data.highestGroup ?: PermissionGroup("Default", NamedTextColor.GRAY)
+
         event.setChatFormat {
             Component.join(
                 JoinConfiguration.noSeparators(),
                 Component.text("[", NamedTextColor.DARK_GRAY),
                 Component.text(level.toInt(), BRAND_COLOR_PRIMARY_1)
-                    .hoverEvent(HoverEvent.showText(event.player.name + Component.text(" has a total of $experience experience,\nand needs $xpToNextLevel XP to reach level ${level.toInt() + 1}."))),
+                    .hoverEvent(HoverEvent.showText(player.name + Component.text(" has a total of $experience experience,\nand needs $xpToNextLevel XP to reach level ${level.toInt() + 1}."))),
                 Component.text("] ", NamedTextColor.DARK_GRAY),
-                event.player.name,
+                group.prefix,
+                if (group.prefix != Component.empty()) Component.space() else Component.empty(),
+                player.name,
                 Component.text(": ", NamedTextColor.DARK_GRAY),
                 Component.text(event.message, NamedTextColor.WHITE)
             )
@@ -124,6 +131,13 @@ fun main() {
         if (ban != null) {
             player.kick(getPunishmentMessage(ban, "currently banned from this server"))
         }
+
+        val group = player.data.highestGroup
+        if (group == null) {
+            player.displayName = player.username withColor NamedTextColor.GRAY
+            return@addListener
+        }
+        player.displayName = player.username withColor group.color
     }
 
     // Initialize commands

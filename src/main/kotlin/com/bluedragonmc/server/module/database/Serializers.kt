@@ -12,6 +12,9 @@ import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.TextColor
+import net.kyori.adventure.text.minimessage.MiniMessage
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.permission.Permission
 import org.bson.BsonType
@@ -87,4 +90,24 @@ object PosSerializer : KSerializer<Pos> {
         delegateSerializer,
         arrayOf(value.x, value.y, value.z, value.yaw.toDouble(), value.pitch.toDouble())
     )
+}
+
+object ComponentSerializer : KSerializer<Component> {
+    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("Component", PrimitiveKind.STRING)
+
+    override fun deserialize(decoder: Decoder): Component =
+        MiniMessage.miniMessage().deserialize(decoder.decodeString())
+
+    override fun serialize(encoder: Encoder, value: Component) =
+        encoder.encodeString(MiniMessage.miniMessage().serialize(value))
+}
+
+object TextColorSerializer : KSerializer<TextColor> {
+    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("TextColor", PrimitiveKind.STRING)
+
+    override fun deserialize(decoder: Decoder): TextColor =
+        TextColor.fromHexString(decoder.decodeString())!!
+
+    override fun serialize(encoder: Encoder, value: TextColor) =
+        encoder.encodeString(value.asHexString())
 }
