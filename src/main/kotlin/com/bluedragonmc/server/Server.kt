@@ -84,14 +84,17 @@ fun main() {
         val level = CustomPlayer.getXpLevel(experience)
         val xpToNextLevel = CustomPlayer.getXpToNextLevel(level, experience).toInt()
 
-        val group = player.data.highestGroup ?: PermissionGroup("Default", NamedTextColor.GRAY)
+        val group = player.data.highestGroup ?: PermissionGroup("default", NamedTextColor.GRAY)
 
         event.setChatFormat {
             Component.join(
                 JoinConfiguration.noSeparators(),
                 Component.text("[", NamedTextColor.DARK_GRAY),
                 Component.text(level.toInt(), BRAND_COLOR_PRIMARY_1)
-                    .hoverEvent(HoverEvent.showText(player.name + Component.text(" has a total of $experience experience,\nand needs $xpToNextLevel XP to reach level ${level.toInt() + 1}."))),
+                    .hoverEvent(HoverEvent.showText(
+                        player.name +
+                                Component.text(" has a total of $experience experience,\nand needs $xpToNextLevel XP to reach level ${level.toInt() + 1}.", NamedTextColor.GRAY)
+                    )),
                 Component.text("] ", NamedTextColor.DARK_GRAY),
                 group.prefix,
                 if (group.prefix != Component.empty()) Component.space() else Component.empty(),

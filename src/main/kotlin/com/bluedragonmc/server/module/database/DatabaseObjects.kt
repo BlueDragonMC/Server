@@ -11,7 +11,6 @@ import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextColor
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.item.Material
-import org.litote.kmongo.Data
 import org.litote.kmongo.setValue
 import java.time.Duration
 import java.time.Instant
@@ -26,7 +25,7 @@ data class PlayerDocument @OptIn(ExperimentalSerializationApi::class) constructo
     @EncodeDefault var usernameLower: String = username.lowercase(),
     var coins: Int = 0,
     var experience: Int = 0,
-    var groups: MutableList<String> = mutableListOf(),
+    var groups: MutableList<String> = mutableListOf("default"),
     var punishments: MutableList<Punishment> = mutableListOf(),
     var statistics: List<Statistic> = emptyList(),
     var achievements: List<Achievement> = emptyList(),
@@ -121,7 +120,7 @@ data class PermissionGroup(
     @Serializable(with = TextColorSerializer::class) val color: TextColor = NamedTextColor.WHITE,
     @Serializable(with = ComponentSerializer::class) val prefix: Component = Component.empty(),
     val priority: Int = 0,
-    val permissions: MutableList<String> = mutableListOf(),
+    var permissions: MutableList<String> = mutableListOf(),
     val inheritsFrom: List<String> = emptyList()
 ) {
     suspend fun getChildGroups(): List<PermissionGroup?> {
@@ -130,6 +129,17 @@ data class PermissionGroup(
 
     suspend fun getAllPermissions(): List<String> {
         return permissions + getChildGroups().map { getAllPermissions() }.flatten()
+    }
+
+    suspend fun <T> update(field: KMutableProperty<T>, value: T) {
+        DatabaseModule.getGroupsCollection().updateOneById(name, setValue(field, value))
+        field.setter.call(this, value)
+    }
+
+    suspend fun <T> compute(field: KMutableProperty1<PermissionGroup, T>, block: (T) -> T) {
+        val newValue = block(field.get(this))
+        DatabaseModule.getPlayersCollection().updateOneById(name, setValue(field, newValue))
+        field.set(this, newValue)
     }
 }
 

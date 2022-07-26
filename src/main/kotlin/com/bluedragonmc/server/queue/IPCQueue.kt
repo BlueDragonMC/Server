@@ -3,7 +3,6 @@ package com.bluedragonmc.server.queue
 import com.bluedragonmc.messages.*
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.messaging.MessagingModule
-import com.bluedragonmc.server.utils.broadcast
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.MinecraftServer
@@ -26,6 +25,8 @@ object IPCQueue : Queue() {
     override fun start() {
         MessagingModule.subscribe(RequestCreateInstanceMessage::class) { message ->
             if (message.containerId == MessagingModule.containerId) {
+                logger.info("Received request to create instance with type ${message.gameType}.")
+                val start = System.nanoTime()
                 val constructor = gameClasses[message.gameType.name] ?: return@subscribe
                 val map = message.gameType.mapName ?: randomMap(message.gameType.name) ?: run {
                     logger.error("No map name was specified and a random map was not found. A new instance cannot be created.")
@@ -33,7 +34,7 @@ object IPCQueue : Queue() {
                 }
                 val game = constructor.invoke(map)
                 val instance = game.getInstance()
-                broadcast(Component.text("Created instance ${instance.uniqueId} from type ${message.gameType}.", NamedTextColor.DARK_GRAY))
+                logger.info("Created instance ${instance.uniqueId} from type ${message.gameType}. (${(System.nanoTime() - start) / 1_000_000}ms)")
                 // The service will soon be notified of this instance's creation
                 // once the mandatory MessagingModule is initialized
             }
@@ -42,6 +43,7 @@ object IPCQueue : Queue() {
             val instance = MinecraftServer.getInstanceManager().getInstance(message.instance) ?: return@subscribe
             val player = MessagingModule.findPlayer(message.player) ?: return@subscribe
             player.sendMessage(Component.text("Sending you to ${message.instance}...", NamedTextColor.DARK_GRAY))
+            logger.info("Sending player ${player.username} to instance ${message.instance}.")
             val game = Game.findGame(instance.uniqueId) ?: run {
                 player.sendMessage(Component.text("There was an error sending you to the instance! (No game found)", NamedTextColor.RED))
                 return@subscribe
@@ -49,8 +51,6 @@ object IPCQueue : Queue() {
             game.addPlayer(player)
         }
     }
-
-
 
     fun getMaps(gameType: String): Array<File>? {
         val worldFolder = "worlds/$gameType"
