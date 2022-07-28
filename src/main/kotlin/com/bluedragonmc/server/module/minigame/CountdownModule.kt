@@ -25,8 +25,15 @@ import kotlin.concurrent.fixedRateTimer
 class CountdownModule(
     private val threshold: Int,
     val allowMoveDuringCountdown: Boolean = true,
-    vararg val useOnStart: GameModule
+    private val countdownSeconds: Int = 10,
+    private vararg val useOnStart: GameModule
 ) : GameModule() {
+
+    constructor(
+        threshold: Int,
+        allowMoveDuringCountdown: Boolean = true,
+        vararg useOnStart: GameModule
+    ) : this(threshold, allowMoveDuringCountdown, 10, *useOnStart)
 
     private var countdown: Timer? = null
     private var secondsLeft: Int? = null
@@ -37,7 +44,7 @@ class CountdownModule(
         eventNode.addListener(PlayerSpawnEvent::class.java) { event ->
             if (countdownEnded) return@addListener
             if (threshold > 0 && parent.players.size >= threshold && countdown == null) {
-                countdown = createCountdownTask(parent, 10)
+                countdown = createCountdownTask(parent)
                 parent.state = GameState.STARTING
             }
         }
@@ -101,9 +108,9 @@ class CountdownModule(
         }
     }
 
-    private fun createCountdownTask(parent: Game, initialSeconds: Int): Timer {
+    private fun createCountdownTask(parent: Game): Timer {
         if (!allowMoveDuringCountdown) parent.players.forEach { it.teleport(it.respawnPoint) }
-        secondsLeft = initialSeconds
+        secondsLeft = countdownSeconds
         countdownRunning = true
         return fixedRateTimer("countdown", initialDelay = 1000, period = 1000) {
             val seconds = secondsLeft ?: run {

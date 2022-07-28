@@ -3,6 +3,7 @@ package com.bluedragonmc.server.module.gameplay
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.GameState
 import com.bluedragonmc.server.event.GameEvent
 import com.bluedragonmc.server.event.PlayerLeaveGameEvent
 import com.bluedragonmc.server.module.GameModule
@@ -24,7 +25,7 @@ class SpectatorModule(var spectateOnDeath: Boolean, var spectateOnLeave: Boolean
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         this.parent = parent
         eventNode.addListener(PlayerDeathEvent::class.java) { event ->
-            if (spectateOnDeath && !isSpectating(event.player)) addSpectator(event.player)
+            if (parent.state == GameState.INGAME && spectateOnDeath && !isSpectating(event.player)) addSpectator(event.player)
         }
         eventNode.addListener(EntityAttackEvent::class.java) { event ->
             if (event.entity is Player) {

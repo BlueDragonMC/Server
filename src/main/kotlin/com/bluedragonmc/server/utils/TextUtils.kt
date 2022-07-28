@@ -46,7 +46,7 @@ fun Material.displayName(color: TextColor) = Component.translatable(registry().t
 
 fun Component.noItalic() = decoration(TextDecoration.ITALIC, false)
 fun Component.noBold() = decoration(TextDecoration.BOLD, false)
-fun Component.withTransition(phase: Float, vararg colors: TextColor) = color(getColor(phase, *colors))
+fun Component.withTransition(phase: Float, vararg colors: TextColor) = color(colorTransition(phase, *colors))
 fun Component.withGradient(vararg colors: TextColor): Component {
     val split = splitComponentToCharacters(this)
     val size = split.children().size + 1
@@ -76,7 +76,8 @@ fun splitComponentToCharacters(component: Component): Component {
         }
     }
 }
-private fun getColor(phase: Float, vararg colors: TextColor): TextColor {
+
+private fun colorTransition(phase: Float, vararg colors: TextColor): TextColor {
     val steps = 1f / (colors.size - 1)
     var colorIndex = 1
     while(colorIndex < colors.size) {
