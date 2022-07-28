@@ -14,6 +14,7 @@ abstract class Queue {
             "SkyWars" to ::SkyWarsGame,
             "FastFall" to ::FastFallGame,
             "Infection" to ::InfectionGame,
+            "Infinijump" to ::InfinijumpGame
         )
     }
 
