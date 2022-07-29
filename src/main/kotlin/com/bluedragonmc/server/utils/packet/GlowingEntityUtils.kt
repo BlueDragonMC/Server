@@ -5,26 +5,29 @@ import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.MinecraftServer
 import net.minestom.server.entity.Entity
 import net.minestom.server.scoreboard.Team
-
+import net.minestom.server.tag.Tag
+import java.util.*
 
 object GlowingEntityUtils {
-    private val glowTeams = mutableMapOf<Entity, Team>()
+
+    private val TEAM_NAME_TAG = Tag.String("entity_team_name")
+    private val teamCache = mutableMapOf<NamedTextColor, Team>()
 
     fun glow(entity: Entity, color: NamedTextColor) {
         entity.isGlowing = true
-        val team = glowTeams.getOrPut(entity) {
+        val team = teamCache.getOrPut(color) {
             MinecraftServer.getTeamManager().createTeam(
-                entity.uuid.toString(), Component.empty(), Component.empty(), NamedTextColor.WHITE, Component.empty()
-            ).apply { addMember(entity.uuid.toString()) }
+                UUID.randomUUID().toString(), Component.empty(), Component.empty(), color, Component.empty()
+            )
         }
-        if(team.teamColor != color) {
-            team.updateTeamColor(color)
+        val uuid = entity.uuid.toString()
+        if (entity.hasTag(TEAM_NAME_TAG)) {
+            val currentTeam = MinecraftServer.getTeamManager().getTeam(entity.getTag(TEAM_NAME_TAG))
+            if (currentTeam != team) currentTeam.removeMember(uuid)
         }
-    }
-
-    fun cleanup(entity: Entity) {
-        glowTeams.remove(entity)?.let { team ->
-            MinecraftServer.getTeamManager().deleteTeam(team)
+        if (!team.members.contains(uuid)) {
+            team.addMember(uuid)
+            entity.setTag(TEAM_NAME_TAG, team.teamName)
         }
     }
 }
