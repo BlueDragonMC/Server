@@ -34,7 +34,6 @@ import net.minestom.server.instance.block.Block
 import net.minestom.server.network.packet.server.play.BlockBreakAnimationPacket
 import net.minestom.server.particle.Particle
 import net.minestom.server.sound.SoundEvent
-import net.minestom.server.utils.NamespaceID
 import java.time.Duration
 import kotlin.math.cos
 import kotlin.math.sin
@@ -45,7 +44,6 @@ class InfinijumpGame(mapName: String) : Game("Infinijump", mapName) {
     override val maxPlayers = 1
 
     private val spawnPosition = Pos(0.5, 64.0, 0.5)
-    private val blocks = mutableListOf(ParkourBlock(this, getInstance(), 0L, spawnPosition.sub(0.0, 1.0, 0.0)))
 
     init {
         use(VoidDeathModule(0.0))
@@ -54,9 +52,7 @@ class InfinijumpGame(mapName: String) : Game("Infinijump", mapName) {
         use(WinModule(WinModule.WinCondition.MANUAL))
         use(SpawnpointModule(SpawnpointModule.SingleSpawnpointProvider(spawnPosition)))
         use(CustomGeneratorInstanceModule(
-            MinecraftServer.getDimensionTypeManager().getDimension(
-                NamespaceID.from("bluedragon:fullbright_dimension")
-            )!!
+            CustomGeneratorInstanceModule.getFullbrightDimension()
         ) { /* void world - no generation to do */ })
         use(InstantRespawnModule())
         use(SpectatorModule(spectateOnDeath = true))
@@ -102,18 +98,14 @@ class InfinijumpGame(mapName: String) : Game("Infinijump", mapName) {
             }
         })
 
-        ready()
-
-        repeat(3) { i -> // Create 3 blocks when the game starts
-            val newPos = getNextBlockPosition()
-
-            blocks.add(
-                ParkourBlock(
-                    this@InfinijumpGame, getInstance(), getInstance().worldAge + i * 20, newPos
-                )
-            )
+        MinecraftServer.getSchedulerManager().scheduleNextTick {
+            repeat(3) { addNewBlock() }
         }
+
+        ready()
     }
+
+    private val blocks = mutableListOf(ParkourBlock(this, getInstance(), 0L, spawnPosition.sub(0.0, 1.0, 0.0)))
 
     private fun getScore() = blocks.count { it.isReached }
 
@@ -133,7 +125,7 @@ class InfinijumpGame(mapName: String) : Game("Infinijump", mapName) {
         blocks.add(ParkourBlock(this, getInstance(), getInstance().worldAge, getNextBlockPosition()))
     }
 
-    fun getNextBlockPosition(): Pos {
+    private fun getNextBlockPosition(): Pos {
         val lastBlock = blocks.last()
         val lastPos = lastBlock.pos
         angle += Math.toRadians((-45..45).random().toDouble())
@@ -202,7 +194,7 @@ class InfinijumpGame(mapName: String) : Game("Infinijump", mapName) {
         }
 
         private fun setOutlineColor(color: NamedTextColor) {
-            GlowingEntityUtils.glow(entity, color)
+            GlowingEntityUtils.glow(entity, color, entity.viewers)
         }
 
         init {
