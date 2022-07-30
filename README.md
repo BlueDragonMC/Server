@@ -25,5 +25,5 @@ DOCKER_BUILDKIT=1 docker build -t bluedragonmc/server:testing --label com.bluedr
 This uses the `Dockerfile` in the current directory to make an image with the version string `"testing"`.
 
 Environment variables:
-`velocity_secret` - Your Velocity proxy forwarding secret (optional). If not specified, Mojang authentication will be enabled.
-`container_id` - The ID that the container uses to communicate with the Service.
+`PUFFIN_VELOCITY_SECRET` - Your Velocity proxy forwarding secret (optional). If not specified, Mojang authentication will be enabled.
+`PUFFIN_CONTAINER_ID` - The ID that the container uses to communicate with the Service.

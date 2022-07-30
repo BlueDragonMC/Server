@@ -29,7 +29,7 @@ class MessagingModule : GameModule() {
         private val logger = LoggerFactory.getLogger(Companion::class.java)
 
         val containerId: UUID = runCatching {
-            UUID.fromString(System.getenv("container_id"))
+            UUID.fromString(System.getenv("PUFFIN_CONTAINER_ID"))
         }.onFailure {
             logger.error("No container ID found. If this instance is not in a development environment, this is a severe error.")
         }.getOrElse { UUID.randomUUID() }
