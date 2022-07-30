@@ -36,11 +36,13 @@ import net.minestom.server.particle.Particle
 import net.minestom.server.sound.SoundEvent
 import java.time.Duration
 import kotlin.math.cos
+import kotlin.math.floor
 import kotlin.math.sin
 import kotlin.random.Random
 
-class InfinijumpGame(mapName: String) : Game("Infinijump", mapName) {
+class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic") {
 
+    private var score = 0
     override val maxPlayers = 1
 
     private val spawnPosition = Pos(0.5, 64.0, 0.5)
@@ -81,14 +83,19 @@ class InfinijumpGame(mapName: String) : Game("Infinijump", mapName) {
                 }
                 eventNode.addListener(PlayerMoveEvent::class.java) { event ->
                     blocks.forEachIndexed { i, block ->
-                        if (!block.isReached && !block.isRemoved && event.isOnGround && block.pos.distanceSquared(event.player.position) < 2.0) {
+                        val pX = floor(event.player.position.x)
+                        val pY = floor(event.player.position.y)
+                        val pZ = floor(event.player.position.z)
+                        if (!block.isReached && !block.isRemoved && event.isOnGround && pX == block.pos.x && pZ == block.pos.z && pY - block.pos.y <= 1.0) {
                             block.markReached(event.player)
                             MinecraftServer.getSchedulerManager().scheduleNextTick {
                                 // Mark all blocks before this one as reached, just in case a block was skipped
                                 blocks.forEachIndexed { j, previous ->
                                     if (j < i) {
                                         previous.markReached(event.player)
-                                        previous.destroy()
+                                        MinecraftServer.getSchedulerManager().buildTask {
+                                            previous.destroy()
+                                        }.delay(Duration.ofSeconds(1)).schedule()
                                     }
                                 }
                             }
@@ -107,8 +114,6 @@ class InfinijumpGame(mapName: String) : Game("Infinijump", mapName) {
 
     private val blocks = mutableListOf(ParkourBlock(this, getInstance(), 0L, spawnPosition.sub(0.0, 1.0, 0.0)))
 
-    private fun getScore() = blocks.count { it.isReached }
-
     private fun handleTick(ticks: Long) {
         blocks.forEach { block ->
             if (block.isRemoved) return@forEach
@@ -122,21 +127,31 @@ class InfinijumpGame(mapName: String) : Game("Infinijump", mapName) {
     }
 
     fun addNewBlock() {
-        blocks.add(ParkourBlock(this, getInstance(), getInstance().worldAge, getNextBlockPosition()))
+        val instance = getInstance()
+        val lastPos = blocks.last().pos
+        val nextPos = getNextBlockPosition()
+        val block = ParkourBlock(this, instance, instance.worldAge, nextPos)
+        blocks.add(block)
+        if (nextPos.y - lastPos.y >= 2) {
+            block.addLadders()
+        }
+
     }
 
     private fun getNextBlockPosition(): Pos {
         val lastBlock = blocks.last()
         val lastPos = lastBlock.pos
         angle += Math.toRadians((-45..45).random().toDouble())
-        val yDiff = (-1..1).random().toDouble()
-        val vec = Vec(cos(angle), sin(angle)).mul(2.0 - yDiff + Random.nextDouble(1.0, 3.0)).withY(yDiff)
+        val yDiff = (-2..2).random().toDouble()
+        val vec = Vec(cos(angle), sin(angle)).mul(2.0 - yDiff + Random.nextDouble(1.0, 2.0)).withY(yDiff)
         return lastPos.add(vec)
     }
 
     var angle = 0.0
 
     class ParkourBlock(val game: InfinijumpGame, val instance: Instance, var spawnTime: Long, posIn: Pos) {
+
+        private var hasLadders = false
 
         private val placedBlockType = Block.STONE_BRICKS
         private val fallingBlockType = Block.INFESTED_STONE_BRICKS
@@ -155,16 +170,17 @@ class InfinijumpGame(mapName: String) : Game("Infinijump", mapName) {
         fun markReached(player: Player) {
             if (isReached) return
             isReached = true
+            game.score++
             val packet = PacketUtils.createBlockParticle(player.position, Block.SNOW_BLOCK, 10)
             val sound = Sound.sound(
-                SoundEvent.BLOCK_NOTE_BLOCK_PLING, Sound.Source.BLOCK, 1.0f, 0.5f + game.getScore() * 0.05f
+                SoundEvent.BLOCK_NOTE_BLOCK_PLING, Sound.Source.BLOCK, 1.0f, 0.5f + game.score * 0.05f
             )
             player.sendPacket(packet)
             player.playSound(sound)
             player.showTitle(
                 Title.title(
                     Component.empty(),
-                    Component.text(game.getScore(), NamedTextColor.GOLD),
+                    Component.text(game.score, NamedTextColor.GOLD),
                     Title.Times.times(Duration.ZERO, Duration.ZERO, Duration.ofSeconds(60))
                 )
             )
@@ -217,6 +233,21 @@ class InfinijumpGame(mapName: String) : Game("Infinijump", mapName) {
             val sound = Sound.sound(SoundEvent.BLOCK_STONE_BREAK, Sound.Source.BLOCK, 1.0f, 1.0f)
             instance.sendGroupedPacket(packet)
             SoundUtils.playSoundInWorld(sound, instance, center)
+
+            if (hasLadders) {
+                instance.setBlock(pos.sub(1.0, 0.0, 0.0), Block.AIR)
+                instance.setBlock(pos.sub(0.0, 0.0, 1.0), Block.AIR)
+                instance.setBlock(pos.add(1.0, 0.0, 0.0), Block.AIR)
+                instance.setBlock(pos.add(0.0, 0.0, 1.0), Block.AIR)
+            }
+        }
+
+        fun addLadders() {
+            instance.setBlock(pos.sub(1.0, 0.0, 0.0), Block.LADDER.withProperty("facing", "west"))
+            instance.setBlock(pos.sub(0.0, 0.0, 1.0), Block.LADDER.withProperty("facing", "north"))
+            instance.setBlock(pos.add(1.0, 0.0, 0.0), Block.LADDER.withProperty("facing", "east"))
+            instance.setBlock(pos.add(0.0, 0.0, 1.0), Block.LADDER.withProperty("facing", "south"))
+            hasLadders = true
         }
     }
 }
