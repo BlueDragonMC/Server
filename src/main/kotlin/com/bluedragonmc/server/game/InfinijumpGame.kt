@@ -177,6 +177,7 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
         val lastPos = lastBlock.pos
         angle += Math.toRadians((-45..45).random().toDouble())
         val yDiff = (-2..2).random().toDouble()
+        if (lastPos.y + yDiff < 1.0) return getNextBlockPosition()
         val vec = Vec(cos(angle), sin(angle)).mul(1.5 + (difficulty / 4) - yDiff + Random.nextDouble(1.0, 2.0)).withY(yDiff)
         if (vec.x < 1.0 && vec.z < 1.0) return getNextBlockPosition()
         return lastPos.add(vec)
