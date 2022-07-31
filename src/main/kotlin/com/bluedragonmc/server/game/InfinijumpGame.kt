@@ -12,9 +12,11 @@ import com.bluedragonmc.server.module.minigame.WinModule
 import com.bluedragonmc.server.utils.SoundUtils
 import com.bluedragonmc.server.utils.packet.GlowingEntityUtils
 import com.bluedragonmc.server.utils.packet.PacketUtils
+import com.bluedragonmc.server.utils.withColor
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.title.Title
 import net.minestom.server.MinecraftServer
@@ -41,11 +43,40 @@ import kotlin.math.floor
 import kotlin.math.sin
 import kotlin.random.Random
 
-private const val blockLiveTime = 120
-
+private const val blocksPerDifficulty = 50
 class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic") {
 
+    private val blockLiveTime = 120
+        get() = field - difficulty * 15
+
     private var score = 0
+        set(value) {
+            field = value
+            if (field % blocksPerDifficulty == 0) difficulty++
+        }
+    private var difficulty = 0
+        set(value) {
+            lateinit var title: String
+            lateinit var color: TextColor
+            when (value) {
+                1 -> {
+                    title = "Medium"
+                    color = NamedTextColor.YELLOW
+                }
+                2 -> {
+                    title = "Hard"
+                    color = NamedTextColor.RED
+                }
+                3 -> {
+                    title = "Very Hard"
+                    color = NamedTextColor.DARK_RED
+                }
+                else -> return
+            }
+            field = value
+            sendMessage("Difficulty increased to $title. Blocks will disappear faster." withColor color)
+            playSound(Sound.sound(SoundEvent.ENTITY_ENDER_DRAGON_GROWL, Sound.Source.PLAYER, 1.0f, 1.0f))
+        }
     override val maxPlayers = 1
 
     private val spawnPosition = Pos(0.5, 64.0, 0.5)
@@ -54,7 +85,7 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
         use(VoidDeathModule(0.0))
         use(PlayerResetModule(defaultGameMode = GameMode.ADVENTURE))
         use(CountdownModule(threshold = 1, allowMoveDuringCountdown = false, countdownSeconds = 5))
-        use(WinModule(WinModule.WinCondition.MANUAL))
+        // use(WinModule(WinModule.WinCondition.MANUAL))
         use(SpawnpointModule(SpawnpointModule.SingleSpawnpointProvider(spawnPosition)))
         use(CustomGeneratorInstanceModule(
             CustomGeneratorInstanceModule.getFullbrightDimension()
@@ -82,7 +113,7 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
                             Component.text("You scored $score points.", NamedTextColor.RED)
                         )
                     )
-                    endGame(Duration.ofSeconds(10))
+                    endGame(Duration.ofSeconds(3))
                 }
                 eventNode.addListener(InstanceTickEvent::class.java) {
                     if (state == GameState.INGAME) handleTick(it.instance.worldAge)
@@ -181,7 +212,7 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
             game.score++
             val packet = PacketUtils.createBlockParticle(player.position, Block.STONE_BRICKS, 10)
             val sound = Sound.sound(
-                SoundEvent.BLOCK_NOTE_BLOCK_PLING, Sound.Source.BLOCK, 1.0f, 0.5f + game.score * 0.025f
+                SoundEvent.BLOCK_NOTE_BLOCK_PLING, Sound.Source.BLOCK, 1.0f, if (game.score >= 4 * blocksPerDifficulty) 2.0f else 0.5f + (game.score % blocksPerDifficulty) * (1.5f / blocksPerDifficulty) // Max pitch = 2
             )
             player.sendPacket(packet)
             player.playSound(sound)
@@ -199,13 +230,13 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
         fun tick(aliveTicks: Int) {
             val color = when {
                 isReached -> NamedTextColor.WHITE
-                aliveTicks < (blockLiveTime / 3) -> NamedTextColor.GREEN
-                aliveTicks < (2 * blockLiveTime / 3) -> NamedTextColor.YELLOW
+                aliveTicks < (game.blockLiveTime / 3) -> NamedTextColor.GREEN
+                aliveTicks < (2 * game.blockLiveTime / 3) -> NamedTextColor.YELLOW
                 else -> NamedTextColor.RED
             }
             val p = Pos(pos.blockX().toDouble(), pos.blockY().toDouble(), pos.blockZ().toDouble())
             if (aliveTicks % 10 == 0) instance.getChunkAt(pos)
-                ?.sendPacketToViewers(BlockBreakAnimationPacket(Random.nextInt(), p, (aliveTicks / (blockLiveTime / 10)).toByte()))
+                ?.sendPacketToViewers(BlockBreakAnimationPacket(Random.nextInt(), p, (aliveTicks / (game.blockLiveTime / 10)).toByte()))
             setOutlineColor(color)
 
             if (aliveTicks % 10 != 0) return
