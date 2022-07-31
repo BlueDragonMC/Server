@@ -111,7 +111,10 @@ open class BlueDragonCommand(
     }
 
     fun usage(block: CommandCtx.() -> Unit) = setDefaultExecutor { sender, context ->
-        block(CommandCtx(sender, context))
+        sender as CustomPlayer
+        if (permission == null || Permissions.hasPermission(sender.data, permission))
+            block(CommandCtx(sender, context))
+        else sender.sendMessage(Component.translatable("commands.help.failed", errorColor))
     }
 
     fun usage(usageString: String) = usage {
@@ -216,7 +219,7 @@ interface ConditionHolder {
         }
     }
 
-    fun requirePermission(permission: String, noPermissionMessage: String = "You do not have permission to execute this command.") {
+    fun requirePermission(permission: String, noPermissionMessage: Component = Component.translatable("commands.help.failed", errorColor)) {
         conditions.add {
             if (sender is CustomPlayer && !Permissions.hasPermission(sender.data, permission)) {
                 sender.sendMessage(noPermissionMessage withColor errorColor)

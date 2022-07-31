@@ -15,11 +15,13 @@ import net.kyori.adventure.text.event.ClickEvent
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.Style
 import net.kyori.adventure.text.format.TextDecoration
+import net.kyori.adventure.title.Title
 import net.minestom.server.MinecraftServer
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.EntityType
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
+import net.minestom.server.entity.hologram.Hologram
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.player.PlayerSpawnEvent
@@ -32,6 +34,13 @@ import java.time.Duration
 import java.util.*
 
 class Lobby : Game("Lobby", "lobbyv2.1") {
+    private val splashes = listOf(
+        "Welcome back!",
+        "Try Infinijump!",
+        "Enjoy your stay!",
+        "Professional software!",
+        "Have you seen Joe?"
+    )
     init {
         // World modules
         use(AnvilFileMapProviderModule(Paths.get("worlds/$name/$mapName")))
@@ -128,12 +137,27 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
                 interaction = {
                     queue.queue(it.player, GameType(Queue.gameClasses.keys.random(), null, null))
                 })
+
+            addNPC(instance = this@Lobby.getInstance(),
+                position = Pos(-12.5, 61.0, -6.5, -145.0f, 0.0f),
+                customName = Component.text("Shop", NamedTextColor.YELLOW, TextDecoration.BOLD),
+                skin = NPCModule.NPCSkins.SHOP.skin,
+                lookAtPlayer = false,
+                enableFullSkin = false,
+                interaction = {
+                    it.player.sendMessage("Coming soon..." withColor ALT_COLOR_1)
+            })
         }
 
         use(object : GameModule() {
             override fun initialize(parent: Game, eventNode: EventNode<Event>) {
                 eventNode.addListener(PlayerSpawnEvent::class.java) { event ->
                     loadXPBar(event.player)
+                    event.player.showTitle(Title.title(
+                        SERVER_NAME_GRADIENT,
+                        splashes.random() withColor BRAND_COLOR_PRIMARY_2,
+                        Title.Times.times(Duration.ZERO, Duration.ofMillis(1500), Duration.ofMillis(100))
+                    ))
                 }
             }
         })
@@ -158,6 +182,8 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
             playSound(Sound.sound(SoundEvent.BLOCK_NOTE_BLOCK_PLING, Sound.Source.MASTER, 1.0F, 1.0F))
         }.repeat(Duration.ofMinutes(5
         )).schedule()
+
+        Hologram(getInstance(), Pos(16.975, 63.65, 0.0), Component.text("World Tour Parkour", NamedTextColor.GREEN, TextDecoration.BOLD), true)
 
         ready()
     }

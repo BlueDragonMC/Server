@@ -3,6 +3,8 @@ package com.bluedragonmc.server.command
 import com.bluedragonmc.messages.GameType
 import com.bluedragonmc.server.queue
 import com.bluedragonmc.server.queue.Queue
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.command.builder.arguments.ArgumentWord
 
 class JoinCommand(name: String, private val usageString: String, vararg aliases: String) : BlueDragonCommand(name, aliases, null, block = {
@@ -16,6 +18,6 @@ class JoinCommand(name: String, private val usageString: String, vararg aliases:
         queue.queue(player, GameType(get(gameArgument), null, get(mapArgument)))
     }.apply {
         requirePlayers()
-        requirePermission("command.game.map", "Only donators can queue for a specific map.")
+        requirePermission("command.game.map", Component.text("Only donators can queue for a specific map.", NamedTextColor.RED))
     }
 })

@@ -81,7 +81,8 @@ class NPCModule : GameModule() {
         interaction: Consumer<NPCInteraction>? = null,
         customNameVisible: Boolean = true,
         lookAtPlayer: Boolean = true,
-    ): NPC = NPC(instance, position, customName, skin, entityType, interaction, customNameVisible, lookAtPlayer).also { addNPC(it) }
+        enableFullSkin: Boolean = true,
+    ): NPC = NPC(instance, position, customName, skin, entityType, interaction, customNameVisible, lookAtPlayer, enableFullSkin).also { addNPC(it) }
 
     class NPC(
         instance: Instance,
@@ -92,6 +93,7 @@ class NPCModule : GameModule() {
         val interaction: Consumer<NPCInteraction>? = null,
         private val customNameVisible: Boolean = true,
         private val lookAtPlayer: Boolean = true,
+        enableFullSkin: Boolean = true,
     ) : LivingEntity(entityType, UUID.randomUUID()) {
 
         override fun isImmune(type: DamageType) = true
@@ -114,7 +116,7 @@ class NPCModule : GameModule() {
         private lateinit var hologram: Hologram
 
         init {
-            enableFullSkin()
+            if (enableFullSkin) enableFullSkin()
 
             val armorStand = Entity(EntityType.ARMOR_STAND)
             val standMeta = armorStand.entityMeta as ArmorStandMeta
@@ -243,6 +245,9 @@ class NPCModule : GameModule() {
 
         COOL_THING(PlayerSkin("ewogICJ0aW1lc3RhbXAiIDogMTY1OTA1NTU5NjU1MCwKICAicHJvZmlsZUlkIiA6ICI3MzY0ODFkZmY2ZGY0NWUwOTA0ODg0ZjNiMWExMjY1NSIsCiAgInByb2ZpbGVOYW1lIiA6ICJUd2lsaWdodFFBUSIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9lMjQ3MmU1MTNiYmMzZTQ3YWFkZTJlMTZlODg5MzZhZWE1MzY5N2M3MjJlZmJiNjBlNDdjZmQ3MjVjMWE4YTM0IgogICAgfQogIH0KfQ==",
         "PHZYWoFj/uEkJDVbzEIr3vFMi5RVW4JJNyvtRfjDbwNa6RmX+j2BadYRIh7nruXBtjcQBTaT13ooI5VzKX+DfXjMkXuwtjvPLRZaHlyUa/smpeWTt6sbJavhwhLHa7+1Lqo664YfbFTmxH3p3XEscGV83XACShoGX8gqpECDLU/RgTas4gZh8aQ0pLYmQeEnf2ZoW1Ky/nTkpcpgguq5QMm4RoUyGAQdCR7EP8EUEZ6NIrjK9aareEEBukswHPmVLAwR4gL1vskU7Tl1ixsIOZisCOjb1FCc2108tz8md/xuafbDbb0jKZbDQz6FtnuYszLQN9OrJgBch7SqfDtZT6SSSAhTLVtAGaK6dHg4F+qGSSlpt1mqDmZVrxO+dwLjkfLutofhQYxng1GSU4r9d55Jge8mpBNqAC0UW/agTSmzs7lVNPcmbj1djDiwPxQ25B2eVvvo1tTqJq/q25HpF7PJoyj3WCWx5dYgiDH0C+jKy3g3nsFsuPMm7yTdvSw8PGYoM+1WFcL00WRfGdve42laTZ0saP461JpwefZOP9E6woqmLuqtb8xKt1p8P2M1qHfiABIinP2fT4ECPFOtcbJvcevb5EIhPEmQxgmemygnfg+2AQviAk8ZD8YhFxzQ3mH3JAEoaSQ4qsNJ2HHXLwGXgfL79WlN/iR72Sm1S1w=")),
+
+        SHOP(PlayerSkin("ewogICJ0aW1lc3RhbXAiIDogMTU5ODY4MDQzMzgyMywKICAicHJvZmlsZUlkIiA6ICI3MzgyZGRmYmU0ODU0NTVjODI1ZjkwMGY4OGZkMzJmOCIsCiAgInByb2ZpbGVOYW1lIiA6ICJ4cWwiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTNjNDY4OTIzMzY1ZmU2NjczYjgwZWQ3ZGNmYzVjYjBiYzI2YzQzYWQ5MWQ2ZjA0ZWFmYTFhMWViMDQ4Y2ZlMCIsCiAgICAgICJtZXRhZGF0YSIgOiB7CiAgICAgICAgIm1vZGVsIiA6ICJzbGltIgogICAgICB9CiAgICB9CiAgfQp9",
+        "DvOnmAJDZqihPpk+xbI3K6NtbKyjij1afaoiZ4vWpM7a6b380YN9nl29kUXLAQUUDl9DZ7vGtsarTU6B0TMVqLg97NH1S/v3tFsveOgyS1TVMYBexz1jEfwxPlq1FPaONTJpiN1+kvT3UQfvh6+cS3UiHVdyd08KDgir5vZyvo5bU6arJJEwQLuPexR7SGHLmwXfWBzUkJd9b16XVcdkrWMefmFRXIsMJzmE9Bqtm6p5pY923g4BFeah7J8zKywPbzcMUkWU0PlAhdkAjxn09Y/UmTGYt3heP6Clk+DTre/9mkw4iPWqihbVLI3Xyt0qczjYXmPMre1sIhDLxst0OyvJhGjex0LlI40C+BDDoYJpJVtz8qFTrudB3+BctpMOreT68RCJtrId0Hq63dkstuQq4Nc/YXK9ssztgzQUp7k64L+FV0VCwmDihwKOmzpju2fz7x2hs2FJNDbtm0gtfugxp2Idy1QgBW24MiVyZa4WtnK480sGJwgpsu8bCE4r57ko6jMaZDBOa8T1kR4Ejofiiy+J60AN0JsiKdF6qMFBHLfNdtAX7CvZWle/Tt2JUHKrHubO63UP+iej2BuR0K/E8Vc0r2SG1jVUIZSySKIA4l09p2TGtqKLvCXSKk6/dXjR49E2pAHHI8fZZkdzL4IiYpW+paFzyL6KyT53iN8=")),
 
     }
 }
