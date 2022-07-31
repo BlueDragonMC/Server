@@ -70,6 +70,10 @@ fun main() {
         event.setSpawningInstance(instance)
         game?.players?.add(event.player)
         futureInstances.remove(event.player.uuid)
+
+        event.player.sendPlayerListHeaderAndFooter(
+            SERVER_NAME_GRADIENT.decorate(TextDecoration.BOLD),
+            (" Join our community at " withColor BRAND_COLOR_PRIMARY_2) + ("bluedragonmc.com " withColor BRAND_COLOR_PRIMARY_1))
     }
 
     // Chat formatting
@@ -166,6 +170,10 @@ fun main() {
         PingCommand("ping", "/ping", "latency"),
         MindecraftesCommand("mindecraftes", "/mindecraftes"),
     ).forEach(MinecraftServer.getCommandManager()::register)
+
+    MinecraftServer.getCommandManager().setUnknownCommandCallback { sender, command ->
+        sender.sendMessage(Component.translatable("commands.help.failed", NamedTextColor.RED))
+    }
 
     // Create a per-instance tablist using custom packets
     PerInstanceTabList.hook(MinecraftServer.getGlobalEventHandler())

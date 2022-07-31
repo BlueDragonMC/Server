@@ -2,6 +2,7 @@ package com.bluedragonmc.server
 
 import com.bluedragonmc.server.utils.noBold
 import com.bluedragonmc.server.utils.plus
+import com.bluedragonmc.server.utils.withGradient
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextColor
@@ -39,6 +40,11 @@ val ALT_COLOR_2 = NamedTextColor.GOLD
  * The hostname of the server, used in the scoreboard footer.
  */
 const val SERVER_IP = "bluedragonmc.com"
+
+/**
+ * The name of the server ("BlueDragon") with a nice gradient. This is not bold.
+ */
+val SERVER_NAME_GRADIENT = Component.text("BlueDragon").withGradient(BRAND_COLOR_PRIMARY_1, BRAND_COLOR_PRIMARY_3)
 
 /**
  * Information about the latest update, displayed in the server list description.

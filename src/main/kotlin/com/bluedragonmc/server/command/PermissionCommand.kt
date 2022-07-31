@@ -72,7 +72,7 @@ class PermissionCommand(name: String, usageString: String, vararg aliases: Strin
             sender.sendMessage(buildMessage {
                 message("All permissions for group ")
                 field(group.name)
-                message("(")
+                message(" (")
                 field(group.permissions.size.toString())
                 message("):\n")
                 for(permissionName in group.permissions) {
@@ -121,7 +121,7 @@ class PermissionCommand(name: String, usageString: String, vararg aliases: Strin
             sender.sendMessage(buildMessage {
                 message("All permissions for group ")
                 field(group)
-                message("(")
+                message(" (")
                 field(perms.size.toString())
                 message("):\n")
                 for(permissionName in perms) {
@@ -159,7 +159,7 @@ class PermissionCommand(name: String, usageString: String, vararg aliases: Strin
             sender.sendMessage(buildMessage {
                 message("All permissions for player ")
                 field(doc.username)
-                message("(")
+                message(" (")
                 field(perms.size.toString())
                 message("):\n")
                 for(permissionName in perms) {
