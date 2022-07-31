@@ -99,6 +99,16 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
                     queue.queue(it.player, GameType("Infection", null, null))
                 }).lookAt(center)
 
+            // -7.5, 62.5, -30.5, 0.0, 0.0 FAR LEFT
+            addNPC(instance = this@Lobby.getInstance(),
+            position = Pos(-7.5, 62.5, -30.5),
+            customName = Component.text("Infinijump", NamedTextColor.YELLOW, TextDecoration.BOLD),
+            skin = NPCModule.NPCSkins.COOL_THING.skin,
+            lookAtPlayer = false,
+            interaction = {
+                queue.queue(it.player, GameType("Infinijump", null, null))
+            }).lookAt(center)
+
             // GAME SELECT (left)
             addNPC(instance = this@Lobby.getInstance(),
                 position = Pos(-2.5, 61.0, -18.5),

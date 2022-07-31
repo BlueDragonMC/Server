@@ -82,7 +82,7 @@ fun main() {
         }
         val experience = (player).run { if(isDataInitialized()) data.experience else 0 }
         val level = CustomPlayer.getXpLevel(experience)
-        val xpToNextLevel = CustomPlayer.getXpToNextLevel(level, experience).toInt()
+        val xpToNextLevel = CustomPlayer.getXpToNextLevel(level, experience)
 
         val group = player.data.highestGroup ?: PermissionGroup("default", NamedTextColor.GRAY)
 
