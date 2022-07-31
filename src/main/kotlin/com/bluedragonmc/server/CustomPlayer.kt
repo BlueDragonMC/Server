@@ -23,6 +23,12 @@ class CustomPlayer(uuid: UUID, username: String, playerConnection: PlayerConnect
     internal var isSpectating = false
     internal var lastNPCInteractionTime = 0L
 
+    /**
+     * Updated to the player's invisibility state when they go into spectator mode.
+     * Used to determine whether the player should be invisible or not when they leave spectator mode.
+     */
+    private var wasInvisible = false
+
     internal var virtualItems = mutableListOf<ShopModule.VirtualItem>()
 
     internal lateinit var data: PlayerDocument
@@ -57,13 +63,20 @@ class CustomPlayer(uuid: UUID, username: String, playerConnection: PlayerConnect
         if (isSpectating && prevGameMode == GameMode.SPECTATOR && gameMode != GameMode.SPECTATOR) {
             stopSpectating()
         }
+        if(prevGameMode != GameMode.SPECTATOR && gameMode == GameMode.SPECTATOR) { // Entering spectator mode
+            wasInvisible = isInvisible
+            isInvisible = true // Make the player invisible so their floating head does not appear for everyone
+        }
+        if(prevGameMode == GameMode.SPECTATOR && gameMode != GameMode.SPECTATOR) { // Leaving spectator mode
+            isInvisible = wasInvisible
+        }
     }
 
-    public override fun refreshHealth() {
+    public override fun refreshHealth() { // Overridden to increase visibility
         super.refreshHealth()
     }
 
-    public override fun refreshAfterTeleport() {
+    public override fun refreshAfterTeleport() { // Overridden to increase visibility
         super.refreshAfterTeleport()
     }
 
