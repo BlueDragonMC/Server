@@ -1,0 +1,15 @@
+mode: "PUSHGATEWAY"
+http:
+  host: "prometheus"
+  port: 9100
+  authentication:
+    scheme: "NONE"
+    username: "username"
+    password: "password"
+pushGateway:
+  url: "http://pushgateway:9091"
+  authentication:
+    scheme: "NONE"
+    username: "username"
+    password: "password"
+  interval: 10

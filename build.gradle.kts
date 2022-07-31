@@ -35,6 +35,9 @@ dependencies {
     // Messaging
     implementation("com.github.bluedragonmc:messagingsystem:3abc4b8a49")
     implementation("com.github.bluedragonmc:messages:a2a08c9d8e")
+
+    // UnifiedMetrics (available at runtime as an extension)
+    compileOnly("dev.cubxity.plugins", "unifiedmetrics-api", "0.3.6")
 }
 
 tasks.test {
