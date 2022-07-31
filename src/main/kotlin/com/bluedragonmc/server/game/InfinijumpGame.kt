@@ -41,7 +41,7 @@ import kotlin.math.floor
 import kotlin.math.sin
 import kotlin.random.Random
 
-private const val blockLiveTime = 135
+private const val blockLiveTime = 120
 
 class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic") {
 
