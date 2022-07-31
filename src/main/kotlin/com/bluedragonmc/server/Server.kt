@@ -64,8 +64,8 @@ fun main() {
         val game = Game.findGame(instance.uniqueId)
         event.player.displayName = Component.text(
             event.player.username,
-            BRAND_COLOR_PRIMARY_1
-        ) // TODO change this color when we get a rank system
+            BRAND_COLOR_PRIMARY_1 // The default color that appears before group data is loaded
+        )
         event.player.sendMessage(Component.text("Placing you in ${instance.uniqueId}...", NamedTextColor.DARK_GRAY))
         event.setSpawningInstance(instance)
         game?.players?.add(event.player)
@@ -112,7 +112,7 @@ fun main() {
     eventNode.addListener(ServerListPingEvent::class.java) { event ->
         event.responseData.description = buildComponent {
             val title = Component.text("BlueDragon").withDecoration(TextDecoration.BOLD)
-            if(event.pingType == ServerListPingType.OPEN_TO_LAN)
+            if(event.pingType == ServerListPingType.OPEN_TO_LAN || (event.connection?.protocolVersion ?: 0) < 713)
                 +title.withColor(BRAND_COLOR_PRIMARY_3)
             else
                 +title.withGradient(BRAND_COLOR_PRIMARY_1, BRAND_COLOR_PRIMARY_3)
@@ -124,6 +124,11 @@ fun main() {
                 +(event.responseData.version withColor NamedTextColor.GREEN)
             }
             +("]" withColor NamedTextColor.DARK_GRAY)
+            if(event.connection != null && event.connection!!.protocolVersion < MinecraftServer.PROTOCOL_VERSION) {
+                +Component.newline()
+                +("Update to Minecraft 1.18.2 to join BlueDragon." withColor NamedTextColor.RED)
+                return@buildComponent
+            }
             if (event.pingType != ServerListPingType.OPEN_TO_LAN) { // Newlines are disallowed in Open To LAN pings
                 +Component.newline()
                 +SERVER_NEWS
