@@ -4,6 +4,7 @@ import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.GameState
 import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.module.GameModule
+import com.bluedragonmc.server.module.combat.CustomDeathMessageModule
 import com.bluedragonmc.server.module.gameplay.*
 import com.bluedragonmc.server.module.instance.CustomGeneratorInstanceModule
 import com.bluedragonmc.server.module.minigame.CountdownModule
@@ -40,6 +41,8 @@ import kotlin.math.floor
 import kotlin.math.sin
 import kotlin.random.Random
 
+private const val blockLiveTime = 135
+
 class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic") {
 
     private var score = 0
@@ -58,11 +61,14 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
         ) { /* void world - no generation to do */ })
         use(InstantRespawnModule())
         use(SpectatorModule(spectateOnDeath = true))
+        use(CustomDeathMessageModule())
         use(object : GameModule() {
+            var started = false
             override fun initialize(parent: Game, eventNode: EventNode<Event>) {
                 eventNode.addListener(GameStartEvent::class.java) {
-                    blocks.forEachIndexed { i, block ->
-                        block.spawnTime = getInstance().worldAge + 20 * i // Reset age of the block
+                    started = true
+                    blocks.forEach { block ->
+                        block.spawnTime = getInstance().worldAge // Reset age of the block
                     }
                 }
                 eventNode.addListener(PlayerDeathEvent::class.java) { event ->
@@ -82,6 +88,7 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
                     if (state == GameState.INGAME) handleTick(it.instance.worldAge)
                 }
                 eventNode.addListener(PlayerMoveEvent::class.java) { event ->
+                    if (!started) return@addListener
                     blocks.forEachIndexed { i, block ->
                         val pX = floor(event.player.position.x)
                         val pY = floor(event.player.position.y)
@@ -118,7 +125,7 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
         blocks.forEach { block ->
             if (block.isRemoved) return@forEach
             val ticksSinceSpawn = ticks - block.spawnTime
-            if (ticksSinceSpawn > 100) {
+            if (ticksSinceSpawn > blockLiveTime) {
                 block.destroy()
             } else {
                 block.tick(ticksSinceSpawn.toInt())
@@ -144,6 +151,7 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
         angle += Math.toRadians((-45..45).random().toDouble())
         val yDiff = (-2..2).random().toDouble()
         val vec = Vec(cos(angle), sin(angle)).mul(2.0 - yDiff + Random.nextDouble(1.0, 2.0)).withY(yDiff)
+        if (vec.x < 1.0 && vec.z < 1.0) return getNextBlockPosition()
         return lastPos.add(vec)
     }
 
@@ -171,9 +179,9 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
             if (isReached) return
             isReached = true
             game.score++
-            val packet = PacketUtils.createBlockParticle(player.position, Block.SNOW_BLOCK, 10)
+            val packet = PacketUtils.createBlockParticle(player.position, Block.STONE_BRICKS, 10)
             val sound = Sound.sound(
-                SoundEvent.BLOCK_NOTE_BLOCK_PLING, Sound.Source.BLOCK, 1.0f, 0.5f + game.score * 0.05f
+                SoundEvent.BLOCK_NOTE_BLOCK_PLING, Sound.Source.BLOCK, 1.0f, 0.5f + game.score * 0.025f
             )
             player.sendPacket(packet)
             player.playSound(sound)
@@ -190,13 +198,14 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
 
         fun tick(aliveTicks: Int) {
             val color = when {
-                aliveTicks < 20 -> NamedTextColor.GREEN
-                aliveTicks < 50 -> NamedTextColor.YELLOW
+                isReached -> NamedTextColor.WHITE
+                aliveTicks < (blockLiveTime / 3) -> NamedTextColor.GREEN
+                aliveTicks < (2 * blockLiveTime / 3) -> NamedTextColor.YELLOW
                 else -> NamedTextColor.RED
             }
             val p = Pos(pos.blockX().toDouble(), pos.blockY().toDouble(), pos.blockZ().toDouble())
             if (aliveTicks % 10 == 0) instance.getChunkAt(pos)
-                ?.sendPacketToViewers(BlockBreakAnimationPacket(Random.nextInt(), p, (aliveTicks / 10).toByte()))
+                ?.sendPacketToViewers(BlockBreakAnimationPacket(Random.nextInt(), p, (aliveTicks / (blockLiveTime / 10)).toByte()))
             setOutlineColor(color)
 
             if (aliveTicks % 10 != 0) return
