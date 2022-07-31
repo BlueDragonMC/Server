@@ -8,7 +8,6 @@ import com.bluedragonmc.server.module.combat.CustomDeathMessageModule
 import com.bluedragonmc.server.module.gameplay.*
 import com.bluedragonmc.server.module.instance.CustomGeneratorInstanceModule
 import com.bluedragonmc.server.module.minigame.CountdownModule
-import com.bluedragonmc.server.module.minigame.WinModule
 import com.bluedragonmc.server.utils.SoundUtils
 import com.bluedragonmc.server.utils.packet.GlowingEntityUtils
 import com.bluedragonmc.server.utils.packet.PacketUtils
@@ -85,7 +84,6 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
         use(VoidDeathModule(0.0))
         use(PlayerResetModule(defaultGameMode = GameMode.ADVENTURE))
         use(CountdownModule(threshold = 1, allowMoveDuringCountdown = false, countdownSeconds = 5))
-        // use(WinModule(WinModule.WinCondition.MANUAL))
         use(SpawnpointModule(SpawnpointModule.SingleSpawnpointProvider(spawnPosition)))
         use(CustomGeneratorInstanceModule(
             CustomGeneratorInstanceModule.getFullbrightDimension()
@@ -131,9 +129,7 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
                                 blocks.forEachIndexed { j, previous ->
                                     if (j < i) {
                                         previous.markReached(event.player)
-                                        MinecraftServer.getSchedulerManager().buildTask {
-                                            previous.destroy()
-                                        }.delay(Duration.ofSeconds(1)).schedule()
+                                        previous.destroy()
                                     }
                                 }
                             }
@@ -181,7 +177,7 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
         val lastPos = lastBlock.pos
         angle += Math.toRadians((-45..45).random().toDouble())
         val yDiff = (-2..2).random().toDouble()
-        val vec = Vec(cos(angle), sin(angle)).mul(2.0 - yDiff + Random.nextDouble(1.0, 2.0)).withY(yDiff)
+        val vec = Vec(cos(angle), sin(angle)).mul(1.5 + (difficulty / 4) - yDiff + Random.nextDouble(1.0, 2.0)).withY(yDiff)
         if (vec.x < 1.0 && vec.z < 1.0) return getNextBlockPosition()
         return lastPos.add(vec)
     }
