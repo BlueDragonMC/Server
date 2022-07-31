@@ -20,7 +20,10 @@ Requires Java 17 or higher.
 ## Development
 This can be built as a docker container with the following command:
 ```shell
-DOCKER_BUILDKIT=1 docker build -t bluedragonmc/server:testing --label com.bluedragonmc.server.version=testing .
+$ DOCKER_BUILDKIT=1 docker build -t bluedragonmc/server:testing \
+ --label com.bluedragonmc.server.version=testing \
+ --label bluedragonmc.server.version=testing \
+ .
 ```
 This uses the `Dockerfile` in the current directory to make an image with the version string `"testing"`.
 

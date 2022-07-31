@@ -14,6 +14,17 @@ RUN --mount=target=/home/gradle/.gradle,type=cache \
 FROM eclipse-temurin:17
 EXPOSE 25565
 WORKDIR /server
+
+ARG METRICS_VERSION="0.3.6"
+
+# Add UnifiedMetrics by Cubxity
+ADD "https://github.com/Cubxity/UnifiedMetrics/releases/download/v$METRICS_VERSION/unifiedmetrics-platform-minestom-$METRICS_VERSION.jar" /server/extensions/unifiedmetrics-$METRICS_VERSION.jar
+# Copy the built JAR from the previous step
 COPY --from=build /work/build/libs/Server-*-all.jar /server/server.jar
+# Copy config files and assets
 COPY favicon_64.png /server/favicon_64.png
-CMD ["java", "-jar", "/server/server.jar"]
+COPY server-entrypoint.sh /server/entrypoint.sh
+COPY extensions/UnifiedMetrics /server/extensions/UnifiedMetrics
+
+# Run the server
+CMD ["sh", "/server/entrypoint.sh"]

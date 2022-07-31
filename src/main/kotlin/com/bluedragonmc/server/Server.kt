@@ -8,6 +8,7 @@ import com.bluedragonmc.server.block.SkullHandler
 import com.bluedragonmc.server.command.*
 import com.bluedragonmc.server.command.punishment.*
 import com.bluedragonmc.server.game.Lobby
+import com.bluedragonmc.server.module.ServerMetrics
 import com.bluedragonmc.server.module.database.DatabaseModule
 import com.bluedragonmc.server.module.database.PermissionGroup
 import com.bluedragonmc.server.module.database.Punishment
@@ -207,6 +208,9 @@ fun main() {
     minecraftServer.start("0.0.0.0", 25565)
 
     if (Environment.isDev()) OpenToLAN.open()
+
+    // Enable extra metrics for UnifiedMetrics
+    if(!Environment.isDev()) ServerMetrics.initialize()
 }
 
 fun getPunishmentMessage(punishment: Punishment, state: String) = buildComponent {
