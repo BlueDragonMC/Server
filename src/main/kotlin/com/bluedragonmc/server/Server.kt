@@ -10,6 +10,7 @@ import com.bluedragonmc.server.command.punishment.*
 import com.bluedragonmc.server.game.Lobby
 import com.bluedragonmc.server.module.database.DatabaseModule
 import com.bluedragonmc.server.module.database.PermissionGroup
+import com.bluedragonmc.server.module.database.Permissions
 import com.bluedragonmc.server.module.database.Punishment
 import com.bluedragonmc.server.module.messaging.MessagingModule
 import com.bluedragonmc.server.utils.*
@@ -20,6 +21,7 @@ import net.kyori.adventure.text.JoinConfiguration
 import net.kyori.adventure.text.event.HoverEvent
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
+import net.kyori.adventure.text.minimessage.MiniMessage
 import net.minestom.server.MinecraftServer
 import net.minestom.server.event.player.PlayerChatEvent
 import net.minestom.server.event.player.PlayerLoginEvent
@@ -104,7 +106,9 @@ fun main() {
                 if (group.prefix != Component.empty()) Component.space() else Component.empty(),
                 player.name,
                 Component.text(": ", NamedTextColor.DARK_GRAY),
-                Component.text(event.message, NamedTextColor.WHITE)
+                if (!Permissions.hasPermission(player.data, "chat.minimessage"))
+                    Component.text(event.message, NamedTextColor.WHITE)
+                else MiniMessage.miniMessage().deserialize(event.message)
             )
         }
     }
