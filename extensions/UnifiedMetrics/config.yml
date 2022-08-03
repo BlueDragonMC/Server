@@ -9,3 +9,4 @@ metrics:
     server: true
     world: true
     tick: true
+    events: true

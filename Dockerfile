@@ -17,6 +17,8 @@ WORKDIR /server
 
 ARG METRICS_VERSION="0.3.6"
 
+LABEL com.bluedragonmc.allow_prometheus_scrape=true
+
 # Add UnifiedMetrics by Cubxity
 ADD "https://github.com/Cubxity/UnifiedMetrics/releases/download/v$METRICS_VERSION/unifiedmetrics-platform-minestom-$METRICS_VERSION.jar" /server/extensions/unifiedmetrics-$METRICS_VERSION.jar
 # Copy the built JAR from the previous step
