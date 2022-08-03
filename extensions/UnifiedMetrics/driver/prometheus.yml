@@ -1,15 +1,16 @@
-mode: "PUSHGATEWAY"
-http:
-  host: "prometheus"
-  port: 9100
-  authentication:
-    scheme: "NONE"
-    username: "username"
-    password: "password"
+mode: "HTTP"
 pushGateway:
+  job: "unifiedmetrics"
   url: "http://pushgateway:9091"
   authentication:
     scheme: "NONE"
     username: "username"
     password: "password"
   interval: 10
+http:
+  host: "0.0.0.0"
+  port: 9100
+  authentication:
+    scheme: "NONE"
+    username: "username"
+    password: "password"
