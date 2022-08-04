@@ -1,3 +1,5 @@
+server:
+  name: "global"
 metrics:
   enabled: true
   driver: "prometheus"

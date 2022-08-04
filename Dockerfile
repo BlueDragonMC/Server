@@ -25,8 +25,7 @@ ADD "https://github.com/Cubxity/UnifiedMetrics/releases/download/v$METRICS_VERSI
 COPY --from=build /work/build/libs/Server-*-all.jar /server/server.jar
 # Copy config files and assets
 COPY favicon_64.png /server/favicon_64.png
-COPY server-entrypoint.sh /server/entrypoint.sh
 COPY extensions/UnifiedMetrics /server/extensions/UnifiedMetrics
 
 # Run the server
-CMD ["sh", "/server/entrypoint.sh"]
+CMD ["java", "-jar", "/server/server.jar"]
