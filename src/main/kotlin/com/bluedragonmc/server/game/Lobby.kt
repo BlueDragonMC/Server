@@ -225,4 +225,12 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
             loadXPTask.cancel()
         }.repeat(Duration.ofMillis(20)).schedule()
     }
+
+    override fun endGame(delay: Duration) {
+        // Lobbies can not be removed using the default logic.
+    }
+
+    override fun endGameInstantly() {
+        // Lobbies can not be removed using the default logic.
+    }
 }
