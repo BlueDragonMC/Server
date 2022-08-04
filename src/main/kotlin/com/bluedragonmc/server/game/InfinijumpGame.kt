@@ -52,6 +52,7 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
         set(value) {
             field = value
             if (field % blocksPerDifficulty == 0) difficulty++
+            players.forEach { it.exp = (value.toFloat() % blocksPerDifficulty) / blocksPerDifficulty }
         }
     private var difficulty = 0
         set(value) {
@@ -75,6 +76,7 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
             field = value
             sendMessage("Difficulty increased to $title. Blocks will disappear faster." withColor color)
             playSound(Sound.sound(SoundEvent.ENTITY_ENDER_DRAGON_GROWL, Sound.Source.PLAYER, 1.0f, 1.0f))
+            players.forEach { it.level = value }
         }
     override val maxPlayers = 1
 
@@ -175,7 +177,7 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
     private fun getNextBlockPosition(): Pos {
         val lastBlock = blocks.last()
         val lastPos = lastBlock.pos
-        angle += Math.toRadians((-45..45).random().toDouble())
+        angle += Math.toRadians((-35..35).random().toDouble())
         val yDiff = (-2..2).random().toDouble()
         if (lastPos.y + yDiff < 1.0) return getNextBlockPosition()
         val vec = Vec(cos(angle), sin(angle)).mul(1.5 + (difficulty / 4) - yDiff + Random.nextDouble(1.0, 2.0)).withY(yDiff)
@@ -209,7 +211,14 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
             game.score++
             val packet = PacketUtils.createBlockParticle(player.position, Block.STONE_BRICKS, 10)
             val sound = Sound.sound(
-                SoundEvent.BLOCK_NOTE_BLOCK_PLING, Sound.Source.BLOCK, 1.0f, if (game.score >= 4 * blocksPerDifficulty) 2.0f else 0.5f + (game.score % blocksPerDifficulty) * (1.5f / blocksPerDifficulty) // Max pitch = 2
+                when (game.difficulty) {
+                    0 -> SoundEvent.BLOCK_NOTE_BLOCK_PLING
+                    1 -> SoundEvent.ENTITY_EXPERIENCE_ORB_PICKUP
+                    2 -> SoundEvent.BLOCK_AMETHYST_BLOCK_BREAK
+                    3 -> SoundEvent.BLOCK_BASALT_BREAK
+                    else -> SoundEvent.BLOCK_NOTE_BLOCK_PLING
+                },
+                Sound.Source.BLOCK, 1.0f, if (game.score >= 4 * blocksPerDifficulty) 2.0f else 0.5f + (game.score % blocksPerDifficulty) * (1.5f / blocksPerDifficulty) // Max pitch = 2
             )
             player.sendPacket(packet)
             player.playSound(sound)
