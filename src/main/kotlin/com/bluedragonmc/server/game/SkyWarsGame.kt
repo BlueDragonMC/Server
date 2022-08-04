@@ -5,15 +5,12 @@ import com.bluedragonmc.server.module.GuiModule
 import com.bluedragonmc.server.module.combat.CustomDeathMessageModule
 import com.bluedragonmc.server.module.combat.OldCombatModule
 import com.bluedragonmc.server.module.database.AwardsModule
-import com.bluedragonmc.server.module.database.DatabaseModule
-import com.bluedragonmc.server.module.database.MapData
 import com.bluedragonmc.server.module.gameplay.*
 import com.bluedragonmc.server.module.instance.InstanceContainerModule
 import com.bluedragonmc.server.module.map.AnvilFileMapProviderModule
 import com.bluedragonmc.server.module.minigame.CountdownModule
 import com.bluedragonmc.server.module.minigame.WinModule
 import com.bluedragonmc.server.utils.noItalic
-import kotlinx.coroutines.launch
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.coordinate.Point
@@ -76,17 +73,10 @@ class SkyWarsGame(mapName: String) : Game("SkyWars", mapName) {
      * A [ChestLootModule.ChestLootProvider] that can differentiate between spawn and mid chests
      * using the map data stored in the database.
      */
-    abstract class SkyWarsLootProvider(game: Game) : ChestLootModule.ChestLootProvider {
-        private lateinit var mapData: MapData
-
-        init {
-            DatabaseModule.IO.launch {
-                mapData = game.getModule<DatabaseModule>().getMap(game.mapName)
-            }
-        }
+    abstract class SkyWarsLootProvider(private val game: Game) : ChestLootModule.ChestLootProvider {
 
         override fun getLoot(chestLocation: Point): Collection<ItemStack> {
-            if (mapData.additionalLocations[0].contains(Pos(chestLocation.x(), chestLocation.y(), chestLocation.z()))) {
+            if (game.mapData!!.additionalLocations[0].contains(Pos(chestLocation.x(), chestLocation.y(), chestLocation.z()))) {
                 return getMidLoot()
             }
             return getSpawnLoot()

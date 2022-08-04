@@ -135,12 +135,6 @@ data class PermissionGroup(
         DatabaseModule.getGroupsCollection().updateOneById(name, setValue(field, value))
         field.setter.call(this, value)
     }
-
-    suspend fun <T> compute(field: KMutableProperty1<PermissionGroup, T>, block: (T) -> T) {
-        val newValue = block(field.get(this))
-        DatabaseModule.getPlayersCollection().updateOneById(name, setValue(field, newValue))
-        field.set(this, newValue)
-    }
 }
 
 @Serializable

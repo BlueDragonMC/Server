@@ -2,9 +2,7 @@ package com.bluedragonmc.server.module.gameplay
 
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.GameModule
-import com.bluedragonmc.server.module.database.DatabaseModule
 import com.bluedragonmc.server.utils.CircularList
-import kotlinx.coroutines.runBlocking
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
@@ -19,7 +17,8 @@ import net.minestom.server.event.player.PlayerSpawnEvent
  */
 class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule() {
 
-    override val dependencies = if(spawnpointProvider is TeamDatabaseSpawnpointProvider) listOf(TeamModule::class) else emptyList()
+    override val dependencies =
+        if (spawnpointProvider is TeamDatabaseSpawnpointProvider) listOf(TeamModule::class) else emptyList()
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         spawnpointProvider.initialize(parent)
@@ -47,7 +46,7 @@ class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule(
     /**
      * A good spawnpoint provider for testing. Spawns players at the positions provided in the constructor.
      */
-    class TestSpawnpointProvider(vararg val spawns: Pos) : SpawnpointProvider {
+    class TestSpawnpointProvider(private vararg val spawns: Pos) : SpawnpointProvider {
         override fun initialize(game: Game) {}
 
         override fun getSpawnpoint(player: Player): Pos {
@@ -58,7 +57,7 @@ class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule(
     /**
      * Spawns all players at a single location.
      */
-    class SingleSpawnpointProvider(val spawn: Pos) : SpawnpointProvider {
+    class SingleSpawnpointProvider(private val spawn: Pos) : SpawnpointProvider {
         override fun initialize(game: Game) {}
 
         override fun getSpawnpoint(player: Player): Pos {
@@ -77,16 +76,14 @@ class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule(
         private var n = 0
 
         override fun initialize(game: Game) {
-            runBlocking {
-                val mapData = game.getModule<DatabaseModule>().getMap(game.mapName)
-                spawnpoints = CircularList(if(allowRandomOrder) mapData.spawnpoints.shuffled() else mapData.spawnpoints)
-            }
+            spawnpoints =
+                CircularList(if (allowRandomOrder) game.mapData!!.spawnpoints.shuffled() else game.mapData!!.spawnpoints)
         }
 
         override fun getSpawnpoint(player: Player) = cachedSpawnpoints[player] ?: findSpawnpoint(player)
         private fun findSpawnpoint(player: Player): Pos {
             val pos = spawnpoints[n++]
-            if(cachedSpawnpoints.containsValue(pos)) return findSpawnpoint(player) // Prevent players from spawning inside each other
+            if (cachedSpawnpoints.containsValue(pos)) return findSpawnpoint(player) // Prevent players from spawning inside each other
             cachedSpawnpoints[player] = pos
             return pos
         }
@@ -95,7 +92,7 @@ class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule(
     /**
      * Gets spawnpoints from the database.
      * Every team has one spawnpoint. All players spawn at the same location.
-     * If a player's spawnpoint is requested and they are not on a team yet, they are spawned at the first spawnpoint in the database.
+     * If a player's spawnpoint is requested, and they are not on a team yet, they are spawned at the first spawnpoint in the database.
      * If they are on a team, they will be given their team's spawnpoint.
      * Requires the [TeamModule] to work properly.
      */
@@ -120,16 +117,15 @@ class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule(
 
         override fun initialize(game: Game) {
             this.teamModule = game.getModule()
-            runBlocking {
-                val mapData = game.getModule<DatabaseModule>().getMap(game.mapName)
-                spawnpoints = CircularList(if(allowRandomOrder) mapData.spawnpoints.shuffled() else mapData.spawnpoints)
-            }
+            spawnpoints =
+                CircularList(if (allowRandomOrder) game.mapData!!.spawnpoints.shuffled() else game.mapData!!.spawnpoints)
         }
 
         private fun teamOf(player: Player) = teamModule.getTeam(player)
-        override fun getSpawnpoint(player: Player) = teamOf(player)?.let { cachedSpawnpoints[it] ?: findSpawnpoint(it) } ?: spawnpoints[m++]
+        override fun getSpawnpoint(player: Player) =
+            teamOf(player)?.let { cachedSpawnpoints[it] ?: findSpawnpoint(it) } ?: spawnpoints[m++]
 
-        private fun findSpawnpoint(team: TeamModule.Team) = spawnpoints[n++].also { cachedSpawnpoints[team] = it}
+        private fun findSpawnpoint(team: TeamModule.Team) = spawnpoints[n++].also { cachedSpawnpoints[team] = it }
 
     }
 }

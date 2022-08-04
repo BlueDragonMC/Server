@@ -141,13 +141,8 @@ class DatabaseModule : GameModule() {
     }
 
     private val cachedMapData = hashMapOf<String, MapData?>()
-    suspend fun getMap(mapName: String): MapData = getMapOrNull(mapName) ?: error("No map data found for name $mapName")
-    suspend fun getMapOrNull(mapName: String): MapData? {
-        if (cachedMapData.containsKey(mapName)) return cachedMapData[mapName]
-        val col = getMapsCollection()
-        val mapData = col.findOneById(mapName)
-        cachedMapData[mapName] = mapData
-        return mapData
+    suspend fun getMapOrNull(mapName: String): MapData? = cachedMapData.getOrPut(mapName) {
+        getMapsCollection().findOneById(mapName)
     }
 
     class DataLoadedEvent(private val player: Player) : PlayerEvent {

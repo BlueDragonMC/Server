@@ -47,28 +47,28 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
      */
     internal val modules = mutableListOf<GameModule>()
 
-    interface ModuleDependency<T : GameModule> {
-        val type: KClass<T>
-    }
+    var instanceId: UUID? = null
+        get() = field ?: getInstanceOrNull()?.uniqueId?.also { instanceId = it }
+        private set
 
-    data class FilledModuleDependency<T : GameModule>(override val type: KClass<T>, val instance: GameModule) :
-        ModuleDependency<T> {
-        override fun toString(): String {
-            instance::class.simpleName?.let { className ->
-                return className + "@" + instance.hashCode()
-            }
-            return instance.toString()
+    open val maxPlayers = 8
+
+    var state: GameState = GameState.SERVER_STARTING
+        set(value) {
+            field = value
+            MessagingModule.publish(getGameStateUpdateMessage())
         }
-    }
-
-    data class EmptyModuleDependency<T : GameModule>(override val type: KClass<T>) : ModuleDependency<T> {
-        override fun toString(): String = type.simpleName ?: type.toString()
-    }
 
     init {
 
-        // Initialize mandatory modules with no requirements
+        // Initialize mandatory modules for core functionality, like game state updates
         useMandatoryModules()
+
+        // Load map data from the database (or from cache)
+        runBlocking {
+            mapData = getModule<DatabaseModule>().getMapOrNull(mapName)
+            if (mapData == null) logger.warn("No map data found for $mapName!")
+        }
 
         // Ensure the game was registered with `ready()` method
         MinecraftServer.getSchedulerManager().buildTask {
@@ -80,7 +80,7 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
 
     fun use(module: GameModule) {
 
-        if(modules.any { it == module }) throw IllegalStateException("Tried to register module that is already registered: $module")
+        if (modules.any { it == module }) throw IllegalStateException("Tried to register module that is already registered: $module")
 
         val moduleDependencyNode = Node<ModuleDependency<*>>(FilledModuleDependency(module::class, module))
         moduleDependencyNode.addChildren(module.dependencies.map {
@@ -186,8 +186,7 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
 
         // Set time of day according to the MapData
         runBlocking {
-            val mapData = getModule<DatabaseModule>().getMapOrNull(mapName) ?: return@runBlocking
-            val time = mapData.time
+            val time = mapData?.time
             if (time != null && time >= 0) {
                 val instance = getInstance()
                 instance.timeRate = 0
@@ -214,15 +213,9 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
     fun getInstanceOrNull() = getModuleOrNull<InstanceModule>()?.getInstance()
     fun getInstance() = getInstanceOrNull() ?: error("No InstanceModule found.")
 
-    var instanceId: UUID? = null
-        get() = field ?: getInstanceOrNull()?.uniqueId?.also { instanceId = it }
-        private set
-
-    open val maxPlayers = 8
-
-    fun getGameStateUpdateMessage() =
-        GameStateUpdateMessage(instanceId!!, if (isJoinable) maxPlayers - players.size else 0)
-
+    fun getGameStateUpdateMessage(): GameStateUpdateMessage {
+        return GameStateUpdateMessage(instanceId!!, if (isJoinable) maxPlayers - players.size else 0)
+    }
     private val isJoinable
         get() = state.canPlayersJoin
 
@@ -245,12 +238,6 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
         return null
     }
 
-    var state: GameState = GameState.SERVER_STARTING
-        set(value) {
-            field = value
-            MessagingModule.publish(getGameStateUpdateMessage())
-        }
-
     override fun getPlayers(): MutableCollection<Player> = players
 
     fun endGame(delay: Duration = Duration.ZERO) {
@@ -264,7 +251,8 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
     private fun endGameInstantly() {
         val instance = getInstance()
         while (modules.isNotEmpty()) unregister(modules.first())
-        sendActionBar(Component.text("This game is ending. You will be sent to a new game shortly.", NamedTextColor.GREEN))
+        sendActionBar(Component.text("This game is ending. You will be sent to a new game shortly.",
+            NamedTextColor.GREEN))
         players.forEach {
             queue.queue(it, GameType(name, null, null))
         }

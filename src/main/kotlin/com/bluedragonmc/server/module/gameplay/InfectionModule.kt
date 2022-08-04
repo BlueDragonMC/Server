@@ -9,14 +9,11 @@ import com.bluedragonmc.server.game.InfectionGame
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.combat.OldCombatModule
 import com.bluedragonmc.server.module.database.DatabaseModule
-import com.bluedragonmc.server.module.database.MapData
 import com.bluedragonmc.server.module.minigame.WinModule
 import com.bluedragonmc.server.utils.plus
-import kotlinx.coroutines.launch
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.MinecraftServer
-import net.minestom.server.entity.EntityType
 import net.minestom.server.entity.Player
 import net.minestom.server.entity.PlayerSkin
 import net.minestom.server.event.Event
@@ -33,7 +30,6 @@ import java.time.Duration
  */
 class InfectionModule(val scoreboardBinding: SidebarModule.ScoreboardBinding? = null) : GameModule() {
     private lateinit var parent: Game
-    private lateinit var mapData: MapData
     private val survivorsTeam =
         TeamModule.Team(Component.text("Survivors", NamedTextColor.GREEN), allowFriendlyFire = false)
     private val infectedTeam =
@@ -44,10 +40,6 @@ class InfectionModule(val scoreboardBinding: SidebarModule.ScoreboardBinding? = 
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         this.parent = parent
-
-        DatabaseModule.IO.launch {
-            mapData = parent.getModule<DatabaseModule>().getMap(parent.mapName)
-        }
 
         eventNode.addListener(PlayerSpawnEvent::class.java) { event ->
             skins[event.player] = event.player.skin
@@ -93,8 +85,8 @@ class InfectionModule(val scoreboardBinding: SidebarModule.ScoreboardBinding? = 
         player.skin = NPCModule.NPCSkins.ZOMBIE.skin
         survivorsTeam.players.remove(player)
         infectedTeam.players.add(player)
-        player.respawnPoint = mapData.additionalLocations[0][0]
-        player.teleport(mapData.additionalLocations[0][0])
+        player.respawnPoint = parent.mapData!!.additionalLocations[0][0]
+        player.teleport(parent.mapData!!.additionalLocations[0][0])
         if (survivorsTeam.players.size == 1) parent.getModule<WinModule>().declareWinner(survivorsTeam.players[0])
         scoreboardBinding?.update()
     }

@@ -8,8 +8,6 @@ import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.combat.CustomDeathMessageModule
 import com.bluedragonmc.server.module.combat.OldCombatModule
 import com.bluedragonmc.server.module.database.AwardsModule
-import com.bluedragonmc.server.module.database.DatabaseModule
-import com.bluedragonmc.server.module.database.MapData
 import com.bluedragonmc.server.module.gameplay.*
 import com.bluedragonmc.server.module.instance.InstanceContainerModule
 import com.bluedragonmc.server.module.map.AnvilFileMapProviderModule
@@ -18,7 +16,6 @@ import com.bluedragonmc.server.module.minigame.WinModule
 import com.bluedragonmc.server.utils.plus
 import com.bluedragonmc.server.utils.surroundWithSeparators
 import com.bluedragonmc.server.utils.toPlainText
-import kotlinx.coroutines.launch
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -144,7 +141,6 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
             )
         )
         use(object : GameModule() {
-            private lateinit var mapData: MapData
 
             override fun initialize(parent: Game, eventNode: EventNode<Event>) {
 
@@ -246,7 +242,7 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
 
                 eventNode.addListener(GameStartEvent::class.java) {
                     val generatorsModule = getModule<ItemGeneratorsModule>()
-                    val (spawnGenerators, diamondGenerators, emeraldGenerators, mainShopkeepers, teamUpgradeShopkeepers) = mapData.additionalLocations
+                    val (spawnGenerators, diamondGenerators, emeraldGenerators, mainShopkeepers, teamUpgradeShopkeepers) = parent.mapData!!.additionalLocations
                     generatorsModule.addGenerator(
                         getInstance(), spawnGenerators, mapOf(
                             ItemStack.of(Material.IRON_INGOT) to 1,
@@ -285,10 +281,6 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
 
                 eventNode.addListener(WorldPermissionsModule.PreventPlayerBreakMapEvent::class.java) { event ->
                     event.isCancelled = bedBlockToTeam.containsKey(event.block.registry().material())
-                }
-
-                DatabaseModule.IO.launch {
-                    mapData = getModule<DatabaseModule>().getMap(mapName)
                 }
             }
         })

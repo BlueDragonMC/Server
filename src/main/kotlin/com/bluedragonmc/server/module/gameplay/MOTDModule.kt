@@ -9,7 +9,6 @@ import com.bluedragonmc.server.module.database.MapData
 import com.bluedragonmc.server.utils.hoverEvent
 import com.bluedragonmc.server.utils.noBold
 import com.bluedragonmc.server.utils.surroundWithSeparators
-import kotlinx.coroutines.launch
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.event.HoverEvent
 import net.kyori.adventure.text.format.NamedTextColor
@@ -25,13 +24,8 @@ class MOTDModule(val motd: Component) : GameModule() {
 
     override val dependencies = listOf(DatabaseModule::class)
 
-    private lateinit var mapData: MapData
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
-        mapData = MapData(parent.mapName)
-        val databaseModule = parent.getModule<DatabaseModule>()
-        DatabaseModule.IO.launch {
-            mapData = databaseModule.getMapOrNull(parent.mapName) ?: MapData(parent.mapName)
-        }
+        val mapData = parent.mapData ?: MapData(parent.mapName)
         eventNode.addListener(PlayerSpawnEvent::class.java) { event ->
             event.player.sendMessage(
                 Component.text(parent.name + "\n", BRAND_COLOR_PRIMARY_1, TextDecoration.BOLD)
