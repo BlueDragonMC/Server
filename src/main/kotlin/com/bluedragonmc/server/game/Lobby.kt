@@ -34,6 +34,9 @@ import java.time.Duration
 import java.util.*
 
 class Lobby : Game("Lobby", "lobbyv2.1") {
+
+    override val autoRemoveInstance = false
+
     private val splashes = listOf(
         "Welcome back!",
         "Try Infinijump!",
@@ -41,6 +44,7 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
         "Professional software!",
         "Have you seen Joe?"
     )
+
     init {
         // World modules
         use(AnvilFileMapProviderModule(Paths.get("worlds/$name/$mapName")))
@@ -224,13 +228,5 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
             player.level = level.toInt()
             loadXPTask.cancel()
         }.repeat(Duration.ofMillis(20)).schedule()
-    }
-
-    override fun endGame(delay: Duration) {
-        // Lobbies can not be removed using the default logic.
-    }
-
-    override fun endGameInstantly() {
-        // Lobbies can not be removed using the default logic.
     }
 }

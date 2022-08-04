@@ -26,10 +26,11 @@ import net.minestom.server.event.player.PlayerSpawnEvent
 import net.minestom.server.event.trait.CancellableEvent
 import net.minestom.server.event.trait.InstanceEvent
 import net.minestom.server.event.trait.PlayerEvent
-import net.minestom.server.timer.Task
+import net.minestom.server.instance.Instance
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.*
+import kotlin.concurrent.timer
 
 open class Game(val name: String, val mapName: String, val mode: String? = null) : PacketGroupingAudience {
 
@@ -39,7 +40,7 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
 
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
-    private var shutdownTask: Task? = null
+    open val autoRemoveInstance: Boolean = true
 
     /**
      * A list of modules that have been added with the [use] method, but their dependencies have not been added.
@@ -137,9 +138,9 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
 
             override fun initialize(parent: Game, eventNode: EventNode<Event>) {
                 eventNode.addListener(PlayerSpawnEvent::class.java) {
+                    playerHasJoined = true
                     MinecraftServer.getSchedulerManager().scheduleNextTick {
                         MessagingModule.publish(getGameStateUpdateMessage())
-                        shutdownTask?.cancel()
                     }
                 }
                 eventNode.addListener(PlayerDisconnectEvent::class.java) {
@@ -151,17 +152,6 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
                     if (event.entity !is Player) return@addListener
                     callEvent(PlayerLeaveGameEvent(parent, event.entity as Player))
                     players.remove(event.entity)
-
-                    if (event.instance.players.size <= 1) {
-                        // If the last player in the instance left, start a timer to unregister the instance.
-                        shutdownTask?.cancel()
-                        shutdownTask = MinecraftServer.getSchedulerManager().buildTask {
-                            if (event.instance.isRegistered && event.instance.players.isEmpty()) {
-                                logger.info("Removing game ${event.instance.uniqueId} because it has had no players for 5 minutes.")
-                                endGame(Duration.ZERO)
-                            }
-                        }.delay(Duration.ofMinutes(5)).schedule()
-                    }
                 }
             }
         })
@@ -188,6 +178,9 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
         }
     }
 
+    private var playerHasJoined = false
+    private fun shouldRemoveInstance(instance: Instance) = autoRemoveInstance && instance.players.isEmpty() && playerHasJoined
+
     fun ready() {
         val modules = dependencyTree.elementsAtDepth(1)
         val unfilledDependencies = modules.filter { it.value !is FilledModuleDependency<*> }
@@ -212,6 +205,15 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
         // Let the queue system send players to the game
         games.add(this)
         state = GameState.WAITING
+
+        val cachedInstance = getInstance()
+        timer("instance-unregister-${instanceId}", daemon = true, period = 10_000) {
+            if (shouldRemoveInstance(cachedInstance)) {
+                logger.info("Removing instance ${cachedInstance.uniqueId} due to inactivity.")
+                MinecraftServer.getInstanceManager().unregisterInstance(cachedInstance)
+                this.cancel()
+            }
+        }
     }
 
     fun callEvent(event: Event) {
@@ -228,10 +230,9 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
     fun getInstanceOrNull() = getModuleOrNull<InstanceModule>()?.getInstance()
     fun getInstance() = getInstanceOrNull() ?: error("No InstanceModule found.")
 
-    fun getGameStateUpdateMessage(): GameStateUpdateMessage {
-        shutdownTask?.cancel()
-        return GameStateUpdateMessage(instanceId!!, if (isJoinable) maxPlayers - players.size else 0)
-    }
+    fun getGameStateUpdateMessage() =
+        GameStateUpdateMessage(instanceId!!, if (isJoinable) maxPlayers - players.size else 0)
+
     private val isJoinable
         get() = state.canPlayersJoin
 
@@ -256,7 +257,7 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
 
     override fun getPlayers(): MutableCollection<Player> = players
 
-    open fun endGame(delay: Duration = Duration.ZERO) {
+    internal fun endGame(delay: Duration = Duration.ZERO) {
         state = GameState.ENDING
         games.remove(this)
         MinecraftServer.getSchedulerManager().buildTask {
@@ -264,7 +265,8 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
         }.delay(delay).schedule()
     }
 
-    protected open fun endGameInstantly() {
+    protected fun endGameInstantly() {
+        state = GameState.ENDING
         while (modules.isNotEmpty()) unregister(modules.first())
         sendActionBar(Component.text("This game is ending. You will be sent to a new game shortly.",
             NamedTextColor.GREEN))
