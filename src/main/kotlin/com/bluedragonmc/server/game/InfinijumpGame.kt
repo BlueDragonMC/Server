@@ -85,7 +85,7 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
     init {
         use(VoidDeathModule(0.0))
         use(PlayerResetModule(defaultGameMode = GameMode.ADVENTURE))
-        use(CountdownModule(threshold = 1, allowMoveDuringCountdown = false, countdownSeconds = 5))
+        use(CountdownModule(threshold = 1, allowMoveDuringCountdown = false, countdownSeconds = 3))
         use(SpawnpointModule(SpawnpointModule.SingleSpawnpointProvider(spawnPosition)))
         use(CustomGeneratorInstanceModule(
             CustomGeneratorInstanceModule.getFullbrightDimension()
@@ -121,10 +121,7 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
                 eventNode.addListener(PlayerMoveEvent::class.java) { event ->
                     if (!started) return@addListener
                     blocks.forEachIndexed { i, block ->
-                        val pX = floor(event.player.position.x)
-                        val pY = floor(event.player.position.y)
-                        val pZ = floor(event.player.position.z)
-                        if (!block.isReached && !block.isRemoved && event.isOnGround && pX == block.pos.x && pZ == block.pos.z && pY - block.pos.y <= 1.0) {
+                        if (!block.isReached && !block.isRemoved && event.isOnGround && event.player.boundingBox.intersectEntity(event.player.position.sub(0.0, 1.0, 0.0), block.entity)) {
                             block.markReached(event.player)
                             MinecraftServer.getSchedulerManager().scheduleNextTick {
                                 // Mark all blocks before this one as reached, just in case a block was skipped
