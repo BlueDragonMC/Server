@@ -1,6 +1,8 @@
 package com.bluedragonmc.server.command
 
+import com.bluedragonmc.messages.NotifyInstanceRemovedMessage
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.module.messaging.MessagingModule
 import com.bluedragonmc.server.utils.buildComponent
 import com.bluedragonmc.server.utils.clickEvent
 import com.bluedragonmc.server.utils.hoverEvent
@@ -82,6 +84,7 @@ class InstanceCommand(name: String, usageString: String, vararg aliases: String?
             }
             MinecraftServer.getInstanceManager().unregisterInstance(instance)
             player.sendMessage(formatMessage("Removed instance {}.", instance.uniqueId))
+            MessagingModule.publish(NotifyInstanceRemovedMessage(MessagingModule.containerId, instance.uniqueId))
         }
     }
 })

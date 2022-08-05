@@ -211,6 +211,7 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
             if (shouldRemoveInstance(cachedInstance)) {
                 logger.info("Removing instance ${cachedInstance.uniqueId} due to inactivity.")
                 MinecraftServer.getInstanceManager().unregisterInstance(cachedInstance)
+                endGameInstantly()
                 this.cancel()
             }
         }
@@ -267,6 +268,8 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
 
     protected fun endGameInstantly() {
         state = GameState.ENDING
+        games.remove(this)
+        // the NotifyInstanceRemovedMessage is published when the MessagingModule is unregistered
         while (modules.isNotEmpty()) unregister(modules.first())
         sendActionBar(Component.text("This game is ending. You will be sent to a new game shortly.",
             NamedTextColor.GREEN))
