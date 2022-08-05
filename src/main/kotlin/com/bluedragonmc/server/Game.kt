@@ -179,7 +179,8 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
     }
 
     private var playerHasJoined = false
-    private fun shouldRemoveInstance(instance: Instance) = autoRemoveInstance && instance.players.isEmpty() && playerHasJoined
+    private fun shouldRemoveInstance(instance: Instance) =
+        autoRemoveInstance && instance.players.isEmpty() && playerHasJoined
 
     fun ready() {
         val modules = dependencyTree.elementsAtDepth(1)
@@ -211,7 +212,7 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
             if (shouldRemoveInstance(cachedInstance)) {
                 logger.info("Removing instance ${cachedInstance.uniqueId} due to inactivity.")
                 MinecraftServer.getInstanceManager().unregisterInstance(cachedInstance)
-                endGameInstantly()
+                endGameInstantly(queueAllPlayers = false)
                 this.cancel()
             }
         }
@@ -266,15 +267,17 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
         }.delay(delay).schedule()
     }
 
-    protected fun endGameInstantly() {
+    protected fun endGameInstantly(queueAllPlayers: Boolean = true) {
         state = GameState.ENDING
         games.remove(this)
         // the NotifyInstanceRemovedMessage is published when the MessagingModule is unregistered
         while (modules.isNotEmpty()) unregister(modules.first())
-        sendActionBar(Component.text("This game is ending. You will be sent to a new game shortly.",
-            NamedTextColor.GREEN))
-        players.forEach {
-            queue.queue(it, GameType(name, null, null))
+        if (queueAllPlayers) {
+            sendActionBar(Component.text("This game is ending. You will be sent to a new game shortly.",
+                NamedTextColor.GREEN))
+            players.forEach {
+                queue.queue(it, GameType(name, null, null))
+            }
         }
     }
 
