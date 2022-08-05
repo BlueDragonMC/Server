@@ -36,6 +36,7 @@ import net.minestom.server.utils.NamespaceID
 import net.minestom.server.world.DimensionType
 import org.slf4j.LoggerFactory
 import java.net.InetAddress
+import java.time.Duration
 import java.util.*
 
 lateinit var lobby: Game
@@ -87,7 +88,7 @@ fun main() {
             event.player.sendMessage(getPunishmentMessage(mute, "currently muted").surroundWithSeparators())
             return@addListener
         }
-        val experience = (player).run { if(isDataInitialized()) data.experience else 0 }
+        val experience = (player).run { if (isDataInitialized()) data.experience else 0 }
         val level = CustomPlayer.getXpLevel(experience)
         val xpToNextLevel = CustomPlayer.getXpToNextLevel(level, experience)
 
@@ -100,7 +101,8 @@ fun main() {
                 Component.text(level.toInt(), BRAND_COLOR_PRIMARY_1)
                     .hoverEvent(HoverEvent.showText(
                         player.name +
-                                Component.text(" has a total of $experience experience,\nand needs $xpToNextLevel XP to reach level ${level.toInt() + 1}.", NamedTextColor.GRAY)
+                                Component.text(" has a total of $experience experience,\nand needs $xpToNextLevel XP to reach level ${level.toInt() + 1}.",
+                                    NamedTextColor.GRAY)
                     )),
                 Component.text("] ", NamedTextColor.DARK_GRAY),
                 group.prefix,
@@ -117,7 +119,7 @@ fun main() {
     eventNode.addListener(ServerListPingEvent::class.java) { event ->
         event.responseData.description = buildComponent {
             val title = Component.text("BlueDragon").withDecoration(TextDecoration.BOLD)
-            if(event.pingType == ServerListPingType.OPEN_TO_LAN || (event.connection?.protocolVersion ?: 0) < 713)
+            if (event.pingType == ServerListPingType.OPEN_TO_LAN || (event.connection?.protocolVersion ?: 0) < 713)
                 +title.withColor(BRAND_COLOR_PRIMARY_3)
             else
                 +title.withGradient(BRAND_COLOR_PRIMARY_1, BRAND_COLOR_PRIMARY_3)
@@ -129,7 +131,7 @@ fun main() {
                 +(event.responseData.version withColor NamedTextColor.GREEN)
             }
             +("]" withColor NamedTextColor.DARK_GRAY)
-            if(event.connection != null && event.connection!!.protocolVersion < MinecraftServer.PROTOCOL_VERSION) {
+            if (event.connection != null && event.connection!!.protocolVersion < MinecraftServer.PROTOCOL_VERSION) {
                 +Component.newline()
                 +("Update to Minecraft 1.18.2 to join BlueDragon." withColor NamedTextColor.RED)
                 return@buildComponent
@@ -226,8 +228,18 @@ fun main() {
 
     if (Environment.isDev()) OpenToLAN.open()
 
-    // Enable extra metrics for UnifiedMetrics
-    if(!Environment.isDev()) ServerMetrics.initialize()
+    if (!Environment.isDev()) { // Puffin/Docker environment
+
+        // Enable extra metrics for UnifiedMetrics
+        ServerMetrics.initialize()
+
+        // Make the server shutdown after 6 hours (if there are no players online)
+        MinecraftServer.getSchedulerManager().buildTask {
+            if (MinecraftServer.getConnectionManager().onlinePlayers.isEmpty()) {
+                MinecraftServer.stopCleanly()
+            }
+        }.delay(Duration.ofHours(6)).repeat(Duration.ofSeconds(60)).schedule()
+    }
 }
 
 fun getPunishmentMessage(punishment: Punishment, state: String) = buildComponent {
