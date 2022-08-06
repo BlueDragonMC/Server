@@ -8,7 +8,6 @@ import com.bluedragonmc.server.block.SkullHandler
 import com.bluedragonmc.server.command.*
 import com.bluedragonmc.server.command.punishment.*
 import com.bluedragonmc.server.game.Lobby
-import com.bluedragonmc.server.module.ServerMetrics
 import com.bluedragonmc.server.module.database.DatabaseModule
 import com.bluedragonmc.server.module.database.PermissionGroup
 import com.bluedragonmc.server.module.database.Permissions
@@ -229,9 +228,6 @@ fun main() {
     if (Environment.isDev()) OpenToLAN.open()
 
     if (!Environment.isDev()) { // Puffin/Docker environment
-
-        // Enable extra metrics for UnifiedMetrics
-        ServerMetrics.initialize()
 
         // Make the server shutdown after 6 hours (if there are no players online)
         MinecraftServer.getSchedulerManager().buildTask {
