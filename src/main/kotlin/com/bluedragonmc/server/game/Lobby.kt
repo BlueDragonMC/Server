@@ -24,8 +24,11 @@ import net.minestom.server.entity.Player
 import net.minestom.server.entity.hologram.Hologram
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
+import net.minestom.server.event.inventory.InventoryPreClickEvent
 import net.minestom.server.event.player.PlayerSpawnEvent
+import net.minestom.server.event.player.PlayerUseItemEvent
 import net.minestom.server.inventory.InventoryType
+import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import net.minestom.server.sound.SoundEvent
 import net.minestom.server.timer.Task
@@ -162,6 +165,10 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
                         splashes.random() withColor BRAND_COLOR_PRIMARY_2,
                         Title.Times.times(Duration.ZERO, Duration.ofMillis(1500), Duration.ofMillis(100))
                     ))
+                    event.player.inventory.setItemStack(0, gameSelectItem)
+                }
+                eventNode.addListener(PlayerUseItemEvent::class.java) { event ->
+                    if (event.itemStack.material() == Material.COMPASS) gameSelect.open(event.player)
                 }
             }
         })
@@ -174,7 +181,7 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
             Component.text("Click to join our Discord server for announcements, giveaways, events, discussions, and sneak peeks!", BRAND_COLOR_PRIMARY_2).clickEvent(
                 ClickEvent.openUrl("https://discord.gg/3gvSPdW")),
             ("Be sure to try out our newest game: " withColor BRAND_COLOR_PRIMARY_2) +
-                    ("Infection" withColor BRAND_COLOR_PRIMARY_1) +
+                    ("Infinijump" withColor BRAND_COLOR_PRIMARY_1) +
                     ("!" withColor BRAND_COLOR_PRIMARY_2),
             "Did you know: You can now double jump in the lobby!" withColor BRAND_COLOR_PRIMARY_2,
             "Did you know: BlueDragon started as a Minecraft clans server." withColor BRAND_COLOR_PRIMARY_2,
@@ -192,6 +199,7 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
         ready()
     }
 
+    private val gameSelectItem = ItemStack.of(Material.COMPASS).withDisplayName(("Game Menu" withColor ALT_COLOR_1).noItalic())
     private val gameSelect by lazy {
         getModule<GuiModule>().createMenu(Component.text("Game Select"), InventoryType.CHEST_1_ROW,
             isPerPlayer = false,
