@@ -6,7 +6,10 @@ import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.entity.Player
 import net.minestom.server.entity.PlayerSkin
 
-class MindecraftesCommand(name: String, vararg aliases: String) : BlueDragonCommand(name, aliases, block = {
+class MindecraftesCommand(name: String, usageString: String, vararg aliases: String) : BlueDragonCommand(name, aliases, block = {
+
+    usage(usageString)
+
     var isMindecraftes = false
     var previousSkin: PlayerSkin? = null
     syntax {

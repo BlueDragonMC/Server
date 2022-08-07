@@ -180,6 +180,7 @@ fun main() {
         PermissionCommand("permission", "/permission ...", "lp", "perm"),
         PingCommand("ping", "/ping", "latency"),
         MindecraftesCommand("mindecraftes", "/mindecraftes"),
+        StopCommand("stop", "/stop")
     ).forEach(MinecraftServer.getCommandManager()::register)
 
     MinecraftServer.getCommandManager().setUnknownCommandCallback { sender, command ->
