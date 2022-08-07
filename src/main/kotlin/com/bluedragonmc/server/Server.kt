@@ -66,10 +66,11 @@ fun main() {
     MinecraftServer.getGlobalEventHandler().addListener(PlayerLoginEvent::class.java) { event ->
         val instance = futureInstances[event.player.uuid] ?: lobby.getInstance()
         val game = Game.findGame(instance.uniqueId)
-        event.player.displayName = Component.text(
-            event.player.username,
-            BRAND_COLOR_PRIMARY_1 // The default color that appears before group data is loaded
-        )
+        if (event.player.displayName == null)
+            event.player.displayName = Component.text(
+                event.player.username,
+                BRAND_COLOR_PRIMARY_1 // The default color that appears before group data is loaded
+            )
         event.player.sendMessage(Component.text("Placing you in ${instance.uniqueId}...", NamedTextColor.DARK_GRAY))
         event.setSpawningInstance(instance)
         game?.players?.add(event.player)
