@@ -27,6 +27,7 @@ import org.litote.kmongo.coroutine.coroutine
 import org.litote.kmongo.eq
 import org.litote.kmongo.path
 import org.litote.kmongo.reactivestreams.KMongo
+import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.CoroutineContext
@@ -55,6 +56,7 @@ class DatabaseModule : GameModule() {
         private val database: CoroutineDatabase by lazy {
             client.getDatabase("bluedragon")
         }
+        private val logger = LoggerFactory.getLogger(Companion::class.java)
 
         internal fun getPlayersCollection(): CoroutineCollection<PlayerDocument> = database.getCollection("players")
         internal fun getGroupsCollection(): CoroutineCollection<PermissionGroup> = database.getCollection("groups")
@@ -81,35 +83,50 @@ class DatabaseModule : GameModule() {
             }
             return result
         }
-    }
 
-    override fun initialize(parent: Game, eventNode: EventNode<Event>) {
-        eventNode.addListener(AsyncPlayerPreLoginEvent::class.java) { event ->
-            // Load players' data from the database when they spawn
-            val player = event.player as CustomPlayer
-            if (!player.isDataInitialized()) IO.launch {
-                try {
-                    player.data = getPlayerDocument(player)
-                } catch (e: Throwable) {
-                    logger.error("Player data for ${player.username} failed to load.")
-                    MinecraftServer.getExceptionManager().handleException(e)
-                    player.kick(Component.text("Your player data was not loaded! Wait a moment and try to reconnect.",
-                        NamedTextColor.RED))
-                }
-                if (player.username != player.data.username || player.data.username.isBlank()) {
-                    // Keep an up-to-date record of player usernames
-                    player.data.update(PlayerDocument::username, player.username)
-                    player.data.update(PlayerDocument::usernameLower, player.username.lowercase())
-                    logger.info("Updated username for ${player.uuid}: ${player.data.username} -> ${player.username}")
-                }
-                if (player.data.usernameLower != player.username.lowercase()) {
-                    player.data.update(PlayerDocument::usernameLower, player.username.lowercase())
-                }
-                MinecraftServer.getGlobalEventHandler().call(DataLoadedEvent(player))
-                logger.info("Loaded player data for ${player.username}")
+        private suspend fun getPlayerDocument(player: Player): PlayerDocument {
+            val col = getPlayersCollection()
+            val foundDocument = col.findOneById(player.uuid.toString())
+            return if (foundDocument == null) {
+                // Create a document if it doesn't exist
+                val newDocument = PlayerDocument(uuid = player.uuid)
+                col.insertOne(newDocument)
+                newDocument
+            } else {
+                foundDocument
             }
         }
 
+        init {
+            MinecraftServer.getGlobalEventHandler().addListener(AsyncPlayerPreLoginEvent::class.java) { event ->
+                // Load players' data from the database when they spawn
+                val player = event.player as CustomPlayer
+                if (!player.isDataInitialized()) IO.launch {
+                    try {
+                        player.data = getPlayerDocument(player)
+                    } catch (e: Throwable) {
+                        logger.error("Player data for ${player.username} failed to load.")
+                        MinecraftServer.getExceptionManager().handleException(e)
+                        player.kick(Component.text("Your player data was not loaded! Wait a moment and try to reconnect.",
+                            NamedTextColor.RED))
+                    }
+                    if (player.username != player.data.username || player.data.username.isBlank()) {
+                        // Keep an up-to-date record of player usernames
+                        player.data.update(PlayerDocument::username, player.username)
+                        player.data.update(PlayerDocument::usernameLower, player.username.lowercase())
+                        logger.info("Updated username for ${player.uuid}: ${player.data.username} -> ${player.username}")
+                    }
+                    if (player.data.usernameLower != player.username.lowercase()) {
+                        player.data.update(PlayerDocument::usernameLower, player.username.lowercase())
+                    }
+                    MinecraftServer.getGlobalEventHandler().call(DataLoadedEvent(player))
+                    logger.info("Loaded player data for ${player.username}")
+                }
+            }
+        }
+    }
+
+    override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         // Prevent player actions until data is loaded
         eventNode.addListener(PlayerMoveEvent::class.java) { event ->
             if (!(event.player as CustomPlayer).isDataInitialized()) {
@@ -125,19 +142,6 @@ class DatabaseModule : GameModule() {
     private fun preventIfDataNotLoaded(event: PlayerEvent) {
         event as CancellableEvent
         if (!(event.player as CustomPlayer).isDataInitialized()) event.isCancelled = true
-    }
-
-    private suspend fun getPlayerDocument(player: Player): PlayerDocument {
-        val col = getPlayersCollection()
-        val foundDocument = col.findOneById(player.uuid.toString())
-        return if (foundDocument == null) {
-            // Create a document if it doesn't exist
-            val newDocument = PlayerDocument(uuid = player.uuid)
-            col.insertOne(newDocument)
-            newDocument
-        } else {
-            foundDocument
-        }
     }
 
     private val cachedMapData = hashMapOf<String, MapData?>()
