@@ -172,7 +172,7 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
                 }
             }
         })
-        use(DoubleJumpModule)
+        use(DoubleJumpModule())
         use(GuiModule())
 
         val tips = CircularList(listOf(

@@ -12,11 +12,10 @@ import net.minestom.server.network.packet.server.play.ChangeGameStatePacket
 import kotlin.math.cos
 import kotlin.math.sin
 
-object DoubleJumpModule : GameModule() {
-
-    private const val strength = 25.0
-    private const val pitchInfluence = 0.08
-    private const val verticalStrength = 10.0
+/**
+ * Allows players to double jump. The default settings are the ones used in the lobby.
+ */
+class DoubleJumpModule(val strength: Double = 25.0, val pitchInfluence: Double = 0.08, val verticalStrength: Double = 10.0) : GameModule() {
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         eventNode.addListener(PlayerPacketOutEvent::class.java) { event ->

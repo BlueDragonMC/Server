@@ -2,6 +2,7 @@ package com.bluedragonmc.server.module.combat
 
 import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.event.PlayerKillPlayerEvent
 import com.bluedragonmc.server.event.PlayerLeaveGameEvent
 import com.bluedragonmc.server.module.GameModule
 import net.minestom.server.MinecraftServer
@@ -148,14 +149,28 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
                     // see the minecraft wiki: https://minecraft.fandom.com/wiki/Damage#Immunity
                     val lastDamage = target.getTag(LAST_DAMAGE)
                     if (damage > lastDamage) {
-                        target.damage(DamageType.fromPlayer(player), damage - lastDamage)
-                        target.setTag(LAST_DAMAGE, damage)
+                        if ((damage - lastDamage) > target.health && target is Player && !target.isDead) {
+                            parent.callCancellable(PlayerKillPlayerEvent(player, target)) {
+                                target.damage(DamageType.fromPlayer(player), damage - lastDamage)
+                                target.setTag(LAST_DAMAGE, damage)
+                            }
+                        } else {
+                            target.damage(DamageType.fromPlayer(player), damage - lastDamage)
+                            target.setTag(LAST_DAMAGE, damage)
+                        }
                     } else return@addListener
                 } else {
                     // The target has not been hit in the past (by default) 10 ticks.
-                    target.damage(DamageType.fromPlayer(player), damage)
-                    target.setTag(LAST_DAMAGE, damage)
-                    target.setTag(HURT_RESISTANT_TIME, target.getTag(MAX_HURT_RESISTANT_TIME))
+                    if (damage > target.health && target is Player && !target.isDead) {
+                        parent.callCancellable(PlayerKillPlayerEvent(player, target)) {
+                            target.damage(DamageType.fromPlayer(player), damage)
+                            target.setTag(LAST_DAMAGE, damage)
+                        }
+                    } else {
+                        target.damage(DamageType.fromPlayer(player), damage)
+                        target.setTag(LAST_DAMAGE, damage)
+                        target.setTag(HURT_RESISTANT_TIME, target.getTag(MAX_HURT_RESISTANT_TIME))
+                    }
                 }
             }
 

@@ -37,3 +37,8 @@ class GameStartEvent(game: Game) : GameEvent(game)
 class PlayerLeaveGameEvent(game: Game, private val player: Player) : GameEvent(game), PlayerEvent {
     override fun getPlayer() = player
 }
+
+/**
+ * Can be called by a module when a player has killed another player.
+ */
+class PlayerKillPlayerEvent(val attacker: Player, val target: Player) : CancellablePlayerEvent(attacker)
