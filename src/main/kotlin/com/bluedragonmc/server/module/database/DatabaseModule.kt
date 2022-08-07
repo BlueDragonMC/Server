@@ -15,9 +15,9 @@ import net.minestom.server.MinecraftServer
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
+import net.minestom.server.event.player.AsyncPlayerPreLoginEvent
 import net.minestom.server.event.player.PlayerChatEvent
 import net.minestom.server.event.player.PlayerMoveEvent
-import net.minestom.server.event.player.PlayerSpawnEvent
 import net.minestom.server.event.trait.CancellableEvent
 import net.minestom.server.event.trait.PlayerEvent
 import org.litote.kmongo.coroutine.CoroutineClient
@@ -84,7 +84,7 @@ class DatabaseModule : GameModule() {
     }
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
-        eventNode.addListener(PlayerSpawnEvent::class.java) { event ->
+        eventNode.addListener(AsyncPlayerPreLoginEvent::class.java) { event ->
             // Load players' data from the database when they spawn
             val player = event.player as CustomPlayer
             if (!player.isDataInitialized()) IO.launch {
