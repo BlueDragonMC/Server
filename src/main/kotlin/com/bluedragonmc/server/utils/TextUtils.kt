@@ -9,7 +9,6 @@ import net.kyori.adventure.text.flattener.ComponentFlattener
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
-import net.kyori.adventure.text.minimessage.MiniMessage
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
 import net.minestom.server.MinecraftServer
 import net.minestom.server.adventure.audience.PacketGroupingAudience
@@ -24,8 +23,6 @@ fun Component?.surroundWithSeparators(): Component {
         .append(Component.newline()).append(separator)
 }
 
-val miniMessage = MiniMessage.miniMessage()
-fun String.asTextComponent() = miniMessage.deserialize(this)
 fun Component.toPlainText() = PlainTextComponentSerializer.plainText().serialize(this)
 operator fun Component.plus(component: Component) = append(component)
 fun Component.hoverEvent(text: String, color: NamedTextColor): Component =
@@ -35,7 +32,7 @@ fun Component.clickEvent(command: String): Component =
     clickEvent(ClickEvent.clickEvent(ClickEvent.Action.RUN_COMMAND, command))
 
 fun Component.clickEvent(action: ClickEvent.Action, value: String): Component {
-    if(action == ClickEvent.Action.COPY_TO_CLIPBOARD && hoverEvent() == null) {
+    if (action == ClickEvent.Action.COPY_TO_CLIPBOARD && hoverEvent() == null) {
         return clickEvent(ClickEvent.clickEvent(action, value)).hoverEvent("Click to copy!", ALT_COLOR_1)
     }
     return clickEvent(ClickEvent.clickEvent(action, value))
@@ -57,6 +54,7 @@ fun Component.withGradient(vararg colors: TextColor): Component {
     }
     return component
 }
+
 infix fun String.withColor(color: TextColor) = Component.text(this, color)
 infix fun Component.withColor(color: TextColor) = colorIfAbsent(color)
 infix fun Component.withDecoration(decoration: TextDecoration) = decorate(decoration)
@@ -80,15 +78,35 @@ fun splitComponentToCharacters(component: Component): Component {
 private fun colorTransition(phase: Float, vararg colors: TextColor): TextColor {
     val steps = 1f / (colors.size - 1)
     var colorIndex = 1
-    while(colorIndex < colors.size) {
+    while (colorIndex < colors.size) {
         val value = colorIndex * steps
-        if(value >= phase) {
+        if (value >= phase) {
             val factor = 1 + (phase - value) * (colors.size - 1)
             return TextColor.lerp(factor, colors[colorIndex - 1], colors[colorIndex])
         }
-        colorIndex ++
+        colorIndex++
     }
     return NamedTextColor.WHITE
+}
+
+fun abilityProgressBar(abilityName: String, remainingTime: Int, cooldownTime: Int): Component {
+    val bars = 30
+    val percentage = remainingTime.toFloat() / cooldownTime.toFloat()
+
+    val uncompletedBars = Component.text("|".repeat((percentage * bars).toInt()), NamedTextColor.YELLOW)
+    val completedBars = Component.text("|".repeat((bars - percentage * bars).toInt()), NamedTextColor.GRAY)
+
+    val barsComponent = (uncompletedBars + completedBars).noBold()
+
+    val timeString =
+        if (percentage <= 0.05)
+            Component.text("READY", NamedTextColor.GREEN)
+        else Component.text(String.format("%.1fs", remainingTime.toFloat() / 1000f))
+            .withTransition(percentage, NamedTextColor.GREEN, NamedTextColor.YELLOW, NamedTextColor.RED)
+
+    return Component.text(abilityName,
+        NamedTextColor.YELLOW,
+        TextDecoration.BOLD) + Component.space() + barsComponent + Component.space() + timeString.noBold()
 }
 
 class ComponentBuilder {
