@@ -295,7 +295,9 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
 
         init {
             MinecraftServer.getSchedulerManager().buildShutdownTask {
-                games.forEach(Game::endGameInstantly)
+                ArrayList(games).forEach { game ->
+                    game.endGameInstantly(false)
+                }
             }
         }
     }
