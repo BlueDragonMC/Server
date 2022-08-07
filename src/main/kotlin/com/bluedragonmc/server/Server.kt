@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory
 import java.net.InetAddress
 import java.time.Duration
 import java.util.*
+import kotlin.system.exitProcess
 
 lateinit var lobby: Game
 val queue = Environment.queue
@@ -234,6 +235,7 @@ fun main() {
         MinecraftServer.getSchedulerManager().buildTask {
             if (MinecraftServer.getConnectionManager().onlinePlayers.isEmpty()) {
                 MinecraftServer.stopCleanly()
+                exitProcess(0)
             }
         }.delay(Duration.ofHours(6)).repeat(Duration.ofSeconds(60)).schedule()
     }
