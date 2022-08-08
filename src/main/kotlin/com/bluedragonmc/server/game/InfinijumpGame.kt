@@ -254,7 +254,7 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
             MinecraftServer.getSchedulerManager().scheduleNextTick { game.addNewBlock() }
         }
 
-        fun tick(aliveTicks: Int) {
+        open fun tick(aliveTicks: Int) {
             val color = when {
                 isReached -> NamedTextColor.WHITE
                 aliveTicks < (game.blockLiveTime / 3) -> NamedTextColor.GREEN
@@ -262,10 +262,9 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
                 else -> NamedTextColor.RED
             }
             val p = Pos(pos.blockX().toDouble(), pos.blockY().toDouble(), pos.blockZ().toDouble())
-            if (aliveTicks % 10 == 0) instance.getChunkAt(pos)
-                ?.sendPacketToViewers(BlockBreakAnimationPacket(Random.nextInt(),
-                    p,
-                    (aliveTicks / (game.blockLiveTime / 10)).toByte()))
+            if (aliveTicks % 10 == 0) {
+                sendBlockAnimation(p, (aliveTicks / (game.blockLiveTime / 10)).toByte())
+            }
             setOutlineColor(color)
 
             if (aliveTicks % 10 != 0) return
@@ -282,17 +281,26 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
             GlowingEntityUtils.glow(entity, color, entity.viewers)
         }
 
-        protected fun setNeighboringBlocks(block: Block, corners: Boolean = false) {
-            instance.setBlock(pos.add(1.0, 0.0, 0.0), block)
-            instance.setBlock(pos.add(0.0, 0.0, 1.0), block)
-            instance.setBlock(pos.sub(1.0, 0.0, 0.0), block)
-            instance.setBlock(pos.sub(0.0, 0.0, 1.0), block)
+        protected fun sendBlockAnimation(pos: Pos, progress: Byte) {
+            instance.getChunkAt(pos)?.sendPacketToViewers(BlockBreakAnimationPacket(Random.nextInt(), pos, progress))
+        }
+
+        protected fun setNeighboringBlocks(block: Block, corners: Boolean = false) =
+            forEachNeighboringBlock(corners = corners) { pos ->
+                instance.setBlock(pos, block)
+            }
+
+        protected inline fun forEachNeighboringBlock(corners: Boolean = false, block: (Pos) -> Unit) {
+            block(pos.add(1.0, 0.0, 0.0))
+            block(pos.add(0.0, 0.0, 1.0))
+            block(pos.sub(1.0, 0.0, 0.0))
+            block(pos.sub(0.0, 0.0, 1.0))
 
             if (corners) {
-                instance.setBlock(pos.add(1.0, 0.0, 1.0), block)
-                instance.setBlock(pos.add(1.0, 0.0, -1.0), block)
-                instance.setBlock(pos.add(-1.0, 0.0, 1.0), block)
-                instance.setBlock(pos.add(-1.0, 0.0, -1.0), block)
+                block(pos.add(1.0, 0.0, 1.0))
+                block(pos.add(1.0, 0.0, -1.0))
+                block(pos.add(-1.0, 0.0, 1.0))
+                block(pos.add(-1.0, 0.0, -1.0))
             }
         }
 
@@ -351,6 +359,15 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
         override fun create() {
             super.create()
             setNeighboringBlocks(Block.RED_CONCRETE, corners = true)
+        }
+
+        override fun tick(aliveTicks: Int) {
+            super.tick(aliveTicks)
+            if (aliveTicks % 10 == 0) {
+                forEachNeighboringBlock(corners = true) { pos ->
+                    sendBlockAnimation(pos, (aliveTicks / (game.blockLiveTime / 10)).toByte())
+                }
+            }
         }
 
         override fun destroy() {
