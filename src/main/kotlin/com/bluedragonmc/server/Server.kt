@@ -168,7 +168,7 @@ fun main() {
         LobbyCommand("lobby", "/lobby", "l", "hub"),
         TeleportCommand("tp", "/tp <player|<x> <y> <z>> [player|<x> <y> <z>]"),
         FlyCommand("fly"),
-        GameModeCommand("gamemode", "/gamemode <survival|creative|adventure|spectator> [player]", "gm"),
+        GameModeCommand("gamemode", "/gamemode <survival|creative|adventure|spectator> [player]", "gm", "gmc", "gms", "gma", "gmsp"),
         KillCommand("kill", "/kill [player]"),
         SetBlockCommand("setblock", "/setblock <x> <y> <z> <block>"),
         PartyCommand("party", "/party <invite|kick|promote|warp|chat|list> ...", "p"),

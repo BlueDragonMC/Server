@@ -9,6 +9,8 @@ import com.bluedragonmc.server.module.database.DatabaseModule
 import com.bluedragonmc.server.module.database.PlayerDocument
 import com.bluedragonmc.server.utils.plus
 import com.bluedragonmc.server.utils.surroundWithSeparators
+import com.bluedragonmc.server.utils.withDecoration
+import com.bluedragonmc.server.utils.withGradient
 import kotlinx.coroutines.launch
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
@@ -51,12 +53,12 @@ class AwardsModule : GameModule() {
     private fun notifyLevelUp(player: CustomPlayer, oldLevel: Int, newLevel: Int) {
         player.showTitle(
             Title.title(
-                Component.text("LEVEL UP!", ALT_COLOR_2, TextDecoration.BOLD),
+                Component.text("LEVEL UP!").withGradient(ALT_COLOR_1, ALT_COLOR_2).withDecoration(TextDecoration.BOLD),
                 Component.text("You are now level ", ALT_COLOR_1) + Component.text(newLevel)
             )
         )
         player.sendMessage(
-            (Component.text("Level up!\n", ALT_COLOR_1) + Component.text(
+            (Component.text("Level up!\n").withGradient(ALT_COLOR_1, ALT_COLOR_2) + Component.text(
                 oldLevel,
                 ALT_COLOR_2
             ) + Component.text(" → ", ALT_COLOR_1) + Component.text(newLevel, ALT_COLOR_2)).surroundWithSeparators()
