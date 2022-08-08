@@ -37,12 +37,14 @@ import net.minestom.server.network.packet.server.play.BlockBreakAnimationPacket
 import net.minestom.server.particle.Particle
 import net.minestom.server.sound.SoundEvent
 import java.time.Duration
+import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.roundToInt
 import kotlin.math.sin
 import kotlin.random.Random
 
 private const val blocksPerDifficulty = 50
+
 class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic") {
 
     private val blockLiveTime = 120
@@ -98,8 +100,8 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
             override fun initialize(parent: Game, eventNode: EventNode<Event>) {
                 eventNode.addListener(GameStartEvent::class.java) {
                     started = true
-                    blocks.forEach { block ->
-                        block.spawnTime = getInstance().worldAge // Reset age of the block
+                    blocks.forEachIndexed { i, block ->
+                        block.spawnTime = getInstance().worldAge + 40 * i // Reset age of the block
                     }
                 }
                 eventNode.addListener(PlayerDeathEvent::class.java) { event ->
@@ -169,7 +171,7 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
         val lastPos = blocks.last().pos
         val nextPos = getNextBlockPosition()
         val block = when {
-            nextPos.y - lastPos.y <= -5 -> SlimeParkourBlock(this, instance, instance.worldAge, nextPos)
+            nextPos.y - lastPos.y <= -5 -> PlatformParkourBlock(this, instance, instance.worldAge, nextPos)
             nextPos.y - lastPos.y >= 2 -> LadderParkourBlock(this, instance, instance.worldAge, nextPos)
             Math.random() < 0.01 * difficulty -> IronBarParkourBlock(this, instance, instance.worldAge, nextPos)
             else -> ParkourBlock(this, instance, instance.worldAge, nextPos)
@@ -182,9 +184,13 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
         val lastBlock = blocks.last()
         val lastPos = lastBlock.pos
         angle += Math.toRadians((-35..35).random().toDouble())
-        val yDiff = (-2..2).random().toDouble() + Math.random()
+        val yDiff = Random.nextDouble(-1.0, 2.0)
         if (lastPos.y + yDiff < 1.0) return getNextBlockPosition()
-        val vec = Vec(cos(angle), sin(angle)).mul(1.5 + (difficulty / 4) - yDiff + Random.nextDouble(1.0, 2.0)).withY(yDiff.roundToInt().toDouble())
+        val vec = Vec(cos(angle), sin(angle)).mul(1.5 + (difficulty / 4) - yDiff + Random.nextDouble(1.0, 2.0))
+            .withY(yDiff.roundToInt().toDouble())
+        if (Math.random() < 0.2 && lastPos.y > 80) {
+            return lastPos.add(vec).sub(0.0, abs(yDiff) * 8.0, 0.0)
+        }
         if (vec.x < 1.0 && vec.z < 1.0) return getNextBlockPosition()
         return lastPos.add(vec)
     }
@@ -204,7 +210,7 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
          * Setting the falling block type will determine the shape of the block's glow effect.
          * Barriers and invisible falling blocks have no glowing effect.
          */
-        protected open val fallingBlockType: Block = Block.INFESTED_STONE_BRICKS
+        protected open val fallingBlockType: Block? = Block.INFESTED_STONE_BRICKS
 
         val pos = Pos(posIn.blockX().toDouble(), posIn.blockY().toDouble(), posIn.blockZ().toDouble())
 
@@ -222,7 +228,7 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
             if (isReached) return
             isReached = true
             game.score++
-            val packet = PacketUtils.createBlockParticle(player.position, Block.STONE_BRICKS, 10)
+            val packet = PacketUtils.createBlockParticle(player.position, placedBlockType, 10)
             val sound = Sound.sound(
                 when (game.difficulty) {
                     0 -> SoundEvent.BLOCK_NOTE_BLOCK_PLING
@@ -266,7 +272,7 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
             val packet = PacketUtils.createParticleWithBlockState(
                 pos.add(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5),
                 Particle.FALLING_DUST,
-                Block.STONE_BRICKS,
+                placedBlockType,
                 2
             )
             instance.sendGroupedPacket(packet)
@@ -276,13 +282,28 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
             GlowingEntityUtils.glow(entity, color, entity.viewers)
         }
 
+        protected fun setNeighboringBlocks(block: Block, corners: Boolean = false) {
+            instance.setBlock(pos.add(1.0, 0.0, 0.0), block)
+            instance.setBlock(pos.add(0.0, 0.0, 1.0), block)
+            instance.setBlock(pos.sub(1.0, 0.0, 0.0), block)
+            instance.setBlock(pos.sub(0.0, 0.0, 1.0), block)
+
+            if (corners) {
+                instance.setBlock(pos.add(1.0, 0.0, 1.0), block)
+                instance.setBlock(pos.add(1.0, 0.0, -1.0), block)
+                instance.setBlock(pos.add(-1.0, 0.0, 1.0), block)
+                instance.setBlock(pos.add(-1.0, 0.0, -1.0), block)
+            }
+        }
+
         open fun create() {
             instance.setBlock(pos, placedBlockType)
-            (entity.entityMeta as FallingBlockMeta).apply {
-                this.isInvisible = false
-                this.isHasNoGravity = true
-                this.block = fallingBlockType
-            }
+            if (fallingBlockType != null)
+                (entity.entityMeta as FallingBlockMeta).apply {
+                    this.isInvisible = false
+                    this.isHasNoGravity = true
+                    this.block = fallingBlockType!!
+                }
             entity.setInstance(instance, centerBottom)
         }
 
@@ -312,10 +333,7 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
         override fun destroy() {
             super.destroy()
 
-            instance.setBlock(pos.sub(1.0, 0.0, 0.0), Block.AIR)
-            instance.setBlock(pos.sub(0.0, 0.0, 1.0), Block.AIR)
-            instance.setBlock(pos.add(1.0, 0.0, 0.0), Block.AIR)
-            instance.setBlock(pos.add(0.0, 0.0, 1.0), Block.AIR)
+            setNeighboringBlocks(Block.AIR)
         }
     }
 
@@ -325,9 +343,19 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
         override val fallingBlockType: Block = Block.BARRIER
     }
 
-    class SlimeParkourBlock(game: InfinijumpGame, instance: Instance, spawnTime: Long, posIn: Pos) :
+    class PlatformParkourBlock(game: InfinijumpGame, instance: Instance, spawnTime: Long, posIn: Pos) :
         ParkourBlock(game, instance, spawnTime, posIn) {
-        override val placedBlockType: Block = Block.SLIME_BLOCK
-        override val fallingBlockType: Block = Block.BARRIER
+        override val placedBlockType: Block = Block.RED_CONCRETE
+        override val fallingBlockType: Block? = Block.BARRIER
+
+        override fun create() {
+            super.create()
+            setNeighboringBlocks(Block.RED_CONCRETE, corners = true)
+        }
+
+        override fun destroy() {
+            super.destroy()
+            setNeighboringBlocks(Block.AIR, corners = true)
+        }
     }
 }
