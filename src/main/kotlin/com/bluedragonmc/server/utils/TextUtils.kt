@@ -19,8 +19,13 @@ private val separator
 
 fun Component?.surroundWithSeparators(): Component {
     if (this == null) return Component.empty()
-    return separator.append(Component.newline()).append(this.decoration(TextDecoration.STRIKETHROUGH, false))
-        .append(Component.newline()).append(separator)
+    return buildComponent {
+        +separator
+        +Component.newline()
+        +decoration(TextDecoration.STRIKETHROUGH, false)
+        +Component.newline()
+        +separator
+    }
 }
 
 fun Component.toPlainText() = PlainTextComponentSerializer.plainText().serialize(this)

@@ -24,7 +24,6 @@ import net.minestom.server.entity.Player
 import net.minestom.server.entity.hologram.Hologram
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
-import net.minestom.server.event.inventory.InventoryPreClickEvent
 import net.minestom.server.event.player.PlayerSpawnEvent
 import net.minestom.server.event.player.PlayerUseItemEvent
 import net.minestom.server.inventory.InventoryType
