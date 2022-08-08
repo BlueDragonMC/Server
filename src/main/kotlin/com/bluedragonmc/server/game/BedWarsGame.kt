@@ -331,7 +331,7 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
     )
 
     // There's no way we're keeping these names
-    private val speedModifier = AttributeModifier("bluedragon:fastfeet", 1.005f, AttributeOperation.MULTIPLY_BASE)
+    private val speedModifier = AttributeModifier("bluedragon:fastfeet", 0.5f, AttributeOperation.MULTIPLY_BASE)
     private val fastFeet = ShopModule.TeamUpgrade(
         "Fast Feet", "Gives Speed to all members on your team.", Material.IRON_BOOTS
     ) { player, _ ->
