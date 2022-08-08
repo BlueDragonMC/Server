@@ -16,8 +16,15 @@ EXPOSE 25565
 WORKDIR /server
 
 ARG METRICS_VERSION="0.3.6"
+ARG MC_MONITOR_VERSION="0.10.6"
 
 LABEL com.bluedragonmc.allow_prometheus_scrape=true
+
+# Add mc-monitor for container healthchecks
+ADD https://github.com/itzg/mc-monitor/releases/download/$MC_MONITOR_VERSION/mc-monitor_${MC_MONITOR_VERSION}_linux_amd64.tar.gz /tmp/mc-monitor.tgz
+RUN tar -xf /tmp/mc-monitor.tgz -C /usr/local/bin mc-monitor && rm /tmp/mc-monitor.tgz
+
+HEALTHCHECK --start-period=10s --interval=5s --retries=4 CMD mc-monitor status --host localhost --port 25565
 
 # Add UnifiedMetrics by Cubxity
 ADD "https://github.com/Cubxity/UnifiedMetrics/releases/download/v$METRICS_VERSION/unifiedmetrics-platform-minestom-$METRICS_VERSION.jar" /server/extensions/unifiedmetrics-$METRICS_VERSION.jar
