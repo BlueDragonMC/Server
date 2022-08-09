@@ -28,7 +28,7 @@ class TeamDeathmatchGame(mapName: String) : Game("Team Deathmatch", mapName) {
         use(WinModule(WinModule.WinCondition.LAST_TEAM_ALIVE) { player, winningTeam ->
             if (player in winningTeam.players) 150 else 15
         })
-        use(MOTDModule(Component.text("Two teams battle it out\n" + "until only one team stands!\n")))
+        use(MOTDModule(Component.translatable("game.tdm.motd")))
         use(InstantRespawnModule())
         use(WorldPermissionsModule(allowBlockBreak = false, allowBlockPlace = false, allowBlockInteract = false))
         use(PlayerResetModule(defaultGameMode = GameMode.ADVENTURE))

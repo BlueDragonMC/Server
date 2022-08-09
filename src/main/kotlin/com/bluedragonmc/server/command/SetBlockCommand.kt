@@ -19,8 +19,8 @@ class SetBlockCommand(
 
         player.instance?.setBlock(pos, block)
         player.sendMessage(
-            formatMessage(
-                "Set block at position {} to {}",
+            formatMessageTranslated(
+                "command.setblock.response",
                 formatPos(pos),
                 Component.translatable(block.registry().translationKey())
             )

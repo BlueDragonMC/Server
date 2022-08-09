@@ -1,5 +1,6 @@
-package com.bluedragonmc.server.utils.packet
+package com.bluedragonmc.server.bootstrap
 
+import com.bluedragonmc.server.Environment
 import net.minestom.server.MinecraftServer
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
@@ -12,8 +13,8 @@ import net.minestom.server.network.packet.server.play.PlayerInfoPacket.AddPlayer
 import net.minestom.server.network.packet.server.play.PlayerInfoPacket.RemovePlayer
 import net.minestom.server.utils.PacketUtils
 
-object PerInstanceTabList {
-    fun hook(eventNode: EventNode<Event>) {
+object PerInstanceTabList : Bootstrap(Environment.ProductionEnvironment::class) {
+    override fun hook(eventNode: EventNode<Event>) {
         eventNode.addListener(AddEntityToInstanceEvent::class.java) { event ->
             if (event.entity !is Player) return@addListener
             val player = event.entity as Player

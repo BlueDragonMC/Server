@@ -25,7 +25,7 @@ class MindecraftesCommand(name: String, usageString: String, vararg aliases: Str
                 isMindecraftes = true
             }
         } else {
-            sender.sendMessage(formatErrorMessage("Only the Toe Developer can execute this command!"))
+            sender.sendMessage(formatErrorTranslated("command.mindecraftes.fail"))
         }
     }
 })

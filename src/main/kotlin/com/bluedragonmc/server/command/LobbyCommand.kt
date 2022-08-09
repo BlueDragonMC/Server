@@ -7,7 +7,7 @@ class LobbyCommand(name: String, vararg aliases: String?) : BlueDragonCommand(na
     requirePlayers()
     syntax {
         if (player.instance == lobby.getInstance()) {
-            player.sendMessage(formatErrorMessage("You are already in the lobby!"))
+            player.sendMessage(formatErrorTranslated("command.lobby.already_in_lobby"))
             return@syntax
         }
         player.setInstance(

@@ -5,14 +5,29 @@ import com.bluedragonmc.server.queue.Queue
 import com.bluedragonmc.server.queue.TestQueue
 import java.io.File
 
-object Environment {
-    /**
-     * If in a develoment environment, the test queue is used.
-     * If inside a Docker container, the IPCQueue is used.
-     */
-    val queue: Queue = if (File("/server").exists()) IPCQueue else TestQueue()
-    val messagingDisabled = queue is TestQueue
-    val mongoHostname = if (messagingDisabled) "localhost" else "mongo"
+abstract class Environment {
 
-    fun isDev() = messagingDisabled
+    companion object {
+        val current by lazy {
+            if (isDev()) DevelopmentEnvironment() else ProductionEnvironment()
+        }
+
+        private fun isDev() = !File("/server").exists()
+    }
+
+    abstract val queue: Queue
+    abstract val messagingDisabled: Boolean
+    abstract val mongoHostname: String
+
+    class DevelopmentEnvironment : Environment() {
+        override val queue: Queue = TestQueue()
+        override val messagingDisabled: Boolean = true
+        override val mongoHostname: String = "localhost"
+    }
+
+    class ProductionEnvironment : Environment() {
+        override val queue: Queue = IPCQueue
+        override val messagingDisabled: Boolean = false
+        override val mongoHostname: String = "mongo"
+    }
 }

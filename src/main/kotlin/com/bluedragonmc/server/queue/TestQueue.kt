@@ -29,20 +29,20 @@ class TestQueue : Queue() {
      */
     override fun queue(player: Player, gameType: GameType) {
         if (queuedPlayers.contains(player)) {
-            player.sendMessage(Component.text("Removing you from the queue..."))
+            player.sendMessage(Component.translatable("queue.removing", NamedTextColor.RED))
             queuedPlayers.remove(player)
             return
         }
         if (gameType.mapName != null) {
             val mapExists = getMapNames(gameType.name).contains(gameType.mapName)
             if (!mapExists) {
-                player.sendMessage(Component.text("That map does not exist.", NamedTextColor.RED))
+                player.sendMessage(Component.translatable("queue.error.no_map_found", NamedTextColor.RED))
                 return
             }
         }
         queuedPlayers[player] = gameType
         player.sendMessage(
-            Component.text("You are now in the queue.", NamedTextColor.GREEN)
+            Component.translatable("queue.added", NamedTextColor.GREEN)
                 .hoverEvent(HoverEvent.showText(Component.text("Test queue debug information\nGame type: $gameType")))
         )
     }
@@ -51,7 +51,7 @@ class TestQueue : Queue() {
      * Adds a player to a game, regardless of their queue status.
      */
     fun join(player: Player, game: Game) {
-        player.sendMessage(Component.text("You are being sent to a game.", NamedTextColor.GREEN))
+        player.sendMessage(Component.translatable("queue.sending", NamedTextColor.GREEN, Component.text(game.instanceId?.toString().orEmpty())))
         game.addPlayer(player)
     }
 
@@ -64,9 +64,7 @@ class TestQueue : Queue() {
                 queuedPlayers.forEach { (player, gameType) ->
                     if (!gameClasses.containsKey(gameType.name)) {
                         player.sendMessage(
-                            Component.text(
-                                "Invalid game type. Removing you from the queue.", NamedTextColor.RED
-                            )
+                            Component.translatable("queue.error.invalid_game_type", NamedTextColor.RED)
                         )
                         playersToRemove.add(player)
                         return@forEach
@@ -81,11 +79,7 @@ class TestQueue : Queue() {
                     }
                     if (instanceStarting) return@forEach
                     logger.info("Starting a new instance for ${player.username}")
-                    player.sendMessage(
-                        Component.text(
-                            "No joinable instance found. Creating a new instance for you.", NamedTextColor.GREEN
-                        )
-                    )
+                    player.sendMessage(Component.translatable("queue.creating_instance", NamedTextColor.GREEN))
                     val map = gameType.mapName ?: randomMap(gameType.name)
                     logger.info("Map chosen: $map")
                     gameClasses[gameType.name]!!.call(map)

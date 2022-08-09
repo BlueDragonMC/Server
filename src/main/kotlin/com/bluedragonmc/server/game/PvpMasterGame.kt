@@ -23,7 +23,7 @@ class PvpMasterGame(mapName: String) : Game("PvPMaster", mapName) {
         use(DoubleJumpModule(verticalStrength = 5.0, cooldownMillis = 4000))
         use(FallDamageModule)
         use(InventoryPermissionsModule(allowDropItem = false, allowMoveItem = false))
-        use(MOTDModule(Component.text("You start out with netherite armor.\nFor each kill, your armor downgrades one level.\nThe first player to get a kill with\nleather armor is the winner.")))
+        use(MOTDModule(Component.translatable("game.pvpmaster.motd")))
         use(NaturalRegenerationModule())
         use(PlayerResetModule(defaultGameMode = GameMode.ADVENTURE))
         use(SidebarModule(name))

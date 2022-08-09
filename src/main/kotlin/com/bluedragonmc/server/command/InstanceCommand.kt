@@ -5,7 +5,7 @@ import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.messaging.MessagingModule
 import com.bluedragonmc.server.utils.buildComponent
 import com.bluedragonmc.server.utils.clickEvent
-import com.bluedragonmc.server.utils.hoverEvent
+import com.bluedragonmc.server.utils.hoverEventTranslatable
 import com.bluedragonmc.server.utils.surroundWithSeparators
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.event.ClickEvent
@@ -24,8 +24,8 @@ class InstanceCommand(name: String, usageString: String, vararg aliases: String?
     subcommand("list") {
         syntax {
             val component = buildComponent {
-                +Component.text(
-                    "All running instances", NamedTextColor.BLUE, TextDecoration.BOLD, TextDecoration.UNDERLINED
+                +Component.translatable(
+                    "command.instance.title", NamedTextColor.BLUE, TextDecoration.BOLD, TextDecoration.UNDERLINED
                 )
                 +Component.newline()
                 for (instance in MinecraftServer.getInstanceManager().instances) {
@@ -37,16 +37,24 @@ class InstanceCommand(name: String, usageString: String, vararg aliases: String?
                     +Component.newline()
                     +Component.text(" → ", NamedTextColor.GRAY)
                     val game = Game.findGame(instance.uniqueId)
-                    +Component.text(game?.name ?: "No game", NamedTextColor.YELLOW)
+                    if(game?.name != null) {
+                        +Component.text(game.name, NamedTextColor.YELLOW)
+                    } else {
+                        +Component.translatable("command.instance.no_game", NamedTextColor.RED)
+                    }
                     +Component.text(" · ", NamedTextColor.GRAY)
-                    +Component.text(game?.mapName ?: "No map", NamedTextColor.GOLD)
+                    if(game?.mapName != null) {
+                        +Component.text(game.mapName, NamedTextColor.GOLD)
+                    } else {
+                        +Component.translatable("command.instance.no_map", NamedTextColor.RED)
+                    }
                     +Component.text(" · ", NamedTextColor.GRAY)
-                    +Component.text("${instance.players.size} online", NamedTextColor.GRAY)
+                    +Component.translatable("command.instance.players", NamedTextColor.GRAY, Component.text(instance.players.size))
                     +Component.space()
                     val connectButtonColor =
                         if (sender is Player && sender.instance != instance) NamedTextColor.YELLOW else NamedTextColor.GRAY
-                    +Component.text("(Connect)", connectButtonColor)
-                        .hoverEvent("Click to join the instance!", NamedTextColor.YELLOW)
+                    +Component.translatable("command.instance.action.connect", connectButtonColor)
+                        .hoverEventTranslatable("command.instance.action.connect.hover", NamedTextColor.YELLOW)
                         .clickEvent("/instance join ${instance.uniqueId}")
                 }
             }.surroundWithSeparators()
@@ -60,17 +68,17 @@ class InstanceCommand(name: String, usageString: String, vararg aliases: String?
     subcommand("join") {
         syntax(instanceArgument) {
             val instance = get(instanceArgument)
-            player.sendMessage(formatMessage("Sending you to {}...", instance.uniqueId))
+            player.sendMessage(formatMessageTranslated("queue.sending", instance.uniqueId))
             try {
                 player.setInstance(instance).whenCompleteAsync { _, throwable ->
                     // Send a generic error message
                     throwable?.let {
-                        player.sendMessage(formatErrorMessage("There was an error sending you to {}!", instance.uniqueId))
+                        player.sendMessage(formatErrorTranslated("command.instance.join.fail.generic", instance.uniqueId))
                     }
                 }
             } catch (exception: IllegalArgumentException) {
                 // The player can not re-join its current instance.
-                player.sendMessage(formatErrorMessage("You are already in this instance!"))
+                player.sendMessage(formatErrorTranslated("command.instance.join.fail"))
             }
         }.requirePlayers()
     }
@@ -79,12 +87,12 @@ class InstanceCommand(name: String, usageString: String, vararg aliases: String?
         syntax(instanceArgument) {
             val instance = get(instanceArgument)
             if (instance.players.isNotEmpty()) {
-                player.sendMessage(formatErrorMessage("Instances with players cannot be removed."))
+                player.sendMessage(formatErrorTranslated("command.instance.remove.fail"))
                 return@syntax
             }
             MinecraftServer.getInstanceManager().unregisterInstance(instance)
-            player.sendMessage(formatMessage("Removed instance {}.", instance.uniqueId))
             MessagingModule.publish(NotifyInstanceRemovedMessage(MessagingModule.containerId, instance.uniqueId))
+            player.sendMessage(formatMessageTranslated("command.instance.remove.success", instance.uniqueId))
         }
     }
 })

@@ -48,7 +48,7 @@ class ShopModule : GuiModule() {
             itemStack: ItemStack,
             price: Int,
             currency: Material,
-            virtualItem: VirtualItem? = null
+            virtualItem: VirtualItem? = null,
         ) {
             itemsBuilder.slot(itemsBuilder.pos(row, column), itemStack.material(), { player ->
                 if (virtualItem != null) {
@@ -147,7 +147,7 @@ class ShopModule : GuiModule() {
         name: String,
         val description: String,
         val displayItem: Material,
-        val baseObtainedCallback: (Player, VirtualItem) -> Unit
+        val baseObtainedCallback: (Player, VirtualItem) -> Unit,
     ) : VirtualItem(name, { player, item ->
         val team = Game.findGame(player)?.getModule<TeamModule>()?.getTeam(player)
         team?.players?.forEach {
@@ -155,11 +155,10 @@ class ShopModule : GuiModule() {
             (it as CustomPlayer).virtualItems.add(item)
         }
         team?.sendMessage(
-            player.name.append(
-                Component.text(
-                    " purchased $name for the entire team!", NamedTextColor.GREEN
-                )
-            )
+            Component.translatable("module.shop.team_upgrade.purchased",
+                NamedTextColor.GREEN,
+                player.name,
+                Component.text(name))
         )
     })
 }

@@ -1,6 +1,7 @@
 package com.bluedragonmc.server.module.instance
 
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.NAMESPACE
 import net.minestom.server.MinecraftServer
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
@@ -22,7 +23,7 @@ class CustomGeneratorInstanceModule(
 
     companion object {
         fun getFullbrightDimension() = MinecraftServer.getDimensionTypeManager().getDimension(
-            NamespaceID.from("bluedragon:fullbright_dimension")
+            NamespaceID.from("$NAMESPACE:fullbright_dimension")
         )!!
     }
 }

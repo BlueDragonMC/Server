@@ -6,8 +6,9 @@ import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.database.DatabaseModule
 import com.bluedragonmc.server.module.database.MapData
-import com.bluedragonmc.server.utils.hoverEvent
+import com.bluedragonmc.server.utils.buildComponent
 import com.bluedragonmc.server.utils.noBold
+import com.bluedragonmc.server.utils.plus
 import com.bluedragonmc.server.utils.surroundWithSeparators
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.event.HoverEvent
@@ -28,16 +29,29 @@ class MOTDModule(val motd: Component) : GameModule() {
         val mapData = parent.mapData ?: MapData(parent.mapName)
         eventNode.addListener(PlayerSpawnEvent::class.java) { event ->
             event.player.sendMessage(
-                Component.text(parent.name + "\n", BRAND_COLOR_PRIMARY_1, TextDecoration.BOLD)
-                    .append(motd.color(NamedTextColor.WHITE).decoration(TextDecoration.BOLD, false))
-                    .append(Component.text("\nMap: ", BRAND_COLOR_PRIMARY_2).decoration(TextDecoration.BOLD, false))
-                    .append(Component.text(parent.mapName, BRAND_COLOR_PRIMARY_1, TextDecoration.BOLD)
-                        .hoverEvent(HoverEvent.showText(Component.text(parent.mapName, BRAND_COLOR_PRIMARY_1, TextDecoration.BOLD)
-                            .append(Component.newline())
-                            .append(Component.text(mapData.description, NamedTextColor.GRAY).noBold()))))
-                    .append(Component.text(" by ", BRAND_COLOR_PRIMARY_2).decoration(TextDecoration.BOLD, false))
-                    .append(Component.text(mapData.author, BRAND_COLOR_PRIMARY_1).decoration(TextDecoration.BOLD, false))
-                    .surroundWithSeparators()
+                buildComponent {
+                    // Game name
+                    +Component.text(parent.name, BRAND_COLOR_PRIMARY_1, TextDecoration.BOLD)
+                    +Component.newline()
+                    +buildComponent {
+                        // MOTD
+                        +motd.color(NamedTextColor.WHITE)
+                        +Component.newline()
+                        +Component.translatable("module.motd.map",
+                            BRAND_COLOR_PRIMARY_2,
+                            // Map name
+                            Component.text(parent.mapName, BRAND_COLOR_PRIMARY_1)
+                                .hoverEvent(HoverEvent.showText(
+                                    Component.text(parent.mapName,
+                                        BRAND_COLOR_PRIMARY_1,
+                                        TextDecoration.BOLD) + Component.newline() + Component.text(mapData.description,
+                                        NamedTextColor.GRAY).noBold()
+                                )),
+                            // Map builder
+                            Component.text(mapData.author, BRAND_COLOR_PRIMARY_1)
+                        )
+                    }.noBold()
+                }.surroundWithSeparators()
             )
         }
     }

@@ -5,6 +5,7 @@ import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.SERVER_IP
 import com.bluedragonmc.server.module.GameModule
+import com.bluedragonmc.server.utils.withColor
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextDecoration
 import net.minestom.server.entity.Player
@@ -23,7 +24,7 @@ class SidebarModule(title: String) : GameModule() {
     private val sidebar: Sidebar = Sidebar(Component.text(title.uppercase(), ALT_COLOR_1, TextDecoration.BOLD))
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         this.parent = parent
-        sidebar.createLine(ScoreboardLine("website", Component.text(SERVER_IP, BRAND_COLOR_PRIMARY_1), 0))
+        sidebar.createLine(ScoreboardLine("website", SERVER_IP withColor BRAND_COLOR_PRIMARY_1, 0))
         parent.players.forEach { sidebar.addViewer(it) }
         eventNode.addListener(PlayerSpawnEvent::class.java) { event ->
             sidebar.addViewer(event.player)

@@ -76,11 +76,28 @@ open class BlueDragonCommand(
         return String.format("(%.1f, %.1f, %.1f)", x, y, z)
     }
 
+    @Deprecated("Translatable messages are strongly prefered.")
     fun formatMessage(string: String, vararg fields: Any): Component =
         formatMessage(string, messageColor, fieldColor, *fields)
 
+    fun formatMessageTranslated(key: String, vararg fields: Any): Component =
+        formatTranslatedMessage(key, messageColor, fieldColor, *fields)
+
+    fun formatErrorTranslated(key: String, vararg fields: Any): Component =
+        formatTranslatedMessage(key, errorColor, errorFieldColor, *fields)
+
+    @Deprecated("Translatable messages are strongly prefered.")
     fun formatErrorMessage(string: String, vararg fields: Any): Component =
         formatMessage(string, errorColor, errorFieldColor, *fields)
+
+    private fun formatTranslatedMessage(
+        key: String,
+        messageColor: TextColor,
+        fieldColor: TextColor,
+        vararg values: Any,
+    ): Component = Component.translatable(key, messageColor, values.map {
+        if (it is Component) it else Component.text(it.toString(), fieldColor)
+    })
 
     private fun formatMessage(
         string: String,
@@ -131,18 +148,20 @@ open class BlueDragonCommand(
     fun suspendSyntax(vararg args: Argument<*>, block: suspend CommandCtx.() -> Unit) =
         BlockingSyntax(this, args.toList(), block)
 
-    fun userSuspendSyntax(vararg args: Argument<*>, block: suspend UserCommandCtx.() -> Unit) = suspendSyntax(*args, block = {
-        block(UserCommandCtx(sender, ctx, args.first() as ArgumentOfflinePlayer))
-    })
+    fun userSuspendSyntax(vararg args: Argument<*>, block: suspend UserCommandCtx.() -> Unit) =
+        suspendSyntax(*args, block = {
+            block(UserCommandCtx(sender, ctx, args.first() as ArgumentOfflinePlayer))
+        })
 
-    class UserCommandCtx(sender: CommandSender, ctx: CommandContext, userArgument: Argument<PlayerDocument>) : CommandCtx(sender, ctx) {
+    class UserCommandCtx(sender: CommandSender, ctx: CommandContext, userArgument: Argument<PlayerDocument>) :
+        CommandCtx(sender, ctx) {
         val doc = get(userArgument)
     }
 
     open class CommandCtx(val sender: CommandSender, val ctx: CommandContext) {
         val player by lazy { sender as Player }
         val game by lazy { Game.findGame(player)!! }
-        val playerName by lazy { (sender as? Player)?.name ?: Component.text("Console") }
+        val playerName by lazy { (sender as? Player)?.name ?: Component.translatable("command.console_sender_name") }
 
         fun <T> get(argument: Argument<T>): T = ctx.get(argument)
         fun getPlayer(argument: Argument<PlayerDocument>): Player? =
@@ -219,7 +238,10 @@ interface ConditionHolder {
         }
     }
 
-    fun requirePermission(permission: String, noPermissionMessage: Component = Component.translatable("commands.help.failed", errorColor)) {
+    fun requirePermission(
+        permission: String,
+        noPermissionMessage: Component = Component.translatable("commands.help.failed", errorColor),
+    ) {
         conditions.add {
             if (sender is CustomPlayer && !Permissions.hasPermission(sender.data, permission)) {
                 sender.sendMessage(noPermissionMessage withColor errorColor)

@@ -38,9 +38,7 @@ class WorldPermissionsModule(
                 } else {
                     parent.callCancellable(PreventPlayerBreakMapEvent(event.player, event.block, event.resultBlock, event.blockPosition)) {
                         event.player.sendMessage(
-                            Component.text(
-                                "You can only break blocks placed by a player!", NamedTextColor.RED
-                            )
+                            Component.translatable("module.world_permissions.break_world", NamedTextColor.RED)
                         )
                         event.isCancelled = true
                     }

@@ -3,6 +3,7 @@ package com.bluedragonmc.server.utils
 import com.bluedragonmc.server.ALT_COLOR_1
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.JoinConfiguration
+import net.kyori.adventure.text.TranslatableComponent
 import net.kyori.adventure.text.event.ClickEvent
 import net.kyori.adventure.text.event.HoverEvent
 import net.kyori.adventure.text.flattener.ComponentFlattener
@@ -32,13 +33,15 @@ fun Component.toPlainText() = PlainTextComponentSerializer.plainText().serialize
 operator fun Component.plus(component: Component) = append(component)
 fun Component.hoverEvent(text: String, color: NamedTextColor): Component =
     hoverEvent(HoverEvent.hoverEvent(HoverEvent.Action.SHOW_TEXT, Component.text(text, color)))
+fun Component.hoverEventTranslatable(key: String, color: TextColor): Component =
+    hoverEvent(HoverEvent.hoverEvent(HoverEvent.Action.SHOW_TEXT, Component.translatable(key, color)))
 
 fun Component.clickEvent(command: String): Component =
     clickEvent(ClickEvent.clickEvent(ClickEvent.Action.RUN_COMMAND, command))
 
 fun Component.clickEvent(action: ClickEvent.Action, value: String): Component {
     if (action == ClickEvent.Action.COPY_TO_CLIPBOARD && hoverEvent() == null) {
-        return clickEvent(ClickEvent.clickEvent(action, value)).hoverEvent("Click to copy!", ALT_COLOR_1)
+        return clickEvent(ClickEvent.clickEvent(action, value)).hoverEventTranslatable("command.click_to_copy", ALT_COLOR_1)
     }
     return clickEvent(ClickEvent.clickEvent(action, value))
 }
@@ -68,6 +71,7 @@ fun broadcast(msg: Component) =
     PacketGroupingAudience.of(MinecraftServer.getConnectionManager().onlinePlayers).sendMessage(msg)
 
 fun splitComponentToCharacters(component: Component): Component {
+    require(component !is TranslatableComponent) { "TranslatableComponent objects can not be split because they are locale-dependent." }
     return buildComponent {
         ComponentFlattener.textOnly().flatten(component) { str ->
             str.forEach { c ->

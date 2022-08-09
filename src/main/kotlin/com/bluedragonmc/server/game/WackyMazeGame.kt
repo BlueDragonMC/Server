@@ -33,7 +33,7 @@ class WackyMazeGame(mapName: String) : Game("WackyMaze", mapName) {
         use(WinModule(WinModule.WinCondition.LAST_PLAYER_ALIVE) { player, winningTeam ->
             if (player in winningTeam.players) 100 else 10
         })
-        use(MOTDModule(Component.text("Each player will receive a knockback stick.\n" + "Use it to wack your enemies off the map!\n" + "The last player alive wins!")))
+        use(MOTDModule(Component.translatable("game.wackymaze.motd")))
         use(InstantRespawnModule())
         use(WorldPermissionsModule(allowBlockBreak = false, allowBlockPlace = false, allowBlockInteract = false))
         use(PlayerResetModule(defaultGameMode = GameMode.ADVENTURE))

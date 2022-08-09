@@ -1,10 +1,10 @@
 package com.bluedragonmc.server.command.punishment
 
+import com.bluedragonmc.server.bootstrap.GlobalPunishments
 import com.bluedragonmc.server.command.BlueDragonCommand
 import com.bluedragonmc.server.command.OfflinePlayerArgument
 import com.bluedragonmc.server.command.StringArrayArgument
 import com.bluedragonmc.server.command.WordArgument
-import com.bluedragonmc.server.getPunishmentMessage
 import com.bluedragonmc.server.module.database.DatabaseModule
 import com.bluedragonmc.server.module.database.PlayerDocument
 import com.bluedragonmc.server.module.database.Punishment
@@ -46,7 +46,7 @@ class PunishCommand(name: String, usageString: String, vararg aliases: String) :
                 MinecraftServer.getGlobalEventHandler().call(DatabaseModule.DataLoadedEvent(target))
                 if(type == PunishmentType.MUTE) {
                     // Send a chat message telling the player they were muted.
-                    it.sendMessage(getPunishmentMessage(punishment, "muted"))
+                    it.sendMessage(GlobalPunishments.getMuteMessage(punishment))
                 }
             }
             player.sendMessage(formatMessage("{} was ${if (type == PunishmentType.BAN) "banned" else "muted"} for {} for '{}'.",

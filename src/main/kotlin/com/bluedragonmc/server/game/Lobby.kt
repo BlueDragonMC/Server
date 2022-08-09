@@ -47,6 +47,8 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
         "Have you seen Joe?"
     )
 
+    private val queue = Environment.current.queue
+
     init {
         // World modules
         use(AnvilFileMapProviderModule(Paths.get("worlds/$name/$mapName")))
@@ -125,6 +127,7 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
             }).lookAt(center)
 
             // GAME SELECT (left)
+            // todo: waiting on https://github.com/Minestom/Minestom/pull/1275 to translate NPC names
             addNPC(instance = this@Lobby.getInstance(),
                 position = Pos(-2.5, 61.0, -18.5),
                 customName = Component.text("All Games", NamedTextColor.YELLOW, TextDecoration.BOLD),
@@ -175,16 +178,14 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
         use(GuiModule())
 
         val tips = CircularList(listOf(
-            Component.text("Click to join our community forum for announcements, giveaways, events, and discussions!", BRAND_COLOR_PRIMARY_2).clickEvent(
+            Component.translatable("lobby.tips.forum", BRAND_COLOR_PRIMARY_2).clickEvent(
                 ClickEvent.openUrl("https://bluedragonmc.com")),
-            Component.text("Click to join our Discord server for announcements, giveaways, events, discussions, and sneak peeks!", BRAND_COLOR_PRIMARY_2).clickEvent(
+            Component.translatable("lobby.tips.discord", BRAND_COLOR_PRIMARY_2).clickEvent(
                 ClickEvent.openUrl("https://discord.gg/3gvSPdW")),
-            ("Be sure to try out our newest game: " withColor BRAND_COLOR_PRIMARY_2) +
-                    ("Infinijump" withColor BRAND_COLOR_PRIMARY_1) +
-                    ("!" withColor BRAND_COLOR_PRIMARY_2),
-            "Did you know: You can now double jump in the lobby!" withColor BRAND_COLOR_PRIMARY_2,
-            "Did you know: BlueDragon started as a Minecraft clans server." withColor BRAND_COLOR_PRIMARY_2,
-            "Tip: don't go in the blue bus on the Airport map in PvPMaster." withColor BRAND_COLOR_PRIMARY_2,
+            Component.translatable("lobby.tips.newest_game", BRAND_COLOR_PRIMARY_2, Component.text("Infinijump", BRAND_COLOR_PRIMARY_1)),
+            Component.translatable("lobby.tips.extra.1", BRAND_COLOR_PRIMARY_2),
+            Component.translatable("lobby.tips.extra.2", BRAND_COLOR_PRIMARY_2),
+            Component.translatable("lobby.tips.extra.3", BRAND_COLOR_PRIMARY_2),
         ).shuffled())
         var index = 0
         MinecraftServer.getSchedulerManager().buildTask {

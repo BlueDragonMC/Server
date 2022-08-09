@@ -31,7 +31,7 @@ class ArmorLevelsModule : GameModule() {
         this.parent = parent
         eventNode.addListener(GameStartEvent::class.java) { event ->
             for (player in parent.players) {
-                player.setArmorLevel(ArmorLevel.values().size-1)
+                player.setArmorLevel(ArmorLevel.values().size - 1)
             }
         }
 
@@ -64,8 +64,8 @@ class ArmorLevelsModule : GameModule() {
         inventory.setItemStack(0, armorLevel.sword ?: ItemStack.of(Material.AIR))
     }
 
-    fun Player.decrementArmorLevel() {
-        setArmorLevel(armorLevels.getOrDefault(this, ArmorLevel.values().size-1) - 1)
+    private fun Player.decrementArmorLevel() {
+        setArmorLevel(armorLevels.getOrDefault(this, ArmorLevel.values().size - 1) - 1)
     }
 
     enum class ArmorLevel(
@@ -75,7 +75,7 @@ class ArmorLevelsModule : GameModule() {
         val chestplate: ItemStack?,
         val leggings: ItemStack?,
         val boots: ItemStack?,
-        val sword: ItemStack?
+        val sword: ItemStack?,
     ) {
         NOTHING(
             "Nothing" withColor NamedTextColor.BLACK,

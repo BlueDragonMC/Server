@@ -57,7 +57,7 @@ class KitsModule(val showMenu: Boolean = false, val giveKitsOnStart: Boolean = t
                     lore(descriptionToComponents(selectableKit.description))
                 }) {
                     selectedKits[this.player] = selectableKit
-                    this.player.sendMessage(Component.text("You have selected the ", NamedTextColor.GREEN).append(selectableKit.name).append(Component.text(" kit.", NamedTextColor.GREEN)))
+                    this.player.sendMessage(Component.translatable("module.kit.selected", NamedTextColor.GREEN, selectableKit.name))
                     menu.close(this.player)
                     parent.callEvent(KitSelectedEvent(parent, this.player, selectableKit))
                 }

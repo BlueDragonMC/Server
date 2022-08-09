@@ -21,7 +21,7 @@ class GameCommand(name: String, usageString: String, vararg aliases: String?) : 
         syntax {
             game.endGame(Duration.ZERO)
             game.callEvent(WinModule.WinnerDeclaredEvent(game, TeamModule.Team()))
-            sender.sendMessage(formatMessage("Game ended successfully."))
+            sender.sendMessage(formatMessageTranslated("command.game.ended"))
         }.requireInGame()
     }
 
@@ -34,7 +34,7 @@ class GameCommand(name: String, usageString: String, vararg aliases: String?) : 
                 )
             )
             game.callEvent(GameStartEvent(game))
-            sender.sendMessage(formatMessage("Game started successfully."))
+            sender.sendMessage(formatMessageTranslated("command.game.started"))
         }.requireInGame()
     }
 })

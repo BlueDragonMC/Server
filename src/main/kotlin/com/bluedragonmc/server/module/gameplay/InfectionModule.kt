@@ -36,7 +36,11 @@ class InfectionModule(val scoreboardBinding: SidebarModule.ScoreboardBinding? = 
         TeamModule.Team(Component.text("Infected", NamedTextColor.RED), allowFriendlyFire = true)
     private val skins = hashMapOf<Player, PlayerSkin?>()
 
-    override val dependencies = listOf(DatabaseModule::class, SpawnpointModule::class, TeamModule::class, TimedRespawnModule::class, WinModule::class)
+    override val dependencies = listOf(DatabaseModule::class,
+        SpawnpointModule::class,
+        TeamModule::class,
+        TimedRespawnModule::class,
+        WinModule::class)
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         this.parent = parent
@@ -47,12 +51,9 @@ class InfectionModule(val scoreboardBinding: SidebarModule.ScoreboardBinding? = 
 
         eventNode.addListener(GameStartEvent::class.java) {
             survivorsTeam.players.addAll(parent.players)
-            parent.sendMessage(
-                Component.text(
-                    "The first infected player will be chosen in ",
-                    BRAND_COLOR_PRIMARY_2
-                ) + Component.text("20", BRAND_COLOR_PRIMARY_1) + Component.text(" seconds!", BRAND_COLOR_PRIMARY_2)
-            )
+            parent.sendMessage(Component.translatable("game.infection.warning",
+                BRAND_COLOR_PRIMARY_2,
+                Component.text("20", BRAND_COLOR_PRIMARY_1)))
             scoreboardBinding?.update()
             MinecraftServer.getSchedulerManager().buildTask { infectRandomPlayer() }.delay(Duration.ofSeconds(20))
                 .schedule()
@@ -63,7 +64,9 @@ class InfectionModule(val scoreboardBinding: SidebarModule.ScoreboardBinding? = 
         }
 
         eventNode.addListener(OldCombatModule.PlayerAttackEvent::class.java) { event ->
-            if (event.target is Player && survivorsTeam.players.contains(event.target) && infectedTeam.players.contains(event.attacker))
+            if (event.target is Player && survivorsTeam.players.contains(event.target) && infectedTeam.players.contains(
+                    event.attacker)
+            )
                 event.target.kill()
         }
 
@@ -81,7 +84,9 @@ class InfectionModule(val scoreboardBinding: SidebarModule.ScoreboardBinding? = 
     }
 
     fun infect(player: Player) {
-        parent.sendMessage(player.name + Component.text(" is now infected!", BRAND_COLOR_PRIMARY_2))
+        parent.sendMessage(player.name + Component.translatable("game.infection.infected",
+            BRAND_COLOR_PRIMARY_2,
+            player.name))
         player.skin = NPCModule.NPCSkins.ZOMBIE.skin
         survivorsTeam.players.remove(player)
         infectedTeam.players.add(player)

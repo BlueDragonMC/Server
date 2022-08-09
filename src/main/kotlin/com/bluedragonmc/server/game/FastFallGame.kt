@@ -1,5 +1,6 @@
 package com.bluedragonmc.server.game
 
+import com.bluedragonmc.server.ALT_COLOR_2
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.Game
@@ -22,7 +23,6 @@ import net.minestom.server.event.EventNode
 import net.minestom.server.instance.block.Block
 import net.minestom.server.instance.generator.GenerationUnit
 import net.minestom.server.instance.generator.Generator
-import net.minestom.server.utils.NamespaceID
 import java.time.Duration
 import kotlin.math.pow
 import kotlin.math.sqrt
@@ -34,9 +34,8 @@ class FastFallGame(mapName: String?) : Game("FastFall", "Chaos") {
         // INSTANCE MODULES
         use(
             CustomGeneratorInstanceModule(
-                dimensionType = MinecraftServer.getDimensionTypeManager().getDimension(
-                    NamespaceID.from("bluedragon:fullbright_dimension")
-                )!!, generator = ChaosWorldGenerator(radius)
+                dimensionType = CustomGeneratorInstanceModule.getFullbrightDimension(),
+                generator = ChaosWorldGenerator(radius)
             )
         )
 
@@ -46,11 +45,7 @@ class FastFallGame(mapName: String?) : Game("FastFall", "Chaos") {
         use(HealthDisplayModule())
         use(InstantRespawnModule())
         use(MaxHealthModule(2.0F))
-        use(MOTDModule(Component.text(
-            "Everyone spawns in a randomly generated sphere of blocks.\n" +
-                    "Make your way down without losing your only heart.\n" +
-                    "The first player break the glass at the bottom\n" +
-                    "and stand on the emerald wins!")))
+        use(MOTDModule(Component.translatable("game.fastfall.motd")))
         use(PlayerResetModule(defaultGameMode = GameMode.SURVIVAL))
         use(SidebarModule(name))
         use(SpawnpointModule(SpawnpointModule.SingleSpawnpointProvider(Pos(0.5, 257.0, 0.5))))
@@ -61,7 +56,8 @@ class FastFallGame(mapName: String?) : Game("FastFall", "Chaos") {
             override fun initialize(parent: Game, eventNode: EventNode<Event>) {
                 eventNode.addListener(WinModule.WinnerDeclaredEvent::class.java) { event ->
                     event.winningTeam.players.forEach {
-                        if (it.health == it.maxHealth) parent.getModule<AwardsModule>().awardCoins(it, 50, "No Damage Taken")
+                        if (it.health == it.maxHealth)
+                            parent.getModule<AwardsModule>().awardCoins(it, 50, Component.translatable("game.fastfall.award.no_damage_taken", ALT_COLOR_2))
                     }
                 }
             }
