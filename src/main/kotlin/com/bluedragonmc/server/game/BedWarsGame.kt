@@ -181,10 +181,10 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
                         if (!bedWarsTeamInfo.containsKey(team)) bedWarsTeamInfo[team] = BedWarsTeamInfo(false)
                         else bedWarsTeamInfo[team]!!.bedIntact = false
                         sidebarTeamsSection.update()
-                        sendMessage(
-                            Component.translatable("game.bedwars.bed_broken", team.name, event.player.name).surroundWithSeparators()
-                        )
                         for (player in parent.players) {
+                            player.sendMessage(
+                                Component.translatable("game.bedwars.bed_broken", team.name, event.player.name).surroundWithSeparators()
+                            )
                             if (!team.players.contains(player)) {
                                 player.playSound(otherTeamBedDestroyedSound)
                             } else {

@@ -99,19 +99,11 @@ class ShopModule : GuiModule() {
                 player.inventory.takeItemStack(ItemStack.of(currency, price), TransactionOption.ALL_OR_NOTHING)
             val addSuccess = player.inventory.addItemStack(item, TransactionOption.DRY_RUN)
             if (!removeSuccess) {
-                player.sendMessage(
-                    Component.text("You do not have enough ", NamedTextColor.RED)
-                        .append(currency.displayName(NamedTextColor.RED))
-                        .append(Component.text("s to buy this item.", NamedTextColor.RED))
-                )
+                player.sendMessage(Component.translatable("module.shop.not_enough_currency", NamedTextColor.RED, currency.displayName()))
                 return
             }
             if (!addSuccess) {
-                player.sendMessage(
-                    Component.text(
-                        "You do not have enough space in your inventory for this item.", NamedTextColor.RED
-                    )
-                )
+                player.sendMessage(Component.translatable("module.shop.no_inventory_space", NamedTextColor.RED))
                 return
             }
             player.inventory.addItemStack(item, TransactionOption.ALL)
@@ -119,19 +111,13 @@ class ShopModule : GuiModule() {
 
         private fun buyVirtualItem(player: Player, item: VirtualItem, price: Int, currency: Material) {
             if (item.isOwnedBy(player)) {
-                player.sendMessage(Component.text("You already own this item!", NamedTextColor.RED))
+                player.sendMessage(Component.translatable("module.shop.already_owned", NamedTextColor.RED))
                 return
             }
             val removeSuccess =
                 player.inventory.takeItemStack(ItemStack.of(currency, price), TransactionOption.ALL_OR_NOTHING)
             if (!removeSuccess) {
-                player.sendMessage(
-                    Component.text(
-                        "You do not have enough ", NamedTextColor.RED
-                    ) + currency.displayName(NamedTextColor.RED) + Component.text(
-                        "s to buy this item.", NamedTextColor.RED
-                    )
-                )
+                player.sendMessage(Component.translatable("module.shop.not_enough_currency", NamedTextColor.RED))
                 return
             }
             (player as CustomPlayer).virtualItems.add(item)
@@ -154,11 +140,13 @@ class ShopModule : GuiModule() {
             baseObtainedCallback(it, item)
             (it as CustomPlayer).virtualItems.add(item)
         }
-        team?.sendMessage(
-            Component.translatable("module.shop.team_upgrade.purchased",
-                NamedTextColor.GREEN,
-                player.name,
-                Component.text(name))
-        )
+        team?.players?.forEach {
+            it.sendMessage(
+                Component.translatable("module.shop.team_upgrade.purchased",
+                    NamedTextColor.GREEN,
+                    player.name,
+                    Component.text(name))
+            )
+        }
     })
 }

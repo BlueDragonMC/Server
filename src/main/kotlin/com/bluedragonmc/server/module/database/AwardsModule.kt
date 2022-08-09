@@ -7,10 +7,7 @@ import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.database.DatabaseModule
 import com.bluedragonmc.server.module.database.PlayerDocument
-import com.bluedragonmc.server.utils.plus
-import com.bluedragonmc.server.utils.surroundWithSeparators
-import com.bluedragonmc.server.utils.withDecoration
-import com.bluedragonmc.server.utils.withGradient
+import com.bluedragonmc.server.utils.*
 import kotlinx.coroutines.launch
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
@@ -56,9 +53,11 @@ class AwardsModule : GameModule() {
                 Component.text("You are now level ", ALT_COLOR_1) + Component.text(newLevel)
             )
         )
-        val msg = Component.translatable("module.award.level_up.1", ALT_COLOR_1) + Component.translatable("module.award.level_up.2",
-            Component.text(oldLevel, ALT_COLOR_2),
-            Component.text(newLevel, ALT_COLOR_2))
+        val msg = buildComponent {
+            +Component.translatable("module.award.level_up.1", ALT_COLOR_1)
+            +Component.newline()
+            +Component.translatable("module.award.level_up.2", Component.text(oldLevel, ALT_COLOR_2), Component.text(newLevel, ALT_COLOR_2))
+        }
         player.sendMessage(msg.surroundWithSeparators())
         player.playSound(Sound.sound(SoundEvent.ENTITY_PLAYER_LEVELUP, Sound.Source.PLAYER, 1.0F, 1.0F))
     }

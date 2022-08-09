@@ -59,7 +59,7 @@ class TeamModule(
             logger.info(teams.toString())
 
             teams.forEach { team ->
-                team.sendMessage(Component.translatable("module.team.assignment", NamedTextColor.GREEN, team.name))
+                team.players.forEach { it.sendMessage(Component.translatable("module.team.assignment", NamedTextColor.GREEN, team.name)) }
                 val scoreboardTeam = MinecraftServer.getTeamManager().createTeam(
                     parent.getInstance().uniqueId.toString() + "-" + team.name.toPlainText(),
                     team.name,

@@ -75,9 +75,11 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
                 else -> return
             }
             field = value
-            sendMessage(Component.translatable("game.infinijump.difficulty_increased", color))
             playSound(Sound.sound(SoundEvent.ENTITY_ENDER_DRAGON_GROWL, Sound.Source.PLAYER, 1.0f, 1.0f))
-            players.forEach { it.level = value }
+            players.forEach {
+                it.sendMessage(Component.translatable("game.infinijump.difficulty_increased", color, Component.text(title)))
+                it.level = value
+            }
         }
     override val maxPlayers = 1
 

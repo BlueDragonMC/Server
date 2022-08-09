@@ -274,8 +274,8 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
         // the NotifyInstanceRemovedMessage is published when the MessagingModule is unregistered
         while (modules.isNotEmpty()) unregister(modules.first())
         if (queueAllPlayers) {
-            sendMessage(Component.translatable("game.status.ending", NamedTextColor.GREEN))
             players.forEach {
+                it.sendMessage(Component.translatable("game.status.ending", NamedTextColor.GREEN))
                 Environment.current.queue.queue(it, GameType(name, null, null))
             }
         }
