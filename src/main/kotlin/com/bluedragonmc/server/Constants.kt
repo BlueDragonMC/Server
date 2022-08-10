@@ -49,9 +49,9 @@ val SERVER_NAME_GRADIENT = Component.text("BlueDragon").withGradient(BRAND_COLOR
 /**
  * Information about the latest update, displayed in the server list description.
  */
-val SERVER_NEWS = Component.text("              NEW GAME", NamedTextColor.GOLD, TextDecoration.BOLD) +
+val SERVER_NEWS = Component.empty() + Component.text("NEW GAME", NamedTextColor.GOLD, TextDecoration.BOLD) +
         Component.text(" - ", NamedTextColor.GRAY).noBold() +
-        Component.text("SKYWARS", NamedTextColor.YELLOW, TextDecoration.BOLD)
+        Component.text("INFINIJUMP", NamedTextColor.YELLOW, TextDecoration.BOLD)
 
 /**
  * A base64-encoded PNG image of the server's favicon shown on clients' server lists.

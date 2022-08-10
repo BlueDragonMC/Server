@@ -20,6 +20,7 @@ import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.JoinConfiguration
 import net.kyori.adventure.text.event.HoverEvent
 import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.Style
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.text.minimessage.MiniMessage
 import net.minestom.server.MinecraftServer
@@ -118,7 +119,7 @@ fun main() {
     }
 
     eventNode.addListener(ServerListPingEvent::class.java) { event ->
-        event.responseData.description = buildComponent {
+        event.responseData.description = (buildComponent {
             val title = Component.text("BlueDragon").withDecoration(TextDecoration.BOLD)
             if (event.pingType == ServerListPingType.OPEN_TO_LAN || (event.connection?.protocolVersion ?: 0) < 713)
                 +title.withColor(BRAND_COLOR_PRIMARY_3)
@@ -132,16 +133,16 @@ fun main() {
                 +(event.responseData.version withColor NamedTextColor.GREEN)
             }
             +("]" withColor NamedTextColor.DARK_GRAY)
+        }).center(92) + Component.newline() + buildComponent {
             if (event.connection != null && event.connection!!.protocolVersion < MinecraftServer.PROTOCOL_VERSION) {
-                +Component.newline()
                 +("Update to Minecraft 1.18.2 to join BlueDragon." withColor NamedTextColor.RED)
                 return@buildComponent
             }
             if (event.pingType != ServerListPingType.OPEN_TO_LAN) { // Newlines are disallowed in Open To LAN pings
-                +Component.newline()
                 +SERVER_NEWS
             }
-        }
+        }.center(92) // 115
+            //Component.text("This string is going to be about 52 characters long, just as a test."))
         event.responseData.favicon = FAVICON
     }
 
