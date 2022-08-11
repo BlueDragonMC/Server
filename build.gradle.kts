@@ -38,6 +38,13 @@ dependencies {
 
     // UnifiedMetrics (available at runtime as an extension)
     compileOnly("dev.cubxity.plugins", "unifiedmetrics-api", "0.3.6")
+
+    // Agones SDK integration
+    implementation("com.github.Cubxity:AgonesKt:0.1.2")
+    implementation("io.grpc:grpc-protobuf:1.48.0")
+    runtimeOnly("io.grpc", "grpc-netty", "1.37.0")
+    runtimeOnly("io.grpc", "grpc-kotlin-stub", "1.3.0")
+    runtimeOnly("com.google.protobuf:protobuf-kotlin:3.21.3")
 }
 
 tasks.test {

@@ -3,6 +3,11 @@ package com.bluedragonmc.server
 import com.bluedragonmc.server.bootstrap.*
 import com.bluedragonmc.server.game.Lobby
 import com.bluedragonmc.server.bootstrap.PerInstanceTabList
+import com.bluedragonmc.server.module.database.DatabaseModule
+import dev.cubxity.libs.agones.AgonesSDK
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.launch
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextDecoration
 import net.minestom.server.MinecraftServer
@@ -10,15 +15,17 @@ import net.minestom.server.event.player.PlayerSpawnEvent
 import net.minestom.server.utils.NamespaceID
 import net.minestom.server.world.DimensionType
 import org.slf4j.LoggerFactory
+import java.time.Duration
 
 const val NAMESPACE = "bluedragon"
 lateinit var lobby: Game
 private val logger = LoggerFactory.getLogger("ServerKt")
 
-fun main() {
+val agones = AgonesSDK()
+
+suspend fun main() {
 
     logger.info("Starting Minecraft server in environment ${Environment.current::class.simpleName}")
-
     val minecraftServer = MinecraftServer.init()
     val eventNode = MinecraftServer.getGlobalEventHandler()
 
@@ -67,4 +74,28 @@ fun main() {
 
     // Start the server & bind to port 25565
     minecraftServer.start("0.0.0.0", 25565)
+
+    val healthFlow = flow {
+        while(true) {
+            emit(Unit)
+            delay(1_000)
+        }
+    }
+
+    if (Environment.current !is Environment.DevelopmentEnvironment) {
+        DatabaseModule.IO.launch {
+            agones.health(healthFlow)
+        }
+        DatabaseModule.IO.launch {
+            agones.ready()
+            logger.info("Agones - Ready")
+
+            while (true) {
+                if (MinecraftServer.getConnectionManager().onlinePlayers.isNotEmpty()) {
+                    agones.reserve(Duration.ofSeconds(20))
+                }
+                delay(2_000)
+            }
+        }
+    }
 }
