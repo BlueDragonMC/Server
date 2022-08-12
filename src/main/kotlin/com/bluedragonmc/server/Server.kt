@@ -82,6 +82,9 @@ suspend fun main() {
         }
     }
 
+    var lastReservedTime = 0L
+    val reserveThreshold = 10_000L // Reserve the server every 10 seconds while players are online
+
     if (Environment.current !is Environment.DevelopmentEnvironment) {
         DatabaseModule.IO.launch {
             agones.health(healthFlow)
@@ -91,7 +94,8 @@ suspend fun main() {
             logger.info("Agones - Ready")
 
             while (true) {
-                if (MinecraftServer.getConnectionManager().onlinePlayers.isNotEmpty()) {
+                if (MinecraftServer.getConnectionManager().onlinePlayers.isNotEmpty() && System.currentTimeMillis() - lastReservedTime > reserveThreshold) {
+                    lastReservedTime = System.currentTimeMillis()
                     agones.reserve(Duration.ofSeconds(20))
                 }
                 delay(2_000)
