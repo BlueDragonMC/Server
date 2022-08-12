@@ -6,7 +6,6 @@ import com.bluedragonmc.messagingsystem.message.Message
 import com.bluedragonmc.messagingsystem.message.RPCErrorMessage
 import com.bluedragonmc.server.Environment
 import com.bluedragonmc.server.Game
-import com.bluedragonmc.server.agones
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.database.DatabaseModule
 import com.bluedragonmc.server.module.instance.InstanceModule
@@ -16,7 +15,6 @@ import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.minimessage.MiniMessage
 import net.kyori.adventure.title.TitlePart
 import net.minestom.server.MinecraftServer
-import net.minestom.server.command.CommandSender
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import org.slf4j.LoggerFactory
@@ -24,6 +22,7 @@ import java.util.*
 import java.util.function.Consumer
 import kotlin.concurrent.timer
 import kotlin.reflect.KClass
+import kotlin.system.exitProcess
 
 class MessagingModule : GameModule() {
 
@@ -70,13 +69,12 @@ class MessagingModule : GameModule() {
 
         init {
             DatabaseModule.IO.launch {
-                if (!Environment.isDev())
-                    containerId = UUID.fromString(agones.getGameServer().objectMeta.uid)
-                else if (System.getenv("PUFFIN_CONTAINER_ID") != null)
-                    containerId = UUID.fromString(System.getenv("PUFFIN_CONTAINER_ID"))
-                else {
-                    containerId = UUID.randomUUID()
-                    logger.warn("Container ID not found. If this is not a development environment, this is a severe error.")
+                try {
+                    containerId = Environment.current.getContainerId()
+                } catch (e: Throwable) {
+                    e.printStackTrace()
+                    logger.error("Severe error: failed to gather contaier ID from Environment.")
+                    exitProcess(1)
                 }
                 publish(PingMessage(containerId, emptyMap()))
                 logger.info("Published ping message.")
