@@ -143,14 +143,16 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
             }
         })
 
+        MinecraftServer.getSchedulerManager().scheduleNextTick {
+            repeat(3) { addNewBlock() }
+        }
+
         ready()
     }
 
     private val blocks = mutableListOf(
         ParkourBlock(this, getInstance(), 0L, spawnPosition.sub(0.0, 1.0, 0.0)).apply { create() }
-    ).also {
-        repeat(3) { addNewBlock() }
-    }
+    )
 
     private fun handleTick(ticks: Long) {
         blocks.forEach { block ->
