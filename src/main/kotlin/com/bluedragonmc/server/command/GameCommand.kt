@@ -2,8 +2,11 @@ package com.bluedragonmc.server.command
 
 import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.module.gameplay.TeamModule
+import com.bluedragonmc.server.module.instance.InstanceModule
 import com.bluedragonmc.server.module.minigame.WinModule
+import com.bluedragonmc.server.utils.withColor
 import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.event.HoverEvent
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.title.Title
@@ -36,5 +39,35 @@ class GameCommand(name: String, usageString: String, vararg aliases: String?) : 
             game.callEvent(GameStartEvent(game))
             sender.sendMessage(formatMessage("Game started successfully."))
         }.requireInGame()
+    }
+
+    subcommand("module") {
+        subcommand("list") {
+            syntax {
+                sender.sendMessage(formatMessage("All modules ({}):", game.modules.size))
+                for (module in game.modules) {
+                    sender.sendMessage(formatMessage("- {}", module.javaClass.simpleName).hoverEvent(HoverEvent.showText(module.toString() withColor NamedTextColor.GRAY)))
+                }
+            }.requireInGame()
+        }
+        subcommand("unload") {
+            val moduleArgument by WordArgument
+            syntax(moduleArgument) {
+                val modToRemove = get(moduleArgument)
+                val unremovableModules = listOf("DatabaseModule", "MessagingModule")
+                for (module in game.modules) {
+                    if (module.javaClass.simpleName == modToRemove) {
+                        if (unremovableModules.contains(modToRemove) || module is InstanceModule) {
+                            sender.sendMessage(formatErrorMessage("This module cannot be unloaded."))
+                            return@syntax
+                        }
+                        game.unregister(module)
+                        sender.sendMessage(formatMessage("{} was successfully unloaded.", module.javaClass.simpleName))
+                        return@syntax
+                    }
+                }
+                sender.sendMessage(formatErrorMessage("Module not found."))
+            }
+        }
     }
 })
