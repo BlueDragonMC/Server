@@ -52,7 +52,7 @@ fun Component.clickEvent(action: ClickEvent.Action, value: String): Component {
  */
 fun Component.center(centerPx: Int = 154): Component {
     var componentSizePx = 0
-    for (i in this.iterateChildren()) {
+    for (i in (Component.empty() + this).iterateChildren()) {
         val isBold = i.style().hasDecoration(TextDecoration.BOLD)
         for (c in i.toPlainText()) {
             componentSizePx +=
@@ -60,11 +60,13 @@ fun Component.center(centerPx: Int = 154): Component {
                 else DefaultFontInfo.getDefaultFontInfo(c).length
         }
     }
+    println("Size of ${this.toPlainText()} is $componentSizePx px")
     val halfedSize = componentSizePx / 2
     val toCompensate = centerPx - halfedSize
     val spaceLength = DefaultFontInfo.SPACE.length + 1
     var compensated = 0
     val sb = StringBuilder()
+    println("Adding $toCompensate px")
     while (compensated < toCompensate) {
         sb.append(" ")
         compensated += spaceLength

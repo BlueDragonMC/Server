@@ -135,7 +135,7 @@ fun main() {
             +("]" withColor NamedTextColor.DARK_GRAY)
         }).center(92) + Component.newline() + buildComponent {
             if (event.connection != null && event.connection!!.protocolVersion < MinecraftServer.PROTOCOL_VERSION) {
-                +("Update to Minecraft 1.18.2 to join BlueDragon." withColor NamedTextColor.RED)
+                +("Update to Minecraft ${MinecraftServer.VERSION_NAME} to join BlueDragon." withColor NamedTextColor.RED)
                 return@buildComponent
             }
             if (event.pingType != ServerListPingType.OPEN_TO_LAN) { // Newlines are disallowed in Open To LAN pings
