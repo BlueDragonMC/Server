@@ -21,18 +21,24 @@ object AgonesIntegration : Bootstrap(Environment.ProductionEnvironment::class) {
     // Every time the server is reserved, keep it reserved for 20 seconds.
     private const val RESERVATION_TIME = 20_000L
 
+    // The amount of milliseconds in between health check pings
+    private const val HEALTH_CHECK_INTERVAL = 1_000L
+
     override fun hook(eventNode: EventNode<Event>) {
 
         var lastReservedTime = 0L
 
+        val healthFlow = flow {
+            while(true) {
+                // Send a health message every second
+                emit(Unit)
+                delay(HEALTH_CHECK_INTERVAL)
+            }
+        }
+
         DatabaseModule.IO.launch {
-            sdk.health(flow {
-                while (true) {
-                    // Send a health message every second
-                    emit(Unit)
-                    delay(1_000)
-                }
-            })
+            logger.info("Agones - Starting health check pings")
+            sdk.health(healthFlow)
         }
 
         DatabaseModule.IO.launch {
