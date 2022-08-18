@@ -124,6 +124,16 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
                 queue.queue(it.player, GameType("Infinijump", null, null))
             }).lookAt(center)
 
+            // 8.5, 62.5, -30.5, 0.0, 0.0 FAR RIGHT
+            addNPC(instance = this@Lobby.getInstance(),
+                position = Pos(8.5, 62.5, -30.5),
+                customName = Component.text("ArenaPvP", NamedTextColor.YELLOW, TextDecoration.BOLD),
+                skin = NPCModule.NPCSkins.BLUE_KNIGHT.skin,
+                lookAtPlayer = false,
+                interaction = {
+                    queue.queue(it.player, GameType("ArenaPvP", null, null))
+                }).lookAt(center)
+
             // GAME SELECT (left)
             addNPC(instance = this@Lobby.getInstance(),
                 position = Pos(-2.5, 61.0, -18.5),
@@ -144,6 +154,7 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
                     queue.queue(it.player, GameType(Queue.gameClasses.keys.random(), null, null))
                 })
 
+            // SHOPKEEPER
             addNPC(instance = this@Lobby.getInstance(),
                 position = Pos(-12.5, 61.0, -6.5, -145.0f, 0.0f),
                 customName = Component.text("Shop", NamedTextColor.YELLOW, TextDecoration.BOLD),

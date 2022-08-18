@@ -24,7 +24,7 @@ import net.minestom.server.item.Material
  * Use the `giveKit` function to manually give a player their selected kit.
  * When the module is unloaded, players keep their kits.
  */
-class KitsModule(val showMenu: Boolean = false, val giveKitsOnStart: Boolean = true, val selectableKits: List<Kit>) : GameModule() {
+class KitsModule(val showMenu: Boolean = false, val giveKitsOnStart: Boolean = true, val giveKitsOnSelect: Boolean = false, val selectableKits: List<Kit>) : GameModule() {
 
     override val dependencies = listOf(GuiModule::class)
 
@@ -58,6 +58,7 @@ class KitsModule(val showMenu: Boolean = false, val giveKitsOnStart: Boolean = t
                 }) {
                     selectedKits[this.player] = selectableKit
                     this.player.sendMessage(Component.text("You have selected the ", NamedTextColor.GREEN).append(selectableKit.name).append(Component.text(" kit.", NamedTextColor.GREEN)))
+                    if (giveKitsOnSelect) giveKit(this.player, selectableKit)
                     menu.close(this.player)
                     parent.callEvent(KitSelectedEvent(parent, this.player, selectableKit))
                 }
@@ -90,6 +91,8 @@ class KitsModule(val showMenu: Boolean = false, val giveKitsOnStart: Boolean = t
     fun giveKit(player: Player) {
         giveKit(player, selectedKits.getOrDefault(player, selectableKits[0]))
     }
+
+    fun getSelectedKit(player: Player): Kit = selectedKits.getOrDefault(player, selectableKits[0])
 
     data class Kit(val name: Component, val description: String = "", val icon: Material = Material.DIAMOND, val items: HashMap<Int, ItemStack>)
 
