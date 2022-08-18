@@ -1,7 +1,7 @@
-# syntax = docker/dockerfile:1.2
-# This Dockerfile must be run with BuildKit enabled
-# see https://docs.docker.com/engine/reference/builder/#buildkit
-# for the Dockerfile that is run on our CI/CD pipeline, see production.Dockerfile
+# syntax = docker/dockerfile:1
+# This Dockerfile runs on the CI/CD pipeline when the Server is being deployed.
+# It is much slower because `RUN mount=type=cache` is not supported by BuildKit,
+# Buildah, or Kaniko in a Kubernetes cluster (docker-in-docker environment)
 
 # Build the project into an executable JAR
 FROM gradle:jdk17 as build
@@ -9,8 +9,7 @@ FROM gradle:jdk17 as build
 COPY . /work
 WORKDIR /work
 # Run gradle in the /work directory
-RUN --mount=target=/home/gradle/.gradle,type=cache \
-    /usr/bin/gradle --console=rich --warn --stacktrace --no-daemon --build-cache --configuration-cache build
+RUN /usr/bin/gradle --console=rich --warn --stacktrace --no-daemon build
 
 # Run the built JAR and expose port 25565
 FROM eclipse-temurin:17
