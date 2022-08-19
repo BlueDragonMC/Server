@@ -24,7 +24,8 @@ dependencies {
     // Originally: a04012d9bf
     // July 9th, 2022: e713cf62a7
     // July 23rd, 2022: d596992c0e
-    implementation("com.github.Minestom:Minestom:d596992c0e")
+    // August 19, 2022: f5f323fef9
+    implementation("com.github.Minestom:Minestom:f5f323fef9")
 
     // MiniMessage
     implementation("net.kyori:adventure-text-minimessage:4.11.0")
