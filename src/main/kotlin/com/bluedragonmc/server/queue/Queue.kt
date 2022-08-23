@@ -16,6 +16,7 @@ abstract class Queue {
             "Infection" to ::InfectionGame,
             "Infinijump" to ::InfinijumpGame,
             "PvPMaster" to ::PvpMasterGame,
+            "ArenaPvP" to ::ArenaPvpGame
         )
     }
 

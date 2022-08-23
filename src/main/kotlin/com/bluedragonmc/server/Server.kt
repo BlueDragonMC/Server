@@ -2,6 +2,7 @@ package com.bluedragonmc.server
 
 import com.bluedragonmc.server.bootstrap.*
 import com.bluedragonmc.server.game.Lobby
+import com.bluedragonmc.server.bootstrap.PerInstanceTabList
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextDecoration
 import net.minestom.server.MinecraftServer
@@ -17,6 +18,7 @@ private val logger = LoggerFactory.getLogger("ServerKt")
 fun main() {
 
     logger.info("Starting Minecraft server in environment ${Environment.current::class.simpleName}")
+
     val minecraftServer = MinecraftServer.init()
     val eventNode = MinecraftServer.getGlobalEventHandler()
 
@@ -65,6 +67,6 @@ fun main() {
 
     // Start the server & bind to port 25565
     minecraftServer.start("0.0.0.0", 25565)
-
+    
     if (AgonesIntegration.canHook()) AgonesIntegration.hook(eventNode)
 }

@@ -15,6 +15,7 @@ import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.minimessage.MiniMessage
 import net.kyori.adventure.title.TitlePart
 import net.minestom.server.MinecraftServer
+import net.minestom.server.command.CommandSender
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import org.slf4j.LoggerFactory
@@ -67,6 +68,8 @@ class MessagingModule : GameModule() {
             else containerIdWaitingActions.add(consumer)
         }
 
+        private val ZERO_UUID = UUID(0L, 0L)
+
         init {
             DatabaseModule.IO.launch {
                 try {
@@ -81,7 +84,6 @@ class MessagingModule : GameModule() {
                 containerIdWaitingActions.forEach { it.accept(containerId) }
                 containerIdWaitingActions.clear()
             }
-
             subscribe(SendChatMessage::class) { message ->
                 val target = if (message.targetPlayer == ZERO_UUID) MinecraftServer.getCommandManager().consoleSender
                 else message.targetPlayer.asPlayer() ?: return@subscribe
