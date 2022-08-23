@@ -42,7 +42,7 @@ class SkyWarsGame(mapName: String) : Game("SkyWars", mapName) {
         use(WinModule(WinModule.WinCondition.LAST_TEAM_ALIVE) { player, winningTeam ->
             if (player in winningTeam.players) 250 else 25
         })
-        use(MOTDModule(Component.text("Each team spawns on their own island.\n" + "Collect items from your chests, and collect better\n" + "items at the middle island. Last team standing wins!")))
+        use(MOTDModule(Component.translatable("game.skywars.motd")))
         use(InstantRespawnModule())
         use(ItemDropModule(dropBlocksOnBreak = true, dropAllOnDeath = true))
         use(CustomDeathMessageModule())

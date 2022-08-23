@@ -1,6 +1,5 @@
 package com.bluedragonmc.server.game
 
-import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.GameStartEvent
@@ -75,7 +74,7 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
             }
         }))
         use(SpawnpointModule(SpawnpointModule.TeamDatabaseSpawnpointProvider()))
-        use(MOTDModule(Component.text("Collect resources at generators around the map.\n" + "When your team's bed is broken, you cannot respawn.")))
+        use(MOTDModule(Component.translatable("game.bedwars.motd")))
         use(PlayerResetModule(defaultGameMode = GameMode.SURVIVAL))
         use(ItemGeneratorsModule())
         use(AwardsModule())
@@ -174,7 +173,7 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
                     if (team != null) {
                         if (team == parent.getModule<TeamModule>().getTeam(event.player)) {
                             event.player.sendMessage(
-                                Component.text("You cannot break your own bed!", NamedTextColor.RED)
+                                Component.translatable("game.bedwars.error.break_own_bed", NamedTextColor.RED)
                             )
                             event.isCancelled = true
                             return@addListener
@@ -182,12 +181,10 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
                         if (!bedWarsTeamInfo.containsKey(team)) bedWarsTeamInfo[team] = BedWarsTeamInfo(false)
                         else bedWarsTeamInfo[team]!!.bedIntact = false
                         sidebarTeamsSection.update()
-                        sendMessage((
-                            team.name + Component.text(
-                                " bed was broken by ", BRAND_COLOR_PRIMARY_2
-                            ) + event.player.name).surroundWithSeparators()
-                        )
                         for (player in parent.players) {
+                            player.sendMessage(
+                                Component.translatable("game.bedwars.bed_broken", team.name, event.player.name).surroundWithSeparators()
+                            )
                             if (!team.players.contains(player)) {
                                 player.playSound(otherTeamBedDestroyedSound)
                             } else {

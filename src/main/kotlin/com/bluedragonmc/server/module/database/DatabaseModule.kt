@@ -43,7 +43,7 @@ class DatabaseModule : GameModule() {
 
         private val client: CoroutineClient by lazy {
             KMongo.createClient(MongoClientSettings.builder()
-                .applyConnectionString(ConnectionString("mongodb://${Environment.mongoHostname}"))
+                .applyConnectionString(ConnectionString("mongodb://${Environment.current.mongoHostname}"))
                 .applyToSocketSettings { block ->
                     block.connectTimeout(5, TimeUnit.SECONDS)
                 }
@@ -107,8 +107,7 @@ class DatabaseModule : GameModule() {
                     } catch (e: Throwable) {
                         logger.error("Player data for ${player.username} failed to load.")
                         MinecraftServer.getExceptionManager().handleException(e)
-                        player.kick(Component.text("Your player data was not loaded! Wait a moment and try to reconnect.",
-                            NamedTextColor.RED))
+                        player.kick(Component.translatable("module.database.data_load_fail", NamedTextColor.RED))
                     }
                     if (player.username != player.data.username || player.data.username.isBlank()) {
                         // Keep an up-to-date record of player usernames

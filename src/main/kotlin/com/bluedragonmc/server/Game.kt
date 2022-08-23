@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.*
 import kotlin.concurrent.timer
+import kotlin.reflect.jvm.jvmName
 
 open class Game(val name: String, val mapName: String, val mode: String? = null) : PacketGroupingAudience {
 
@@ -273,16 +274,15 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
         // the NotifyInstanceRemovedMessage is published when the MessagingModule is unregistered
         while (modules.isNotEmpty()) unregister(modules.first())
         if (queueAllPlayers) {
-            sendActionBar(Component.text("This game is ending. You will be sent to a new game shortly.",
-                NamedTextColor.GREEN))
             players.forEach {
-                queue.queue(it, GameType(name, null, null))
+                it.sendMessage(Component.translatable("game.status.ending", NamedTextColor.GREEN))
+                Environment.current.queue.queue(it, GameType(name, null, null))
             }
         }
     }
 
     override fun toString(): String {
-        val modules = modules.joinToString { it::class.simpleName ?: "<Anonymous module>" }
+        val modules = modules.joinToString { it::class.simpleName ?: it::class.jvmName }
         val players = players.joinToString { it.username }
         return "Game(name='$name', mapName='$mapName', modules=$modules, players=$players, instanceId=$instanceId, maxPlayers=$maxPlayers, isJoinable=$isJoinable, state=$state)"
     }

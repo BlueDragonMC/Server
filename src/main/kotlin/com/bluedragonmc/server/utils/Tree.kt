@@ -25,13 +25,13 @@ open class Node<T>(var value: T?) {
     }
 
     fun maxDepth(): Int {
-        return if(children.isEmpty()) 0
+        return if (children.isEmpty()) 0
         else 1 + children.maxOf { it.maxDepth() }
     }
 
     fun elementsAtDepth(depth: Int): List<Node<T>> {
         val list = mutableListOf<Node<T>>()
-        dfs { node, i -> if(i == depth) list.add(node) }
+        dfs { node, i -> if (i == depth) list.add(node) }
         return list
     }
 
@@ -58,7 +58,7 @@ open class Node<T>(var value: T?) {
         return buildString {
             append("Tree ${this@Node::class.simpleName}@${this.hashCode()}:\n")
             dfs { node, depth ->
-                if(node is Root) return@dfs
+                if (node is Root) return@dfs
                 append("${"\t".repeat(depth - 1)} ${symbols[depth % symbols.size]} ${node.value}\n")
             }
         }

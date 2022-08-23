@@ -5,6 +5,6 @@ class PingCommand(name: String, usageString: String, vararg aliases: String) :
         usage(usageString)
 
         syntax {
-            sender.sendMessage(formatMessage("Your ping is: ${player.latency}ms"))
+            sender.sendMessage(formatMessageTranslated("command.ping.response", player.latency))
         }.requirePlayers()
     })

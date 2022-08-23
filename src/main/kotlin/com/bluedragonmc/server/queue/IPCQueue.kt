@@ -17,7 +17,7 @@ object IPCQueue : Queue() {
     private val queuedPlayers = mutableListOf<Player>()
 
     override fun queue(player: Player, gameType: GameType) {
-        player.sendMessage(Component.text("Adding you to the queue...", NamedTextColor.DARK_GRAY))
+        player.sendMessage(Component.translatable("queue.adding", NamedTextColor.DARK_GRAY))
         if(queuedPlayers.contains(player)) MessagingModule.publish(RequestRemoveFromQueueMessage(player.uuid))
         else MessagingModule.publish(RequestAddToQueueMessage(player.uuid, gameType))
     }
@@ -42,10 +42,10 @@ object IPCQueue : Queue() {
         MessagingModule.subscribe(SendPlayerToInstanceMessage::class) { message ->
             val instance = MinecraftServer.getInstanceManager().getInstance(message.instance) ?: return@subscribe
             val player = MessagingModule.findPlayer(message.player) ?: return@subscribe
-            player.sendMessage(Component.text("Sending you to ${message.instance}...", NamedTextColor.DARK_GRAY))
+            player.sendMessage(Component.translatable("queue.sending", NamedTextColor.DARK_GRAY, Component.text(message.instance.toString())))
             logger.info("Sending player ${player.username} to instance ${message.instance}.")
             val game = Game.findGame(instance.uniqueId) ?: run {
-                player.sendMessage(Component.text("There was an error sending you to the instance! (No game found)", NamedTextColor.RED))
+                player.sendMessage(Component.translatable("queue.error_sending", NamedTextColor.RED, Component.translatable("queue.error.no_game_found")))
                 return@subscribe
             }
             game.addPlayer(player)

@@ -12,7 +12,7 @@ class UpdateCommand(name: String, usageString: String, vararg aliases: String) :
     val branchArgument by StringArgument
 
     syntax(repoArgument, branchArgument) {
-        sender.sendMessage(formatMessage("Requesting update of repo {}:{}", get(repoArgument), get(branchArgument)))
+        sender.sendMessage(formatMessageTranslated("command.update.response", get(repoArgument), get(branchArgument)))
         MessagingModule.publish(RequestUpdateMessage(
             (sender as? Player)?.uuid ?: UUID(0L, 0L),
             get(repoArgument),

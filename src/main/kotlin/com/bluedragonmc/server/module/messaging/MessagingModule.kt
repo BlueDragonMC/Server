@@ -13,6 +13,7 @@ import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.minimessage.MiniMessage
 import net.kyori.adventure.title.TitlePart
 import net.minestom.server.MinecraftServer
+import net.minestom.server.command.CommandSender
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import org.slf4j.LoggerFactory
@@ -42,47 +43,48 @@ class MessagingModule : GameModule() {
         fun UUID.asPlayer() = findPlayer(this)
 
         fun publish(message: Message) {
-            if(!Environment.isDev()) client.publish(message)
+            if (!Environment.current.messagingDisabled) client.publish(message)
         }
 
         suspend fun send(message: Message): Message {
-            return if(!Environment.isDev()) client.publishAndReceive(message)
+            return if (!Environment.current.messagingDisabled) client.publishAndReceive(message)
             else RPCErrorMessage("Messaging disabled")
         }
 
         fun <T : Message> subscribe(type: KClass<T>, listener: (T) -> Unit) {
-            if(!Environment.isDev()) client.subscribe(type, listener)
-        }
-        fun <T : Message> consume(type: KClass<T>, listener: (T) -> Message) {
-            if(!Environment.isDev()) client.subscribeRPC(type, listener)
+            if (!Environment.current.messagingDisabled) client.subscribe(type, listener)
         }
 
+        fun <T : Message> consume(type: KClass<T>, listener: (T) -> Message) {
+            if (!Environment.current.messagingDisabled) client.subscribeRPC(type, listener)
+        }
+
+        private val ZERO_UUID = UUID(0L, 0L)
+
         init {
-            publish(
-                PingMessage(
-                    containerId, emptyMap()
-                )
-            )
+            publish(PingMessage(containerId, emptyMap()))
             logger.info("Published ping message.")
             subscribe(SendChatMessage::class) { message ->
-                val player = message.targetPlayer.asPlayer() ?: return@subscribe
+                val target = if (message.targetPlayer == ZERO_UUID) MinecraftServer.getCommandManager().consoleSender
+                else message.targetPlayer.asPlayer() ?: return@subscribe
                 val msg = MiniMessage.miniMessage().deserialize(message.message)
                 when (message.type) {
-                    ChatType.CHAT -> player.sendMessage(msg)
-                    ChatType.ACTION_BAR -> player.sendActionBar(msg)
-                    ChatType.TITLE -> player.sendTitlePart(TitlePart.TITLE, msg)
-                    ChatType.SUBTITLE -> player.sendTitlePart(TitlePart.SUBTITLE, msg)
-                    ChatType.SOUND -> player.playSound(
-                        Sound.sound(
-                            Key.key(message.message), Sound.Source.PLAYER, 1f, 1f
-                        )
-                    )
+                    ChatType.CHAT -> target.sendMessage(msg)
+                    ChatType.ACTION_BAR -> target.sendActionBar(msg)
+                    ChatType.TITLE -> target.sendTitlePart(TitlePart.TITLE, msg)
+                    ChatType.SUBTITLE -> target.sendTitlePart(TitlePart.SUBTITLE, msg)
+                    ChatType.SOUND -> target.playSound(Sound.sound(Key.key(message.message),
+                        Sound.Source.PLAYER,
+                        1f,
+                        1f))
                 }
             }
             timer("server-sync", daemon = true, period = 30_000) {
                 // Every 30 seconds, send a synchronization message
                 publish(ServerSyncMessage(containerId, Game.games.mapNotNull {
-                    RunningGameInfo(it.instanceId ?: return@mapNotNull null, GameType(it.name, it.mode, it.mapName), it.getGameStateUpdateMessage())
+                    RunningGameInfo(it.instanceId ?: return@mapNotNull null,
+                        GameType(it.name, it.mode, it.mapName),
+                        it.getGameStateUpdateMessage())
                 }))
             }
         }
@@ -92,11 +94,7 @@ class MessagingModule : GameModule() {
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         instanceId = parent.getInstance().uniqueId
-        publish(
-            NotifyInstanceCreatedMessage(
-                containerId, instanceId, GameType(parent.name, null, parent.mapName)
-            )
-        )
+        publish(NotifyInstanceCreatedMessage(containerId, instanceId, GameType(parent.name, null, parent.mapName)))
     }
 
     override fun deinitialize() {

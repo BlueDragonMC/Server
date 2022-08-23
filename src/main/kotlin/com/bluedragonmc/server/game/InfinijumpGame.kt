@@ -11,7 +11,6 @@ import com.bluedragonmc.server.module.minigame.CountdownModule
 import com.bluedragonmc.server.utils.SoundUtils
 import com.bluedragonmc.server.utils.packet.GlowingEntityUtils
 import com.bluedragonmc.server.utils.packet.PacketUtils
-import com.bluedragonmc.server.utils.withColor
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -76,9 +75,11 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
                 else -> return
             }
             field = value
-            sendMessage("Difficulty increased to $title. Blocks will disappear faster." withColor color)
             playSound(Sound.sound(SoundEvent.ENTITY_ENDER_DRAGON_GROWL, Sound.Source.PLAYER, 1.0f, 1.0f))
-            players.forEach { it.level = value }
+            players.forEach {
+                it.sendMessage(Component.translatable("game.infinijump.difficulty_increased", color, Component.text(title)))
+                it.level = value
+            }
         }
     override val maxPlayers = 1
 

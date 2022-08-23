@@ -56,11 +56,7 @@ class InfectionGame(mapName: String) : Game("Infection", mapName) {
             )
         )
         use(MaxHealthModule(1.0F))
-        use(MOTDModule(Component.text(
-            "Use the first 20 seconds to hide.\n" +
-                    "After that, one random player will be chosen as infected.\n" +
-                    "The last player to avoid being infected wins!"
-        )))
+        use(MOTDModule(Component.translatable("game.infection.motd")))
         use(NaturalRegenerationModule())
         use(PlayerResetModule(defaultGameMode = GameMode.ADVENTURE))
         val sidebarModule = SidebarModule(name)

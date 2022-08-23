@@ -29,12 +29,12 @@ val BRAND_COLOR_PRIMARY_3 = TextColor.color(0x3336f4) // Very dark
 /**
  * An alternate color, used for the title in the scoreboard and some chat messages.
  */
-val ALT_COLOR_1 = NamedTextColor.YELLOW
+val ALT_COLOR_1: TextColor = NamedTextColor.YELLOW
 
 /**
  * A secondary alternate color that complements [ALT_COLOR_1].
  */
-val ALT_COLOR_2 = NamedTextColor.GOLD
+val ALT_COLOR_2: TextColor = NamedTextColor.GOLD
 
 /**
  * The hostname of the server, used in the scoreboard footer.

@@ -1,12 +1,14 @@
 package com.bluedragonmc.server.command
 
 import com.bluedragonmc.messages.*
+import com.bluedragonmc.server.CustomPlayer
+import com.bluedragonmc.server.module.database.Permissions
 import com.bluedragonmc.server.module.messaging.MessagingModule
 import net.kyori.adventure.text.minimessage.MiniMessage
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder
 
-class PartyCommand(name: String, usage: String, vararg aliases: String) : BlueDragonCommand(name, aliases, null, block = {
-    requirePlayers()
+class PartyCommand(name: String, usageString: String, vararg aliases: String) : BlueDragonCommand(name, aliases, null, block = {
+    requirePlayers() // All subcommands require a player
+    usage(usageString)
     /*
     invite <player>
     kick <player>
@@ -33,9 +35,14 @@ class PartyCommand(name: String, usage: String, vararg aliases: String) : BlueDr
     subcommand("chat") {
         val chatArgument by StringArrayArgument
         syntax(chatArgument) {
-            // Escape the chat message to prevent players using MiniMessage tags in party chat messages
-            val component = MiniMessage.miniMessage().deserialize("<msg>", Placeholder.unparsed("msg", get(chatArgument).joinToString(separator = " ")))
-            MessagingModule.publish(PartyChatMessage(player.uuid, MiniMessage.miniMessage().serialize(component)))
+            val msg = if(!Permissions.hasPermission((player as CustomPlayer).data, "chat.minimessage")) {
+                // Escape the chat message to prevent players using MiniMessage tags in party chat messages
+                MiniMessage.miniMessage().escapeTags(get(chatArgument).joinToString(" "))
+            } else {
+                // The player is allowed to use MiniMessage
+                get(chatArgument).joinToString(" ")
+            }
+            MessagingModule.publish(PartyChatMessage(player.uuid, msg))
         }
     }
 

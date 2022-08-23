@@ -47,6 +47,8 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
         "Have you seen Joe?"
     )
 
+    private val queue = Environment.current.queue
+
     init {
         // World modules
         use(AnvilFileMapProviderModule(Paths.get("worlds/$name/$mapName")))
@@ -116,13 +118,13 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
 
             // -7.5, 62.5, -30.5, 0.0, 0.0 FAR LEFT
             addNPC(instance = this@Lobby.getInstance(),
-            position = Pos(-7.5, 62.5, -30.5),
-            customName = Component.text("Infinijump", NamedTextColor.YELLOW, TextDecoration.BOLD),
-            skin = NPCModule.NPCSkins.COOL_THING.skin,
-            lookAtPlayer = false,
-            interaction = {
-                queue.queue(it.player, GameType("Infinijump", null, null))
-            }).lookAt(center)
+                position = Pos(-7.5, 62.5, -30.5),
+                customName = Component.text("Infinijump", NamedTextColor.YELLOW, TextDecoration.BOLD),
+                skin = NPCModule.NPCSkins.COOL_THING.skin,
+                lookAtPlayer = false,
+                interaction = {
+                    queue.queue(it.player, GameType("Infinijump", null, null))
+                }).lookAt(center)
 
             // 8.5, 62.5, -30.5, 0.0, 0.0 FAR RIGHT
             addNPC(instance = this@Lobby.getInstance(),
@@ -135,6 +137,7 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
                 }).lookAt(center)
 
             // GAME SELECT (left)
+            // todo: waiting on https://github.com/Minestom/Minestom/pull/1275 to translate NPC names
             addNPC(instance = this@Lobby.getInstance(),
                 position = Pos(-2.5, 61.0, -18.5),
                 customName = Component.text("All Games", NamedTextColor.YELLOW, TextDecoration.BOLD),
@@ -162,8 +165,8 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
                 lookAtPlayer = false,
                 enableFullSkin = false,
                 interaction = {
-                    it.player.sendMessage("Coming soon..." withColor ALT_COLOR_1)
-            })
+                    it.player.sendMessage(Component.translatable("lobby.shop.coming_soon", ALT_COLOR_1))
+                })
         }
 
         use(object : GameModule() {
@@ -186,30 +189,36 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
         use(GuiModule())
 
         val tips = CircularList(listOf(
-            Component.text("Click to join our community forum for announcements, giveaways, events, and discussions!", BRAND_COLOR_PRIMARY_2).clickEvent(
+            Component.translatable("lobby.tips.forum", BRAND_COLOR_PRIMARY_2).clickEvent(
                 ClickEvent.openUrl("https://bluedragonmc.com")),
-            Component.text("Click to join our Discord server for announcements, giveaways, events, discussions, and sneak peeks!", BRAND_COLOR_PRIMARY_2).clickEvent(
+            Component.translatable("lobby.tips.discord", BRAND_COLOR_PRIMARY_2).clickEvent(
                 ClickEvent.openUrl("https://discord.gg/3gvSPdW")),
-            ("Be sure to try out our newest game: " withColor BRAND_COLOR_PRIMARY_2) +
-                    ("Infinijump" withColor BRAND_COLOR_PRIMARY_1) +
-                    ("!" withColor BRAND_COLOR_PRIMARY_2),
-            "Did you know: You can now double jump in the lobby!" withColor BRAND_COLOR_PRIMARY_2,
-            "Did you know: BlueDragon started as a Minecraft clans server." withColor BRAND_COLOR_PRIMARY_2,
-            "Tip: don't go in the blue bus on the Airport map in PvPMaster." withColor BRAND_COLOR_PRIMARY_2,
+            Component.translatable("lobby.tips.newest_game",
+                BRAND_COLOR_PRIMARY_2,
+                Component.text("Infinijump", BRAND_COLOR_PRIMARY_1)),
+            Component.translatable("lobby.tips.extra.1", BRAND_COLOR_PRIMARY_2),
+            Component.translatable("lobby.tips.extra.2", BRAND_COLOR_PRIMARY_2),
+            Component.translatable("lobby.tips.extra.3", BRAND_COLOR_PRIMARY_2),
         ).shuffled())
         var index = 0
         MinecraftServer.getSchedulerManager().buildTask {
-            sendMessage(tips[index++].surroundWithSeparators())
+            getInstance().players.forEach {
+                it.sendMessage(tips[index].surroundWithSeparators())
+            }
+            ++index
             playSound(Sound.sound(SoundEvent.BLOCK_NOTE_BLOCK_PLING, Sound.Source.MASTER, 1.0F, 1.0F))
-        }.repeat(Duration.ofMinutes(5
-        )).schedule()
+        }.repeat(Duration.ofMinutes(5)).schedule()
 
-        Hologram(getInstance(), Pos(16.975, 63.65, 0.0), Component.text("World Tour Parkour", NamedTextColor.GREEN, TextDecoration.BOLD), true)
+        Hologram(getInstance(),
+            Pos(16.975, 63.65, 0.0),
+            Component.text("World Tour Parkour", NamedTextColor.GREEN, TextDecoration.BOLD),
+            true)
 
         ready()
     }
 
-    private val gameSelectItem = ItemStack.of(Material.COMPASS).withDisplayName(("Game Menu" withColor ALT_COLOR_1).noItalic())
+    private val gameSelectItem =
+        ItemStack.of(Material.COMPASS).withDisplayName(("Game Menu" withColor ALT_COLOR_1).noItalic())
     private val gameSelect by lazy {
         getModule<GuiModule>().createMenu(Component.text("Game Select"), InventoryType.CHEST_1_ROW,
             isPerPlayer = false,
@@ -219,12 +228,16 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
             val properties = Properties()
             properties.load(propertiesFile)
             Queue.gameClasses.keys.forEachIndexed { index, key ->
-                val material = Material.fromNamespaceId(properties.getProperty("game_${key}_material") ?: "minecraft:paper") ?: Material.PAPER
+                val material =
+                    Material.fromNamespaceId(properties.getProperty("game_${key}_material") ?: "minecraft:paper")
+                        ?: Material.PAPER
                 val desc = properties.getProperty("game_${key}_description") ?: ""
                 val category = properties.getProperty("game_${key}_category") ?: "Misc"
                 slot(index, material, {
-                    displayName(Component.text(key, Style.style(TextDecoration.BOLD)).noItalic().withGradient(BRAND_COLOR_PRIMARY_1, BRAND_COLOR_PRIMARY_3))
-                    val lore = desc.split("\n").map { Component.text(it, NamedTextColor.YELLOW).noItalic() }.toMutableList()
+                    displayName(Component.text(key, Style.style(TextDecoration.BOLD)).noItalic()
+                        .withGradient(BRAND_COLOR_PRIMARY_1, BRAND_COLOR_PRIMARY_3))
+                    val lore =
+                        desc.split("\n").map { Component.text(it, NamedTextColor.YELLOW).noItalic() }.toMutableList()
                     lore.add(0, Component.text(category, NamedTextColor.RED).noItalic())
                     lore(lore)
                 }) {

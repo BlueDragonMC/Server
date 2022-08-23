@@ -4,7 +4,6 @@ import com.bluedragonmc.server.module.database.DatabaseModule
 import com.bluedragonmc.server.module.database.Permissions
 import com.bluedragonmc.server.module.database.PlayerDocument
 import kotlinx.coroutines.runBlocking
-import net.kyori.adventure.text.Component
 import net.minestom.server.MinecraftServer
 import net.minestom.server.command.builder.arguments.*
 import net.minestom.server.command.builder.arguments.minecraft.ArgumentBlockState
@@ -57,7 +56,7 @@ class ArgumentInstance(id: String) : Argument<Instance>(id) {
     init {
         setSuggestionCallback { _, _, suggestion ->
             suggestion.entries.addAll(MinecraftServer.getInstanceManager().instances.map {
-                SuggestionEntry(it.uniqueId.toString(), Component.text(it::class.simpleName ?: "Unknown"))
+                SuggestionEntry(it.uniqueId.toString())
             }.filter { it.entry.startsWith(suggestion.input) })
         }
     }
