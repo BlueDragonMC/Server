@@ -59,13 +59,13 @@ fun Component.center(centerPx: Int = 154): Component {
         val isBold = i.style().hasDecoration(TextDecoration.BOLD)
         for (c in i.toPlainText()) {
             componentSizePx +=
-                if (isBold) DefaultFontInfo.getDefaultFontInfo(c).boldLength
-                else DefaultFontInfo.getDefaultFontInfo(c).length
+                if (isBold) DefaultFontInfo.getBoldLength(c)
+                else DefaultFontInfo.getLength(c)
         }
     }
-    val halfedSize = componentSizePx / 2
-    val toCompensate = centerPx - halfedSize
-    val spaceLength = DefaultFontInfo.SPACE.length + 1
+    val halvedSize = componentSizePx / 2
+    val toCompensate = centerPx - halvedSize
+    val spaceLength = DefaultFontInfo.getLength(' ') + 1
     var compensated = 0
     val sb = StringBuilder()
     while (compensated < toCompensate) {
