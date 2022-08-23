@@ -5,7 +5,10 @@ import com.bluedragonmc.server.GameState
 import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.combat.CustomDeathMessageModule
-import com.bluedragonmc.server.module.gameplay.*
+import com.bluedragonmc.server.module.gameplay.InstantRespawnModule
+import com.bluedragonmc.server.module.gameplay.PlayerResetModule
+import com.bluedragonmc.server.module.gameplay.SpawnpointModule
+import com.bluedragonmc.server.module.gameplay.SpectatorModule
 import com.bluedragonmc.server.module.instance.CustomGeneratorInstanceModule
 import com.bluedragonmc.server.module.minigame.CountdownModule
 import com.bluedragonmc.server.utils.SoundUtils
@@ -24,6 +27,7 @@ import net.minestom.server.entity.Entity
 import net.minestom.server.entity.EntityType
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
+import net.minestom.server.entity.damage.DamageType
 import net.minestom.server.entity.metadata.other.FallingBlockMeta
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
@@ -86,7 +90,6 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
     private val spawnPosition = Pos(0.5, 64.0, 0.5)
 
     init {
-        use(VoidDeathModule(0.0))
         use(PlayerResetModule(defaultGameMode = GameMode.ADVENTURE))
         use(CountdownModule(threshold = 1, allowMoveDuringCountdown = false, countdownSeconds = 3))
         use(SpawnpointModule(SpawnpointModule.SingleSpawnpointProvider(spawnPosition)))
@@ -120,6 +123,7 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
                 }
                 eventNode.addListener(InstanceTickEvent::class.java) {
                     if (state == GameState.INGAME) handleTick(it.instance.worldAge)
+                    if (blocks.size <= 3) addNewBlock() // Add a new block every tick until there are 3 blocks
                 }
                 eventNode.addListener(PlayerMoveEvent::class.java) { event ->
                     if (!started) return@addListener
@@ -140,13 +144,12 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
                             }
                         }
                     }
+                    if (event.newPosition.y < blocks.minOf { it.pos.blockY() }) {
+                        event.player.damage(DamageType.VOID, Float.MAX_VALUE)
+                    }
                 }
             }
         })
-
-        MinecraftServer.getSchedulerManager().scheduleNextTick {
-            repeat(3) { addNewBlock() }
-        }
 
         ready()
     }
