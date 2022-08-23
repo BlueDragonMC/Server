@@ -1,6 +1,7 @@
 package com.bluedragonmc.server.module.gameplay
 
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.event.CancellablePlayerEvent
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.utils.abilityProgressBar
 import net.minestom.server.entity.GameMode
@@ -45,12 +46,14 @@ class DoubleJumpModule(
             if (event.player.gameMode == GameMode.CREATIVE || event.player.gameMode == GameMode.SPECTATOR) return@addListener
             event.player.isFlying = false
             event.player.isAllowFlying = false
-            val x = -sin(Math.toRadians(event.player.position.yaw.toDouble())) * strength
-            val z = cos(Math.toRadians(event.player.position.yaw.toDouble())) * strength
-            event.player.velocity = event.player.velocity.add(
-                x, 0.0, z
-            ).withY(verticalStrength + pitchInfluence * (-event.player.position.pitch.toDouble()).coerceAtLeast(0.0))
-            event.player.setTag(LAST_DOUBLE_JUMP_TAG, System.currentTimeMillis())
+            parent.callCancellable(PlayerDoubleJumpEvent(event.player)) {
+                val x = -sin(Math.toRadians(event.player.position.yaw.toDouble())) * strength
+                val z = cos(Math.toRadians(event.player.position.yaw.toDouble())) * strength
+                event.player.velocity = event.player.velocity.add(
+                    x, 0.0, z
+                ).withY(verticalStrength + pitchInfluence * (-event.player.position.pitch.toDouble()).coerceAtLeast(0.0))
+                event.player.setTag(LAST_DOUBLE_JUMP_TAG, System.currentTimeMillis())
+            }
         }
         if (cooldownMillis > 0)
             eventNode.addListener(PlayerTickEvent::class.java) { event ->
@@ -72,4 +75,6 @@ class DoubleJumpModule(
         val lastDoubleJump = getLastDoubleJump(player)
         return System.currentTimeMillis() - lastDoubleJump > cooldownMillis
     }
+
+    class PlayerDoubleJumpEvent(player: Player) : CancellablePlayerEvent(player)
 }

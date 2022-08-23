@@ -176,7 +176,7 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
 
             // Process fire aspect
             if (target is LivingEntity && (heldEnchantments[Enchantment.FIRE_ASPECT] ?: 0) > 0 && !target.isOnFire) {
-                target.isOnFire = true
+//                target.isOnFire = true
                 target.setFireForDuration(heldEnchantments[Enchantment.FIRE_ASPECT]!! * 4)
             }
 
@@ -235,7 +235,7 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
                     if (CombatUtils.shouldCauseThorns(level)) {
                         val thornsDamage = CombatUtils.getThornsDamage(level)
                         player.damage(DamageType.fromPlayer(target), thornsDamage.toFloat())
-                        player.inventory.setEquipment(slot, CombatUtils.damageItemStack(itemStack, 2))
+                        target.inventory.setEquipment(slot, CombatUtils.damageItemStack(itemStack, 2))
                     }
                 }
             }
