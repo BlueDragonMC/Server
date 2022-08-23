@@ -16,6 +16,7 @@ import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.MinecraftServer
 import net.minestom.server.adventure.audience.PacketGroupingAudience
+import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventFilter
@@ -27,6 +28,7 @@ import net.minestom.server.event.trait.CancellableEvent
 import net.minestom.server.event.trait.InstanceEvent
 import net.minestom.server.event.trait.PlayerEvent
 import net.minestom.server.instance.Instance
+import net.minestom.server.utils.chunk.ChunkUtils
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.*
@@ -42,6 +44,7 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
     open val autoRemoveInstance: Boolean = true
+    open val preloadSpawnChunks: Boolean = true
 
     /**
      * A list of modules that have been added with the [use] method, but their dependencies have not been added.
@@ -215,6 +218,12 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
                 MinecraftServer.getInstanceManager().unregisterInstance(cachedInstance)
                 endGameInstantly(queueAllPlayers = false)
                 this.cancel()
+            }
+        }
+
+        if (preloadSpawnChunks && !shouldRemoveInstance(cachedInstance)) {
+            ChunkUtils.forChunksInRange(Pos.ZERO, MinecraftServer.getChunkViewDistance()) { chunkX, chunkZ ->
+                cachedInstance.loadOptionalChunk(chunkX, chunkZ)
             }
         }
     }

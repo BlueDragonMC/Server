@@ -1,5 +1,7 @@
+# syntax = docker/dockerfile:1.2
 # This Dockerfile must be run with BuildKit enabled
 # see https://docs.docker.com/engine/reference/builder/#buildkit
+# for the Dockerfile that is run on our CI/CD pipeline, see production.Dockerfile
 
 # Build the project into an executable JAR
 FROM gradle:jdk17 as build

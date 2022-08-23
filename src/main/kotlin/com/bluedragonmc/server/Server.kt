@@ -67,4 +67,6 @@ fun main() {
 
     // Start the server & bind to port 25565
     minecraftServer.start("0.0.0.0", 25565)
+    
+    if (AgonesIntegration.canHook()) AgonesIntegration.hook(eventNode)
 }

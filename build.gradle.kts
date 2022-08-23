@@ -24,7 +24,8 @@ dependencies {
     // Originally: a04012d9bf
     // July 9th, 2022: e713cf62a7
     // July 23rd, 2022: d596992c0e
-    implementation("com.github.Minestom:Minestom:d596992c0e")
+    // August 19, 2022: f5f323fef9
+    implementation("com.github.Minestom:Minestom:f5f323fef9")
 
     // MiniMessage
     implementation("net.kyori:adventure-text-minimessage:4.11.0")
@@ -38,6 +39,13 @@ dependencies {
 
     // UnifiedMetrics (available at runtime as an extension)
     compileOnly("dev.cubxity.plugins", "unifiedmetrics-api", "0.3.6")
+
+    // Agones SDK integration
+    implementation("com.github.Cubxity:AgonesKt:0.1.2")
+    implementation("io.grpc:grpc-protobuf:1.48.0")
+    runtimeOnly("io.grpc", "grpc-netty", "1.37.0")
+    runtimeOnly("io.grpc", "grpc-kotlin-stub", "1.3.0")
+    runtimeOnly("com.google.protobuf:protobuf-kotlin:3.21.3")
 }
 
 tasks.test {

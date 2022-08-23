@@ -1,1 +1,10 @@
+# Gradle temporary files
+.gradle
+# IntelliJ project files
+.idea
+# Assets
 worlds
+favicon_hq.png
+README.md
+# Built classes
+build
