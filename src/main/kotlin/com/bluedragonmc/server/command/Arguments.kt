@@ -103,6 +103,33 @@ class ArgumentOfflinePlayer(id: String) : Argument<PlayerDocument>(id) {
     }
 }
 
+/**
+ * An argument that returns a [String] representing a player name. The string is not validated.
+ * Online players are suggested to the player, but offline players can be passed to this argument
+ * and will be returned as-is.
+ */
+class ArgumentOptionalPlayer(id: String) : Argument<String>(id) {
+    private val backingArgument = ArgumentString(id)
+
+    override fun parse(input: String) = backingArgument.parse(input)
+
+    override fun parser(): String = "brigadier:string"
+
+    init {
+        setSuggestionCallback { _, _, suggestion ->
+            suggestion.entries.addAll(MinecraftServer.getConnectionManager().onlinePlayers.filter {
+                suggestion.input.isEmpty() || it.username.startsWith(suggestion.input)
+            }.map { SuggestionEntry(it.username) })
+        }
+    }
+
+    override fun nodeProperties(): ByteArray {
+        return BinaryWriter.makeArray { packetWriter: BinaryWriter ->
+            packetWriter.writeVarInt(0) // Single word
+        }
+    }
+}
+
 class ArgumentPermission(id: String) : Argument<String>(id) {
     private val str = ArgumentString(id)
 
@@ -186,6 +213,7 @@ object EntitySelectorArgument : ArgumentTypeDelegation<EntityFinder>(::ArgumentE
 object WordArgument : ArgumentTypeDelegation<String>(::ArgumentWord)
 object PlayerArgument : ArgumentTypeDelegation<EntityFinder>(::ArgumentPlayer)
 object OfflinePlayerArgument : ArgumentTypeDelegation<PlayerDocument>(::ArgumentOfflinePlayer)
+object OptionalPlayerArgument : ArgumentTypeDelegation<String>(::ArgumentOptionalPlayer)
 object InstanceArgument : ArgumentTypeDelegation<Instance>(::ArgumentInstance)
 object PermissionArgument : ArgumentTypeDelegation<String>(::ArgumentPermission)
 object PermissionGroupArgument : ArgumentTypeDelegation<String>(::ArgumentPermissionGroup)

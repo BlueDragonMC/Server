@@ -66,4 +66,10 @@ class PartyCommand(name: String, usageString: String, vararg aliases: String) : 
         }
     }
 
+    subcommand("list") {
+        syntax {
+            MessagingModule.publish(PartyListMessage(player.uuid))
+        }
+    }
+
 })

@@ -11,6 +11,7 @@ import com.mongodb.client.model.Filters
 import kotlinx.coroutines.*
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.TextColor
 import net.minestom.server.MinecraftServer
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
@@ -67,6 +68,16 @@ class DatabaseModule : GameModule() {
                 return (it as CustomPlayer).data
             }
             return getPlayersCollection().findOne(PlayerDocument::usernameLower eq username.lowercase())
+        }
+
+        internal suspend fun getNameColor(username: String): TextColor? {
+            val document = getPlayerDocument(username)
+            return document?.highestGroup?.color
+        }
+
+        internal suspend fun getNameColor(uuid: UUID): TextColor? {
+            val document = getPlayerDocument(uuid)
+            return document?.highestGroup?.color
         }
 
         internal suspend fun getPlayerDocument(uuid: UUID): PlayerDocument? {
