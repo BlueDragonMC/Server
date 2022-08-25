@@ -6,19 +6,17 @@ import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.combat.CustomDeathMessageModule
 import com.bluedragonmc.server.module.combat.OldCombatModule
 import com.bluedragonmc.server.module.database.AwardsModule
-import com.bluedragonmc.server.module.gameplay.*
+import com.bluedragonmc.server.module.gameplay.InstantRespawnModule
+import com.bluedragonmc.server.module.gameplay.InventoryPermissionsModule
+import com.bluedragonmc.server.module.gameplay.WorldPermissionsModule
 import com.bluedragonmc.server.module.instance.SharedInstanceModule
 import com.bluedragonmc.server.module.map.AnvilFileMapProviderModule
-import com.bluedragonmc.server.module.minigame.CountdownModule
-import com.bluedragonmc.server.module.minigame.WinModule
+import com.bluedragonmc.server.module.minigame.*
+import com.bluedragonmc.server.utils.ItemUtils
 import net.kyori.adventure.text.Component
 import net.minestom.server.entity.GameMode
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
-import net.minestom.server.item.Enchantment
-import net.minestom.server.item.ItemMeta
-import net.minestom.server.item.ItemStack
-import net.minestom.server.item.Material
 import java.nio.file.Paths
 
 class WackyMazeGame(mapName: String) : Game("WackyMaze", mapName) {
@@ -51,28 +49,11 @@ class WackyMazeStickModule : GameModule() {
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         eventNode.addListener(GameStartEvent::class.java) { event ->
 
-            val stickItem = ItemStack.builder(Material.STICK).displayName(Component.text("Knockback Stick"))
-                .lore(Component.text("Use this to wack your enemies"), Component.text("off the map!"))
-                .meta { metaBuilder: ItemMeta.Builder ->
-                    metaBuilder.enchantment(Enchantment.KNOCKBACK, 10)
-                }.build()
+            val stickItem = ItemUtils.knockbackStick(10)
 
             parent.players.forEach { player ->
                 player.inventory.setItemStack(0, stickItem)
             }
         }
     }
-
 }
-
-/* TODO STUFF:
-ChestLootTableModule
-AwardModule
-AchievementModule
-
-OldCombatModule
-ModernCombatModule
-
-MaxPlayersModule (should be mandatory for games in the future)
-
- */

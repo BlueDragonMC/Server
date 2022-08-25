@@ -10,8 +10,11 @@ import com.bluedragonmc.server.module.database.AwardsModule
 import com.bluedragonmc.server.module.gameplay.*
 import com.bluedragonmc.server.module.instance.InstanceContainerModule
 import com.bluedragonmc.server.module.map.AnvilFileMapProviderModule
-import com.bluedragonmc.server.module.minigame.CountdownModule
-import com.bluedragonmc.server.module.minigame.WinModule
+import com.bluedragonmc.server.module.minigame.*
+import com.bluedragonmc.server.module.vanilla.ChestModule
+import com.bluedragonmc.server.module.vanilla.ItemDropModule
+import com.bluedragonmc.server.module.vanilla.ItemPickupModule
+import com.bluedragonmc.server.module.vanilla.NaturalRegenerationModule
 import com.bluedragonmc.server.utils.plus
 import com.bluedragonmc.server.utils.surroundWithSeparators
 import com.bluedragonmc.server.utils.toPlainText

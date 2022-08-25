@@ -1,4 +1,4 @@
-package com.bluedragonmc.server.module.gameplay
+package com.bluedragonmc.server.module.vanilla
 
 import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.Game

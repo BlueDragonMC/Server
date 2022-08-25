@@ -24,9 +24,12 @@ import net.minestom.server.item.Material
  * This module was designed for PvPMaster, but it can be used for other games.
  */
 class ArmorLevelsModule : GameModule() {
+
     override val dependencies = listOf(WinModule::class) // TODO scoreboard bindings
+
     private val armorLevels = hashMapOf<Player, Int>()
     private lateinit var parent: Game
+
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         this.parent = parent
         eventNode.addListener(GameStartEvent::class.java) { event ->

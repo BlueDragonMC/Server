@@ -1,8 +1,8 @@
-package com.bluedragonmc.server.module.gameplay
+package com.bluedragonmc.server.module.minigame
 
 import com.bluedragonmc.server.Game
-import com.bluedragonmc.server.event.GameEvent
 import com.bluedragonmc.server.event.GameStartEvent
+import com.bluedragonmc.server.event.KitSelectedEvent
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.GuiModule
 import net.kyori.adventure.text.Component
@@ -24,7 +24,12 @@ import net.minestom.server.item.Material
  * Use the `giveKit` function to manually give a player their selected kit.
  * When the module is unloaded, players keep their kits.
  */
-class KitsModule(val showMenu: Boolean = false, val giveKitsOnStart: Boolean = true, val giveKitsOnSelect: Boolean = false, val selectableKits: List<Kit>) : GameModule() {
+class KitsModule(
+    val showMenu: Boolean = false,
+    val giveKitsOnStart: Boolean = true,
+    val giveKitsOnSelect: Boolean = false,
+    val selectableKits: List<Kit>,
+) : GameModule() {
 
     override val dependencies = listOf(GuiModule::class)
 
@@ -94,11 +99,15 @@ class KitsModule(val showMenu: Boolean = false, val giveKitsOnStart: Boolean = t
 
     fun getSelectedKit(player: Player): Kit = selectedKits.getOrDefault(player, selectableKits[0])
 
-    data class Kit(val name: Component, val description: String = "", val icon: Material = Material.DIAMOND, val items: HashMap<Int, ItemStack>)
+    fun hasAbility(player: Player, ability: String): Boolean = getSelectedKit(player).abilities.contains(ability)
 
-    /**
-     * This event is fired when the player confirms their kit selection.
-     * If the player closes the kit selection menu, this event is not fired.
-     */
-    class KitSelectedEvent(game: Game, val player: Player, val kit: Kit) : GameEvent(game)
+    data class Kit(
+        val name: Component,
+        val description: String = "",
+        val icon: Material = Material.DIAMOND,
+        val items: HashMap<Int, ItemStack> = hashMapOf(),
+        val abilities: List<String> = emptyList()
+    ) {
+        fun hasAbility(ability: String) = abilities.contains(ability)
+    }
 }

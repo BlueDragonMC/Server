@@ -1,9 +1,10 @@
-package com.bluedragonmc.server.bootstrap
+package com.bluedragonmc.server.bootstrap.prod
 
 import com.bluedragonmc.messages.SendPlayerToInstanceMessage
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
 import com.bluedragonmc.server.Environment
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.bootstrap.Bootstrap
 import com.bluedragonmc.server.lobby
 import com.bluedragonmc.server.module.messaging.MessagingModule
 import net.kyori.adventure.text.Component

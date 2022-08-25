@@ -3,6 +3,7 @@ package com.bluedragonmc.server.module.gameplay
 import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.GuiModule
+import com.bluedragonmc.server.module.minigame.TeamModule
 import com.bluedragonmc.server.utils.displayName
 import com.bluedragonmc.server.utils.noItalic
 import com.bluedragonmc.server.utils.plus

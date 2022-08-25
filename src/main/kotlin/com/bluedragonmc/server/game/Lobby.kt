@@ -2,16 +2,19 @@ package com.bluedragonmc.server.game
 
 import com.bluedragonmc.messages.GameType
 import com.bluedragonmc.server.*
+import com.bluedragonmc.server.module.ConfigModule
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.GuiModule
 import com.bluedragonmc.server.module.gameplay.*
 import com.bluedragonmc.server.module.instance.SharedInstanceModule
 import com.bluedragonmc.server.module.map.AnvilFileMapProviderModule
+import com.bluedragonmc.server.module.minigame.PlayerResetModule
+import com.bluedragonmc.server.module.minigame.SpawnpointModule
+import com.bluedragonmc.server.module.minigame.VoidDeathModule
 import com.bluedragonmc.server.queue.Queue
 import com.bluedragonmc.server.utils.*
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.event.ClickEvent
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.Style
 import net.kyori.adventure.text.format.TextDecoration
@@ -21,6 +24,7 @@ import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.EntityType
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
+import net.minestom.server.entity.PlayerSkin
 import net.minestom.server.entity.hologram.Hologram
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
@@ -31,9 +35,10 @@ import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import net.minestom.server.sound.SoundEvent
 import net.minestom.server.timer.Task
+import org.spongepowered.configurate.CommentedConfigurationNode
+import org.spongepowered.configurate.objectmapping.ConfigSerializable
 import java.nio.file.Paths
 import java.time.Duration
-import java.util.*
 
 class Lobby : Game("Lobby", "lobbyv2.1") {
 
@@ -49,7 +54,31 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
 
     private val queue = Environment.current.queue
 
+    @ConfigSerializable
+    data class ConfigurableNPC(
+        val pos: Pos = Pos.ZERO,
+        val name: Component = Component.empty(),
+        val entityType: EntityType? = null,
+        val skin: PlayerSkin? = null,
+        val game: String? = null,
+        val map: String? = null,
+        val mode: String? = null,
+        val lookAt: Pos? = null
+    )
+
+    @ConfigSerializable
+    data class GameEntry(
+        val game: String = "???",
+        val category: String = "???",
+        val description: String = "???",
+        val time: String = "\u221e",
+        val material: Material = Material.RED_STAINED_GLASS
+    )
+
     init {
+
+        val config = use(ConfigModule("lobby.yml")).getConfig()
+
         // World modules
         use(AnvilFileMapProviderModule(Paths.get("worlds/$name/$mapName")))
         use(SharedInstanceModule())
@@ -66,75 +95,23 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
         use(NPCModule())
         getModule<NPCModule>().apply {
 
-            val center = Pos(0.5, 64.25, -31.5)
-
-            // 0.5, 62.5, -35.5, 0.0, 0.0 CENTER
-            addNPC(instance = this@Lobby.getInstance(),
-                position = Pos(0.5, 62.5, -35.5),
-                customName = Component.text("WackyMaze", NamedTextColor.YELLOW, TextDecoration.BOLD),
-                skin = NPCModule.NPCSkins.EX4.skin,
-                lookAtPlayer = false,
-                interaction = {
-                    queue.queue(it.player, GameType("WackyMaze", null, "Islands"))
-                }).lookAt(center)
-            // -3.5, 62.5, -34.5, 0.0, 0.0 LEFT OF CENTER
-            addNPC(instance = this@Lobby.getInstance(),
-                position = Pos(-3.5, 62.5, -34.5),
-                customName = Component.text("BedWars", NamedTextColor.YELLOW, TextDecoration.BOLD),
-                skin = NPCModule.NPCSkins.BED_HEAD.skin,
-                lookAtPlayer = false,
-                interaction = {
-                    queue.queue(it.player, GameType("BedWars", null, "Caves"))
-                }).lookAt(center)
-            // 4.5, 62.5, -34.5, 0.0, 0.0 RIGHT OF CENTER
-            addNPC(instance = this@Lobby.getInstance(),
-                position = Pos(4.5, 62.5, -34.5),
-                customName = Component.text("SkyWars", NamedTextColor.YELLOW, TextDecoration.BOLD),
-                skin = NPCModule.NPCSkins.SKY.skin,
-                lookAtPlayer = false,
-                interaction = {
-                    queue.queue(it.player, GameType("SkyWars", null, null))
-                }).lookAt(center)
-
-            // -5.5, 62.5, -32.5, 0.0, 0.0 LEFT OF LEFT OF CENTER
-            addNPC(instance = this@Lobby.getInstance(),
-                position = Pos(-5.5, 62.5, -32.5),
-                customName = Component.text("FastFall", NamedTextColor.YELLOW, TextDecoration.BOLD),
-                skin = NPCModule.NPCSkins.STUMBLE_GUY.skin,
-                lookAtPlayer = false,
-                interaction = {
-                    queue.queue(it.player, GameType("FastFall", null, null))
-                }).lookAt(center)
-
-            // 6.5, 62.5, -32.5, 0.0, 0.0 RIGHT OF RIGHT OF CENTER
-            addNPC(instance = this@Lobby.getInstance(),
-                position = Pos(6.5, 62.5, -32.5),
-                customName = Component.text("Infection", NamedTextColor.YELLOW, TextDecoration.BOLD),
-                entityType = EntityType.ZOMBIE,
-                lookAtPlayer = false,
-                interaction = {
-                    queue.queue(it.player, GameType("Infection", null, null))
-                }).lookAt(center)
-
-            // -7.5, 62.5, -30.5, 0.0, 0.0 FAR LEFT
-            addNPC(instance = this@Lobby.getInstance(),
-                position = Pos(-7.5, 62.5, -30.5),
-                customName = Component.text("Infinijump", NamedTextColor.YELLOW, TextDecoration.BOLD),
-                skin = NPCModule.NPCSkins.COOL_THING.skin,
-                lookAtPlayer = false,
-                interaction = {
-                    queue.queue(it.player, GameType("Infinijump", null, null))
-                }).lookAt(center)
-
-            // 8.5, 62.5, -30.5, 0.0, 0.0 FAR RIGHT
-            addNPC(instance = this@Lobby.getInstance(),
-                position = Pos(8.5, 62.5, -30.5),
-                customName = Component.text("ArenaPvP", NamedTextColor.YELLOW, TextDecoration.BOLD),
-                skin = NPCModule.NPCSkins.BLUE_KNIGHT.skin,
-                lookAtPlayer = false,
-                interaction = {
-                    queue.queue(it.player, GameType("ArenaPvP", null, null))
-                }).lookAt(center)
+            val npcs = config.node("npcs").getList(ConfigurableNPC::class.java)!!
+            npcs.forEach {
+                addNPC(
+                    instance = this@Lobby.getInstance(),
+                    position = it.pos,
+                    customName = it.name,
+                    skin = it.skin,
+                    lookAtPlayer = false,
+                    interaction = { (player, _) ->
+                        if (it.game != null)
+                            queue.queue(player, GameType(it.game, it.mode, it.map))
+                    },
+                    entityType = it.entityType ?: EntityType.PLAYER
+                ).run {
+                    if(it.lookAt != null) lookAt(it.lookAt)
+                }
+            }
 
             // GAME SELECT (left)
             // todo: waiting on https://github.com/Minestom/Minestom/pull/1275 to translate NPC names
@@ -188,18 +165,9 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
         use(DoubleJumpModule())
         use(GuiModule())
 
-        val tips = CircularList(listOf(
-            Component.translatable("lobby.tips.forum", BRAND_COLOR_PRIMARY_2).clickEvent(
-                ClickEvent.openUrl("https://bluedragonmc.com")),
-            Component.translatable("lobby.tips.discord", BRAND_COLOR_PRIMARY_2).clickEvent(
-                ClickEvent.openUrl("https://discord.gg/3gvSPdW")),
-            Component.translatable("lobby.tips.newest_game",
-                BRAND_COLOR_PRIMARY_2,
-                Component.text("Infinijump", BRAND_COLOR_PRIMARY_1)),
-            Component.translatable("lobby.tips.extra.1", BRAND_COLOR_PRIMARY_2),
-            Component.translatable("lobby.tips.extra.2", BRAND_COLOR_PRIMARY_2),
-            Component.translatable("lobby.tips.extra.3", BRAND_COLOR_PRIMARY_2),
-        ).shuffled())
+        populateGameSelector(config)
+
+        val tips = CircularList(config.node("tips").getList(Component::class.java)!!.shuffled())
         var index = 0
         MinecraftServer.getSchedulerManager().buildTask {
             getInstance().players.forEach {
@@ -219,29 +187,25 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
 
     private val gameSelectItem =
         ItemStack.of(Material.COMPASS).withDisplayName(("Game Menu" withColor ALT_COLOR_1).noItalic())
-    private val gameSelect by lazy {
-        getModule<GuiModule>().createMenu(Component.text("Game Select"), InventoryType.CHEST_1_ROW,
+
+    private lateinit var gameSelect: GuiModule.Menu
+
+    private fun populateGameSelector(config: CommentedConfigurationNode) {
+        val games = config.node("games").getList(GameEntry::class.java)!!
+        gameSelect = getModule<GuiModule>().createMenu(Component.text("Game Select"), InventoryType.CHEST_1_ROW,
             isPerPlayer = false,
             allowSpectatorClicks = true
         ) {
-            val propertiesFile = javaClass.classLoader.getResourceAsStream("game_info.properties")
-            val properties = Properties()
-            properties.load(propertiesFile)
-            Queue.gameClasses.keys.forEachIndexed { index, key ->
-                val material =
-                    Material.fromNamespaceId(properties.getProperty("game_${key}_material") ?: "minecraft:paper")
-                        ?: Material.PAPER
-                val desc = properties.getProperty("game_${key}_description") ?: ""
-                val category = properties.getProperty("game_${key}_category") ?: "Misc"
+            games.forEachIndexed { index, (game, category, desc, time, material) ->
                 slot(index, material, {
-                    displayName(Component.text(key, Style.style(TextDecoration.BOLD)).noItalic()
+                    displayName(Component.text(game, Style.style(TextDecoration.BOLD)).noItalic()
                         .withGradient(BRAND_COLOR_PRIMARY_1, BRAND_COLOR_PRIMARY_3))
                     val lore =
-                        desc.split("\n").map { Component.text(it, NamedTextColor.YELLOW).noItalic() }.toMutableList()
-                    lore.add(0, Component.text(category, NamedTextColor.RED).noItalic())
+                        desc.split("\\n").map { Component.text(it, NamedTextColor.YELLOW).noItalic() }.toMutableList()
+                    lore.add(0, Component.text("$category \u2014 \u231a $time", NamedTextColor.RED).noItalic())
                     lore(lore)
                 }) {
-                    queue.queue(player, GameType(key))
+                    queue.queue(player, GameType(game))
                     menu.close(player)
                 }
             }

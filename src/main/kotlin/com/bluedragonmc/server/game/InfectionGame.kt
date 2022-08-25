@@ -7,8 +7,8 @@ import com.bluedragonmc.server.module.database.AwardsModule
 import com.bluedragonmc.server.module.gameplay.*
 import com.bluedragonmc.server.module.instance.SharedInstanceModule
 import com.bluedragonmc.server.module.map.AnvilFileMapProviderModule
-import com.bluedragonmc.server.module.minigame.CountdownModule
-import com.bluedragonmc.server.module.minigame.WinModule
+import com.bluedragonmc.server.module.minigame.*
+import com.bluedragonmc.server.module.vanilla.NaturalRegenerationModule
 import com.bluedragonmc.server.utils.noItalic
 import com.bluedragonmc.server.utils.withColor
 import net.kyori.adventure.text.Component

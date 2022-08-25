@@ -1,7 +1,7 @@
 package com.bluedragonmc.server.command
 
 import com.bluedragonmc.server.event.GameStartEvent
-import com.bluedragonmc.server.module.gameplay.TeamModule
+import com.bluedragonmc.server.module.minigame.TeamModule
 import com.bluedragonmc.server.module.instance.InstanceModule
 import com.bluedragonmc.server.module.minigame.WinModule
 import com.bluedragonmc.server.utils.withColor

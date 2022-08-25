@@ -3,6 +3,7 @@ package com.bluedragonmc.server.module.database
 import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.Environment
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.event.DataLoadedEvent
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.utils.packet.PacketUtils
 import com.mongodb.ConnectionString
@@ -18,6 +19,7 @@ import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.player.AsyncPlayerPreLoginEvent
 import net.minestom.server.event.player.PlayerChatEvent
+import net.minestom.server.event.player.PlayerCommandEvent
 import net.minestom.server.event.player.PlayerMoveEvent
 import net.minestom.server.event.trait.CancellableEvent
 import net.minestom.server.event.trait.PlayerEvent
@@ -147,6 +149,7 @@ class DatabaseModule : GameModule() {
             }
         }
         eventNode.addListener(PlayerChatEvent::class.java, ::preventIfDataNotLoaded)
+        eventNode.addListener(PlayerCommandEvent::class.java, ::preventIfDataNotLoaded)
     }
 
     private fun preventIfDataNotLoaded(event: PlayerEvent) {
@@ -157,9 +160,5 @@ class DatabaseModule : GameModule() {
     private val cachedMapData = hashMapOf<String, MapData?>()
     suspend fun getMapOrNull(mapName: String): MapData? = cachedMapData.getOrPut(mapName) {
         getMapsCollection().findOneById(mapName)
-    }
-
-    class DataLoadedEvent(private val player: Player) : PlayerEvent {
-        override fun getPlayer(): Player = player
     }
 }

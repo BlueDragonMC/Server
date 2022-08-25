@@ -6,8 +6,9 @@ import com.bluedragonmc.server.module.combat.OldCombatModule
 import com.bluedragonmc.server.module.gameplay.*
 import com.bluedragonmc.server.module.instance.SharedInstanceModule
 import com.bluedragonmc.server.module.map.AnvilFileMapProviderModule
-import com.bluedragonmc.server.module.minigame.CountdownModule
-import com.bluedragonmc.server.module.minigame.WinModule
+import com.bluedragonmc.server.module.minigame.*
+import com.bluedragonmc.server.module.vanilla.FallDamageModule
+import com.bluedragonmc.server.module.vanilla.NaturalRegenerationModule
 import net.kyori.adventure.text.Component
 import net.minestom.server.entity.GameMode
 import java.nio.file.Paths

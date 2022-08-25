@@ -5,6 +5,7 @@ import com.bluedragonmc.server.command.BlueDragonCommand
 import com.bluedragonmc.server.command.OfflinePlayerArgument
 import com.bluedragonmc.server.command.StringArrayArgument
 import com.bluedragonmc.server.command.WordArgument
+import com.bluedragonmc.server.event.DataLoadedEvent
 import com.bluedragonmc.server.module.database.DatabaseModule
 import com.bluedragonmc.server.module.database.PlayerDocument
 import com.bluedragonmc.server.module.database.Punishment
@@ -43,7 +44,7 @@ class PunishCommand(name: String, usageString: String, vararg aliases: String) :
             val target = getPlayer(playerArgument)
             target?.let {
                 // If the player is on the server, call the DataLoadedEvent to send them the ban message
-                MinecraftServer.getGlobalEventHandler().call(DatabaseModule.DataLoadedEvent(target))
+                MinecraftServer.getGlobalEventHandler().call(DataLoadedEvent(target))
                 if(type == PunishmentType.MUTE) {
                     // Send a chat message telling the player they were muted.
                     it.sendMessage(GlobalPunishments.getMuteMessage(punishment))

@@ -6,9 +6,9 @@ import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.combat.CustomDeathMessageModule
 import com.bluedragonmc.server.module.gameplay.InstantRespawnModule
-import com.bluedragonmc.server.module.gameplay.PlayerResetModule
-import com.bluedragonmc.server.module.gameplay.SpawnpointModule
-import com.bluedragonmc.server.module.gameplay.SpectatorModule
+import com.bluedragonmc.server.module.minigame.PlayerResetModule
+import com.bluedragonmc.server.module.minigame.SpawnpointModule
+import com.bluedragonmc.server.module.minigame.SpectatorModule
 import com.bluedragonmc.server.module.instance.CustomGeneratorInstanceModule
 import com.bluedragonmc.server.module.minigame.CountdownModule
 import com.bluedragonmc.server.utils.SoundUtils

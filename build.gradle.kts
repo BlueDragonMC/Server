@@ -46,6 +46,10 @@ dependencies {
     runtimeOnly("io.grpc", "grpc-netty", "1.37.0")
     runtimeOnly("io.grpc", "grpc-kotlin-stub", "1.3.0")
     runtimeOnly("com.google.protobuf:protobuf-kotlin:3.21.3")
+
+    // Configurate for game configuration
+    implementation("org.spongepowered:configurate-yaml:4.1.2")
+    implementation("org.spongepowered:configurate-extra-kotlin:4.1.2")
 }
 
 tasks.test {

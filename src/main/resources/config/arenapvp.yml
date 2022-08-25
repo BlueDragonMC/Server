@@ -1,0 +1,94 @@
+kits:
+  - name: <yellow>Classic
+    description: Just the usual armor and sword.
+    icon: minecraft:iron_chestplate
+    items:
+      0:
+        material: minecraft:iron_sword
+      helmet:
+        material: minecraft:iron_helmet
+      chestplate:
+        material: minecraft:iron_chestplate
+      leggings:
+        material: minecraft:iron_leggings
+      boots:
+        material: minecraft:iron_boots
+  - name: <gradient:#2792f7:#4EB2F4>Kit of the Month
+    description: What will it be for August?
+    icon: minecraft:amethyst_block
+    items:
+      0:
+        material: minecraft:netherite_sword
+      helmet:
+        material: minecraft:leather_helmet
+      chestplate:
+        material: minecraft:leather_chestplate
+      leggings:
+        material: minecraft:leather_leggings
+      boots:
+        material: minecraft:leather_boots
+  - name: <yellow>Troll
+    description: Receive a knockback stick to wack your enemies!
+    icon: minecraft:stick
+    items:
+      0:
+        material: minecraft:stick
+        enchants:
+          minecraft:knockback: 5
+        name: Knockback Stick
+        lore:
+          - <gray>Use this to wack your enemies
+          - <gray>off the map!
+      1:
+        material: minecraft:wooden_sword
+      helmet:
+        material: minecraft:iron_helmet
+      chestplate:
+        material: minecraft:iron_chestplate
+      leggings:
+        material: minecraft:iron_leggings
+      boots:
+        material: minecraft:iron_boots
+  - name: <green>Cactus
+    description: Your armor has thorns, which hurts\nother players when they attack you.
+    icon: minecraft:cactus
+    items:
+      0:
+        material: minecraft:iron_sword
+      helmet:
+        material: minecraft:leather_helmet
+        enchants:
+          minecraft:thorns: 2
+        dye: 0, 255, 0
+      chestplate:
+        material: minecraft:leather_chestplate
+        enchants:
+          minecraft:thorns: 2
+        dye: 0, 255, 0
+      leggings:
+        material: minecraft:leather_leggings
+        enchants:
+          minecraft:thorns: 2
+        dye: 0, 255, 0
+      boots:
+        material: minecraft:leather_boots
+        enchants:
+          minecraft:thorns: 2
+        dye: 0, 255, 0
+  - name: <aqua>Moonwalker
+    description: You jump higher, and you can double jump.
+    icon: minecraft:end_stone
+    items:
+      0:
+        material: minecraft:stone_sword
+      helmet:
+        material: minecraft:chainmail_helmet
+      chestplate:
+        material: minecraft:chainmail_chestplate
+      leggings:
+        material: minecraft:chainmail_leggings
+      boots:
+        material: minecraft:chainmail_boots
+    abilities:
+      - double_jump
+      - jump_boost
