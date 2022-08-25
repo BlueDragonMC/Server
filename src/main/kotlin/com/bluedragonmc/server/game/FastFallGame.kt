@@ -78,6 +78,7 @@ class FastFallGame(mapName: String?) : Game("FastFall", "Chaos") {
         use(WorldPermissionsModule(exceptions = listOf(Block.GLASS)))
         use(CustomDeathMessageModule())
         var lead: Player? = null
+        var lastLeadChange = 0L
         use(object : GameModule() {
             override fun initialize(parent: Game, eventNode: EventNode<Event>) {
                 eventNode.addListener(WinModule.WinnerDeclaredEvent::class.java) { event ->
@@ -94,17 +95,20 @@ class FastFallGame(mapName: String?) : Game("FastFall", "Chaos") {
                     val ordered = players.sortedBy { it.position.y }
                     if (ordered.isEmpty()) return@addListener
                     val lowest = ordered.first()
-                    if (lead != lowest) {
+                    // Players' velocity has a Y component of -1.568 when standing still
+                    // Lead changes are limited to, at most, every 1.5 seconds
+                    if (lead != lowest && lowest.velocity.y >= -1.568 && event.instance.worldAge - lastLeadChange > 30) {
                         if (lead != null) {
-                            val msg = lead!!.name + Component.text(" is now in the lead!", BRAND_COLOR_PRIMARY_2)
+                            val msg = lowest.name + Component.text(" is now in the lead!", BRAND_COLOR_PRIMARY_2)
                             sendMessage(msg)
                             showTitle(Title.title(Component.empty(), msg))
                             playSound(Sound.sound(SoundEvent.BLOCK_NOTE_BLOCK_PLING, Sound.Source.PLAYER, 1.0f, 1.0f))
                         }
                         lead = lowest
+                        lastLeadChange = event.instance.worldAge
                     }
                     ordered.forEachIndexed { index, player ->
-                        val ahead = ordered.size - index - 1
+                        val ahead = ordered.size - (ordered.size - index)
                         val playersAhead = Component.text(ahead,
                             BRAND_COLOR_PRIMARY_1) + Component.text(" player${if (ahead == 1) "" else "s"} ahead · ",
                             BRAND_COLOR_PRIMARY_2)
