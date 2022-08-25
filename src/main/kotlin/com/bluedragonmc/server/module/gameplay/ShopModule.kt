@@ -117,7 +117,7 @@ class ShopModule : GuiModule() {
             val removeSuccess =
                 player.inventory.takeItemStack(ItemStack.of(currency, price), TransactionOption.ALL_OR_NOTHING)
             if (!removeSuccess) {
-                player.sendMessage(Component.translatable("module.shop.not_enough_currency", NamedTextColor.RED))
+                player.sendMessage(Component.translatable("module.shop.not_enough_currency", NamedTextColor.RED, currency.displayName()))
                 return
             }
             (player as CustomPlayer).virtualItems.add(item)

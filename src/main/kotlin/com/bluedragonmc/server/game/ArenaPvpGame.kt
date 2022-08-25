@@ -137,7 +137,7 @@ class ArenaPvpGame(mapName: String) : Game("ArenaPvP", mapName) {
         use(AwardsModule())
 
         // GAMEPLAY
-        use(DoubleJumpModule(verticalStrength = 20.0))
+        use(DoubleJumpModule(verticalStrength = 20.0, cooldownMillis = 3000))
         use(GuiModule())
         use(InstantRespawnModule())
         use(InventoryPermissionsModule(allowDropItem = false, allowMoveItem = true))

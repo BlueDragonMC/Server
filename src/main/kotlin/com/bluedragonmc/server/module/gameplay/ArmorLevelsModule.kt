@@ -133,7 +133,7 @@ class ArmorLevelsModule : GameModule() {
         ),
         NETHERITE(
             "Netherite" withColor TextColor.color(0x383538),
-            "The stronger armor that exists." withColor ALT_COLOR_1,
+            "Get 6 kills to win!" withColor ALT_COLOR_1,
             ItemStack.of(Material.NETHERITE_HELMET),
             ItemStack.of(Material.NETHERITE_CHESTPLATE),
             ItemStack.of(Material.NETHERITE_LEGGINGS),

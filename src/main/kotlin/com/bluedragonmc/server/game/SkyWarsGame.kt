@@ -47,7 +47,6 @@ class SkyWarsGame(mapName: String) : Game("SkyWars", mapName) {
         use(ItemDropModule(dropBlocksOnBreak = true, dropAllOnDeath = true))
         use(CustomDeathMessageModule())
         use(ItemPickupModule())
-        use(WorldPermissionsModule(allowBlockBreak = true, allowBlockPlace = true, allowBlockInteract = true))
         use(PlayerResetModule(defaultGameMode = GameMode.SURVIVAL))
         use(TeamModule(autoTeams = true,
             autoTeamMode = TeamModule.AutoTeamMode.PLAYER_COUNT,
