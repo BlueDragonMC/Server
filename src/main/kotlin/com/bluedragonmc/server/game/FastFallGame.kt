@@ -6,6 +6,7 @@ import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.combat.CustomDeathMessageModule
+import com.bluedragonmc.server.module.config.ConfigModule
 import com.bluedragonmc.server.module.database.AwardsModule
 import com.bluedragonmc.server.module.gameplay.*
 import com.bluedragonmc.server.module.instance.CustomGeneratorInstanceModule
@@ -30,9 +31,13 @@ import kotlin.math.sqrt
 class FastFallGame(mapName: String?) : Game("FastFall", "Chaos") {
     private val radius = (38..55).random()
 
-    private val blockSet = FastFallBlockSet.values().random()
-
     init {
+
+        val config = use(ConfigModule("fastfall.yml")).getConfig()
+        val blockSetName = config.node("block-sets").childrenMap().keys.random()
+        logger.info("Using block set: $blockSetName")
+        val blockSet = config.node("block-sets", blockSetName).getList(Block::class.java)!!
+
         // INSTANCE MODULES
         use(
             CustomGeneratorInstanceModule(
@@ -102,7 +107,7 @@ class FastFallGame(mapName: String?) : Game("FastFall", "Chaos") {
         // TODO action bar with the player's progress to the bottom and # of players ahead
     }
 
-    class ChaosWorldGenerator(val radius: Int, val blockSet: FastFallBlockSet) : Generator {
+    class ChaosWorldGenerator(val radius: Int, val blockSet: Collection<Block>) : Generator {
         override fun generate(unit: GenerationUnit) {
             val start = unit.absoluteStart()
             val end = unit.absoluteEnd()
@@ -135,7 +140,7 @@ class FastFallGame(mapName: String?) : Game("FastFall", "Chaos") {
         }
 
         private fun randomBlock(): Block {
-            return blockSet.randomBlock()
+            return blockSet.random()
         }
 
         /**
@@ -154,113 +159,5 @@ class FastFallGame(mapName: String?) : Game("FastFall", "Chaos") {
             return distance <= radius
         }
 
-    }
-
-    // TODO - make this use a config file
-    enum class FastFallBlockSet(val blocks: Set<Block>) {
-        CLASSIC(
-            setOf(
-                Block.RED_BED,
-                Block.OAK_PRESSURE_PLATE,
-                Block.OAK_PLANKS,
-                Block.STONE,
-                Block.DIAMOND_BLOCK,
-                Block.SEA_LANTERN,
-                Block.GLOWSTONE,
-                Block.DIRT,
-                Block.OAK_LOG,
-                Block.IRON_TRAPDOOR,
-                Block.NETHER_PORTAL,
-                Block.PUMPKIN,
-                Block.WHITE_STAINED_GLASS,
-                Block.BEACON,
-                Block.OBSIDIAN,
-                Block.SANDSTONE,
-                Block.HAY_BLOCK,
-                Block.CHEST,
-                Block.PISTON,
-                Block.MELON,
-                Block.ANDESITE,
-                Block.STONE_SLAB,
-            )
-        ),
-        NETHER(
-            setOf(
-                Block.BLACKSTONE,
-                Block.GILDED_BLACKSTONE,
-                Block.SOUL_SOIL,
-                Block.SOUL_SAND,
-                Block.MAGMA_BLOCK,
-                Block.WARPED_NYLIUM,
-                Block.CRIMSON_NYLIUM,
-                Block.NETHER_BRICKS,
-                Block.NETHER_BRICK_FENCE,
-                Block.RED_NETHER_BRICKS,
-                Block.OBSIDIAN,
-                Block.CRYING_OBSIDIAN,
-                Block.NETHERRACK,
-                Block.WARPED_PLANKS,
-                Block.CRIMSON_PLANKS,
-                Block.NETHER_WART_BLOCK,
-                Block.NETHERITE_BLOCK,
-                Block.NETHER_GOLD_ORE,
-                Block.NETHER_QUARTZ_ORE,
-                Block.DEEPSLATE,
-                Block.COBBLED_DEEPSLATE,
-                Block.POLISHED_DEEPSLATE,
-            )
-        ),
-        COLORS(
-            setOf(
-                Block.WHITE_CONCRETE,
-                Block.ORANGE_CONCRETE,
-                Block.MAGENTA_CONCRETE,
-                Block.LIGHT_BLUE_CONCRETE,
-                Block.YELLOW_CONCRETE,
-                Block.LIME_CONCRETE,
-                Block.PINK_CONCRETE,
-                Block.GRAY_CONCRETE,
-                Block.LIGHT_GRAY_CONCRETE,
-                Block.CYAN_CONCRETE,
-                Block.PURPLE_CONCRETE,
-                Block.BLUE_CONCRETE,
-                Block.BROWN_CONCRETE,
-                Block.GREEN_CONCRETE,
-                Block.RED_CONCRETE,
-                Block.BLACK_CONCRETE,
-                Block.WHITE_WOOL,
-                Block.ORANGE_WOOL,
-                Block.MAGENTA_WOOL,
-                Block.LIGHT_BLUE_WOOL,
-                Block.YELLOW_WOOL,
-                Block.LIME_WOOL,
-                Block.PINK_WOOL,
-                Block.GRAY_WOOL,
-                Block.LIGHT_GRAY_WOOL,
-                Block.CYAN_WOOL,
-                Block.BLUE_WOOL,
-                Block.BROWN_WOOL,
-                Block.GREEN_WOOL,
-                Block.RED_WOOL,
-                Block.BLACK_WOOL,
-                Block.WHITE_STAINED_GLASS,
-                Block.ORANGE_STAINED_GLASS,
-                Block.MAGENTA_STAINED_GLASS,
-                Block.LIGHT_BLUE_STAINED_GLASS,
-                Block.YELLOW_STAINED_GLASS,
-                Block.LIME_STAINED_GLASS,
-                Block.PINK_STAINED_GLASS,
-                Block.GRAY_STAINED_GLASS,
-                Block.LIGHT_GRAY_STAINED_GLASS,
-                Block.CYAN_STAINED_GLASS,
-                Block.BLUE_STAINED_GLASS,
-                Block.BROWN_STAINED_GLASS,
-                Block.GREEN_STAINED_GLASS,
-                Block.RED_STAINED_GLASS,
-                Block.BLACK_STAINED_GLASS,
-            )
-        );
-
-        fun randomBlock(): Block = blocks.random()
     }
 }

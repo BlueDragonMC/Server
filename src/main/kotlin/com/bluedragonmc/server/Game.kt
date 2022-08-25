@@ -41,7 +41,7 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
 
     internal var mapData: MapData? = null
 
-    private val logger = LoggerFactory.getLogger(this.javaClass)
+    protected val logger = LoggerFactory.getLogger(this.javaClass)
 
     open val autoRemoveInstance: Boolean = true
     open val preloadSpawnChunks: Boolean = true

@@ -2,9 +2,9 @@ package com.bluedragonmc.server.game
 
 import com.bluedragonmc.messages.GameType
 import com.bluedragonmc.server.*
-import com.bluedragonmc.server.module.config.ConfigModule
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.GuiModule
+import com.bluedragonmc.server.module.config.ConfigModule
 import com.bluedragonmc.server.module.gameplay.*
 import com.bluedragonmc.server.module.instance.SharedInstanceModule
 import com.bluedragonmc.server.module.map.AnvilFileMapProviderModule
@@ -35,7 +35,7 @@ import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import net.minestom.server.sound.SoundEvent
 import net.minestom.server.timer.Task
-import org.spongepowered.configurate.CommentedConfigurationNode
+import org.spongepowered.configurate.ConfigurationNode
 import org.spongepowered.configurate.objectmapping.ConfigSerializable
 import java.nio.file.Paths
 import java.time.Duration
@@ -190,7 +190,7 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
 
     private lateinit var gameSelect: GuiModule.Menu
 
-    private fun populateGameSelector(config: CommentedConfigurationNode) {
+    private fun populateGameSelector(config: ConfigurationNode) {
         val games = config.node("games").getList(GameEntry::class.java)!!
         gameSelect = getModule<GuiModule>().createMenu(Component.text("Game Select"), InventoryType.CHEST_1_ROW,
             isPerPlayer = false,
