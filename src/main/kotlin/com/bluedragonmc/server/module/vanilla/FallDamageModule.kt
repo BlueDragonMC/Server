@@ -23,7 +23,7 @@ object FallDamageModule : GameModule() {
             val player = event.player
             val block = event.instance.getBlock(player.position)
 
-            if (block.compare(Block.WATER) || block.compare(Block.COBWEB) || (player as CustomPlayer).isOnLadder()) {
+            if (block.compare(Block.WATER) || block.compare(Block.COBWEB) || (player as CustomPlayer).isOnLadder() || player.isFlying || player.isAllowFlying) {
                 // Water resets fall distance
                 player.removeTag(FALL_START_TAG)
             } else if (block.compare(Block.LAVA) && player.hasTag(FALL_START_TAG)) {

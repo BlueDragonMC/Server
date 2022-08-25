@@ -8,22 +8,32 @@ import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.combat.CustomDeathMessageModule
 import com.bluedragonmc.server.module.config.ConfigModule
 import com.bluedragonmc.server.module.database.AwardsModule
-import com.bluedragonmc.server.module.gameplay.*
+import com.bluedragonmc.server.module.gameplay.InstantRespawnModule
+import com.bluedragonmc.server.module.gameplay.MaxHealthModule
+import com.bluedragonmc.server.module.gameplay.SidebarModule
+import com.bluedragonmc.server.module.gameplay.WorldPermissionsModule
 import com.bluedragonmc.server.module.instance.CustomGeneratorInstanceModule
 import com.bluedragonmc.server.module.minigame.*
 import com.bluedragonmc.server.module.vanilla.FallDamageModule
 import com.bluedragonmc.server.utils.plus
+import com.bluedragonmc.server.utils.withTransition
+import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.title.Title
 import net.minestom.server.MinecraftServer
 import net.minestom.server.coordinate.Point
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.coordinate.Vec
 import net.minestom.server.entity.GameMode
+import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
+import net.minestom.server.event.instance.InstanceTickEvent
 import net.minestom.server.instance.block.Block
 import net.minestom.server.instance.generator.GenerationUnit
 import net.minestom.server.instance.generator.Generator
+import net.minestom.server.sound.SoundEvent
 import java.time.Duration
 import kotlin.math.pow
 import kotlin.math.sqrt
@@ -49,7 +59,6 @@ class FastFallGame(mapName: String?) : Game("FastFall", "Chaos") {
         // GAMEPLAY MODULES
         use(AwardsModule())
         use(FallDamageModule)
-        use(HealthDisplayModule())
         use(InstantRespawnModule())
         use(MaxHealthModule(2.0F))
         use(MOTDModule(Component.translatable("game.fastfall.motd")))
@@ -68,6 +77,7 @@ class FastFallGame(mapName: String?) : Game("FastFall", "Chaos") {
         use(VoidDeathModule(threshold = 0.0, respawnMode = true))
         use(WorldPermissionsModule(exceptions = listOf(Block.GLASS)))
         use(CustomDeathMessageModule())
+        var lead: Player? = null
         use(object : GameModule() {
             override fun initialize(parent: Game, eventNode: EventNode<Event>) {
                 eventNode.addListener(WinModule.WinnerDeclaredEvent::class.java) { event ->
@@ -77,6 +87,38 @@ class FastFallGame(mapName: String?) : Game("FastFall", "Chaos") {
                             50,
                             Component.translatable("game.fastfall.award.no_damage_taken", ALT_COLOR_2)
                         )
+                    }
+                }
+                eventNode.addListener(InstanceTickEvent::class.java) { event ->
+                    if (event.instance.worldAge % 5 != 0L) return@addListener // Only run every 5 ticks
+                    val ordered = players.sortedBy { it.position.y }
+                    if (ordered.isEmpty()) return@addListener
+                    val lowest = ordered.first()
+                    if (lead != lowest) {
+                        if (lead != null) {
+                            val msg = lead!!.name + Component.text(" is now in the lead!", BRAND_COLOR_PRIMARY_2)
+                            sendMessage(msg)
+                            showTitle(Title.title(Component.empty(), msg))
+                            playSound(Sound.sound(SoundEvent.BLOCK_NOTE_BLOCK_PLING, Sound.Source.PLAYER, 1.0f, 1.0f))
+                        }
+                        lead = lowest
+                    }
+                    ordered.forEachIndexed { index, player ->
+                        val ahead = ordered.size - index - 1
+                        val playersAhead = Component.text(ahead,
+                            BRAND_COLOR_PRIMARY_1) + Component.text(" player${if (ahead == 1) "" else "s"} ahead · ",
+                            BRAND_COLOR_PRIMARY_2)
+                        val health = Component.text(String.format("%.1f%%", player.health / player.maxHealth * 100))
+                            .withTransition(
+                                player.health / player.maxHealth,
+                                NamedTextColor.RED,
+                                NamedTextColor.YELLOW,
+                                NamedTextColor.GREEN
+                            ) + Component.text(" health · ")
+                        val yPos =
+                            Component.text(player.position.y.toInt() - (257 - 2 * radius), BRAND_COLOR_PRIMARY_1) +
+                                    Component.text(" blocks left", BRAND_COLOR_PRIMARY_2)
+                        player.sendActionBar(playersAhead + health + yPos)
                     }
                 }
             }
@@ -103,8 +145,6 @@ class FastFallGame(mapName: String?) : Game("FastFall", "Chaos") {
         }.repeat(Duration.ofSeconds(1)).schedule()
 
         ready()
-
-        // TODO action bar with the player's progress to the bottom and # of players ahead
     }
 
     class ChaosWorldGenerator(val radius: Int, val blockSet: Collection<Block>) : Generator {
