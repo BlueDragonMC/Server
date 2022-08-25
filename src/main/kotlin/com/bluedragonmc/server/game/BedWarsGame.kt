@@ -6,6 +6,7 @@ import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.combat.CustomDeathMessageModule
 import com.bluedragonmc.server.module.combat.OldCombatModule
+import com.bluedragonmc.server.module.config.ConfigModule
 import com.bluedragonmc.server.module.database.AwardsModule
 import com.bluedragonmc.server.module.gameplay.*
 import com.bluedragonmc.server.module.instance.InstanceContainerModule
@@ -26,6 +27,7 @@ import net.kyori.adventure.title.Title
 import net.minestom.server.attribute.Attribute
 import net.minestom.server.attribute.AttributeModifier
 import net.minestom.server.attribute.AttributeOperation
+import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.EntityType
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
@@ -36,14 +38,13 @@ import net.minestom.server.event.player.PlayerBlockPlaceEvent
 import net.minestom.server.event.player.PlayerDeathEvent
 import net.minestom.server.instance.block.Block
 import net.minestom.server.instance.block.BlockFace
-import net.minestom.server.item.Enchantment
-import net.minestom.server.item.ItemMeta
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import net.minestom.server.potion.Potion
 import net.minestom.server.potion.PotionEffect
 import net.minestom.server.sound.SoundEvent
-import net.minestom.server.utils.inventory.PlayerInventoryUtils
+import org.spongepowered.configurate.ConfigurationNode
+import org.spongepowered.configurate.kotlin.extensions.get
 import java.nio.file.Paths
 import java.util.*
 
@@ -54,6 +55,9 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
     val bedDestroyedSound = Sound.sound(SoundEvent.ENTITY_WITHER_DEATH, Sound.Source.HOSTILE, 1.0f, 1.0f)
 
     init {
+
+        val config = use(ConfigModule("bedwars.yml")).getConfig()
+
         use(AnvilFileMapProviderModule(Paths.get("worlds/$name/$mapName")))
         use(InstanceContainerModule())
         use(VoidDeathModule(32.0))
@@ -96,50 +100,9 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
         use(ItemDropModule(dropAllOnDeath = true))
         use(
             KitsModule(
-                showMenu = true, giveKitsOnStart = true, selectableKits = listOf(
-                    KitsModule.Kit(
-                        Component.text("Armorer", NamedTextColor.YELLOW),
-                        "When the game starts, receive the following items:\n- Wooden Sword\n- Iron Chestplate\n- Iron Leggings",
-                        Material.IRON_CHESTPLATE,
-                        items = hashMapOf(
-                            0 to ItemStack.builder(Material.WOODEN_SWORD).build(),
-                            PlayerInventoryUtils.CHESTPLATE_SLOT to ItemStack.builder(Material.IRON_CHESTPLATE).build(),
-                            PlayerInventoryUtils.LEGGINGS_SLOT to ItemStack.builder(Material.IRON_LEGGINGS).build()
-                        )
-                    ), KitsModule.Kit(
-                        Component.text("Swordsman", NamedTextColor.YELLOW),
-                        "When the game starts, receive the following items:\n- Diamond Sword\n- Leather Tunic\n- Leather Pants",
-                        Material.DIAMOND_SWORD,
-                        items = hashMapOf(
-                            0 to ItemStack.builder(Material.DIAMOND_SWORD).build(),
-                            PlayerInventoryUtils.CHESTPLATE_SLOT to ItemStack.builder(Material.LEATHER_CHESTPLATE)
-                                .build(),
-                            PlayerInventoryUtils.LEGGINGS_SLOT to ItemStack.builder(Material.LEATHER_LEGGINGS).build()
-                        )
-                    ), KitsModule.Kit(
-                        Component.text("Builder", NamedTextColor.YELLOW),
-                        "When the game starts, receive the following items:\n- Wooden Sword\n- 48 Wool\n- Leather Tunic\n- Leather Pants",
-                        Material.WHITE_WOOL,
-                        items = hashMapOf(
-                            0 to ItemStack.builder(Material.WOODEN_SWORD).build(),
-                            1 to ItemStack.builder(Material.WHITE_WOOL).amount(48).build(),
-                            PlayerInventoryUtils.CHESTPLATE_SLOT to ItemStack.builder(Material.LEATHER_CHESTPLATE)
-                                .build(),
-                            PlayerInventoryUtils.LEGGINGS_SLOT to ItemStack.builder(Material.LEATHER_LEGGINGS).build()
-                        )
-                    ), KitsModule.Kit(
-                        Component.text("Trader", NamedTextColor.YELLOW),
-                        "When the game starts, receive the following items:\n- Wooden Sword\n- 32 Iron\n- Leather Tunic\n- Leather Pants",
-                        Material.IRON_INGOT,
-                        items = hashMapOf(
-                            0 to ItemStack.builder(Material.WOODEN_SWORD).build(),
-                            1 to ItemStack.builder(Material.IRON_INGOT).amount(32).build(),
-                            PlayerInventoryUtils.CHESTPLATE_SLOT to ItemStack.builder(Material.LEATHER_CHESTPLATE)
-                                .build(),
-                            PlayerInventoryUtils.LEGGINGS_SLOT to ItemStack.builder(Material.LEATHER_LEGGINGS).build()
-                        )
-                    )
-                )
+                showMenu = true,
+                giveKitsOnStart = true,
+                selectableKits = config.node("kits").getList(KitsModule.Kit::class.java)!!
             )
         )
         use(object : GameModule() {
@@ -186,7 +149,8 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
                         sidebarTeamsSection.update()
                         for (player in parent.players) {
                             player.sendMessage(
-                                Component.translatable("game.bedwars.bed_broken", team.name, event.player.name).surroundWithSeparators()
+                                Component.translatable("game.bedwars.bed_broken", team.name, event.player.name)
+                                    .surroundWithSeparators()
                             )
                             if (!team.players.contains(player)) {
                                 player.playSound(otherTeamBedDestroyedSound)
@@ -243,22 +207,10 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
                 eventNode.addListener(GameStartEvent::class.java) {
                     val generatorsModule = getModule<ItemGeneratorsModule>()
                     val (spawnGenerators, diamondGenerators, emeraldGenerators, mainShopkeepers, teamUpgradeShopkeepers) = parent.mapData!!.additionalLocations
-                    generatorsModule.addGenerator(
-                        getInstance(), spawnGenerators, mapOf(
-                            ItemStack.of(Material.IRON_INGOT) to 1,
-                            ItemStack.of(Material.GOLD_INGOT) to 3,
-                        )
-                    )
-                    generatorsModule.addGenerator(
-                        getInstance(), diamondGenerators, mapOf(
-                            ItemStack.of(Material.DIAMOND) to 25,
-                        )
-                    )
-                    generatorsModule.addGenerator(
-                        getInstance(), emeraldGenerators, mapOf(
-                            ItemStack.of(Material.EMERALD) to 35,
-                        )
-                    )
+
+                    generatorsModule.addGenerator(config, "spawn", spawnGenerators)
+                    generatorsModule.addGenerator(config, "diamond", diamondGenerators)
+                    generatorsModule.addGenerator(config, "emerald", emeraldGenerators)
 
                     getModule<NPCModule>().addNPC(instance = getInstance(),
                         positions = mainShopkeepers,
@@ -288,32 +240,29 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
         ready()
     }
 
+    private fun ItemGeneratorsModule.addGenerator(config: ConfigurationNode, type: String, locations: List<Pos>) {
+        val map = config.node("generators", type).childrenList().map { node ->
+            node.node("item").get<ItemStack>()!! to node.node("cooldown").getInt(Int.MAX_VALUE)
+        }
+        addGenerator(getInstance(), locations, mapOf(*map.toTypedArray()))
+    }
+
     private val shop by lazy {
         getModule<ShopModule>().createShop("Shop") {
-            item(1, 1, Material.WHITE_WOOL, 16, 10, Material.IRON_INGOT)
-            item(1, 2, Material.OAK_WOOD, 8, 10, Material.GOLD_INGOT)
-            item(1, 3, Material.END_STONE, 8, 50, Material.IRON_INGOT)
-
-            item(2, 1, Material.SHEARS, 1, 50, Material.IRON_INGOT)
-            item(2, 2, Material.STONE_PICKAXE, 1, 50, Material.IRON_INGOT)
-            item(2, 3, Material.STONE_AXE, 1, 50, Material.IRON_INGOT)
-            item(2, 4, Material.IRON_PICKAXE, 1, 20, Material.GOLD_INGOT)
-            item(2, 5, Material.IRON_AXE, 1, 20, Material.GOLD_INGOT)
-
-            item(3, 1, Material.STONE_SWORD, 1, 15, Material.IRON_INGOT)
-            item(3, 2, Material.IRON_SWORD, 1, 10, Material.GOLD_INGOT)
-            item(3, 3, Material.DIAMOND_SWORD, 1, 5, Material.EMERALD)
-
-            item(4, 1, Material.IRON_HELMET, 1, 20, Material.GOLD_INGOT)
-            item(4, 2, Material.IRON_CHESTPLATE, 1, 5, Material.EMERALD)
-            item(4, 3, Material.IRON_LEGGINGS, 1, 5, Material.EMERALD)
-            item(4, 4, Material.IRON_BOOTS, 1, 20, Material.GOLD_INGOT)
-            val stickItem = ItemStack.builder(Material.STICK).displayName(Component.text("Knockback Stick"))
-                .lore(Component.text("Use this to wack your enemies"), Component.text("off the map!"))
-                .meta { metaBuilder: ItemMeta.Builder ->
-                    metaBuilder.enchantment(Enchantment.KNOCKBACK, 3)
-                }.build()
-            item(3, 4, stickItem, 3, Material.EMERALD)
+            val config = getModule<ConfigModule>().getConfig()
+            for (item in config.node("shop").childrenList()) {
+                val row = item.node("row").int
+                val col = item.node("column").int
+                val price = item.node("price").int
+                val currency = item.node("currency").get<Material>()!!
+                if (item.hasChild("item")) {
+                    item(row, col, item.node("item").get<ItemStack>()!!, price, currency)
+                } else {
+                    val material = item.node("material").get<Material>()!!
+                    val amount = item.node("amount").getInt(1)
+                    item(row, col, material, amount, price, currency)
+                }
+            }
         }
     }
 
@@ -351,11 +300,11 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
     }
 
     fun openShop(player: Player) {
-        if(player.gameMode != GameMode.SPECTATOR) shop.open(player)
+        if (player.gameMode != GameMode.SPECTATOR) shop.open(player)
     }
 
     fun openUpgradesMenu(player: Player) {
-        if(player.gameMode != GameMode.SPECTATOR) upgrades.open(player)
+        if (player.gameMode != GameMode.SPECTATOR) upgrades.open(player)
     }
 
     private val bedBlockToTeam = mapOf(

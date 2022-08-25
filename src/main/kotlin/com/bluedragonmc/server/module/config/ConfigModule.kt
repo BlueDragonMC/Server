@@ -11,10 +11,11 @@ import net.minestom.server.entity.EntityType
 import net.minestom.server.entity.PlayerSkin
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
+import net.minestom.server.instance.block.Block
 import net.minestom.server.item.Enchantment
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
-import org.spongepowered.configurate.CommentedConfigurationNode
+import org.spongepowered.configurate.ConfigurationNode
 import org.spongepowered.configurate.ConfigurationOptions
 import org.spongepowered.configurate.yaml.YamlConfigurationLoader
 import java.io.BufferedReader
@@ -22,7 +23,7 @@ import java.io.InputStreamReader
 
 class ConfigModule(private val configFileName: String) : GameModule() {
 
-    private lateinit var root: CommentedConfigurationNode
+    private lateinit var root: ConfigurationNode
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
 
@@ -43,11 +44,12 @@ class ConfigModule(private val configFileName: String) : GameModule() {
             builder.register(PlayerSkin::class.java, PlayerSkinSerializer())
             builder.register(KitsModule.Kit::class.java, KitSerializer())
             builder.register(ItemStack::class.java, ItemStackSerializer())
+            builder.register(Block::class.java, BlockSerializer())
         }
         root = loader.load(config)
     }
 
-    fun getConfig(): CommentedConfigurationNode {
+    fun getConfig(): ConfigurationNode {
         return root
     }
 }
