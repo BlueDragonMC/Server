@@ -5,8 +5,6 @@ import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.GameEvent
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.database.AwardsModule
-import com.bluedragonmc.server.module.gameplay.SpectatorModule
-import com.bluedragonmc.server.module.gameplay.TeamModule
 import com.bluedragonmc.server.utils.surroundWithSeparators
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor

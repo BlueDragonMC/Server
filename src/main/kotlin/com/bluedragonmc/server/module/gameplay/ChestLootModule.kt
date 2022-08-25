@@ -1,7 +1,9 @@
 package com.bluedragonmc.server.module.gameplay
 
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.event.ChestPopulateEvent
 import com.bluedragonmc.server.module.GameModule
+import com.bluedragonmc.server.module.vanilla.ChestModule
 import net.minestom.server.coordinate.Point
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
@@ -46,7 +48,7 @@ class ChestLootModule(private val lootProvider: ChestLootProvider) : GameModule(
     }
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
-        eventNode.addListener(ChestModule.ChestPopulateEvent::class.java) { event ->
+        eventNode.addListener(ChestPopulateEvent::class.java) { event ->
             lootProvider.getLoot(event.position).forEachIndexed { index, itemStack ->
                 event.menu.setItemStack(event.player, index, itemStack)
             }

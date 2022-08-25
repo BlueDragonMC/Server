@@ -1,18 +1,22 @@
 package com.bluedragonmc.server
 
 import com.bluedragonmc.server.bootstrap.*
+import com.bluedragonmc.server.bootstrap.dev.DevInstanceRouter
+import com.bluedragonmc.server.bootstrap.dev.MojangAuthentication
+import com.bluedragonmc.server.bootstrap.dev.OpenToLAN
+import com.bluedragonmc.server.bootstrap.prod.AgonesIntegration
+import com.bluedragonmc.server.bootstrap.prod.CustomExceptionHandler
+import com.bluedragonmc.server.bootstrap.prod.InitialInstanceRouter
+import com.bluedragonmc.server.bootstrap.prod.VelocityForwarding
 import com.bluedragonmc.server.game.Lobby
-import com.bluedragonmc.server.bootstrap.PerInstanceTabList
-import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.format.TextDecoration
 import net.minestom.server.MinecraftServer
-import net.minestom.server.event.player.PlayerSpawnEvent
 import net.minestom.server.utils.NamespaceID
 import net.minestom.server.world.DimensionType
 import org.slf4j.LoggerFactory
 
 const val NAMESPACE = "bluedragon"
 lateinit var lobby: Game
+fun isLobbyInitialized() = ::lobby.isInitialized
 private val logger = LoggerFactory.getLogger("ServerKt")
 
 fun main() {
@@ -22,26 +26,23 @@ fun main() {
     val minecraftServer = MinecraftServer.init()
     val eventNode = MinecraftServer.getGlobalEventHandler()
 
-    // Create a test instance
-    lobby = Lobby()
-
     val services = listOf(
         Commands,
-        OpenToLAN,
-        GlobalPunishments,
-        GlobalChatFormat,
-        PerInstanceTabList,
-        CustomPlayerProvider,
-        ServerListPingHandler,
-        InitialInstanceRouter,
-        DevInstanceRouter,
         CustomExceptionHandler,
-        ScheduledServerShutdown,
-        VelocityForwarding,
-        MojangAuthentication,
+        CustomPlayerProvider,
+        DevInstanceRouter,
+        GlobalBlockHandlers,
+        GlobalChatFormat,
         GlobalPlayerNameFormat,
+        GlobalPunishments,
         GlobalTranslation,
-        GlobalBlockHandlers
+        InitialInstanceRouter,
+        MojangAuthentication,
+        OpenToLAN,
+        PerInstanceTabList,
+        ServerListPingHandler,
+        TabListFormat,
+        VelocityForwarding
     ).filter { it.canHook() }
 
     services.forEach {
@@ -51,22 +52,19 @@ fun main() {
 
     logger.info("Initialized ${services.size} services in environment ${Environment.current::class.simpleName}.")
 
-    eventNode.addListener(PlayerSpawnEvent::class.java) { event ->
-        event.player.sendPlayerListHeaderAndFooter(
-            SERVER_NAME_GRADIENT.decorate(TextDecoration.BOLD),
-            Component.translatable("global.tab.call_to_action", BRAND_COLOR_PRIMARY_2, Component.translatable("global.server.domain", BRAND_COLOR_PRIMARY_1)))
-    }
-
     // Register custom dimension types
-    MinecraftServer.getDimensionTypeManager().addDimension(
-        DimensionType.builder(NamespaceID.from("$NAMESPACE:fullbright_dimension")).ambientLight(1.0F).build()
-    )
+    MinecraftServer.getDimensionTypeManager()
+        .addDimension(DimensionType.builder(NamespaceID.from("$NAMESPACE:fullbright_dimension")).ambientLight(1.0F)
+            .build())
 
     // Start the queue, allowing players to queue for and join games
     Environment.current.queue.start()
 
     // Start the server & bind to port 25565
     minecraftServer.start("0.0.0.0", 25565)
-    
+
+    // Create a Lobby instance
+    lobby = Lobby()
+
     if (AgonesIntegration.canHook()) AgonesIntegration.hook(eventNode)
 }

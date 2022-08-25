@@ -9,6 +9,9 @@ import com.bluedragonmc.server.game.InfectionGame
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.combat.OldCombatModule
 import com.bluedragonmc.server.module.database.DatabaseModule
+import com.bluedragonmc.server.module.minigame.SpawnpointModule
+import com.bluedragonmc.server.module.minigame.TeamModule
+import com.bluedragonmc.server.module.minigame.TimedRespawnModule
 import com.bluedragonmc.server.module.minigame.WinModule
 import com.bluedragonmc.server.utils.plus
 import net.kyori.adventure.text.Component

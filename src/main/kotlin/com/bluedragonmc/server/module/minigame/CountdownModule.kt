@@ -5,7 +5,6 @@ import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.GameState
 import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.module.GameModule
-import com.bluedragonmc.server.module.gameplay.SpawnpointModule
 import com.bluedragonmc.server.utils.packet.PacketUtils
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor

@@ -1,4 +1,4 @@
-package com.bluedragonmc.server.module.gameplay
+package com.bluedragonmc.server.module.minigame
 
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.CustomPlayer

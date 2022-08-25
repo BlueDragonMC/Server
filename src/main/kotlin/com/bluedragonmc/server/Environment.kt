@@ -1,6 +1,6 @@
 package com.bluedragonmc.server
 
-import com.bluedragonmc.server.bootstrap.AgonesIntegration
+import com.bluedragonmc.server.bootstrap.prod.AgonesIntegration
 import com.bluedragonmc.server.queue.IPCQueue
 import com.bluedragonmc.server.queue.Queue
 import com.bluedragonmc.server.queue.TestQueue

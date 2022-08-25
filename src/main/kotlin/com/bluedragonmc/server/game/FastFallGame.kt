@@ -9,8 +9,8 @@ import com.bluedragonmc.server.module.combat.CustomDeathMessageModule
 import com.bluedragonmc.server.module.database.AwardsModule
 import com.bluedragonmc.server.module.gameplay.*
 import com.bluedragonmc.server.module.instance.CustomGeneratorInstanceModule
-import com.bluedragonmc.server.module.minigame.CountdownModule
-import com.bluedragonmc.server.module.minigame.WinModule
+import com.bluedragonmc.server.module.minigame.*
+import com.bluedragonmc.server.module.vanilla.FallDamageModule
 import com.bluedragonmc.server.utils.plus
 import net.kyori.adventure.text.Component
 import net.minestom.server.MinecraftServer

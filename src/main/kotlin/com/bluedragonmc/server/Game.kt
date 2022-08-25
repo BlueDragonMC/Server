@@ -87,7 +87,7 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
         }.delay(Duration.ofSeconds(5)).schedule()
     }
 
-    fun use(module: GameModule) {
+    fun <T: GameModule> use(module: T): T {
 
         if (modules.any { it == module }) throw IllegalStateException("Tried to register module that is already registered: $module")
 
@@ -103,7 +103,7 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
                 modules.any { module -> dep.isInstance(module) }
             }) {
             logger.debug("Waiting for dependencies of module $module to load before registering.")
-            return
+            return module
         }
 
         // Create an event node for the module.
@@ -115,7 +115,7 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
         modules.add(module)
 
         val depth = dependencyTree.maxDepth()
-        if (depth == 0) return
+        if (depth == 0) return module
         val entries = dependencyTree.elementsAtDepth(depth)
         entries.forEach { node ->
             if (node.value is EmptyModuleDependency && node.value!!.type.isInstance(module)) {
@@ -131,6 +131,7 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
                 }
             }
         }
+        return module
     }
 
     private fun useMandatoryModules() {

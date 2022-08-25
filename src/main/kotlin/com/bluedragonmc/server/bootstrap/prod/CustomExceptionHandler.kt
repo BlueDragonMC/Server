@@ -1,8 +1,9 @@
-package com.bluedragonmc.server.bootstrap
+package com.bluedragonmc.server.bootstrap.prod
 
 import com.bluedragonmc.messages.ReportErrorMessage
 import com.bluedragonmc.server.Environment
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.bootstrap.Bootstrap
 import com.bluedragonmc.server.module.database.DatabaseModule
 import com.bluedragonmc.server.module.messaging.MessagingModule
 import kotlinx.coroutines.launch

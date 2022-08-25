@@ -3,7 +3,7 @@ package com.bluedragonmc.server
 import com.bluedragonmc.server.module.database.PlayerDocument
 import com.bluedragonmc.server.module.database.PunishmentType
 import com.bluedragonmc.server.module.gameplay.ShopModule
-import com.bluedragonmc.server.module.gameplay.SpawnpointModule
+import com.bluedragonmc.server.module.minigame.SpawnpointModule
 import net.minestom.server.entity.Entity
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player

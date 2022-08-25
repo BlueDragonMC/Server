@@ -1,6 +1,8 @@
-package com.bluedragonmc.server.module.gameplay
+package com.bluedragonmc.server.module.vanilla
 
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.event.ChestOpenEvent
+import com.bluedragonmc.server.event.ChestPopulateEvent
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.GuiModule
 import com.bluedragonmc.server.utils.SoundUtils
@@ -13,8 +15,6 @@ import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.player.PlayerBlockInteractEvent
-import net.minestom.server.event.trait.CancellableEvent
-import net.minestom.server.event.trait.PlayerInstanceEvent
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
 import net.minestom.server.inventory.InventoryType
@@ -180,41 +180,5 @@ class ChestModule : GameModule() {
         val rootPosition =
             nearbyChests.filter { chests.containsKey(it) }.sortedBy { it.blockX() }.maxByOrNull { it.blockZ() } ?: pos
         return inventoryType to rootPosition
-    }
-
-    /**
-     * Called whenever a chest is opened.
-     * If this event is cancelled, the chest's [menu] is not opened for the [player].
-     */
-    data class ChestOpenEvent(
-        private val player: Player,
-        val position: Point,
-        val baseChestPosition: Point,
-        val inventoryType: InventoryType,
-        val menu: GuiModule.Menu,
-    ) : PlayerInstanceEvent, CancellableEvent {
-        override fun getPlayer(): Player = player
-
-        private var cancelled = false
-        override fun isCancelled() = cancelled
-
-        override fun setCancelled(cancel: Boolean) {
-            cancelled = cancel
-        }
-    }
-
-    /**
-     * Called when a chest is first populated.
-     * This event is not per-player, it is only called when a chest's [menu] is created.
-     * The player in this event is always the first [player] to open the chest at [baseChestPosition].
-     */
-    data class ChestPopulateEvent(
-        private val player: Player,
-        val position: Point,
-        val baseChestPosition: Point,
-        val inventoryType: InventoryType,
-        val menu: GuiModule.Menu,
-    ) : PlayerInstanceEvent {
-        override fun getPlayer(): Player = player
     }
 }
