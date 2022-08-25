@@ -4,7 +4,7 @@ import com.bluedragonmc.server.ALT_COLOR_1
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.KitSelectedEvent
 import com.bluedragonmc.server.event.PlayerLeaveGameEvent
-import com.bluedragonmc.server.module.ConfigModule
+import com.bluedragonmc.server.module.config.ConfigModule
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.GuiModule
 import com.bluedragonmc.server.module.combat.CustomDeathMessageModule

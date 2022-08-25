@@ -2,7 +2,7 @@ package com.bluedragonmc.server.game
 
 import com.bluedragonmc.messages.GameType
 import com.bluedragonmc.server.*
-import com.bluedragonmc.server.module.ConfigModule
+import com.bluedragonmc.server.module.config.ConfigModule
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.GuiModule
 import com.bluedragonmc.server.module.gameplay.*
