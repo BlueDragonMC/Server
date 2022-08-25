@@ -46,11 +46,14 @@ class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule(
     /**
      * A good spawnpoint provider for testing. Spawns players at the positions provided in the constructor.
      */
-    class TestSpawnpointProvider(private vararg val spawns: Pos) : SpawnpointProvider {
+    class TestSpawnpointProvider(vararg spawns: Pos) : SpawnpointProvider {
+        private val cachedSpawnpoints = hashMapOf<Player, Pos>()
+        private val list = CircularList(listOf(*spawns))
+        private var i = 0
         override fun initialize(game: Game) {}
 
         override fun getSpawnpoint(player: Player): Pos {
-            return spawns.iterator().next()
+            return cachedSpawnpoints.getOrPut(player) { list[i++] }
         }
     }
 

@@ -59,9 +59,9 @@ class FastFallGame(mapName: String?) : Game("FastFall", "Chaos") {
             SpawnpointModule(
                 SpawnpointModule.TestSpawnpointProvider(
                     Pos(-4.5, 257.0, -4.5),
-                    Pos(-4.5, 257.0, 4.5),
-                    Pos(4.5, 257.0, -5.5),
-                    Pos(-4.5, 257.0, -4.5)
+                    Pos(-4.5, 257.0, 5.5),
+                    Pos(5.5, 257.0, 5.5),
+                    Pos(5.5, 257.0, -4.5)
                 )
             )
         )
