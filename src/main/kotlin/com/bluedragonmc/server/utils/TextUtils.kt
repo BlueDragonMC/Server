@@ -1,9 +1,6 @@
 package com.bluedragonmc.server.utils
 
-import com.bluedragonmc.server.ALT_COLOR_1
-import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
-import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
-import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_3
+import com.bluedragonmc.server.*
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.JoinConfiguration
 import net.kyori.adventure.text.TranslatableComponent
@@ -30,7 +27,7 @@ val miniMessage = MiniMessage.builder().editTags { builder ->
         TagResolver.resolver("p2", Tag.styling(BRAND_COLOR_PRIMARY_2)),
         TagResolver.resolver("p3", Tag.styling(BRAND_COLOR_PRIMARY_3)),
         TagResolver.resolver("a1", Tag.styling(ALT_COLOR_1)),
-        TagResolver.resolver("a2", Tag.styling(ALT_COLOR_1)),
+        TagResolver.resolver("a2", Tag.styling(ALT_COLOR_2)),
         TagResolver.resolver("nobold", Tag.styling(TextDecoration.BOLD.withState(false))),
         TagResolver.resolver("noitalic", Tag.styling(TextDecoration.ITALIC.withState(false)))
     )
