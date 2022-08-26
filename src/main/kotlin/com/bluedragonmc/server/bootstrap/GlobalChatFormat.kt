@@ -7,11 +7,11 @@ import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.module.database.PermissionGroup
 import com.bluedragonmc.server.module.database.Permissions
 import com.bluedragonmc.server.utils.buildComponent
+import com.bluedragonmc.server.utils.miniMessage
 import com.bluedragonmc.server.utils.surroundWithSeparators
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.event.HoverEvent
 import net.kyori.adventure.text.format.NamedTextColor
-import net.kyori.adventure.text.minimessage.MiniMessage
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.player.PlayerChatEvent
@@ -48,8 +48,8 @@ object GlobalChatFormat : Bootstrap() {
                 +if (group.prefix != Component.empty()) Component.space() else Component.empty()
                 +player.name
                 +Component.text(": ", NamedTextColor.DARK_GRAY)
-                if (Permissions.hasPermission(player.data, "chat.minimessage")) +MiniMessage.miniMessage()
-                    .deserialize(event.message)
+                if (Permissions.hasPermission(player.data, "chat.minimessage"))
+                    +miniMessage.deserialize(event.message)
                 else +Component.text(event.message, NamedTextColor.WHITE)
             }
 

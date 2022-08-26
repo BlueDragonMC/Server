@@ -44,14 +44,6 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
 
     override val autoRemoveInstance = false
 
-    private val splashes = listOf(
-        "Welcome back!",
-        "Try Infinijump!",
-        "Enjoy your stay!",
-        "Professional software!",
-        "Have you seen Joe?"
-    )
-
     private val queue = Environment.current.queue
 
     @ConfigSerializable
@@ -145,6 +137,8 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
                     it.player.sendMessage(Component.translatable("lobby.shop.coming_soon", ALT_COLOR_1))
                 })
         }
+
+        val splashes = config.node("splashes").getList(String::class.java)!!
 
         use(object : GameModule() {
             override fun initialize(parent: Game, eventNode: EventNode<Event>) {

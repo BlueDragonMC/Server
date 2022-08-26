@@ -4,7 +4,7 @@ import com.bluedragonmc.messages.*
 import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.module.database.Permissions
 import com.bluedragonmc.server.module.messaging.MessagingModule
-import net.kyori.adventure.text.minimessage.MiniMessage
+import com.bluedragonmc.server.utils.miniMessage
 
 class PartyCommand(name: String, usageString: String, vararg aliases: String) : BlueDragonCommand(name, aliases, null, block = {
     requirePlayers() // All subcommands require a player
@@ -37,7 +37,7 @@ class PartyCommand(name: String, usageString: String, vararg aliases: String) : 
         syntax(chatArgument) {
             val msg = if(!Permissions.hasPermission((player as CustomPlayer).data, "chat.minimessage")) {
                 // Escape the chat message to prevent players using MiniMessage tags in party chat messages
-                MiniMessage.miniMessage().escapeTags(get(chatArgument).joinToString(" "))
+                miniMessage.escapeTags(get(chatArgument).joinToString(" "))
             } else {
                 // The player is allowed to use MiniMessage
                 get(chatArgument).joinToString(" ")

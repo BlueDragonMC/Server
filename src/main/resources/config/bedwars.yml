@@ -1,5 +1,5 @@
 kits:
-  - name: <yellow>Armorer
+  - name: <a1>Armorer
     description: When the game starts, receive the following items:\n  - Wooden Sword\n  - Iron Chestplate\n  - Iron Leggings
     icon: minecraft:iron_chestplate
     items:
@@ -9,7 +9,7 @@ kits:
         material: minecraft:iron_chestplate
       leggings:
         material: minecraft:iron_leggings
-  - name: <yellow>Swordsman
+  - name: <a1>Swordsman
     description: When the game starts, receive the following items:\n  - Diamond Sword\n  - Leather Tunic\n  - Leather Pants
     icon: minecraft:diamond_sword
     items:
@@ -19,7 +19,7 @@ kits:
         material: minecraft:leather_chestplate
       leggings:
         material: minecraft:leather_leggings
-  - name: <yellow>Builder
+  - name: <a1>Builder
     description: When the game starts, receive the following items:\n  - Wooden Sword\n  - 48 Wool\n  - Leather Tunic\n  - Leather Pants
     icon: minecraft:white_wool
     items:
@@ -32,7 +32,7 @@ kits:
         material: minecraft:leather_chestplate
       leggings:
         material: minecraft:leather_leggings
-  - name: <yellow>Trader
+  - name: <a1>Trader
     description: When the game starts, receive the following items:\n  - Wooden Sword\n  - 32 Iron\n  - Leather Tunic\n  - Leather Pants
     icon: minecraft:iron_ingot
     items:

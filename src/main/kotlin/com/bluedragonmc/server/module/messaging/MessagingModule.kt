@@ -9,6 +9,7 @@ import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.database.DatabaseModule
 import com.bluedragonmc.server.module.instance.InstanceModule
+import com.bluedragonmc.server.utils.miniMessage
 import kotlinx.coroutines.launch
 import net.kyori.adventure.key.Key
 import net.kyori.adventure.sound.Sound
@@ -84,7 +85,7 @@ class MessagingModule : GameModule() {
             subscribe(SendChatMessage::class) { message ->
                 val target = if (message.targetPlayer == ZERO_UUID) MinecraftServer.getCommandManager().consoleSender
                 else message.targetPlayer.asPlayer() ?: return@subscribe
-                val msg = MiniMessage.miniMessage().deserialize(message.message)
+                val msg = miniMessage.deserialize(message.message)
                 when (message.type) {
                     ChatType.CHAT -> target.sendMessage(msg)
                     ChatType.ACTION_BAR -> target.sendActionBar(msg)

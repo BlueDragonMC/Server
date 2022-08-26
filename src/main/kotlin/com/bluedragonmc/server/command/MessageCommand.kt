@@ -6,10 +6,10 @@ import com.bluedragonmc.messages.SendChatMessage
 import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.module.database.DatabaseModule
 import com.bluedragonmc.server.module.messaging.MessagingModule
+import com.bluedragonmc.server.utils.miniMessage
 import kotlinx.coroutines.runBlocking
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
-import net.kyori.adventure.text.minimessage.MiniMessage
 import net.minestom.server.MinecraftServer
 import net.minestom.server.entity.Player
 
@@ -43,7 +43,7 @@ class MessageCommand(name: String, vararg aliases: String) : BlueDragonCommand(n
                 val receiverMessage = formatMessageTranslated("command.msg.received", senderName, message)
                 sender.sendMessage(senderMessage)
                 MessagingModule.publish(SendChatMessage(
-                    response.uuid!!, MiniMessage.miniMessage().serialize(receiverMessage), ChatType.CHAT
+                    response.uuid!!, miniMessage.serialize(receiverMessage), ChatType.CHAT
                 ))
             }
         }

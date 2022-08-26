@@ -2,6 +2,7 @@
 
 package com.bluedragonmc.server.module.database
 
+import com.bluedragonmc.server.utils.miniMessage
 import com.github.jershell.kbson.FlexibleDecoder
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -14,7 +15,6 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextColor
-import net.kyori.adventure.text.minimessage.MiniMessage
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.permission.Permission
 import org.bson.BsonType
@@ -96,10 +96,10 @@ object ComponentSerializer : KSerializer<Component> {
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("Component", PrimitiveKind.STRING)
 
     override fun deserialize(decoder: Decoder): Component =
-        MiniMessage.miniMessage().deserialize(decoder.decodeString())
+        miniMessage.deserialize(decoder.decodeString())
 
     override fun serialize(encoder: Encoder, value: Component) =
-        encoder.encodeString(MiniMessage.miniMessage().serialize(value))
+        encoder.encodeString(miniMessage.serialize(value))
 }
 
 object TextColorSerializer : KSerializer<TextColor> {
