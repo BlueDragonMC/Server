@@ -20,6 +20,7 @@ import com.bluedragonmc.server.utils.withTransition
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.title.Title
 import net.minestom.server.MinecraftServer
 import net.minestom.server.coordinate.Point
@@ -61,16 +62,23 @@ class FastFallGame(mapName: String?) : Game("FastFall", "Chaos") {
         use(FallDamageModule)
         use(InstantRespawnModule())
         use(MaxHealthModule(2.0F))
-        use(MOTDModule(Component.translatable("game.fastfall.motd")))
+        use(
+            MOTDModule(
+                showMapName = false,
+                motd = Component.translatable("game.fastfall.motd") +
+                        Component.newline() +
+                        Component.translatable(
+                            "game.fastfall.motd.theme", BRAND_COLOR_PRIMARY_2,
+                            Component.translatable("game.fastfall.block_set.${blockSetName}", BRAND_COLOR_PRIMARY_1, TextDecoration.BOLD)
+                        )
+            )
+        )
         use(PlayerResetModule(defaultGameMode = GameMode.SURVIVAL))
         use(SidebarModule(name))
         use(
             SpawnpointModule(
                 SpawnpointModule.TestSpawnpointProvider(
-                    Pos(-4.5, 257.0, -4.5),
-                    Pos(-4.5, 257.0, 5.5),
-                    Pos(5.5, 257.0, 5.5),
-                    Pos(5.5, 257.0, -4.5)
+                    Pos(-4.5, 257.0, -4.5), Pos(-4.5, 257.0, 5.5), Pos(5.5, 257.0, 5.5), Pos(5.5, 257.0, -4.5)
                 )
             )
         )
@@ -84,9 +92,7 @@ class FastFallGame(mapName: String?) : Game("FastFall", "Chaos") {
                 eventNode.addListener(WinModule.WinnerDeclaredEvent::class.java) { event ->
                     event.winningTeam.players.forEach {
                         if (it.health == it.maxHealth) parent.getModule<AwardsModule>().awardCoins(
-                            it,
-                            50,
-                            Component.translatable("game.fastfall.award.no_damage_taken", ALT_COLOR_2)
+                            it, 50, Component.translatable("game.fastfall.award.no_damage_taken", ALT_COLOR_2)
                         )
                     }
                 }
@@ -111,9 +117,11 @@ class FastFallGame(mapName: String?) : Game("FastFall", "Chaos") {
                     }
                     ordered.forEachIndexed { index, player ->
                         val ahead = ordered.size - (ordered.size - index)
-                        val playersAhead = Component.text(ahead,
-                            BRAND_COLOR_PRIMARY_1) + Component.text(" player${if (ahead == 1) "" else "s"} ahead · ",
-                            BRAND_COLOR_PRIMARY_2)
+                        val playersAhead = Component.text(
+                            ahead, BRAND_COLOR_PRIMARY_1
+                        ) + Component.text(
+                            " player${if (ahead == 1) "" else "s"} ahead · ", BRAND_COLOR_PRIMARY_2
+                        )
                         val health = Component.text(String.format("%.1f%%", player.health / player.maxHealth * 100))
                             .withTransition(
                                 player.health / player.maxHealth,
@@ -121,9 +129,10 @@ class FastFallGame(mapName: String?) : Game("FastFall", "Chaos") {
                                 NamedTextColor.YELLOW,
                                 NamedTextColor.GREEN
                             ) + Component.text(" health · ")
-                        val yPos =
-                            Component.text(player.position.y.toInt() - (257 - 2 * radius), BRAND_COLOR_PRIMARY_1) +
-                                    Component.text(" blocks left", BRAND_COLOR_PRIMARY_2)
+                        val yPos = Component.text(
+                            player.position.y.toInt() - (257 - 2 * radius),
+                            BRAND_COLOR_PRIMARY_1
+                        ) + Component.text(" blocks left", BRAND_COLOR_PRIMARY_2)
                         player.sendActionBar(playersAhead + health + yPos)
                     }
                 }
@@ -141,8 +150,7 @@ class FastFallGame(mapName: String?) : Game("FastFall", "Chaos") {
         val binding = getModule<SidebarModule>().bind {
             players.map {
                 "player-y-${it.username}" to it.name + Component.text(
-                    ": ",
-                    BRAND_COLOR_PRIMARY_2
+                    ": ", BRAND_COLOR_PRIMARY_2
                 ) + Component.text("${it.position.y.toInt() - (257 - 2 * radius)}", BRAND_COLOR_PRIMARY_1)
             }
         }
@@ -174,10 +182,7 @@ class FastFallGame(mapName: String?) : Game("FastFall", "Chaos") {
                             ) // Spawn point
                             else if (!pointInSphere(Vec(x.toDouble(), y.toDouble(), z.toDouble()), radius)) continue
                             else if ((1..20).random() == 1) setter.setBlock(
-                                x,
-                                y,
-                                z,
-                                if ((1..23).random() == 1) Block.SLIME_BLOCK else randomBlock()
+                                x, y, z, if ((1..23).random() == 1) Block.SLIME_BLOCK else randomBlock()
                             )
                         }
                     }
