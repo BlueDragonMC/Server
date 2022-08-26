@@ -4,21 +4,22 @@ import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.GuiModule
 import com.bluedragonmc.server.module.combat.CustomDeathMessageModule
 import com.bluedragonmc.server.module.combat.OldCombatModule
+import com.bluedragonmc.server.module.config.ConfigModule
 import com.bluedragonmc.server.module.database.AwardsModule
-import com.bluedragonmc.server.module.gameplay.*
+import com.bluedragonmc.server.module.gameplay.ChestLootModule
+import com.bluedragonmc.server.module.gameplay.InstantRespawnModule
+import com.bluedragonmc.server.module.gameplay.InventoryPermissionsModule
 import com.bluedragonmc.server.module.instance.InstanceContainerModule
 import com.bluedragonmc.server.module.map.AnvilFileMapProviderModule
 import com.bluedragonmc.server.module.minigame.*
 import com.bluedragonmc.server.module.vanilla.*
-import com.bluedragonmc.server.utils.noItalic
 import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.coordinate.Point
 import net.minestom.server.entity.GameMode
-import net.minestom.server.item.Enchantment
-import net.minestom.server.item.ItemMeta
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
+import org.spongepowered.configurate.ConfigurationNode
+import org.spongepowered.configurate.kotlin.extensions.get
 import java.nio.file.Paths
 
 /**
@@ -29,6 +30,9 @@ import java.nio.file.Paths
  */
 class SkyWarsGame(mapName: String) : Game("SkyWars", mapName) {
     init {
+
+        val config = use(ConfigModule("skywars.yml")).getConfig()
+
         use(AnvilFileMapProviderModule(Paths.get("worlds/$name/$mapName")))
         use(InstanceContainerModule())
         use(VoidDeathModule(32.0))
@@ -65,17 +69,13 @@ class SkyWarsGame(mapName: String) : Game("SkyWars", mapName) {
         use(AwardsModule())
 
         use(GuiModule())
-        use(ChestLootModule(NormalSkyWarsLootProvider(this)))
+        use(ChestLootModule(NormalSkyWarsLootProvider(config, this)))
 
         ready()
     }
 
     data class SkyWarsLootItem(val item: ItemStack, val chance: Double, val quantity: IntRange) {
-        constructor(item: ItemStack, chance: Double, quantity: Int) : this(item, chance, quantity..quantity)
         constructor(item: Material, chance: Double, quantity: IntRange) : this(ItemStack.of(item), chance, quantity)
-        constructor(item: Material, chance: Double, quantity: Int) : this(ItemStack.of(item),
-            chance,
-            quantity..quantity)
     }
 
 
@@ -107,62 +107,29 @@ class SkyWarsGame(mapName: String) : Game("SkyWars", mapName) {
         abstract fun getMidLoot(): Collection<SkyWarsLootItem>
     }
 
-    class NormalSkyWarsLootProvider(game: Game) : SkyWarsLootProvider(game) {
+    class NormalSkyWarsLootProvider(private val config: ConfigurationNode, game: Game) : SkyWarsLootProvider(game) {
 
-        private val stickItem = ItemStack.builder(Material.STICK).displayName(Component.text("Knockback Stick"))
-            .lore(
-                Component.text("Use this to wack your enemies", NamedTextColor.GRAY).noItalic(),
-                Component.text("off the map!", NamedTextColor.GRAY).noItalic()
-            )
-            .meta { metaBuilder: ItemMeta.Builder ->
-                metaBuilder.enchantment(Enchantment.KNOCKBACK, 2)
-            }.build()
+        private fun getLoot(category: String): Collection<SkyWarsLootItem> {
+            val parentNode = config.node("loot", category)
+            return parentNode.childrenList().map { node ->
+                val material = node.node("material").get<Material>()
+                val chance = node.node("chance").double
+                val quantityString = node.node("quantity").string!!
+                val split = quantityString.split("-")
 
-        override fun getSpawnLoot() = listOf(
-            SkyWarsLootItem(Material.WHITE_WOOL, 1.0, 12..36),
-            SkyWarsLootItem(Material.COOKED_BEEF, 0.5, 1..3),
-            SkyWarsLootItem(Material.STONE_SWORD, 0.5, 1),
-            SkyWarsLootItem(Material.IRON_SWORD, 0.5, 1),
+                val qtyRange = if (split.size == 1) split[0].toInt()..split[0].toInt()
+                else split[0].toInt()..split[1].toInt()
 
-            SkyWarsLootItem(Material.LEATHER_HELMET, 0.15, 1),
-            SkyWarsLootItem(Material.LEATHER_CHESTPLATE, 0.15, 1),
-            SkyWarsLootItem(Material.LEATHER_LEGGINGS, 0.15, 1),
-            SkyWarsLootItem(Material.LEATHER_BOOTS, 0.15, 1),
+                if (material == null) {
+                    val itemStack = node.node("item").get<ItemStack>()!!
+                    SkyWarsLootItem(itemStack, chance, qtyRange)
+                } else {
+                    SkyWarsLootItem(material, chance, qtyRange)
+                }
+            }
+        }
 
-            SkyWarsLootItem(Material.CHAINMAIL_HELMET, 0.10, 1),
-            SkyWarsLootItem(Material.CHAINMAIL_CHESTPLATE, 0.10, 1),
-            SkyWarsLootItem(Material.CHAINMAIL_LEGGINGS, 0.10, 1),
-            SkyWarsLootItem(Material.CHAINMAIL_BOOTS, 0.10, 1),
-
-            SkyWarsLootItem(Material.IRON_HELMET, 0.05, 1),
-            SkyWarsLootItem(Material.IRON_CHESTPLATE, 0.05, 1),
-            SkyWarsLootItem(Material.IRON_LEGGINGS, 0.05, 1),
-            SkyWarsLootItem(Material.IRON_BOOTS, 0.05, 1),
-        )
-
-        override fun getMidLoot() = listOf(
-            SkyWarsLootItem(Material.WHITE_WOOL, 1.0, 8..16),
-            SkyWarsLootItem(Material.GOLDEN_APPLE, 1.0, 0..3),
-            SkyWarsLootItem(Material.IRON_SWORD, 0.5, 1),
-            SkyWarsLootItem(Material.DIAMOND_SWORD, 0.5, 1),
-            SkyWarsLootItem(Material.FLINT_AND_STEEL, 0.4, 1),
-
-            SkyWarsLootItem(Material.IRON_HELMET, 0.20, 1),
-            SkyWarsLootItem(Material.IRON_CHESTPLATE, 0.20, 1),
-            SkyWarsLootItem(Material.IRON_LEGGINGS, 0.20, 1),
-            SkyWarsLootItem(Material.IRON_BOOTS, 0.20, 1),
-
-            SkyWarsLootItem(Material.DIAMOND_HELMET, 0.125, 1),
-            SkyWarsLootItem(Material.DIAMOND_CHESTPLATE, 0.125, 1),
-            SkyWarsLootItem(Material.DIAMOND_LEGGINGS, 0.125, 1),
-            SkyWarsLootItem(Material.DIAMOND_BOOTS, 0.125, 1),
-
-            SkyWarsLootItem(Material.NETHERITE_HELMET, 0.01, 1),
-            SkyWarsLootItem(Material.NETHERITE_CHESTPLATE, 0.01, 1),
-            SkyWarsLootItem(Material.NETHERITE_LEGGINGS, 0.01, 1),
-            SkyWarsLootItem(Material.NETHERITE_BOOTS, 0.01, 1),
-
-            SkyWarsLootItem(stickItem, 0.16, 1)
-        )
+        override fun getSpawnLoot() = getLoot("spawn")
+        override fun getMidLoot() = getLoot("middle")
     }
 }
