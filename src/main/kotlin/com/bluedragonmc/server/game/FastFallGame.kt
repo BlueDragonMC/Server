@@ -103,6 +103,8 @@ class FastFallGame(mapName: String?) : Game("FastFall", "Chaos") {
                             sendMessage(msg)
                             showTitle(Title.title(Component.empty(), msg))
                             playSound(Sound.sound(SoundEvent.BLOCK_NOTE_BLOCK_PLING, Sound.Source.PLAYER, 1.0f, 1.0f))
+                            lowest.isGlowing = true
+                            lead?.isGlowing = false
                         }
                         lead = lowest
                         lastLeadChange = event.instance.worldAge

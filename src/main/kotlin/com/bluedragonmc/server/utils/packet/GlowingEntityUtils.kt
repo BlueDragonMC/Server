@@ -12,7 +12,8 @@ import java.util.*
 
 object GlowingEntityUtils {
 
-    private val SEEN_TEAMS_TAG = Tag.String("seen_teams").list()
+    private val SEEN_TEAMS_TAG = Tag.String("seen_glow_teams").list()
+    private val CURRENT_GLOW_TAG = Tag.String("current_glow_team")
     private val teamCache = mutableMapOf<NamedTextColor, Team>()
 
     fun glow(entity: Entity, color: NamedTextColor, viewers: Collection<Player>) {
@@ -36,5 +37,13 @@ object GlowingEntityUtils {
                 viewer.setTag(SEEN_TEAMS_TAG, viewer.getTag(SEEN_TEAMS_TAG) + team.teamName)
             }
         }
+        entity.setTag(CURRENT_GLOW_TAG, team.teamName)
+    }
+
+    fun removeGlow(entity: Entity, viewers: Collection<Player>) {
+        val team = entity.getTag(CURRENT_GLOW_TAG)
+        PacketGroupingAudience.of(viewers).sendGroupedPacket(TeamsPacket(
+            team, TeamsPacket.RemoveEntitiesToTeamAction(arrayOf(entity.uuid.toString()))
+        ))
     }
 }
