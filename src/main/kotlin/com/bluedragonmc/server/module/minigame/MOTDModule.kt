@@ -21,7 +21,7 @@ import net.minestom.server.event.player.PlayerSpawnEvent
 /**
  * Displays a message to players when they join the game.
  */
-class MOTDModule(val motd: Component) : GameModule() {
+class MOTDModule(val motd: Component, val showMapName: Boolean = true) : GameModule() {
 
     override val dependencies = listOf(DatabaseModule::class)
 
@@ -36,11 +36,11 @@ class MOTDModule(val motd: Component) : GameModule() {
                     +buildComponent {
                         // MOTD
                         +motd.color(NamedTextColor.WHITE)
-                        +Component.newline()
-                        +Component.translatable("module.motd.map",
+                        if (showMapName) +Component.newline()
+                        if (showMapName) +Component.translatable("module.motd.map",
                             BRAND_COLOR_PRIMARY_2,
                             // Map name
-                            Component.text(parent.mapName, BRAND_COLOR_PRIMARY_1)
+                            Component.text(parent.mapName, BRAND_COLOR_PRIMARY_1, TextDecoration.BOLD)
                                 .hoverEvent(HoverEvent.showText(
                                     Component.text(parent.mapName,
                                         BRAND_COLOR_PRIMARY_1,
