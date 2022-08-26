@@ -1,21 +1,16 @@
 package com.bluedragonmc.server.module.gameplay
 
-import com.bluedragonmc.server.ALT_COLOR_1
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.event.PlayerKillPlayerEvent
 import com.bluedragonmc.server.module.GameModule
+import com.bluedragonmc.server.module.minigame.KitsModule
 import com.bluedragonmc.server.module.minigame.WinModule
-import com.bluedragonmc.server.utils.withColor
-import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.format.NamedTextColor
-import net.kyori.adventure.text.format.TextColor
+import net.kyori.adventure.text.minimessage.MiniMessage
 import net.kyori.adventure.title.Title
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
-import net.minestom.server.item.ItemStack
-import net.minestom.server.item.Material
 
 /**
  * A module that gives an armor level to each player.
@@ -23,7 +18,7 @@ import net.minestom.server.item.Material
  * When a player gets a kill with the lowest armor level (leather), they win the game.
  * This module was designed for PvPMaster, but it can be used for other games.
  */
-class ArmorLevelsModule : GameModule() {
+class ArmorLevelsModule(private val levels: List<KitsModule.Kit>) : GameModule() {
 
     override val dependencies = listOf(WinModule::class) // TODO scoreboard bindings
 
@@ -34,7 +29,7 @@ class ArmorLevelsModule : GameModule() {
         this.parent = parent
         eventNode.addListener(GameStartEvent::class.java) { event ->
             for (player in parent.players) {
-                player.setArmorLevel(ArmorLevel.values().size - 1)
+                player.setArmorLevel(levels.size - 1)
             }
         }
 
@@ -55,93 +50,17 @@ class ArmorLevelsModule : GameModule() {
         }
         armorLevels[this] = newLevel
 
-        val armorLevel = ArmorLevel.values()[newLevel]
+        val armorLevel = levels[newLevel]
 
-        showTitle(Title.title(armorLevel.levelName, armorLevel.description))
+        showTitle(Title.title(armorLevel.name, MiniMessage.miniMessage().deserialize(armorLevel.description)))
 
         inventory.clear()
-        inventory.helmet = armorLevel.helmet ?: ItemStack.of(Material.AIR)
-        inventory.chestplate = armorLevel.chestplate ?: ItemStack.of(Material.AIR)
-        inventory.leggings = armorLevel.leggings ?: ItemStack.of(Material.AIR)
-        inventory.boots = armorLevel.boots ?: ItemStack.of(Material.AIR)
-        inventory.setItemStack(0, armorLevel.sword ?: ItemStack.of(Material.AIR))
+        for (item in armorLevel.items) {
+            inventory.setItemStack(item.key, item.value)
+        }
     }
 
     private fun Player.decrementArmorLevel() {
-        setArmorLevel(armorLevels.getOrDefault(this, ArmorLevel.values().size - 1) - 1)
-    }
-
-    enum class ArmorLevel(
-        val levelName: Component,
-        val description: Component,
-        val helmet: ItemStack?,
-        val chestplate: ItemStack?,
-        val leggings: ItemStack?,
-        val boots: ItemStack?,
-        val sword: ItemStack?,
-    ) {
-        NOTHING(
-            "Nothing" withColor NamedTextColor.BLACK,
-            "No armor at all!" withColor ALT_COLOR_1,
-            null,
-            null,
-            null,
-            null,
-            null
-        ),
-        LEATHER(
-            "Leather" withColor TextColor.color(0x5f3c26),
-            "One kill to go!" withColor ALT_COLOR_1,
-            ItemStack.of(Material.LEATHER_HELMET),
-            ItemStack.of(Material.LEATHER_CHESTPLATE),
-            ItemStack.of(Material.LEATHER_LEGGINGS),
-            ItemStack.of(Material.LEATHER_BOOTS),
-            ItemStack.of(Material.WOODEN_SWORD)
-        ),
-        GOLD(
-            "Gold" withColor NamedTextColor.GOLD,
-            "Like having no armor at all!" withColor ALT_COLOR_1,
-            ItemStack.of(Material.GOLDEN_HELMET),
-            ItemStack.of(Material.GOLDEN_CHESTPLATE),
-            ItemStack.of(Material.GOLDEN_LEGGINGS),
-            ItemStack.of(Material.GOLDEN_BOOTS),
-            ItemStack.of(Material.GOLDEN_SWORD)
-        ),
-        CHAINMAIL(
-            "Chainmail" withColor NamedTextColor.DARK_GRAY,
-            "Still better than gold." withColor ALT_COLOR_1,
-            ItemStack.of(Material.CHAINMAIL_HELMET),
-            ItemStack.of(Material.CHAINMAIL_CHESTPLATE),
-            ItemStack.of(Material.CHAINMAIL_LEGGINGS),
-            ItemStack.of(Material.CHAINMAIL_BOOTS),
-            ItemStack.of(Material.STONE_SWORD)
-        ),
-        IRON(
-            "Iron" withColor NamedTextColor.WHITE,
-            "Shiny!" withColor ALT_COLOR_1,
-            ItemStack.of(Material.IRON_HELMET),
-            ItemStack.of(Material.IRON_CHESTPLATE),
-            ItemStack.of(Material.IRON_LEGGINGS),
-            ItemStack.of(Material.IRON_BOOTS),
-            ItemStack.of(Material.IRON_SWORD)
-        ),
-        DIAMOND(
-            "Diamond" withColor NamedTextColor.AQUA,
-            "Rock solid!" withColor ALT_COLOR_1,
-            ItemStack.of(Material.DIAMOND_HELMET),
-            ItemStack.of(Material.DIAMOND_CHESTPLATE),
-            ItemStack.of(Material.DIAMOND_LEGGINGS),
-            ItemStack.of(Material.DIAMOND_BOOTS),
-            ItemStack.of(Material.DIAMOND_SWORD)
-        ),
-        NETHERITE(
-            "Netherite" withColor TextColor.color(0x383538),
-            "Get 6 kills to win!" withColor ALT_COLOR_1,
-            ItemStack.of(Material.NETHERITE_HELMET),
-            ItemStack.of(Material.NETHERITE_CHESTPLATE),
-            ItemStack.of(Material.NETHERITE_LEGGINGS),
-            ItemStack.of(Material.NETHERITE_BOOTS),
-            ItemStack.of(Material.NETHERITE_SWORD)
-        )
+        setArmorLevel(armorLevels.getOrDefault(this, levels.size - 1) - 1)
     }
 }
