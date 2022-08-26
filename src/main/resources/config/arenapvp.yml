@@ -1,5 +1,5 @@
 kits:
-  - name: <yellow>Classic
+  - name: <a1>Classic
     description: Just the usual armor and sword.
     icon: minecraft:iron_chestplate
     items:
@@ -27,7 +27,7 @@ kits:
         material: minecraft:leather_leggings
       boots:
         material: minecraft:leather_boots
-  - name: <yellow>Troll
+  - name: <a1>Troll
     description: Receive a knockback stick to wack your enemies!
     icon: minecraft:stick
     items:

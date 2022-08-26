@@ -1,8 +1,10 @@
 package com.bluedragonmc.server.utils
 
 import com.bluedragonmc.server.ALT_COLOR_1
+import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
+import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
+import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_3
 import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.ComponentIteratorType
 import net.kyori.adventure.text.JoinConfiguration
 import net.kyori.adventure.text.TranslatableComponent
 import net.kyori.adventure.text.event.ClickEvent
@@ -11,6 +13,9 @@ import net.kyori.adventure.text.flattener.ComponentFlattener
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
+import net.kyori.adventure.text.minimessage.MiniMessage
+import net.kyori.adventure.text.minimessage.tag.Tag
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
 import net.minestom.server.MinecraftServer
 import net.minestom.server.adventure.audience.PacketGroupingAudience
@@ -18,6 +23,18 @@ import net.minestom.server.item.Material
 
 private val separator
     get() = Component.text("=================================", NamedTextColor.WHITE, TextDecoration.STRIKETHROUGH)
+
+val miniMessage = MiniMessage.builder().editTags { builder ->
+    builder.resolvers(
+        TagResolver.resolver("p1", Tag.styling(BRAND_COLOR_PRIMARY_1)),
+        TagResolver.resolver("p2", Tag.styling(BRAND_COLOR_PRIMARY_2)),
+        TagResolver.resolver("p3", Tag.styling(BRAND_COLOR_PRIMARY_3)),
+        TagResolver.resolver("a1", Tag.styling(ALT_COLOR_1)),
+        TagResolver.resolver("a2", Tag.styling(ALT_COLOR_1)),
+        TagResolver.resolver("nobold", Tag.styling(TextDecoration.BOLD.withState(false))),
+        TagResolver.resolver("noitalic", Tag.styling(TextDecoration.ITALIC.withState(false)))
+    )
+}.build()
 
 fun Component?.surroundWithSeparators(): Component {
     if (this == null) return Component.empty()
@@ -34,6 +51,7 @@ fun Component.toPlainText() = PlainTextComponentSerializer.plainText().serialize
 operator fun Component.plus(component: Component) = append(component)
 fun Component.hoverEvent(text: String, color: NamedTextColor): Component =
     hoverEvent(HoverEvent.hoverEvent(HoverEvent.Action.SHOW_TEXT, Component.text(text, color)))
+
 fun Component.hoverEventTranslatable(key: String, color: TextColor): Component =
     hoverEvent(HoverEvent.hoverEvent(HoverEvent.Action.SHOW_TEXT, Component.translatable(key, color)))
 
@@ -42,7 +60,8 @@ fun Component.clickEvent(command: String): Component =
 
 fun Component.clickEvent(action: ClickEvent.Action, value: String): Component {
     if (action == ClickEvent.Action.COPY_TO_CLIPBOARD && hoverEvent() == null) {
-        return clickEvent(ClickEvent.clickEvent(action, value)).hoverEventTranslatable("command.click_to_copy", ALT_COLOR_1)
+        return clickEvent(ClickEvent.clickEvent(action, value)).hoverEventTranslatable("command.click_to_copy",
+            ALT_COLOR_1)
     }
     return clickEvent(ClickEvent.clickEvent(action, value))
 }
