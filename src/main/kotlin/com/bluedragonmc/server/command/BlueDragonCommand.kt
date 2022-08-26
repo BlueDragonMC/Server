@@ -41,6 +41,7 @@ open class BlueDragonCommand(
         val fieldColor = BRAND_COLOR_PRIMARY_1
         val errorColor: TextColor = NamedTextColor.RED
         val errorFieldColor: TextColor = NamedTextColor.DARK_RED
+        internal fun buildMessage(block: MessageBuilder.() -> Unit) = MessageBuilder().apply(block).get()
     }
 
     internal class MessageBuilder {
@@ -68,8 +69,6 @@ open class BlueDragonCommand(
 
         fun get() = Component.join(JoinConfiguration.noSeparators(), components)
     }
-
-    internal fun buildMessage(block: MessageBuilder.() -> Unit) = MessageBuilder().apply(block).get()
 
     fun formatPos(pos: Point): String {
         val (x, y, z) = pos
@@ -108,7 +107,7 @@ open class BlueDragonCommand(
         val split = string.split("{}")
 
         if (split.size == 1) return string withColor messageColor
-        return buildMessage {
+        return Companion.buildMessage {
             for ((index, part) in split.withIndex()) {
                 message(part)
                 if (index < fields.size) {

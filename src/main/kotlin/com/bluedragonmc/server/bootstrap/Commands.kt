@@ -11,27 +11,28 @@ import net.minestom.server.event.EventNode
 object Commands : Bootstrap() {
     override fun hook(eventNode: EventNode<Event>) {
         listOf(
-            JoinCommand("join", "/join <game>"),
-            InstanceCommand("instance", "/instance <list|add|remove> ...", "in"),
+            FlyCommand("fly"),
             GameCommand("game", "/game <start|end>"),
+            GameModeCommand("gamemode", "/gamemode <survival|creative|adventure|spectator> [player]", "gm", "gmc", "gms", "gma", "gmsp"),
+            GiveCommand("give", "/give [player] <item>"),
+            InstanceCommand("instance", "/instance <list|add|remove> ...", "in"),
+            JoinCommand("join", "/join <game>"),
+            KickCommand("kick", "/kick <player> <reason>"),
+            KillCommand("kill", "/kill [player]"),
+            ListCommand("list"),
             LobbyCommand("lobby", "/lobby", "l", "hub"),
             MessageCommand("msg", "message", "w", "tell"),
-            TeleportCommand("tp", "/tp <player|<x> <y> <z>> [player|<x> <y> <z>]"),
-            FlyCommand("fly"),
-            GameModeCommand("gamemode", "/gamemode <survival|creative|adventure|spectator> [player]", "gm", "gmc", "gms", "gma", "gmsp"),
-            KillCommand("kill", "/kill [player]"),
-            SetBlockCommand("setblock", "/setblock <x> <y> <z> <block>"),
-            PartyCommand("party", "/party <invite|kick|promote|warp|chat|list> ...", "p"),
-            GiveCommand("give", "/give [player] <item>"),
-            PunishCommand("ban", "/<ban|mute> <player> <duration> <reason>", "mute"),
-            KickCommand("kick", "/kick <player> <reason>"),
+            MindecraftesCommand("mindecraftes", "/mindecraftes"),
             PardonCommand("pardon", "/pardon <player|ban ID>", "unban", "unmute"),
-            ViewPunishmentsCommand("punishments", "/punishments <player>", "vps", "history"),
-            ViewPunishmentCommand("punishment", "/punishment <id>", "vp"),
+            PartyCommand("party", "/party <invite|kick|promote|warp|chat|list> ...", "p"),
             PermissionCommand("permission", "/permission ...", "lp", "perm"),
             PingCommand("ping", "/ping", "latency"),
-            MindecraftesCommand("mindecraftes", "/mindecraftes"),
-            StopCommand("stop", "/stop")
+            PunishCommand("ban", "/<ban|mute> <player> <duration> <reason>", "mute"),
+            SetBlockCommand("setblock", "/setblock <x> <y> <z> <block>"),
+            StopCommand("stop", "/stop"),
+            TeleportCommand("tp", "/tp <player|<x> <y> <z>> [player|<x> <y> <z>]"),
+            ViewPunishmentCommand("punishment", "/punishment <id>", "vp"),
+            ViewPunishmentsCommand("punishments", "/punishments <player>", "vps", "history"),
         ).forEach(MinecraftServer.getCommandManager()::register)
 
         MinecraftServer.getCommandManager().setUnknownCommandCallback { sender, command ->

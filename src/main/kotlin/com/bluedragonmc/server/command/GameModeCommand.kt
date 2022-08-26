@@ -12,10 +12,10 @@ class GameModeCommand(name: String, usageString: String, vararg aliases: String)
     syntax {
         val gameMode = getGameModeFromCommandName(ctx.commandName) ?: return@syntax
         player.gameMode = gameMode
-        sender.sendMessage(formatMessageTranslated("command.gamemode.own", get(gameModeArgument).lowercase()))
+        sender.sendMessage(formatMessageTranslated("command.gamemode.own", gameMode.toString().lowercase()))
     }.requirePlayers()
 
-    syntax {
+    syntax(playerArgument) {
         val gameMode = getGameModeFromCommandName(ctx.commandName) ?: return@syntax
         val player = getFirstPlayer(playerArgument)
         player.gameMode = gameMode
