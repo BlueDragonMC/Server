@@ -8,6 +8,7 @@ import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.database.DatabaseModule
 import com.bluedragonmc.server.module.database.MapData
 import com.bluedragonmc.server.module.instance.InstanceModule
+import com.bluedragonmc.server.module.map.AnvilFileMapProviderModule
 import com.bluedragonmc.server.module.messaging.MessagingModule
 import com.bluedragonmc.server.module.packet.PerInstanceChatModule
 import com.bluedragonmc.server.utils.*
@@ -217,6 +218,7 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
             if (shouldRemoveInstance(cachedInstance)) {
                 logger.info("Removing instance ${cachedInstance.uniqueId} due to inactivity.")
                 MinecraftServer.getInstanceManager().unregisterInstance(cachedInstance)
+                AnvilFileMapProviderModule.checkReleaseMap(cachedInstance)
                 endGameInstantly(queueAllPlayers = false)
                 this.cancel()
             }

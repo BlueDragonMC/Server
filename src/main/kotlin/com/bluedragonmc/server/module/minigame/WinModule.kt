@@ -40,7 +40,8 @@ class WinModule(
                     declareWinner(remainingTeams.first())
                 }
             } else if (winCondition == WinCondition.LAST_PLAYER_ALIVE && parent.players.size - spectatorModule.spectatorCount() <= 1) {
-                parent.players.firstOrNull { player -> !spectatorModule.isSpectating(player) }?.let { declareWinner(it) }
+                parent.players.firstOrNull { player -> !spectatorModule.isSpectating(player) }
+                    ?.let { declareWinner(it) }
             }
         }
         eventNode.addListener(WinnerDeclaredEvent::class.java) { event ->
@@ -51,9 +52,14 @@ class WinModule(
                     .awardCoins(player, coins, if (player in event.winningTeam.players) "Win" else "Participation")
             }
         }
-        if (winCondition == WinCondition.TOUCH_EMERALD) eventNode.addListener(PlayerMoveEvent::class.java) { event ->
-            if (!winnerDeclared && event.player.instance?.getBlock(event.player.position.sub(0.0, 1.0, 0.0)) == Block.EMERALD_BLOCK) {
-                declareWinner(event.player)
+        if (winCondition == WinCondition.TOUCH_EMERALD) {
+            eventNode.addListener(PlayerMoveEvent::class.java) { event ->
+                if (!winnerDeclared &&
+                    event.player.instance?.getBlock(event.player.position.sub(0.0, 1.0, 0.0)) == Block.EMERALD_BLOCK &&
+                    event.player.isOnGround
+                ) {
+                    declareWinner(event.player)
+                }
             }
         }
     }
