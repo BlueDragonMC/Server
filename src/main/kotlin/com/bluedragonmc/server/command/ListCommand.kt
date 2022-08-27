@@ -34,7 +34,7 @@ class ListCommand(name: String, vararg aliases: String) : BlueDragonCommand(name
         internal fun getInstancePlayerList(instance: Instance) = buildMessage {
             instance.players.forEachIndexed { index, player ->
                 component(player.name)
-                if (index < instance.players.size - 2) message(", ")
+                if (index < instance.players.size - 1) message(", ")
             }
         }
     }
