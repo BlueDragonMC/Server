@@ -66,9 +66,10 @@ class WinModule(
         MinecraftServer.getGlobalEventHandler().callCancellable(WinnerDeclaredEvent(parent, team)) {
             winnerDeclared = true
             // Normal message
-            parent.filterAudience { if (it is Player) it.uuid.toString() != "110429e8-197f-4446-8bec-5d66f17be4d5" else true }
-                .sendMessage(Component.translatable("module.win.team_won", BRAND_COLOR_PRIMARY_2, team.name)
+            parent.players.forEach {
+                it.sendMessage(Component.translatable("module.win.team_won", BRAND_COLOR_PRIMARY_2, team.name)
                     .surroundWithSeparators())
+            }
             for (p in parent.players) {
                 if (team.players.contains(p)) p.showTitle(Title.title(Component.text("VICTORY!",
                     NamedTextColor.GOLD,
