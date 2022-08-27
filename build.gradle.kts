@@ -37,9 +37,6 @@ dependencies {
     implementation("com.github.bluedragonmc:messagingsystem:3abc4b8a49")
     implementation("com.github.bluedragonmc:messages:23a6e3bfc8")
 
-    // UnifiedMetrics (available at runtime as an extension)
-    compileOnly("dev.cubxity.plugins", "unifiedmetrics-api", "0.3.6")
-
     // Agones SDK integration
     implementation("com.github.Cubxity:AgonesKt:0.1.2")
     implementation("io.grpc:grpc-protobuf:1.48.0")
