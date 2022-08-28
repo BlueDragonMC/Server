@@ -2,6 +2,8 @@ package com.bluedragonmc.server.queue
 
 import com.bluedragonmc.messages.GameType
 import com.bluedragonmc.server.Game
+import com.github.benmanes.caffeine.cache.Cache
+import com.github.benmanes.caffeine.cache.Caffeine
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.event.HoverEvent
 import net.kyori.adventure.text.format.NamedTextColor
@@ -17,7 +19,9 @@ import kotlin.random.Random
  * This is not a fully fledged queue system, but it will work fine for now.
  */
 class TestQueue : Queue() {
-    private val queuedPlayers: HashMap<Player, GameType> = hashMapOf()
+    private val queuedPlayers: Cache<Player, GameType> = Caffeine.newBuilder()
+        .expireAfterWrite(Duration.ofSeconds(30))
+        .build()
 
     private val logger = LoggerFactory.getLogger(TestQueue::class.java)
 
@@ -28,9 +32,9 @@ class TestQueue : Queue() {
      * @param idealGame If no games already exist, start a new one of this type. If this is null, the queue will not start a new game.
      */
     override fun queue(player: Player, gameType: GameType) {
-        if (queuedPlayers.contains(player)) {
+        if (queuedPlayers.getIfPresent(player) != null) {
             player.sendMessage(Component.translatable("queue.removing", NamedTextColor.RED))
-            queuedPlayers.remove(player)
+            queuedPlayers.invalidate(player)
             return
         }
         if (gameType.mapName != null) {
@@ -40,7 +44,7 @@ class TestQueue : Queue() {
                 return
             }
         }
-        queuedPlayers[player] = gameType
+        queuedPlayers.put(player, gameType)
         player.sendMessage(
             Component.translatable("queue.added", NamedTextColor.GREEN)
                 .hoverEvent(HoverEvent.showText(Component.text("Test queue debug information\nGame type: $gameType")))
@@ -59,20 +63,19 @@ class TestQueue : Queue() {
     override fun start() {
         MinecraftServer.getSchedulerManager().buildTask {
             try {
-                val playersToRemove = mutableListOf<Player>()
                 instanceStarting = false
-                queuedPlayers.forEach { (player, gameType) ->
+                queuedPlayers.asMap().forEach { (player, gameType) ->
                     if (!gameClasses.containsKey(gameType.name)) {
                         player.sendMessage(
                             Component.translatable("queue.error.invalid_game_type", NamedTextColor.RED)
                         )
-                        playersToRemove.add(player)
+                        queuedPlayers.invalidate(player)
                         return@forEach
                     }
                     for (game in Game.games) {
                         if (game.name == gameType.name && (gameType.mapName == null || gameType.mapName == game.mapName)) {
                             logger.info("Found a good game for ${player.username} to join")
-                            playersToRemove.add(player)
+                            queuedPlayers.invalidate(player)
                             join(player, game)
                             return@forEach
                         }
@@ -85,7 +88,6 @@ class TestQueue : Queue() {
                     gameClasses[gameType.name]!!.call(map)
                     instanceStarting = true
                 }
-                playersToRemove.forEach { queuedPlayers.remove(it) }
             } catch (e: Exception) {
                 e.printStackTrace()
             }

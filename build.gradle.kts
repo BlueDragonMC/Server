@@ -47,6 +47,9 @@ dependencies {
     // Configurate for game configuration
     implementation("org.spongepowered:configurate-yaml:4.1.2")
     implementation("org.spongepowered:configurate-extra-kotlin:4.1.2")
+
+    // Caching library for database responses
+    implementation("com.github.ben-manes.caffeine:caffeine:3.1.1")
 }
 
 tasks.test {

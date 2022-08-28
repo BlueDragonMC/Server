@@ -6,6 +6,8 @@ import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.DataLoadedEvent
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.utils.packet.PacketUtils
+import com.github.benmanes.caffeine.cache.Cache
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.mongodb.ConnectionString
 import com.mongodb.MongoClientSettings
 import com.mongodb.client.model.Filters
@@ -31,6 +33,7 @@ import org.litote.kmongo.eq
 import org.litote.kmongo.path
 import org.litote.kmongo.reactivestreams.KMongo
 import org.slf4j.LoggerFactory
+import java.time.Duration
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.CoroutineContext
@@ -56,10 +59,17 @@ class DatabaseModule : GameModule() {
                 .build()
             ).coroutine
         }
+
         private val database: CoroutineDatabase by lazy {
             client.getDatabase("bluedragon")
         }
+
         private val logger = LoggerFactory.getLogger(Companion::class.java)
+
+        private val mapDataCache: Cache<String, MapData?> = Caffeine.newBuilder()
+            .maximumSize(100)
+            .expireAfterWrite(Duration.ofMinutes(10))
+            .build()
 
         internal fun getPlayersCollection(): CoroutineCollection<PlayerDocument> = database.getCollection("players")
         internal fun getGroupsCollection(): CoroutineCollection<PermissionGroup> = database.getCollection("groups")
@@ -72,29 +82,11 @@ class DatabaseModule : GameModule() {
             return getPlayersCollection().findOne(PlayerDocument::usernameLower eq username.lowercase())
         }
 
-        internal suspend fun getNameColor(username: String): TextColor? {
-            val document = getPlayerDocument(username)
-            return document?.highestGroup?.color
-        }
-
-        internal suspend fun getNameColor(uuid: UUID): TextColor? {
-            val document = getPlayerDocument(uuid)
-            return document?.highestGroup?.color
-        }
-
         internal suspend fun getPlayerDocument(uuid: UUID): PlayerDocument? {
             MinecraftServer.getConnectionManager().getPlayer(uuid)?.let {
                 return (it as CustomPlayer).data
             }
             return getPlayersCollection().findOne(Filters.eq(PlayerDocument::uuid.path(), uuid.toString()))
-        }
-
-        internal suspend fun getAllGroups(): List<PermissionGroup> {
-            val result = mutableListOf<PermissionGroup>()
-            getGroupsCollection().find().consumeEach {
-                result.add(it)
-            }
-            return result
         }
 
         private suspend fun getPlayerDocument(player: Player): PlayerDocument {
@@ -108,6 +100,16 @@ class DatabaseModule : GameModule() {
             } else {
                 foundDocument
             }
+        }
+
+        internal suspend fun getNameColor(uuid: UUID): TextColor? = getPlayerDocument(uuid)?.highestGroup?.color
+
+        internal suspend fun getAllGroups(): List<PermissionGroup> {
+            val result = mutableListOf<PermissionGroup>()
+            getGroupsCollection().find().consumeEach {
+                result.add(it)
+            }
+            return result
         }
 
         init {
@@ -157,8 +159,11 @@ class DatabaseModule : GameModule() {
         if (!(event.player as CustomPlayer).isDataInitialized()) event.isCancelled = true
     }
 
-    private val cachedMapData = hashMapOf<String, MapData?>()
-    suspend fun getMapOrNull(mapName: String): MapData? = cachedMapData.getOrPut(mapName) {
-        getMapsCollection().findOneById(mapName)
+    suspend fun getMapOrNull(mapName: String): MapData? {
+        return mapDataCache.getIfPresent(mapName) ?: run {
+            val doc = getMapsCollection().findOneById(mapName)
+            mapDataCache.put(mapName, doc)
+            doc
+        }
     }
 }
