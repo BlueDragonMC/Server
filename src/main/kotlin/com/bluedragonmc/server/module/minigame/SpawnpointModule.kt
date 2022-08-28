@@ -41,12 +41,17 @@ class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule(
          * Returns a spawnpoint for the specified player.
          */
         fun getSpawnpoint(player: Player): Pos
+
+        /**
+         * Returns all spawnpoints a player could spawn.
+         */
+        fun getAllSpawnpoints(): List<Pos>
     }
 
     /**
      * A good spawnpoint provider for testing. Spawns players at the positions provided in the constructor.
      */
-    class TestSpawnpointProvider(vararg spawns: Pos) : SpawnpointProvider {
+    class TestSpawnpointProvider(private vararg val spawns: Pos) : SpawnpointProvider {
         private val cachedSpawnpoints = hashMapOf<Player, Pos>()
         private val list = CircularList(listOf(*spawns))
         private var i = 0
@@ -55,6 +60,8 @@ class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule(
         override fun getSpawnpoint(player: Player): Pos {
             return cachedSpawnpoints.getOrPut(player) { list[i++] }
         }
+
+        override fun getAllSpawnpoints(): List<Pos> = spawns.toList()
     }
 
     /**
@@ -66,6 +73,8 @@ class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule(
         override fun getSpawnpoint(player: Player): Pos {
             return spawn
         }
+
+        override fun getAllSpawnpoints(): List<Pos> = listOf(spawn)
 
     }
 
@@ -84,6 +93,9 @@ class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule(
         }
 
         override fun getSpawnpoint(player: Player) = cachedSpawnpoints[player] ?: findSpawnpoint(player)
+
+        override fun getAllSpawnpoints(): List<Pos> = spawnpoints.toList()
+
         private fun findSpawnpoint(player: Player): Pos {
             val pos = spawnpoints[n++]
             if (cachedSpawnpoints.containsValue(pos)) return findSpawnpoint(player) // Prevent players from spawning inside each other
@@ -127,6 +139,8 @@ class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule(
         private fun teamOf(player: Player) = teamModule.getTeam(player)
         override fun getSpawnpoint(player: Player) =
             teamOf(player)?.let { cachedSpawnpoints[it] ?: findSpawnpoint(it) } ?: spawnpoints[m++]
+
+        override fun getAllSpawnpoints(): List<Pos> = spawnpoints.toList()
 
         private fun findSpawnpoint(team: TeamModule.Team) = spawnpoints[n++].also { cachedSpawnpoints[team] = it }
 

@@ -1,22 +1,37 @@
 package com.bluedragonmc.server.module.minigame
 
-import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
-import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.*
 import com.bluedragonmc.server.event.GameEvent
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.database.AwardsModule
+import com.bluedragonmc.server.utils.FireworkUtils
 import com.bluedragonmc.server.utils.surroundWithSeparators
+import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.title.Title
 import net.minestom.server.MinecraftServer
+import net.minestom.server.color.Color
+import net.minestom.server.coordinate.Vec
+import net.minestom.server.entity.Entity
+import net.minestom.server.entity.EntityType
 import net.minestom.server.entity.Player
+import net.minestom.server.entity.metadata.other.FireworkRocketMeta
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.player.PlayerMoveEvent
 import net.minestom.server.instance.block.Block
+import net.minestom.server.item.ItemStack
+import net.minestom.server.item.Material
+import net.minestom.server.item.firework.FireworkEffect
+import net.minestom.server.item.firework.FireworkEffectType
+import net.minestom.server.item.metadata.FireworkMeta
+import net.minestom.server.network.packet.server.play.EntityStatusPacket
+import net.minestom.server.sound.SoundEvent
+import net.minestom.server.timer.Task
 import java.time.Duration
+import kotlin.random.Random
 
 class WinModule(
     val winCondition: WinCondition = WinCondition.MANUAL,
@@ -77,10 +92,12 @@ class WinModule(
                     .surroundWithSeparators())
             }
             for (p in parent.players) {
-                if (team.players.contains(p)) p.showTitle(Title.title(Component.text("VICTORY!",
-                    NamedTextColor.GOLD,
-                    TextDecoration.BOLD), Component.empty()))
-                else p.showTitle(Title.title(Component.text("GAME OVER!", NamedTextColor.RED, TextDecoration.BOLD),
+                if (team.players.contains(p)) {
+                    p.showTitle(Title.title(Component.text("VICTORY!",
+                        NamedTextColor.GOLD,
+                        TextDecoration.BOLD), Component.empty()))
+                    scheduleWinFireworks(p)
+                } else p.showTitle(Title.title(Component.text("GAME OVER!", NamedTextColor.RED, TextDecoration.BOLD),
                     Component.text("Better luck next time!", NamedTextColor.RED)))
             }
             parent.endGame(Duration.ofSeconds(5))
@@ -88,6 +105,36 @@ class WinModule(
     }
 
     class WinnerDeclaredEvent(game: Game, val winningTeam: TeamModule.Team) : GameEvent(game)
+
+    fun scheduleWinFireworks(player: Player) {
+        var color = player.name.color() ?: BRAND_COLOR_PRIMARY_3
+        if (color.asHSV() == NamedTextColor.GRAY.asHSV()) color = BRAND_COLOR_PRIMARY_3
+        val instance = parent.getInstance()
+        val availablePositions = parent.getModule<SpawnpointModule>().spawnpointProvider.getAllSpawnpoints()
+        val fireworkMeta = FireworkMeta.Builder().effects(
+                listOf(
+                    FireworkEffect(
+                        true,
+                        true,
+                        FireworkEffectType.SMALL_BALL,
+                        listOf(Color(color.red(), color.green(), color.blue())),
+                        listOf(Color(color.red(), color.green(), color.blue()))
+                    )
+                )
+            )
+            // .flightDuration(3)
+            .build()
+        var delay = 0L
+        for (i in 1 .. 3) {
+            for (fireworkPosition in availablePositions) {
+                MinecraftServer.getSchedulerManager().buildTask {
+                    if (player.instance?.uniqueId != instance.uniqueId) return@buildTask
+                    FireworkUtils.spawnFirework(player.instance!!, fireworkPosition.add(0.0, 0.0, 0.0), 1500, fireworkMeta)
+                }.delay(Duration.ofMillis(delay)).schedule()
+                delay += 350
+            }
+        }
+    }
 
     fun declareWinner(winner: Component) {
         declareWinner(TeamModule.Team(winner, mutableListOf()))
