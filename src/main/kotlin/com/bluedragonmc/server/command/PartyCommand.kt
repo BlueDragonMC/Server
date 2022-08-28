@@ -33,14 +33,14 @@ class PartyCommand(name: String, usageString: String, vararg aliases: String) : 
     }
 
     subcommand("chat") {
-        val chatArgument by StringArrayArgument
-        syntax(chatArgument) {
+        val messageArgument by StringArrayArgument
+        syntax(messageArgument) {
             val msg = if(!Permissions.hasPermission((player as CustomPlayer).data, "chat.minimessage")) {
                 // Escape the chat message to prevent players using MiniMessage tags in party chat messages
-                miniMessage.escapeTags(get(chatArgument).joinToString(" "))
+                miniMessage.escapeTags(get(messageArgument).joinToString(" "))
             } else {
                 // The player is allowed to use MiniMessage
-                get(chatArgument).joinToString(" ")
+                get(messageArgument).joinToString(" ")
             }
             MessagingModule.publish(PartyChatMessage(player.uuid, msg))
         }
