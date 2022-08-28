@@ -40,9 +40,8 @@ data class PlayerDocument @OptIn(ExperimentalSerializationApi::class) constructo
     }
 
     suspend fun getGroups(): List<PermissionGroup> {
-        val col = DatabaseModule.getGroupsCollection()
-        return groups.mapNotNull {
-            col.findOneById(it)
+        return groups.mapNotNull { name ->
+            DatabaseModule.getGroupByName(name)
         }.toList()
     }
 
@@ -121,10 +120,12 @@ data class PermissionGroup(
     @Serializable(with = ComponentSerializer::class) val prefix: Component = Component.empty(),
     val priority: Int = 0,
     var permissions: MutableList<String> = mutableListOf(),
-    val inheritsFrom: List<String> = emptyList()
+    val inheritsFrom: List<String> = emptyList(),
 ) {
     suspend fun getChildGroups(): List<PermissionGroup?> {
-        return inheritsFrom.map { DatabaseModule.getGroupsCollection().findOneById(it) }
+        return inheritsFrom.map { name ->
+            DatabaseModule.getGroupByName(name)
+        }
     }
 
     suspend fun getAllPermissions(): List<String> {

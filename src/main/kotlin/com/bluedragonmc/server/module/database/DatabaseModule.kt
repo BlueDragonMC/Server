@@ -71,9 +71,18 @@ class DatabaseModule : GameModule() {
             .expireAfterWrite(Duration.ofMinutes(10))
             .build()
 
+        private val groupCache: Cache<String, PermissionGroup> = Caffeine.newBuilder()
+            .maximumSize(1_000)
+            .expireAfterWrite(Duration.ofMinutes(10))
+            .build()
+
         internal fun getPlayersCollection(): CoroutineCollection<PlayerDocument> = database.getCollection("players")
         internal fun getGroupsCollection(): CoroutineCollection<PermissionGroup> = database.getCollection("groups")
         internal fun getMapsCollection(): CoroutineCollection<MapData> = database.getCollection("maps")
+
+        internal suspend fun getGroupByName(name: String): PermissionGroup? =
+            groupCache.getIfPresent(name) ?: getGroupsCollection().findOneById(name)
+                .also { group -> groupCache.put(name, group) }
 
         internal suspend fun getPlayerDocument(username: String): PlayerDocument? {
             MinecraftServer.getConnectionManager().findPlayer(username)?.let {
