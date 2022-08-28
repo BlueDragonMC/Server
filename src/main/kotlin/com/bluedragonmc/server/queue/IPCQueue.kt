@@ -32,6 +32,7 @@ object IPCQueue : Queue() {
                     logger.error("No map name was specified and a random map was not found. A new instance cannot be created.")
                     return@subscribe
                 }
+                logger.info("Using map: '$map'")
                 val game = constructor.invoke(map)
                 val instance = game.getInstance()
                 logger.info("Created instance ${instance.uniqueId} from type ${message.gameType}. (${(System.nanoTime() - start) / 1_000_000}ms)")

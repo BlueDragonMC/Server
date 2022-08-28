@@ -82,7 +82,7 @@ class DatabaseModule : GameModule() {
 
         internal suspend fun getGroupByName(name: String): PermissionGroup? =
             groupCache.getIfPresent(name) ?: getGroupsCollection().findOneById(name)
-                .also { group -> groupCache.put(name, group) }
+                .also { group -> if (group != null) groupCache.put(name, group) }
 
         internal suspend fun getPlayerDocument(username: String): PlayerDocument? {
             MinecraftServer.getConnectionManager().findPlayer(username)?.let {
@@ -171,7 +171,7 @@ class DatabaseModule : GameModule() {
     suspend fun getMapOrNull(mapName: String): MapData? {
         return mapDataCache.getIfPresent(mapName) ?: run {
             val doc = getMapsCollection().findOneById(mapName)
-            mapDataCache.put(mapName, doc)
+            if (doc != null) mapDataCache.put(mapName, doc)
             doc
         }
     }
