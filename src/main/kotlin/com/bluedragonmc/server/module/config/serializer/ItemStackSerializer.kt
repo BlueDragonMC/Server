@@ -31,7 +31,7 @@ class ItemStackSerializer : TypeSerializer<ItemStack> {
             amount(amount)
 
             meta { builder ->
-                if (enchantments != null) builder.enchantments(enchantments)
+                if (enchantments != null && enchantments.isNotEmpty()) builder.enchantments(enchantments)
                 if (name != null) builder.displayName(name)
                 if (lore != null) builder.lore(*lore.toTypedArray())
             }

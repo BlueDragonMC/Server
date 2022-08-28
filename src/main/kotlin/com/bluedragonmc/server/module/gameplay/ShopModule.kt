@@ -53,7 +53,7 @@ class ShopModule : GuiModule() {
         ) {
             itemsBuilder.slot(itemsBuilder.pos(row, column), itemStack.material(), { player ->
                 if (virtualItem != null) {
-                    displayName(Component.text(virtualItem.name))
+                    displayName(Component.text(virtualItem.name).noItalic())
                 } else {
                     displayName(
                         itemStack.material().displayName(NamedTextColor.WHITE)
