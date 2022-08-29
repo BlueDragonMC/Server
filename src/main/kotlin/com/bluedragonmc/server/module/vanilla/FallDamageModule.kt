@@ -4,22 +4,24 @@ import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.combat.EnumArmorToughness.ArmorToughness.getArmor
+import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.Player
 import net.minestom.server.entity.damage.DamageType
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
-import net.minestom.server.event.player.PlayerMoveEvent
+import net.minestom.server.event.player.PlayerTickEvent
 import net.minestom.server.instance.block.Block
 import net.minestom.server.item.Enchantment
 import net.minestom.server.potion.PotionEffect
 import net.minestom.server.tag.Tag
+import kotlin.math.floor
 
 object FallDamageModule : GameModule() {
 
     private val FALL_START_TAG = Tag.Double("fall_start")
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
-        eventNode.addListener(PlayerMoveEvent::class.java) { event ->
+        eventNode.addListener(PlayerTickEvent::class.java) { event ->
             val player = event.player
             val block = event.instance.getBlock(player.position)
 
@@ -34,25 +36,25 @@ object FallDamageModule : GameModule() {
             if (player.isFlyingWithElytra && player.velocity.y >= -0.5) {
                 // Fall distance is reset to 1 block when a player is flying level,
                 // upwards, or downwards at a rate <= 0.5 blocks per tick.
-                player.setTag(FALL_START_TAG, event.newPosition.y + 1.0)
+                player.setTag(FALL_START_TAG, event.player.position.y + 1.0)
             }
 
-            if (!event.isOnGround) {
-                // If the player does not have the tag, and they are falling, add the fall start tag.
-                if (!player.hasTag(FALL_START_TAG) && player.velocity.y < 0.0) {
-                    player.setTag(FALL_START_TAG, event.newPosition.y)
-                }
-            } else {
+            if (event.player.isOnGround) {
                 // When the player touches the ground, compare their fall start to their current y-position.
                 if (player.hasTag(FALL_START_TAG)) {
                     val fallStart = player.getTag(FALL_START_TAG)
                     player.removeTag(FALL_START_TAG)
                     val fallDamage = getReducedDamage(
-                        player, fallStart - event.newPosition.y - 3 - getJumpBoostLevel(player)
+                        player, fallStart - event.player.position.y - 3 - getJumpBoostLevel(player)
                     )
                     if (fallDamage > 0.0) {
                         player.damage(DamageType.GRAVITY, fallDamage.toFloat())
                     }
+                }
+            } else {
+                // If the player does not have the tag, and they are falling, add the fall start tag.
+                if (!player.hasTag(FALL_START_TAG) && player.velocity.y < 0.0) {
+                    player.setTag(FALL_START_TAG, event.player.position.y)
                 }
             }
         }
@@ -63,13 +65,7 @@ object FallDamageModule : GameModule() {
             .sumOf { it.potion.amplifier.toInt() }
 
     private fun getReducedDamage(player: Player, originalDamage: Double): Double {
-        var blockBelow: Block? = null
-        var y: Double = player.position.y - 0.2
-        while((blockBelow == null || blockBelow.isAir) && y >= player.instance!!.dimensionType.minY) {
-            blockBelow = player.instance!!.getBlock(player.position.withY(y))
-            y -= 0.2
-        }
-        if(blockBelow == null) return 0.0
+        val blockBelow: Block = player.instance!!.getBlock(getLandingPos(player))
         val blockBelowReduction = when {
             // Honey blocks and hay bales reduce fall damage by 20%
             blockBelow.compare(Block.HAY_BLOCK) || blockBelow.compare(Block.HONEY_BLOCK) -> 0.2
@@ -85,5 +81,12 @@ object FallDamageModule : GameModule() {
         val protLevel = player.getArmor().sumOf { it.meta().enchantmentMap[Enchantment.PROTECTION]?.toInt() ?: 0 }
         val protectionPercentage = ((0.04 * protLevel) + (0.12 * featherFallingLevel)).coerceAtMost(0.8)
         return originalDamage * (1.0 - protectionPercentage) * (1.0 - blockBelowReduction)
+    }
+
+    private fun getLandingPos(player: Player): Pos {
+        val x = floor(player.position.x)
+        val y = floor(player.position.y - 0.2)
+        val z = floor(player.position.z)
+        return Pos(x, y, z)
     }
 }
