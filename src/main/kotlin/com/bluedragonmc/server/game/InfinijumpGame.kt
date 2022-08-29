@@ -6,11 +6,11 @@ import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.combat.CustomDeathMessageModule
 import com.bluedragonmc.server.module.gameplay.InstantRespawnModule
+import com.bluedragonmc.server.module.instance.CustomGeneratorInstanceModule
+import com.bluedragonmc.server.module.minigame.CountdownModule
 import com.bluedragonmc.server.module.minigame.PlayerResetModule
 import com.bluedragonmc.server.module.minigame.SpawnpointModule
 import com.bluedragonmc.server.module.minigame.SpectatorModule
-import com.bluedragonmc.server.module.instance.CustomGeneratorInstanceModule
-import com.bluedragonmc.server.module.minigame.CountdownModule
 import com.bluedragonmc.server.utils.SoundUtils
 import com.bluedragonmc.server.utils.packet.GlowingEntityUtils
 import com.bluedragonmc.server.utils.packet.PacketUtils
@@ -88,6 +88,7 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
     override val maxPlayers = 1
 
     private val spawnPosition = Pos(0.5, 64.0, 0.5)
+    private val blocks: MutableList<ParkourBlock>
 
     init {
         use(PlayerResetModule(defaultGameMode = GameMode.ADVENTURE))
@@ -99,6 +100,11 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
         use(InstantRespawnModule())
         use(SpectatorModule(spectateOnDeath = true))
         use(CustomDeathMessageModule())
+
+        blocks = mutableListOf(
+            ParkourBlock(this, getInstance(), 0L, spawnPosition.sub(0.0, 1.0, 0.0)).apply { create() }
+        )
+
         use(object : GameModule() {
             var started = false
             override fun initialize(parent: Game, eventNode: EventNode<Event>) {
@@ -154,10 +160,6 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
         ready()
     }
 
-    private val blocks = mutableListOf(
-        ParkourBlock(this, getInstance(), 0L, spawnPosition.sub(0.0, 1.0, 0.0)).apply { create() }
-    )
-
     private fun handleTick(ticks: Long) {
         blocks.forEach { block ->
             if (block.isRemoved) return@forEach
@@ -190,7 +192,7 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
         angle += Math.toRadians((-35..35).random().toDouble())
         val yDiff = Random.nextDouble(-1.0, 2.0)
         if (lastPos.y + yDiff < 1.0) return getNextBlockPosition()
-        val vec = Vec(cos(angle), sin(angle)).mul(1.75 + (difficulty / 4) - (yDiff / 2) + Random.nextDouble(1.0, 2.5))
+        val vec = Vec(cos(angle), -sin(angle)).mul(1.75 + (difficulty / 4) - (yDiff / 2) + Random.nextDouble(1.0, 2.5))
             .withY(yDiff.roundToInt().toDouble())
         if (Math.random() < 0.2 && lastPos.y > 80) {
             return lastPos.add(vec).sub(0.0, abs(yDiff) * 8.0, 0.0)
@@ -199,7 +201,7 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
         return lastPos.add(vec)
     }
 
-    var angle = 0.0
+    var angle = 180.0
 
     open class ParkourBlock(val game: InfinijumpGame, val instance: Instance, var spawnTime: Long, posIn: Pos) {
 
