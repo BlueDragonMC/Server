@@ -1,37 +1,26 @@
 package com.bluedragonmc.server.module.minigame
 
-import com.bluedragonmc.server.*
+import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
+import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_3
+import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.GameEvent
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.database.AwardsModule
 import com.bluedragonmc.server.utils.FireworkUtils
 import com.bluedragonmc.server.utils.surroundWithSeparators
-import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.title.Title
 import net.minestom.server.MinecraftServer
 import net.minestom.server.color.Color
-import net.minestom.server.coordinate.Vec
-import net.minestom.server.entity.Entity
-import net.minestom.server.entity.EntityType
 import net.minestom.server.entity.Player
-import net.minestom.server.entity.metadata.other.FireworkRocketMeta
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
-import net.minestom.server.event.player.PlayerMoveEvent
-import net.minestom.server.instance.block.Block
-import net.minestom.server.item.ItemStack
-import net.minestom.server.item.Material
 import net.minestom.server.item.firework.FireworkEffect
 import net.minestom.server.item.firework.FireworkEffectType
 import net.minestom.server.item.metadata.FireworkMeta
-import net.minestom.server.network.packet.server.play.EntityStatusPacket
-import net.minestom.server.sound.SoundEvent
-import net.minestom.server.timer.Task
 import java.time.Duration
-import kotlin.random.Random
 
 class WinModule(
     val winCondition: WinCondition = WinCondition.MANUAL,
@@ -67,16 +56,6 @@ class WinModule(
                     .awardCoins(player, coins, if (player in event.winningTeam.players) "Win" else "Participation")
             }
         }
-        if (winCondition == WinCondition.TOUCH_EMERALD) {
-            eventNode.addListener(PlayerMoveEvent::class.java) { event ->
-                if (!winnerDeclared &&
-                    event.player.instance?.getBlock(event.player.position.sub(0.0, 1.0, 0.0)) == Block.EMERALD_BLOCK &&
-                    event.player.isOnGround
-                ) {
-                    declareWinner(event.player)
-                }
-            }
-        }
     }
 
     /**
@@ -84,6 +63,7 @@ class WinModule(
      * All players are notified of the winning team.
      */
     fun declareWinner(team: TeamModule.Team) {
+        if (winnerDeclared) return
         MinecraftServer.getGlobalEventHandler().callCancellable(WinnerDeclaredEvent(parent, team)) {
             winnerDeclared = true
             // Normal message
@@ -160,10 +140,6 @@ class WinModule(
          */
         LAST_TEAM_ALIVE,
 
-        /**
-         * Automatically declares the winner as the first player to step on an emerald block.
-         */
-        TOUCH_EMERALD
     }
 
 }

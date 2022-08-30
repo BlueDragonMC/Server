@@ -12,7 +12,7 @@ import net.minestom.server.event.player.PlayerLoginEvent
 object DevInstanceRouter : Bootstrap(Environment.DevelopmentEnvironment::class) {
     override fun hook(eventNode: EventNode<Event>) {
         eventNode.addListener(PlayerLoginEvent::class.java) { event ->
-            if (!isLobbyInitialized()) event.player.kick(Component.empty())
+            if (!isLobbyInitialized()) event.player.kick(Component.text("Lobby not initialized yet!"))
             else event.setSpawningInstance(lobby.getInstance())
         }
     }

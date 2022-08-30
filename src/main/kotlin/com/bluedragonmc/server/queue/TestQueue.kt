@@ -91,7 +91,7 @@ class TestQueue : Queue() {
             } catch (e: Exception) {
                 e.printStackTrace()
             }
-        }.repeat(Duration.ofSeconds(2)).schedule()
+        }.repeat(Duration.ofMillis(500)).schedule()
     }
 
     fun getMaps(gameType: String): Array<File>? {

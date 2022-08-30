@@ -31,6 +31,7 @@ import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.instance.InstanceTickEvent
+import net.minestom.server.event.player.PlayerMoveEvent
 import net.minestom.server.instance.block.Block
 import net.minestom.server.instance.generator.GenerationUnit
 import net.minestom.server.instance.generator.Generator
@@ -136,13 +137,20 @@ class FastFallGame(mapName: String?) : Game("FastFall", "Chaos") {
                         player.sendActionBar(playersAhead + health + yPos)
                     }
                 }
+                eventNode.addListener(PlayerMoveEvent::class.java) { event ->
+                    if (
+                        event.player.instance?.getBlock(event.player.position.sub(0.0, 0.2, 0.0)) == Block.EMERALD_BLOCK &&
+                        event.player.isOnGround
+                    ) {
+                        getModule<WinModule>().declareWinner(event.player)
+                    }
+                }
             }
-
         })
 
         // MINIGAME MODULES
         use(CountdownModule(threshold = 1, allowMoveDuringCountdown = false))
-        use(WinModule(winCondition = WinModule.WinCondition.TOUCH_EMERALD) { player, winningTeam ->
+        use(WinModule(winCondition = WinModule.WinCondition.MANUAL) { player, winningTeam ->
             if (player in winningTeam.players) 150 else 15
         })
 
@@ -156,7 +164,7 @@ class FastFallGame(mapName: String?) : Game("FastFall", "Chaos") {
         }
         MinecraftServer.getSchedulerManager().buildTask {
             binding.update()
-        }.repeat(Duration.ofSeconds(1)).schedule()
+        }.repeat(Duration.ofMillis(500)).schedule()
 
         ready()
     }

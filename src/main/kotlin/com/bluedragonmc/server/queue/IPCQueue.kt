@@ -18,7 +18,7 @@ object IPCQueue : Queue() {
 
     override fun queue(player: Player, gameType: GameType) {
         player.sendMessage(Component.translatable("queue.adding", NamedTextColor.DARK_GRAY))
-        if(queuedPlayers.contains(player)) MessagingModule.publish(RequestRemoveFromQueueMessage(player.uuid))
+        if (queuedPlayers.contains(player)) MessagingModule.publish(RequestRemoveFromQueueMessage(player.uuid))
         else MessagingModule.publish(RequestAddToQueueMessage(player.uuid, gameType))
     }
 
@@ -45,6 +45,7 @@ object IPCQueue : Queue() {
             val player = MessagingModule.findPlayer(message.player) ?: return@subscribe
             player.sendMessage(Component.translatable("queue.sending", NamedTextColor.DARK_GRAY, Component.text(message.instance.toString())))
             logger.info("Sending player ${player.username} to instance ${message.instance}.")
+            if (player.instance == instance) return@subscribe
             val game = Game.findGame(instance.uniqueId) ?: run {
                 player.sendMessage(Component.translatable("queue.error_sending", NamedTextColor.RED, Component.translatable("queue.error.no_game_found")))
                 return@subscribe

@@ -1,14 +1,51 @@
 package com.bluedragonmc.server.bootstrap
 
-import com.bluedragonmc.server.block.SignHandler
-import com.bluedragonmc.server.block.SkullHandler
 import net.minestom.server.MinecraftServer
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
+import net.minestom.server.instance.block.BlockHandler
+import net.minestom.server.tag.Tag
+import net.minestom.server.utils.NamespaceID
 
 object GlobalBlockHandlers : Bootstrap() {
     override fun hook(eventNode: EventNode<Event>) {
-        MinecraftServer.getBlockManager().registerHandler("minecraft:sign", ::SignHandler)
-        MinecraftServer.getBlockManager().registerHandler("minecraft:skull", ::SkullHandler)
+        registerHandler("minecraft:sign", listOf(
+            Tag.Byte("GlowingText"),
+            Tag.String("Color"),
+            Tag.String("Text1"),
+            Tag.String("Text2"),
+            Tag.String("Text3"),
+            Tag.String("Text4")
+        ))
+        registerHandler("minecraft:skull", listOf(
+            Tag.String("ExtraType"),
+            Tag.NBT("SkullOwner")
+        ))
+        registerHandler("minecraft:beacon", listOf(
+            Tag.Component("CustomName"),
+            Tag.String("Lock"),
+            Tag.Integer("Levels"),
+            Tag.Integer("Primary"),
+            Tag.Integer("Secondary")
+        ))
+        registerHandler("minecraft:furnace", listOf(
+            Tag.Short("BurnTime"),
+            Tag.Short("CookTime"),
+            Tag.Short("CookTimeTotal"),
+            Tag.Component("CustomName"),
+            Tag.ItemStack("Items").list(),
+            Tag.String("Lock"),
+            Tag.Integer("RecipesUsed").list()
+        ))
+    }
+
+    private fun registerHandler(registryName: String, blockEntityTags: List<Tag<*>>) =
+        MinecraftServer.getBlockManager().registerHandler(registryName) {
+            createHandler(registryName, blockEntityTags)
+        }
+
+    private fun createHandler(registryName: String, blockEntityTags: List<Tag<*>>) = object : BlockHandler {
+        override fun getNamespaceId() = NamespaceID.from(registryName)
+        override fun getBlockEntityTags() = blockEntityTags
     }
 }
