@@ -27,7 +27,7 @@ data class PlayerDocument @OptIn(ExperimentalSerializationApi::class) constructo
     var experience: Int = 0,
     var groups: MutableList<String> = mutableListOf("default"),
     var punishments: MutableList<Punishment> = mutableListOf(),
-    var statistics: List<Statistic> = emptyList(),
+    var statistics: MutableMap<String, Double> = mutableMapOf(),
     var achievements: List<Achievement> = emptyList(),
     var ownedCosmetics: List<Cosmetic> = emptyList(),
     var permissions: MutableList<String> = mutableListOf(),
@@ -67,9 +67,6 @@ data class PlayerDocument @OptIn(ExperimentalSerializationApi::class) constructo
 }
 
 enum class Cosmetic(val displayName: String, val description: String, val icon: Material, val unlockCost: Int)
-
-@Serializable
-data class Statistic(val key: String, val value: Double)
 
 enum class PunishmentType {
     BAN, MUTE, WARNING, COMPETITIVE_BAN
