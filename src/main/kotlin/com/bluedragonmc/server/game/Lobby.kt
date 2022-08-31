@@ -28,6 +28,7 @@ import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
 import net.minestom.server.entity.PlayerSkin
 import net.minestom.server.entity.hologram.Hologram
+import net.minestom.server.entity.metadata.other.ItemFrameMeta
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.player.PlayerSpawnEvent
@@ -39,8 +40,12 @@ import net.minestom.server.sound.SoundEvent
 import net.minestom.server.timer.Task
 import org.spongepowered.configurate.ConfigurationNode
 import org.spongepowered.configurate.objectmapping.ConfigSerializable
+import java.awt.Color
+import java.awt.Font
+import java.awt.geom.AffineTransform
 import java.nio.file.Paths
 import java.time.Duration
+import javax.imageio.ImageIO
 
 class Lobby : Game("Lobby", "lobbyv2.1") {
 
@@ -181,6 +186,35 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
             Pos(16.975, 63.65, 0.0),
             Component.text("World Tour Parkour", NamedTextColor.GREEN, TextDecoration.BOLD),
             true)
+
+        val font = Font.createFont(Font.TRUETYPE_FONT, this::class.java.getResourceAsStream("/Minecraft.ttf")).deriveFont(Font.PLAIN, 14f)
+
+        MapUtils.createMaps(getInstance(), Pos(-19.0, 64.0, -17.0), Pos(-19.0, 62.0, -23.0), ItemFrameMeta.Orientation.EAST) { graphics ->
+            val imageStream = Lobby::class.java.getResourceAsStream("/bd-banner.png")!!
+            val image = ImageIO.read(imageStream)
+            val scale = (128 * 7) / image.width.toDouble()
+            graphics.background = Color.WHITE
+            graphics.clearRect(0, 0, 128 * 7, 128 * 3)
+            graphics.drawRenderedImage(image, AffineTransform.getScaleInstance(scale, scale))
+            graphics.font = font
+            graphics.color = Color.BLACK
+            graphics.scale(3.0, 3.0)
+            LOBBY_NEWS_ITEMS.forEachIndexed { index, str ->
+                graphics.drawString(str, 5, 70 + index * 14)
+            }
+            graphics.color = Color(BRAND_COLOR_PRIMARY_3.value())
+            graphics.scale(0.5, 0.5)
+            graphics.drawString("Join our community at bluedragonmc.com", 5f, 250f)
+        }
+
+        MapUtils.createMaps(getInstance(), Pos(52.0, 64.0, -24.0), Pos(52.0, 61.0, -21.0), ItemFrameMeta.Orientation.WEST) { graphics ->
+            graphics.font = font
+            graphics.scale(5.0, 5.0)
+            graphics.drawString("WackyMaze", 5f, 12.8f)
+            graphics.scale(0.5, 0.5)
+            graphics.color = Color(0x727272)
+            graphics.drawString("Most Wins", 10f, 40f)
+        }
 
         ready()
     }

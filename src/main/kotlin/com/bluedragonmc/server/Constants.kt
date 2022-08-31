@@ -53,6 +53,12 @@ val SERVER_NEWS = Component.empty() + Component.text("NEW GAME", NamedTextColor.
         Component.text(" - ", NamedTextColor.GRAY).noBold() +
         Component.text("INFINIJUMP", NamedTextColor.YELLOW, TextDecoration.BOLD)
 
+val LOBBY_NEWS_ITEMS = listOf(
+    "- Aug 28: FastFall updates!",
+    "- Aug 18: New game: ArenaPvP!",
+    "- Aug 07: New game: Infinijump!",
+)
+
 /**
  * A base64-encoded PNG image of the server's favicon shown on clients' server lists.
  */
