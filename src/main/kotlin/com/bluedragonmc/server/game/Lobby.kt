@@ -187,7 +187,8 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
             Component.text("World Tour Parkour", NamedTextColor.GREEN, TextDecoration.BOLD),
             true)
 
-        val font = Font.createFont(Font.TRUETYPE_FONT, this::class.java.getResourceAsStream("/Minecraft.ttf")).deriveFont(Font.PLAIN, 14f)
+        // Font is from https://www.1001freefonts.com/minecraft.font
+        val font = Font.createFont(Font.TRUETYPE_FONT, this::class.java.getResourceAsStream("/font/Minecraft.otf")).deriveFont(Font.PLAIN, 14f)
 
         MapUtils.createMaps(getInstance(), Pos(-19.0, 64.0, -17.0), Pos(-19.0, 62.0, -23.0), ItemFrameMeta.Orientation.EAST) { graphics ->
             val imageStream = Lobby::class.java.getResourceAsStream("/bd-banner.png")!!
