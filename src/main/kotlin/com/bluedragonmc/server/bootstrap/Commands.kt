@@ -19,6 +19,7 @@ object Commands : Bootstrap() {
             JoinCommand("join", "/join <game>"),
             KickCommand("kick", "/kick <player> <reason>"),
             KillCommand("kill", "/kill [player]"),
+            LeaderboardCommand("leaderboard", "/leaderboard <statistic>"),
             ListCommand("list"),
             LobbyCommand("lobby", "/lobby", "l", "hub"),
             MessageCommand("msg", "message", "w", "tell"),

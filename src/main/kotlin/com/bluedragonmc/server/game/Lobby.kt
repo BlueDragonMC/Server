@@ -2,9 +2,11 @@ package com.bluedragonmc.server.game
 
 import com.bluedragonmc.messages.GameType
 import com.bluedragonmc.server.*
+import com.bluedragonmc.server.event.DataLoadedEvent
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.GuiModule
 import com.bluedragonmc.server.module.config.ConfigModule
+import com.bluedragonmc.server.module.database.StatisticsModule
 import com.bluedragonmc.server.module.gameplay.*
 import com.bluedragonmc.server.module.instance.SharedInstanceModule
 import com.bluedragonmc.server.module.map.AnvilFileMapProviderModule
@@ -140,6 +142,7 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
 
         val splashes = config.node("splashes").getList(String::class.java)!!
 
+        use(StatisticsModule())
         use(object : GameModule() {
             override fun initialize(parent: Game, eventNode: EventNode<Event>) {
                 eventNode.addListener(PlayerSpawnEvent::class.java) { event ->
@@ -150,6 +153,9 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
                         Title.Times.times(Duration.ZERO, Duration.ofMillis(1500), Duration.ofMillis(100))
                     ))
                     event.player.inventory.setItemStack(0, gameSelectItem)
+                }
+                eventNode.addListener(DataLoadedEvent::class.java) { event ->
+                    getModule<StatisticsModule>().recordStatistic(event.player, "times_data_loaded") { i -> i?.plus(1.0) ?: 1.0 }
                 }
                 eventNode.addListener(PlayerUseItemEvent::class.java) { event ->
                     if (event.itemStack.material() == Material.COMPASS) gameSelect.open(event.player)
