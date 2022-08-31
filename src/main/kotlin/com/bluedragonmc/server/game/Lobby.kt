@@ -15,6 +15,8 @@ import com.bluedragonmc.server.module.minigame.SpawnpointModule
 import com.bluedragonmc.server.module.minigame.VoidDeathModule
 import com.bluedragonmc.server.queue.Queue
 import com.bluedragonmc.server.utils.*
+import com.mongodb.internal.operation.OrderBy
+import kotlinx.coroutines.runBlocking
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -188,7 +190,10 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
             true)
 
         // Font is from https://www.1001freefonts.com/minecraft.font
-        val font = Font.createFont(Font.TRUETYPE_FONT, this::class.java.getResourceAsStream("/font/Minecraft.otf")).deriveFont(Font.PLAIN, 14f)
+        val font = Font.createFont(Font.TRUETYPE_FONT, this::class.java.getResourceAsStream("/font/Minecraft.otf"))
+        val font18 = font.deriveFont(Font.PLAIN, 18f)
+        val font36 = font.deriveFont(Font.PLAIN, 36f)
+        val font72 = font.deriveFont(Font.PLAIN, 72f)
 
         MapUtils.createMaps(getInstance(), Pos(-19.0, 64.0, -17.0), Pos(-19.0, 62.0, -23.0), ItemFrameMeta.Orientation.EAST) { graphics ->
             val imageStream = Lobby::class.java.getResourceAsStream("/bd-banner.png")!!
@@ -197,25 +202,43 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
             graphics.background = Color.WHITE
             graphics.clearRect(0, 0, 128 * 7, 128 * 3)
             graphics.drawRenderedImage(image, AffineTransform.getScaleInstance(scale, scale))
-            graphics.font = font
+            graphics.font = font36
             graphics.color = Color.BLACK
-            graphics.scale(3.0, 3.0)
             LOBBY_NEWS_ITEMS.forEachIndexed { index, str ->
-                graphics.drawString(str, 5, 70 + index * 14)
+                graphics.drawString(str, 10, 200 + index * 30)
             }
             graphics.color = Color(BRAND_COLOR_PRIMARY_3.value())
-            graphics.scale(0.5, 0.5)
-            graphics.drawString("Join our community at bluedragonmc.com", 5f, 250f)
+            graphics.font = font18
+            graphics.drawString("Join our community at bluedragonmc.com", 10f, 128f * 3f - 10f)
         }
 
-        MapUtils.createMaps(getInstance(), Pos(52.0, 64.0, -24.0), Pos(52.0, 61.0, -21.0), ItemFrameMeta.Orientation.WEST) { graphics ->
-            graphics.font = font
-            graphics.scale(5.0, 5.0)
-            graphics.drawString("WackyMaze", 5f, 12.8f)
-            graphics.scale(0.5, 0.5)
-            graphics.color = Color(0x727272)
-            graphics.drawString("Most Wins", 10f, 40f)
-        }
+        MinecraftServer.getSchedulerManager().buildTask {
+            MapUtils.createMaps(getInstance(), Pos(52.0, 64.0, -24.0), Pos(52.0, 61.0, -21.0), ItemFrameMeta.Orientation.WEST, 200) { graphics ->
+                graphics.font = font72
+                graphics.drawString("WackyMaze", 10f, 70f)
+                graphics.color = Color(0x727272)
+                graphics.font = font36
+                graphics.drawString("Most Wins", 10f, 110f)
+                runBlocking {
+                    val leaderboardPlayers = getModule<StatisticsModule>().rankPlayersByStatistic("times_data_loaded", OrderBy.DESC, 10)
+                    println(leaderboardPlayers)
+                    graphics.color = Color.WHITE
+                    for (i in 0 until 10) {
+                        val lineStartY = 160f + 30f * i
+                        graphics.drawString("${i+1}.", 10f, lineStartY)
+                    }
+                    leaderboardPlayers.entries.forEachIndexed { i, (player, value) ->
+                        val lineStartY = 160f + 30f * i
+                        graphics.color = Color(player.highestGroup?.color?.value() ?: 0x727272)
+                        graphics.drawString(player.username, 60f, lineStartY)
+                        graphics.color = Color.WHITE
+                        graphics.drawString(value.toString(), 370f, lineStartY)
+//                        font.stringbounds
+                    }
+
+                }
+            }
+        }.repeat(Duration.ofMillis(5000)).schedule()
 
         ready()
     }

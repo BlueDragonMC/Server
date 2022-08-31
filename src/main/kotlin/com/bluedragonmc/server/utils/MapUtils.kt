@@ -26,7 +26,7 @@ object MapUtils {
     private val logger = LoggerFactory.getLogger(MapUtils::class.java)
     private var mapId = 0
 
-    fun createMaps(instance: Instance, start: Pos, end: Pos, orientation: Orientation, renderFunction: Consumer<Graphics2D>) {
+    fun createMaps(instance: Instance, start: Pos, end: Pos, orientation: Orientation, startingMapId: Int = -1, renderFunction: Consumer<Graphics2D>) {
         val startTime = System.nanoTime()
 
         val minX = min(start.blockX(), end.blockX())
@@ -65,10 +65,10 @@ object MapUtils {
 
         val framebuffer = LargeGraphics2DFramebuffer(width * 128, height * 128)
         renderFunction.accept(framebuffer.renderer)
-        val mapPackets = mapPackets(framebuffer, mapId, width, height)
+        val mapPackets = mapPackets(framebuffer, if (startingMapId < 0) mapId else startingMapId, width, height)
 
         val positions = getAllInBox(start, end)
-        for(pos in positions) {
+        for (pos in positions) {
             // The upper left corner is the [start] position.
             val relX = pos.blockX() - start.blockX()
             val relY = pos.blockY() - start.blockY()
@@ -81,10 +81,17 @@ object MapUtils {
                 Orientation.WEST -> relY.absoluteValue * width + relZ.absoluteValue
                 Orientation.EAST -> relY * width + relZ
             }.absoluteValue
+            // Remove old item frames that are already there
+            for (entity in instance.getNearbyEntities(pos, 0.5)) {
+                if (entity is MapItemFrame) {
+                    entity.remove()
+                }
+            }
+            // Create the new item frame entity
             MapItemFrame(orientation, mapPackets[index]!!).setInstance(instance, pos.withYaw(yaw))
         }
 
-        mapId += mapPackets.size
+        if (startingMapId < 0) mapId += mapPackets.size
         logger.info("Created ${mapPackets.size} maps in ${(System.nanoTime() - startTime) / 1_000_000}ms.")
     }
 
@@ -127,7 +134,7 @@ object MapUtils {
             val meta = entityMeta as ItemFrameMeta
             meta.setNotifyAboutChanges(false)
             meta.orientation = orientation
-//          meta.isInvisible = true
+            meta.isInvisible = true
             meta.item = ItemStack.builder(Material.FILLED_MAP)
                 .meta(
                     MapMeta::class.java
