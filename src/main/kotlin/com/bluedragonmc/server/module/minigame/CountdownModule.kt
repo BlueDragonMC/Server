@@ -96,6 +96,7 @@ class CountdownModule(
         }
 
         eventNode.addListener(GameStartEvent::class.java) { event ->
+            cancelCountdown()
             for (module in useOnStart) parent.use(module)
             parent.state = GameState.INGAME
             MinecraftServer.getSchedulerManager().scheduleNextTick {
@@ -129,7 +130,6 @@ class CountdownModule(
                 parent.sendTitlePart(
                     TitlePart.TITLE, Component.text("GO!", NamedTextColor.GREEN).decorate(TextDecoration.BOLD)
                 )
-                cancelCountdown()
                 parent.callEvent(GameStartEvent(parent))
             }
         }
