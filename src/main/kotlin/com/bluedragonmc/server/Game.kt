@@ -2,6 +2,7 @@ package com.bluedragonmc.server
 
 import com.bluedragonmc.messages.GameStateUpdateMessage
 import com.bluedragonmc.messages.GameType
+import com.bluedragonmc.server.event.DataLoadedEvent
 import com.bluedragonmc.server.event.GameEvent
 import com.bluedragonmc.server.event.PlayerLeaveGameEvent
 import com.bluedragonmc.server.module.GameModule
@@ -166,6 +167,7 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
     private fun createEventNode(module: GameModule) =
         EventNode.event(module::class.simpleName.orEmpty(), EventFilter.ALL) { event ->
             when (event) {
+                is DataLoadedEvent -> true
                 is InstanceEvent -> event.instance == getInstanceOrNull()
                 is GameEvent -> event.game == this
                 is PlayerSpawnEvent -> event.spawnInstance == getInstanceOrNull() // Workaround for PlayerSpawnEvent not being an InstanceEvent
