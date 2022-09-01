@@ -100,5 +100,11 @@ games:
     time: "\u221e" # Infinite
     description: An endless, singleplayer parkour game.\nTry to beat your own high score\nor even climb the leaderboards.
     material: minecraft:feather
-holograms:
-  -
+leaderboards:
+  - title: WackyMaze
+    subtitle: Most wins
+    statistic: game_wackymaze_wins
+    display-mode: WHOLE_NUMBER # one of: WHOLE_NUMBER, DECIMAL, or DURATION
+    top-left: 52.0,64.0,-24.0
+    bottom-right: 52.0,61.0,-21.0
+    orientation: WEST

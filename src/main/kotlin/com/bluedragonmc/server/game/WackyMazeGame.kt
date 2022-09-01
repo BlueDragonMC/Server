@@ -6,6 +6,7 @@ import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.combat.CustomDeathMessageModule
 import com.bluedragonmc.server.module.combat.OldCombatModule
 import com.bluedragonmc.server.module.database.AwardsModule
+import com.bluedragonmc.server.module.database.StatisticsModule
 import com.bluedragonmc.server.module.gameplay.InstantRespawnModule
 import com.bluedragonmc.server.module.gameplay.InventoryPermissionsModule
 import com.bluedragonmc.server.module.gameplay.WorldPermissionsModule
@@ -40,6 +41,7 @@ class WackyMazeGame(mapName: String) : Game("WackyMaze", mapName) {
         use(TeamModule(true, TeamModule.AutoTeamMode.PLAYER_COUNT, 1))
         use(WackyMazeStickModule())
         use(AwardsModule())
+        use(StatisticsModule())
 
         ready()
     }

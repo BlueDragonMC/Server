@@ -6,6 +6,7 @@ import com.bluedragonmc.server.module.combat.CustomDeathMessageModule
 import com.bluedragonmc.server.module.combat.OldCombatModule
 import com.bluedragonmc.server.module.config.ConfigModule
 import com.bluedragonmc.server.module.database.AwardsModule
+import com.bluedragonmc.server.module.database.StatisticsModule
 import com.bluedragonmc.server.module.gameplay.ChestLootModule
 import com.bluedragonmc.server.module.gameplay.InstantRespawnModule
 import com.bluedragonmc.server.module.gameplay.InventoryPermissionsModule
@@ -70,6 +71,8 @@ class SkyWarsGame(mapName: String) : Game("SkyWars", mapName) {
 
         use(GuiModule())
         use(ChestLootModule(NormalSkyWarsLootProvider(config, this)))
+
+        use(StatisticsModule())
 
         ready()
     }

@@ -4,10 +4,12 @@ import com.bluedragonmc.server.ALT_COLOR_2
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.combat.CustomDeathMessageModule
 import com.bluedragonmc.server.module.config.ConfigModule
 import com.bluedragonmc.server.module.database.AwardsModule
+import com.bluedragonmc.server.module.database.StatisticsModule
 import com.bluedragonmc.server.module.gameplay.InstantRespawnModule
 import com.bluedragonmc.server.module.gameplay.MaxHealthModule
 import com.bluedragonmc.server.module.gameplay.SidebarModule
@@ -39,6 +41,7 @@ import net.minestom.server.sound.SoundEvent
 import java.time.Duration
 import kotlin.math.pow
 import kotlin.math.sqrt
+import kotlin.properties.Delegates
 
 class FastFallGame(mapName: String?) : Game("FastFall", "Chaos") {
     private val radius = (38..55).random()
@@ -89,7 +92,13 @@ class FastFallGame(mapName: String?) : Game("FastFall", "Chaos") {
         var lead: Player? = null
         var lastLeadChange = 0L
         use(object : GameModule() {
+
+            private var startTime by Delegates.notNull<Long>()
+
             override fun initialize(parent: Game, eventNode: EventNode<Event>) {
+                eventNode.addListener(GameStartEvent::class.java) {
+                    startTime = System.currentTimeMillis()
+                }
                 eventNode.addListener(WinModule.WinnerDeclaredEvent::class.java) { event ->
                     event.winningTeam.players.forEach {
                         if (it.health == it.maxHealth) parent.getModule<AwardsModule>().awardCoins(
@@ -143,6 +152,16 @@ class FastFallGame(mapName: String?) : Game("FastFall", "Chaos") {
                         event.player.isOnGround
                     ) {
                         getModule<WinModule>().declareWinner(event.player)
+                        val time = System.currentTimeMillis() - startTime
+                        // Record the players' best times (only update the statistic if the new value is less than the old value)
+                        getModule<StatisticsModule>().recordStatistic(event.player, "game_fastfall_best_time", time.toDouble()) { prev ->
+                            prev == null || prev > time
+                        }
+                        if (parent.players.size > 1) {
+                            // Only record wins in multiplayer
+                            getModule<StatisticsModule>().recordStatistic(event.player,
+                                "game.fastfall.wins") { prev -> prev?.plus(1.0) ?: 1.0 }
+                        }
                     }
                 }
             }
@@ -165,6 +184,8 @@ class FastFallGame(mapName: String?) : Game("FastFall", "Chaos") {
         MinecraftServer.getSchedulerManager().buildTask {
             binding.update()
         }.repeat(Duration.ofMillis(500)).schedule()
+
+        use(StatisticsModule(recordWins = false))
 
         ready()
     }

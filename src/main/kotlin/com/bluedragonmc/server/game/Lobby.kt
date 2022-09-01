@@ -30,7 +30,7 @@ import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
 import net.minestom.server.entity.PlayerSkin
 import net.minestom.server.entity.hologram.Hologram
-import net.minestom.server.entity.metadata.other.ItemFrameMeta
+import net.minestom.server.entity.metadata.other.ItemFrameMeta.Orientation
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.player.PlayerSpawnEvent
@@ -44,6 +44,8 @@ import org.spongepowered.configurate.ConfigurationNode
 import org.spongepowered.configurate.objectmapping.ConfigSerializable
 import java.awt.Color
 import java.awt.Font
+import java.awt.Graphics2D
+import java.awt.font.FontRenderContext
 import java.awt.geom.AffineTransform
 import java.nio.file.Paths
 import java.time.Duration
@@ -75,6 +77,22 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
         val time: String = "\u221e",
         val material: Material = Material.RED_STAINED_GLASS
     )
+
+    @ConfigSerializable
+    data class Leaderboard(
+        val statistic: String = "",
+        val title: String = "Failed to load leaderboard",
+        val subtitle: String = "",
+        val show: Int = 10,
+        val displayMode: DisplayMode = DisplayMode.WHOLE_NUMBER,
+        val topLeft: Pos = Pos.ZERO,
+        val bottomRight: Pos = Pos.ZERO,
+        val orientation: Orientation = Orientation.EAST
+    ) {
+        enum class DisplayMode {
+            DURATION, DECIMAL, WHOLE_NUMBER
+        }
+    }
 
     init {
 
@@ -190,12 +208,16 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
             true)
 
         // Font is from https://www.1001freefonts.com/minecraft.font
-        val font = Font.createFont(Font.TRUETYPE_FONT, this::class.java.getResourceAsStream("/font/Minecraft.otf"))
-        val font18 = font.deriveFont(Font.PLAIN, 18f)
-        val font36 = font.deriveFont(Font.PLAIN, 36f)
-        val font72 = font.deriveFont(Font.PLAIN, 72f)
+        val baseFont = Font.createFont(Font.TRUETYPE_FONT, this::class.java.getResourceAsStream("/font/Minecraft.otf"))
+        val font18 = baseFont.deriveFont(Font.PLAIN, 18f)
+        val font36 = baseFont.deriveFont(Font.PLAIN, 36f)
+        val font72 = baseFont.deriveFont(Font.PLAIN, 72f)
+        val leaderboards = config.node("leaderboards").getList(Leaderboard::class.java)
 
-        MapUtils.createMaps(getInstance(), Pos(-19.0, 64.0, -17.0), Pos(-19.0, 62.0, -23.0), ItemFrameMeta.Orientation.EAST) { graphics ->
+        // Create a list of font sizes to use for dynamic text scaling
+        val fontSizes = (12 .. 36 step 2).map { baseFont.deriveFont(Font.PLAIN, it.toFloat()) }
+
+        MapUtils.createMaps(getInstance(), Pos(-19.0, 64.0, -17.0), Pos(-19.0, 62.0, -23.0), Orientation.EAST) { graphics ->
             val imageStream = Lobby::class.java.getResourceAsStream("/bd-banner.png")!!
             val image = ImageIO.read(imageStream)
             val scale = (128 * 7) / image.width.toDouble()
@@ -212,36 +234,63 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
             graphics.drawString("Join our community at bluedragonmc.com", 10f, 128f * 3f - 10f)
         }
 
-        MinecraftServer.getSchedulerManager().buildTask {
-            MapUtils.createMaps(getInstance(), Pos(52.0, 64.0, -24.0), Pos(52.0, 61.0, -21.0), ItemFrameMeta.Orientation.WEST, 200) { graphics ->
-                graphics.font = font72
-                graphics.drawString("WackyMaze", 10f, 70f)
-                graphics.color = Color(0x727272)
-                graphics.font = font36
-                graphics.drawString("Most Wins", 10f, 110f)
-                runBlocking {
-                    val leaderboardPlayers = getModule<StatisticsModule>().rankPlayersByStatistic("times_data_loaded", OrderBy.DESC, 10)
-                    println(leaderboardPlayers)
-                    graphics.color = Color.WHITE
-                    for (i in 0 until 10) {
-                        val lineStartY = 160f + 30f * i
-                        graphics.drawString("${i+1}.", 10f, lineStartY)
-                    }
-                    leaderboardPlayers.entries.forEachIndexed { i, (player, value) ->
-                        val lineStartY = 160f + 30f * i
-                        graphics.color = Color(player.highestGroup?.color?.value() ?: 0x727272)
-                        graphics.drawString(player.username, 60f, lineStartY)
+        leaderboards?.forEachIndexed { lbIndex, lb ->
+            MinecraftServer.getSchedulerManager().buildTask {
+                MapUtils.createMaps(getInstance(), lb.topLeft, lb.bottomRight, lb.orientation, 5000 + lbIndex * 200) { graphics ->
+                    graphics.font = font72
+                    graphics.drawString(lb.title, 10f, 70f)
+                    graphics.color = Color(0x727272)
+                    graphics.font = font36
+                    graphics.drawString(lb.subtitle, 10f, 110f)
+                    runBlocking {
+                        val leaderboardPlayers = getModule<StatisticsModule>().rankPlayersByStatistic(lb.statistic, OrderBy.DESC, 10)
+                        val it = leaderboardPlayers.entries.iterator()
                         graphics.color = Color.WHITE
-                        graphics.drawString(value.toString(), 370f, lineStartY)
-//                        font.stringbounds
-                    }
+                        for (i in 1 .. lb.show) {
+                            // Draw leaderboard numbers (default: 1-10)
+                            val lineStartY = 130f + 30f * i
+                            graphics.drawString("$i.", 10f, lineStartY)
 
+                            if (!it.hasNext()) continue
+                            val (player, value) = it.next()
+
+                            // Create the text to display based on the display mode
+                            val displayText = when(lb.displayMode) {
+                                Leaderboard.DisplayMode.DURATION -> {
+                                    val duration = Duration.ofMillis(value.toLong())
+                                    String.format("%02d:%02d:%02d.%03d", duration.toHoursPart(), duration.toMinutesPart(), duration.toSecondsPart(), duration.toMillisPart())
+                                }
+                                Leaderboard.DisplayMode.DECIMAL -> String.format("%.2f", value)
+                                Leaderboard.DisplayMode.WHOLE_NUMBER -> value.toInt().toString()
+                            }
+                            // Draw player name
+                            val remainingPixels = 128 * 4 - stringWidth(graphics, font36, displayText) - 60f - 10f
+                            val playerNameFont = fontSizes.lastOrNull {
+                                stringWidth(graphics, it, player.username) < remainingPixels
+                            } ?: continue
+                            graphics.drawString(player.username, 60f, lineStartY, Color(player.highestGroup?.color?.value() ?: 0x727272), playerNameFont)
+                            // Draw leaderboard value
+                            graphics.drawString(displayText, 128 * 4 - stringWidth(graphics, displayText) - 10f, lineStartY, Color.WHITE, font36)
+                        }
+                    }
                 }
-            }
-        }.repeat(Duration.ofMillis(5000)).schedule()
+            }.repeat(Duration.ofMinutes(5)).schedule()
+        }
 
         ready()
     }
+
+    private fun Graphics2D.drawString(string: String, x: Float, y: Float, color: Color, font: Font) {
+        this.font = font
+        this.color = color
+        drawString(string, x, y)
+    }
+
+    private fun stringWidth(graphics: Graphics2D, string: String) =
+        graphics.font.getStringBounds(string, FontRenderContext(graphics.transform, false, false)).width.toFloat()
+
+    private fun stringWidth(graphics: Graphics2D, font: Font, string: String) =
+        font.getStringBounds(string, FontRenderContext(graphics.transform, false, false)).width.toFloat()
 
     private val gameSelectItem =
         ItemStack.of(Material.COMPASS).withDisplayName(("Game Menu" withColor ALT_COLOR_1).noItalic())

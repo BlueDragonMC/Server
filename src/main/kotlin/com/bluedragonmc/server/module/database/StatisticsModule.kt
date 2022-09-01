@@ -3,6 +3,7 @@ package com.bluedragonmc.server.module.database
 import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.GameModule
+import com.bluedragonmc.server.module.minigame.WinModule
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.mongodb.client.model.Sorts
@@ -20,7 +21,7 @@ import java.util.function.Predicate
  * A module to save and retrieve players' statistics,
  * as well as rank players by their statistic values.
  */
-class StatisticsModule : GameModule() {
+class StatisticsModule(private val recordWins: Boolean = true) : GameModule() {
 
     override val dependencies = listOf(DatabaseModule::class)
 
@@ -30,7 +31,17 @@ class StatisticsModule : GameModule() {
             Caffeine.newBuilder().expireAfterWrite(Duration.ofMinutes(20)).build()
     }
 
-    override fun initialize(parent: Game, eventNode: EventNode<Event>) {}
+    override fun initialize(parent: Game, eventNode: EventNode<Event>) {
+        if (recordWins) {
+            eventNode.addListener(WinModule.WinnerDeclaredEvent::class.java) { event ->
+                event.winningTeam.players.forEach { player ->
+                    val statName = if (parent.mode == null) "game_${parent.name.lowercase()}_wins"
+                    else "game_${parent.name.lowercase()}_${parent.mode.lowercase()}_wins"
+                    recordStatistic(player, statName) { value -> value?.plus(1) ?: 1.0 }
+                }
+            }
+        }
+    }
 
     /**
      * Records a statistic for the [player] using the [key] and provided [value].
@@ -101,7 +112,7 @@ class StatisticsModule : GameModule() {
         limit: Int = 10,
     ): Map<PlayerDocument, Double> {
 
-        val cachedEntry = statisticsCache.getIfPresent(key)
+        val cachedEntry = statisticsCache.getIfPresent(sortOrderBy.toString() + key)
         if (cachedEntry != null) return cachedEntry.associateWith { it.statistics[key]!! }
 
         val sortCriteria = when (sortOrderBy) {
@@ -111,7 +122,7 @@ class StatisticsModule : GameModule() {
 
         val documents = DatabaseModule.getPlayersCollection().find().sort(sortCriteria).limit(limit).toList()
             .filter { it.statistics.containsKey(key) }
-        statisticsCache.put(key, documents)
+        statisticsCache.put(sortOrderBy.toString() + key, documents)
 
         return documents.associateWith { it.statistics[key]!! }
     }

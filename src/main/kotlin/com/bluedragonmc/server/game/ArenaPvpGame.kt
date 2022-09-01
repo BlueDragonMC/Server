@@ -4,12 +4,13 @@ import com.bluedragonmc.server.ALT_COLOR_1
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.KitSelectedEvent
 import com.bluedragonmc.server.event.PlayerLeaveGameEvent
-import com.bluedragonmc.server.module.config.ConfigModule
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.GuiModule
 import com.bluedragonmc.server.module.combat.CustomDeathMessageModule
 import com.bluedragonmc.server.module.combat.OldCombatModule
+import com.bluedragonmc.server.module.config.ConfigModule
 import com.bluedragonmc.server.module.database.AwardsModule
+import com.bluedragonmc.server.module.database.StatisticsModule
 import com.bluedragonmc.server.module.gameplay.*
 import com.bluedragonmc.server.module.instance.SharedInstanceModule
 import com.bluedragonmc.server.module.map.AnvilFileMapProviderModule
@@ -106,6 +107,8 @@ class ArenaPvpGame(mapName: String) : Game("ArenaPvP", mapName) {
             lookAtPlayer = false,
             enableFullSkin = false,
         )
+
+        use(StatisticsModule())
 
         ready()
     }
