@@ -5,6 +5,7 @@ import com.bluedragonmc.server.module.combat.CustomDeathMessageModule
 import com.bluedragonmc.server.module.combat.OldCombatModule
 import com.bluedragonmc.server.module.config.ConfigModule
 import com.bluedragonmc.server.module.database.AwardsModule
+import com.bluedragonmc.server.module.database.StatisticsModule
 import com.bluedragonmc.server.module.gameplay.*
 import com.bluedragonmc.server.module.instance.SharedInstanceModule
 import com.bluedragonmc.server.module.map.AnvilFileMapProviderModule
@@ -51,6 +52,8 @@ class PvpMasterGame(mapName: String) : Game("PvPMaster", mapName) {
             if (player in winningTeam.players) 50 else 5
         })
         use(AwardsModule())
+
+        use(StatisticsModule())
 
         ready()
     }

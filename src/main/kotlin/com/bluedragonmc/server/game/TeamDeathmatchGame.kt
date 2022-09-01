@@ -3,7 +3,10 @@ package com.bluedragonmc.server.game
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.combat.CustomDeathMessageModule
 import com.bluedragonmc.server.module.combat.OldCombatModule
-import com.bluedragonmc.server.module.gameplay.*
+import com.bluedragonmc.server.module.database.StatisticsModule
+import com.bluedragonmc.server.module.gameplay.InstantRespawnModule
+import com.bluedragonmc.server.module.gameplay.InventoryPermissionsModule
+import com.bluedragonmc.server.module.gameplay.WorldPermissionsModule
 import com.bluedragonmc.server.module.instance.SharedInstanceModule
 import com.bluedragonmc.server.module.map.AnvilFileMapProviderModule
 import com.bluedragonmc.server.module.minigame.*
@@ -52,6 +55,8 @@ class TeamDeathmatchGame(mapName: String) : Game("Team Deathmatch", mapName) {
                 KitsModule.Kit(name = Component.text("Hard Mode", NamedTextColor.RED),
                     icon = Material.REDSTONE,
                     items = hashMapOf(0 to sword, PlayerInventoryUtils.BOOTS_SLOT to ironBoots)))))
+
+        use(StatisticsModule())
 
         ready()
     }

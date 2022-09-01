@@ -8,6 +8,7 @@ import com.bluedragonmc.server.module.combat.CustomDeathMessageModule
 import com.bluedragonmc.server.module.combat.OldCombatModule
 import com.bluedragonmc.server.module.config.ConfigModule
 import com.bluedragonmc.server.module.database.AwardsModule
+import com.bluedragonmc.server.module.database.StatisticsModule
 import com.bluedragonmc.server.module.gameplay.*
 import com.bluedragonmc.server.module.instance.InstanceContainerModule
 import com.bluedragonmc.server.module.map.AnvilFileMapProviderModule
@@ -236,6 +237,8 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
                 }
             }
         })
+
+        use(StatisticsModule())
 
         ready()
     }
