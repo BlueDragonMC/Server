@@ -22,7 +22,7 @@ class MessageCommand(name: String, vararg aliases: String) : BlueDragonCommand(n
         val playerName = get(playerArgument)
         val player = MinecraftServer.getConnectionManager().getPlayer(playerName)
         val message = Component.text(get(messageArgument).joinToString(" "), NamedTextColor.GRAY)
-        val senderName = (sender as? Player)?.name ?: Component.text("Console")
+        val senderName = (sender as? Player)?.name ?: Component.translatable("command.msg.console")
         if (player != null) {
             // Player is on the same server and online
             val color = (player as CustomPlayer).data.highestGroup?.color ?: NamedTextColor.GRAY

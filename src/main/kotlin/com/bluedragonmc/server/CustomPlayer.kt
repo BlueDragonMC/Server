@@ -12,6 +12,7 @@ import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
 import net.minestom.server.network.player.PlayerConnection
 import net.minestom.server.potion.PotionEffect
+import net.minestom.server.utils.async.AsyncUtils
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import kotlin.math.log
@@ -83,11 +84,15 @@ class CustomPlayer(uuid: UUID, username: String, playerConnection: PlayerConnect
     override fun setInstance(instance: Instance): CompletableFuture<Void> {
         Game.findGame(this)?.apply {
             val spawnpoint = getModuleOrNull<SpawnpointModule>()?.spawnpointProvider?.getSpawnpoint(this@CustomPlayer)
-            if (spawnpoint != null) {
+            if (spawnpoint != null && instance != this@CustomPlayer.instance) {
                 return super.setInstance(instance, spawnpoint)
             }
         }
-        return super.setInstance(instance, if (this.instance != null) getPosition() else respawnPoint)
+        return if (instance != this@CustomPlayer.instance) {
+            super.setInstance(instance, if (this.instance != null) getPosition() else respawnPoint)
+        } else {
+            AsyncUtils.VOID_FUTURE
+        }
     }
 
     override fun getAdditionalHearts(): Float {

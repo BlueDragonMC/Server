@@ -1,5 +1,6 @@
 package com.bluedragonmc.server.game
 
+import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.GameStartEvent
@@ -150,7 +151,7 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
                         sidebarTeamsSection.update()
                         for (player in parent.players) {
                             player.sendMessage(
-                                Component.translatable("game.bedwars.bed_broken", team.name, event.player.name)
+                                Component.translatable("game.bedwars.bed_broken", BRAND_COLOR_PRIMARY_2, team.name, event.player.name)
                                     .surroundWithSeparators()
                             )
                             if (!team.players.contains(player)) {
@@ -158,8 +159,8 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
                             } else {
                                 player.showTitle(
                                     Title.title(
-                                        Component.text("BED DESTROYED", NamedTextColor.RED, TextDecoration.BOLD),
-                                        Component.text("You can no longer respawn!", NamedTextColor.RED)
+                                        Component.translatable("game.bedwars.title.bed_broken", NamedTextColor.RED, TextDecoration.BOLD),
+                                        Component.translatable("game.bedwars.subtitle.bed_broken", NamedTextColor.RED)
                                     )
                                 )
                                 player.playSound(bedDestroyedSound)
@@ -215,7 +216,7 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
 
                     getModule<NPCModule>().addNPC(instance = getInstance(),
                         positions = mainShopkeepers,
-                        customName = Component.text("Shop", NamedTextColor.YELLOW, TextDecoration.BOLD),
+                        customName = Component.translatable("game.bedwars.npc.shop", NamedTextColor.YELLOW, TextDecoration.BOLD),
                         skin = NPCModule.NPCSkins.WEIRD_FARMER.skin,
                         entityType = EntityType.PLAYER,
                         interaction = {
@@ -224,7 +225,7 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
 
                     getModule<NPCModule>().addNPC(instance = getInstance(),
                         positions = teamUpgradeShopkeepers,
-                        customName = Component.text("Upgrades", NamedTextColor.YELLOW, TextDecoration.BOLD),
+                        customName = Component.translatable("game.bedwars.npc.upgrades", NamedTextColor.YELLOW, TextDecoration.BOLD),
                         skin = NPCModule.NPCSkins.WEIRD_FARMER.skin,
                         entityType = EntityType.PLAYER,
                         interaction = {
@@ -251,7 +252,7 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
     }
 
     private val shop by lazy {
-        getModule<ShopModule>().createShop("Shop") {
+        getModule<ShopModule>().createShop(Component.translatable("game.bedwars.menu.shop.title")) {
             val config = getModule<ConfigModule>().getConfig()
             for (item in config.node("shop").childrenList()) {
                 val row = item.node("row").int
@@ -285,18 +286,22 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
     // There's no way we're keeping these names
     private val speedModifier = AttributeModifier("bluedragon:fastfeet", 0.4f, AttributeOperation.MULTIPLY_BASE)
     private val fastFeet = ShopModule.TeamUpgrade(
-        "Fast Feet", "Gives Speed to all members on your team.", Material.IRON_BOOTS
+        Component.translatable("game.bedwars.upgrade.fast_feet.name"),
+        Component.translatable("game.bedwars.upgrade.fast_feet.desc"),
+        Material.IRON_BOOTS
     ) { player, _ ->
         player.getAttribute(Attribute.MOVEMENT_SPEED)
             .addModifier(speedModifier)
     }
 
     private val miningMalarkey = ShopModule.TeamUpgrade(
-        "Mining Malarkey", "Gives Haste I to all members on your team.", Material.IRON_PICKAXE
+        Component.translatable("game.bedwars.upgrade.mining_malarkey.name"),
+        Component.translatable("game.bedwars.upgrade.mining_malarkey.desc"),
+        Material.IRON_PICKAXE
     ) { player, _ -> player.addEffect(Potion(PotionEffect.HASTE, 1, Integer.MAX_VALUE, Potion.ICON_FLAG)) }
 
     private val upgrades by lazy {
-        getModule<ShopModule>().createShop("Team Upgrades") {
+        getModule<ShopModule>().createShop(Component.translatable("game.bedwars.menu.upgrades.title")) {
             teamUpgrade(1, 1, 7, Material.DIAMOND, fastFeet)
             teamUpgrade(1, 2, 5, Material.DIAMOND, miningMalarkey)
         }

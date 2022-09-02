@@ -1,6 +1,7 @@
 package com.bluedragonmc.server.module.config.serializer
 
 import com.bluedragonmc.server.module.minigame.KitsModule
+import com.bluedragonmc.server.utils.miniMessage
 import com.bluedragonmc.server.utils.noItalic
 import net.kyori.adventure.text.Component
 import net.minestom.server.item.ItemStack
@@ -14,10 +15,12 @@ import java.lang.reflect.Type
 class KitSerializer : TypeSerializer<KitsModule.Kit> {
     override fun deserialize(type: Type?, node: ConfigurationNode): KitsModule.Kit {
         val name = node.node("name").get<Component>()?.noItalic() ?: Component.empty()
-        val description = node.node("description").string?.replace("\\n", "\n") ?: ""
+        val description = miniMessage.deserialize(
+            node.node("description").string?.replace("\\n", "\n") ?: ""
+        )
         val icon = node.node("icon").get<Material>() ?: Material.DIAMOND
         val items = node.node("items").get<Map<String, ItemStack>>()!!.map { (str, itemStack) ->
-            val slot = str.toIntOrNull() ?: when(str) {
+            val slot = str.toIntOrNull() ?: when (str) {
                 "helmet" -> PlayerInventoryUtils.HELMET_SLOT
                 "chestplate" -> PlayerInventoryUtils.CHESTPLATE_SLOT
                 "leggings" -> PlayerInventoryUtils.LEGGINGS_SLOT

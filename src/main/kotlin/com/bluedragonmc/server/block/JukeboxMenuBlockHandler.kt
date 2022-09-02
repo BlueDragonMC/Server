@@ -13,13 +13,13 @@ import net.minestom.server.item.Material
 import net.minestom.server.utils.NamespaceID
 
 /**
- * When a player right clicks the block, a menu opens that allows them to select a song.
+ * When a player right-clicks the block, a menu opens that allows them to select a song.
  * When the player chooses a song, it is played to everyone around them.
  */
 class JukeboxMenuBlockHandler(val instance: Instance, val x: Int, val y: Int, val z: Int) : BlockHandler {
         private val guiModule = GuiModule()
         val menu = guiModule.createMenu(
-            title = Component.text("Select a Song"),
+            title = Component.translatable("lobby.menu.jukebox.title"),
             inventoryType = InventoryType.CHEST_3_ROW,
             isPerPlayer = false,
             allowSpectatorClicks = false
@@ -37,7 +37,7 @@ class JukeboxMenuBlockHandler(val instance: Instance, val x: Int, val y: Int, va
             }
         }
 
-        override fun getNamespaceId(): NamespaceID = NamespaceID.from("$NAMESPACE:jukebox_handler")
+        override fun getNamespaceId(): NamespaceID = NamespaceID.from("$NAMESPACE:jukebox")
         override fun onInteract(interaction: BlockHandler.Interaction): Boolean {
             menu.open(interaction.player)
             return false

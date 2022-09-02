@@ -14,9 +14,12 @@ import net.kyori.adventure.text.minimessage.MiniMessage
 import net.kyori.adventure.text.minimessage.tag.Tag
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
+import net.kyori.adventure.translation.GlobalTranslator
 import net.minestom.server.MinecraftServer
 import net.minestom.server.adventure.audience.PacketGroupingAudience
+import net.minestom.server.entity.Player
 import net.minestom.server.item.Material
+import java.util.*
 
 private val separator
     get() = Component.text("=================================", NamedTextColor.WHITE, TextDecoration.STRIKETHROUGH)
@@ -125,8 +128,24 @@ infix fun String.withColor(color: TextColor) = Component.text(this, color)
 infix fun Component.withColor(color: TextColor) = colorIfAbsent(color)
 infix fun Component.withDecoration(decoration: TextDecoration) = decorate(decoration)
 
-fun broadcast(msg: Component) =
-    PacketGroupingAudience.of(MinecraftServer.getConnectionManager().onlinePlayers).sendMessage(msg)
+fun splitAndFormatLore(description: Component, color: TextColor, player: Player): List<Component> {
+    return splitComponentByNewline(description, player.locale ?: DEFAULT_LOCALE).map {
+        it.withColor(color).noItalic()
+    }
+}
+
+fun splitComponentByNewline(component: Component, locale: Locale? = null, list: MutableList<Component> = mutableListOf()): List<Component> {
+    val rendered = if (locale == null) component else GlobalTranslator.render(component, locale)
+    ComponentFlattener.textOnly().flatten(rendered) { str ->
+        str.split("\n").forEach { c ->
+            list.add(Component.text(c, component.style()))
+        }
+    }
+    component.children().forEach { child ->
+        list.addAll(splitComponentByNewline(child))
+    }
+    return list
+}
 
 fun splitComponentToCharacters(component: Component): Component {
     require(component !is TranslatableComponent) { "TranslatableComponent objects can not be split because they are locale-dependent." }
@@ -156,7 +175,7 @@ private fun colorTransition(phase: Float, vararg colors: TextColor): TextColor {
     return NamedTextColor.WHITE
 }
 
-fun abilityProgressBar(abilityName: String, remainingTime: Int, cooldownTime: Int): Component {
+fun abilityProgressBar(abilityName: Component, remainingTime: Int, cooldownTime: Int): Component {
     val bars = 30
     val percentage = remainingTime.toFloat() / cooldownTime.toFloat()
 
@@ -167,13 +186,11 @@ fun abilityProgressBar(abilityName: String, remainingTime: Int, cooldownTime: In
 
     val timeString =
         if (percentage <= 0.05)
-            Component.text("READY", NamedTextColor.GREEN)
-        else Component.text(String.format("%.1fs", remainingTime.toFloat() / 1000f))
+            Component.translatable("global.ability.ready", NamedTextColor.GREEN)
+        else Component.translatable("global.ability.cooldown_time", Component.text(String.format("%.1f", remainingTime.toFloat() / 1000f)))
             .withTransition(percentage, NamedTextColor.GREEN, NamedTextColor.YELLOW, NamedTextColor.RED)
 
-    return Component.text(abilityName,
-        NamedTextColor.YELLOW,
-        TextDecoration.BOLD) + Component.space() + barsComponent + Component.space() + timeString.noBold()
+    return abilityName + Component.space() + barsComponent + Component.space() + timeString.noBold()
 }
 
 class ComponentBuilder {
@@ -185,7 +202,7 @@ class ComponentBuilder {
     }
 
     operator fun Pair<String, TextColor>.unaryPlus() {
-        list.add(Component.text(first, second))
+        list.add(Component.translatable(first, second))
     }
 
     fun build() = Component.join(JoinConfiguration.noSeparators(), list)

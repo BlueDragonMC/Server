@@ -127,7 +127,7 @@ class ChestModule : GameModule() {
         override fun getMenu(player: Player): GuiModule.Menu {
             return enderChestMenus.getOrPut(player) {
                 val menu =
-                    game.getModule<GuiModule>().createMenu(Component.text("Ender Chest"), InventoryType.CHEST_3_ROW,
+                    game.getModule<GuiModule>().createMenu(Component.translatable("container.enderchest"), InventoryType.CHEST_3_ROW,
                         isPerPlayer = false, // A new Menu is created for each player, so we do not need this option
                         allowSpectatorClicks = false)
                 menu.onClosed { player ->
@@ -151,8 +151,8 @@ class ChestModule : GameModule() {
 
         private val menu by lazy {
             game.getModule<GuiModule>().createMenu(
-                Component.text(
-                    if (inventoryType == InventoryType.CHEST_6_ROW) "Large Chest" else "Chest"
+                Component.translatable(
+                    if (inventoryType == InventoryType.CHEST_6_ROW) "container.chestDouble" else "container.chest"
                 ), inventoryType, isPerPlayer = false, allowSpectatorClicks = false
             ).apply {
                 onClosed { player -> onClosed(player) }

@@ -10,6 +10,9 @@ import net.kyori.adventure.text.format.TextDecoration
 import org.apache.commons.net.util.Base64
 import java.io.File
 import java.nio.charset.Charset
+import java.util.Locale
+
+val DEFAULT_LOCALE = Locale.ENGLISH
 
 /**
  * Light color, often used for emphasis.

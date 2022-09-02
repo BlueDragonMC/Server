@@ -6,7 +6,6 @@ import com.bluedragonmc.server.event.PlayerKillPlayerEvent
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.minigame.KitsModule
 import com.bluedragonmc.server.module.minigame.WinModule
-import com.bluedragonmc.server.utils.miniMessage
 import net.kyori.adventure.title.Title
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
@@ -52,7 +51,7 @@ class ArmorLevelsModule(private val levels: List<KitsModule.Kit>) : GameModule()
 
         val armorLevel = levels[newLevel]
 
-        showTitle(Title.title(armorLevel.name, miniMessage.deserialize(armorLevel.description)))
+        showTitle(Title.title(armorLevel.name, armorLevel.description))
 
         inventory.clear()
         for (item in armorLevel.items) {

@@ -46,6 +46,7 @@ class TeamDeathmatchGame(mapName: String) : Game("Team Deathmatch", mapName) {
         val sword = ItemStack.builder(Material.DIAMOND_SWORD).build()
         use(KitsModule(showMenu = true,
             selectableKits = listOf(KitsModule.Kit(name = Component.text("Default", NamedTextColor.YELLOW),
+                description = Component.empty(),
                 icon = Material.DIAMOND_CHESTPLATE,
                 items = hashMapOf(0 to sword,
                     PlayerInventoryUtils.HELMET_SLOT to ironHelmet,
@@ -53,6 +54,7 @@ class TeamDeathmatchGame(mapName: String) : Game("Team Deathmatch", mapName) {
                     PlayerInventoryUtils.LEGGINGS_SLOT to ironLeggings,
                     PlayerInventoryUtils.BOOTS_SLOT to ironBoots)),
                 KitsModule.Kit(name = Component.text("Hard Mode", NamedTextColor.RED),
+                    description = Component.empty(),
                     icon = Material.REDSTONE,
                     items = hashMapOf(0 to sword, PlayerInventoryUtils.BOOTS_SLOT to ironBoots)))))
 

@@ -66,15 +66,15 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
             lateinit var color: TextColor
             when (value) {
                 1 -> {
-                    title = "Medium"
+                    title = "game.infinijump.difficulty.medium"
                     color = NamedTextColor.YELLOW
                 }
                 2 -> {
-                    title = "Hard"
+                    title = "game.infinijump.difficulty.hard"
                     color = NamedTextColor.RED
                 }
                 3 -> {
-                    title = "Very Hard"
+                    title = "game.infinijump.difficulty.very_hard"
                     color = NamedTextColor.DARK_RED
                 }
                 else -> return
@@ -82,7 +82,7 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
             field = value
             playSound(Sound.sound(SoundEvent.ENTITY_ENDER_DRAGON_GROWL, Sound.Source.PLAYER, 1.0f, 1.0f))
             players.forEach {
-                it.sendMessage(Component.translatable("game.infinijump.difficulty_increased", color, Component.text(title)))
+                it.sendMessage(Component.translatable("game.infinijump.difficulty_increased", color, Component.translatable(title)))
                 it.level = value
             }
         }
@@ -122,8 +122,8 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
 
                     event.player.showTitle(
                         Title.title(
-                            Component.text("GAME OVER!", NamedTextColor.RED, TextDecoration.BOLD),
-                            Component.text("You scored $score points.", NamedTextColor.RED)
+                            Component.translatable("module.win.title.lost", NamedTextColor.RED, TextDecoration.BOLD),
+                            Component.translatable("game.infinijump.loss_score", NamedTextColor.RED, Component.text(score))
                         )
                     )
                     endGame(Duration.ofSeconds(3))

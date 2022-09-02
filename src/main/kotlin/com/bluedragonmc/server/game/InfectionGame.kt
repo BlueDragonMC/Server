@@ -24,8 +24,8 @@ import java.nio.file.Paths
 class InfectionGame(mapName: String) : Game("Infection", mapName) {
     private val stickItem = ItemStack.builder(Material.STICK).displayName(Component.text("Knockback Stick"))
         .lore(
-            Component.text("Use this to wack your fellow survivors", NamedTextColor.GRAY).noItalic(),
-            Component.text("toward the zombies!", NamedTextColor.GRAY).noItalic()
+            Component.translatable("game.infection.kb_stick.lore.1", NamedTextColor.GRAY).noItalic(),
+            Component.translatable("game.infection.kb_stick.lore.2", NamedTextColor.GRAY).noItalic()
         )
         .meta { metaBuilder: ItemMeta.Builder ->
             metaBuilder.enchantment(Enchantment.KNOCKBACK, 3)
@@ -49,9 +49,10 @@ class InfectionGame(mapName: String) : Game("Infection", mapName) {
             KitsModule(
                 showMenu = false, giveKitsOnStart = true, selectableKits = listOf(
                     KitsModule.Kit(
-                        Component.text("Default"), "Default kit!", Material.STICK, hashMapOf(
-                            0 to stickItem
-                        )
+                        Component.translatable("game.infection.kit.default"),
+                        Component.translatable("game.infection.kit.default.desc"),
+                        Material.STICK,
+                        hashMapOf(0 to stickItem)
                     )
                 )
             )

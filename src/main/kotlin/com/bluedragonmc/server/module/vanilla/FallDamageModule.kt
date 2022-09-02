@@ -36,9 +36,6 @@ object FallDamageModule : GameModule() {
             if (getReducedDamage(event.player, 1.0) == 0.0) {
                 player.removeTag(FALL_START_TAG)
             }
-//            if (event.player.instance!!.getBlock(event.player.position.sub(0.0, 1.0, 0.0)).compare(Block.SLIME_BLOCK) && !event.player.isSneaking) {
-//                player.removeTag(FALL_START_TAG)
-//            }
 
             if (player.isFlyingWithElytra && player.velocity.y >= -0.5) {
                 // Fall distance is reset to 1 block when a player is flying level,

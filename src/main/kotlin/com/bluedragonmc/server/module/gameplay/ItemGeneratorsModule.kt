@@ -3,7 +3,6 @@ package com.bluedragonmc.server.module.gameplay
 import com.bluedragonmc.server.ALT_COLOR_1
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.GameModule
-import com.bluedragonmc.server.utils.plus
 import com.bluedragonmc.server.utils.withTransition
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -73,8 +72,7 @@ class ItemGeneratorsModule : GameModule() {
                 // Create a static hologram showing the kind of generator
                 staticHologram = Hologram(
                     instance, location.add(0.0, 2.0, 0.0),
-                    Component.translatable(items.keys.first().material().registry().translationKey(), ALT_COLOR_1) +
-                            Component.text(" Generator", ALT_COLOR_1)
+                    Component.translatable("module.generator.hologram", Component.translatable(items.keys.first().material().registry().translationKey(), ALT_COLOR_1))
                 )
                 // Create a dynamic hologram that updates every second
                 hologram = Hologram(instance, location.add(0.0, 1.75, 0.0), Component.empty())
@@ -96,9 +94,10 @@ class ItemGeneratorsModule : GameModule() {
 
         private fun updateHologram() {
             val phase = secondsLeft.toFloat() / items.values.first().toFloat()
-            hologram.text = Component.text("Spawning in ") +
-                    Component.text("${secondsLeft}s")
+            hologram.text = Component.translatable("module.generator.hologram.subtext",
+                    Component.text(secondsLeft)
                         .withTransition(phase, NamedTextColor.DARK_GREEN, NamedTextColor.GREEN, NamedTextColor.YELLOW, NamedTextColor.GOLD, NamedTextColor.RED, NamedTextColor.DARK_RED)
+            )
         }
     }
 }

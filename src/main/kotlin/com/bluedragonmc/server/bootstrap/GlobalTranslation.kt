@@ -2,9 +2,12 @@ package com.bluedragonmc.server.bootstrap
 
 import com.bluedragonmc.server.NAMESPACE
 import net.kyori.adventure.key.Key
+import net.kyori.adventure.text.Component
 import net.kyori.adventure.translation.GlobalTranslator
+import net.kyori.adventure.translation.GlobalTranslator.renderer
 import net.kyori.adventure.translation.TranslationRegistry
 import net.minestom.server.adventure.MinestomAdventure
+import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import java.util.*
@@ -42,3 +45,5 @@ object GlobalTranslation : Bootstrap() {
         GlobalTranslator.translator().addSource(registry)
     }
 }
+
+fun GlobalTranslator.render(component: Component, player: Player) = renderer().render(component, player.locale ?: Locale.ENGLISH)

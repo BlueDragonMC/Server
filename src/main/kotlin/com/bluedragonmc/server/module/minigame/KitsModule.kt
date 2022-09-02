@@ -5,9 +5,9 @@ import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.event.KitSelectedEvent
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.GuiModule
+import com.bluedragonmc.server.utils.splitAndFormatLore
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
-import net.kyori.adventure.text.format.TextDecoration
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
@@ -54,12 +54,12 @@ class KitsModule(
      * Displays the kit selection menu to the specified player.
      */
     fun selectKit(player: Player) {
-        val menu = parent.getModule<GuiModule>().createMenu(title = Component.text("Select Kit"), inventoryType = InventoryType.CHEST_1_ROW, isPerPlayer = true) {
+        val menu = parent.getModule<GuiModule>().createMenu(title = Component.translatable("module.kit.menu.title"), inventoryType = InventoryType.CHEST_1_ROW, isPerPlayer = true) {
             for (selectableKit in selectableKits) {
                 val index = selectableKits.indexOf(selectableKit)
                 slot(index, selectableKit.icon, { player ->
                     displayName(selectableKit.name)
-                    lore(descriptionToComponents(selectableKit.description))
+                    lore(splitAndFormatLore(selectableKit.description, NamedTextColor.GRAY, player))
                 }) {
                     selectedKits[this.player] = selectableKit
                     this.player.sendMessage(Component.translatable("module.kit.selected", NamedTextColor.GREEN, selectableKit.name))
@@ -70,13 +70,6 @@ class KitsModule(
             }
         }
         menu.open(player)
-    }
-
-    private fun descriptionToComponents(description: String): MutableList<Component> {
-        val descriptionSplit = description.split("\n")
-        return MutableList(descriptionSplit.size) {
-            Component.text(descriptionSplit[it], NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false)
-        }
     }
 
     /**
@@ -103,7 +96,7 @@ class KitsModule(
 
     data class Kit(
         val name: Component,
-        val description: String = "",
+        val description: Component = Component.empty(),
         val icon: Material = Material.DIAMOND,
         val items: HashMap<Int, ItemStack> = hashMapOf(),
         val abilities: List<String> = emptyList()

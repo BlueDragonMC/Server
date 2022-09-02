@@ -122,7 +122,7 @@ class FastFallGame(mapName: String?) : Game("FastFall", "Chaos") {
                     // Lead changes are limited to, at most, every 1.5 seconds
                     if (lead != lowest && lowest.velocity.y >= -1.568 && event.instance.worldAge - lastLeadChange > 30) {
                         if (lead != null) {
-                            val msg = lowest.name + Component.text(" is now in the lead!", BRAND_COLOR_PRIMARY_2)
+                            val msg = Component.translatable("game.fastfall.lead_changed", BRAND_COLOR_PRIMARY_2, lowest.name)
                             sendMessage(msg)
                             showTitle(Title.title(Component.empty(), msg))
                             playSound(Sound.sound(SoundEvent.BLOCK_NOTE_BLOCK_PLING, Sound.Source.PLAYER, 1.0f, 1.0f))
@@ -134,23 +134,24 @@ class FastFallGame(mapName: String?) : Game("FastFall", "Chaos") {
                     }
                     ordered.forEachIndexed { index, player ->
                         val ahead = ordered.size - (ordered.size - index)
-                        val playersAhead = Component.text(
-                            ahead, BRAND_COLOR_PRIMARY_1
-                        ) + Component.text(
-                            " player${if (ahead == 1) "" else "s"} ahead · ", BRAND_COLOR_PRIMARY_2
+
+                        val key = if (ahead == 1) "game.fastfall.actionbar.singular" else "game.fastfall.actionbar"
+                        val actionBarComponent = Component.translatable(key, BRAND_COLOR_PRIMARY_2,
+                            Component.text(ahead, BRAND_COLOR_PRIMARY_1),
+                            Component.text(String.format("%.1f%%", player.health / player.maxHealth * 100))
+                                .withTransition(
+                                    player.health / player.maxHealth,
+                                    NamedTextColor.RED,
+                                    NamedTextColor.YELLOW,
+                                    NamedTextColor.GREEN
+                                ),
+                            Component.text(
+                                player.position.y.toInt() - (257 - 2 * radius),
+                                BRAND_COLOR_PRIMARY_1
+                            )
                         )
-                        val health = Component.text(String.format("%.1f%%", player.health / player.maxHealth * 100))
-                            .withTransition(
-                                player.health / player.maxHealth,
-                                NamedTextColor.RED,
-                                NamedTextColor.YELLOW,
-                                NamedTextColor.GREEN
-                            ) + Component.text(" health · ")
-                        val yPos = Component.text(
-                            player.position.y.toInt() - (257 - 2 * radius),
-                            BRAND_COLOR_PRIMARY_1
-                        ) + Component.text(" blocks left", BRAND_COLOR_PRIMARY_2)
-                        player.sendActionBar(playersAhead + health + yPos)
+
+                        player.sendActionBar(actionBarComponent)
                     }
                 }
                 eventNode.addListener(PlayerMoveEvent::class.java) { event ->
@@ -188,9 +189,9 @@ class FastFallGame(mapName: String?) : Game("FastFall", "Chaos") {
         // SIDEBAR DISPLAY
         val binding = getModule<SidebarModule>().bind {
             val duration = Duration.ofMillis(System.currentTimeMillis() - (startTime ?: return@bind emptySet()))
-            val elapsed = "_time-elapsed" to (
-                    Component.text("Time elapsed: ", BRAND_COLOR_PRIMARY_2) +
-                    Component.text(String.format("%02d:%02d", duration.toMinutesPart(), duration.toSecondsPart()))
+            val elapsed = "_time-elapsed" to Component.translatable(
+                "game.fastfall.sidebar.elapsed", BRAND_COLOR_PRIMARY_2,
+                Component.text(String.format("%02d:%02d", duration.toMinutesPart(), duration.toSecondsPart()))
             )
             setOf(elapsed) + players.map {
                 "player-y-${it.username}" to it.name + Component.text(

@@ -67,9 +67,9 @@ class CountdownModule(
                 cancelCountdown()
                 parent.showTitle(
                     Title.title(
-                        Component.text("Cancelled!", NamedTextColor.RED), Component.text(
-                            "Not enough players to start (${parent.players.size}/$threshold)", NamedTextColor.RED
-                        ), Title.Times.times(Duration.ZERO, Duration.ofSeconds(5), Duration.ofSeconds(1))
+                        Component.translatable("module.countdown.cancelled", NamedTextColor.RED),
+                        Component.translatable("module.countdown.cancelled.subtitle", NamedTextColor.RED, Component.text(parent.players.size), Component.text(threshold)),
+                        Title.Times.times(Duration.ZERO, Duration.ofSeconds(5), Duration.ofSeconds(1))
                     )
                 )
                 parent.state = GameState.WAITING
@@ -128,7 +128,7 @@ class CountdownModule(
                 secondsLeft = secondsLeft!! - 1
             } else {
                 parent.sendTitlePart(
-                    TitlePart.TITLE, Component.text("GO!", NamedTextColor.GREEN).decorate(TextDecoration.BOLD)
+                    TitlePart.TITLE, Component.translatable("module.countdown.go", NamedTextColor.GREEN).decorate(TextDecoration.BOLD)
                 )
                 parent.callEvent(GameStartEvent(parent))
             }

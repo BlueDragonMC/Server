@@ -52,8 +52,10 @@ class WinModule(
             parent.players.forEach { player ->
                 val coins = coinAwardsFunction(player, event.winningTeam)
                 if (coins == 0) return@forEach
-                parent.getModule<AwardsModule>()
-                    .awardCoins(player, coins, if (player in event.winningTeam.players) "Win" else "Participation")
+                parent.getModule<AwardsModule>().awardCoins(
+                    player, coins, Component.translatable(
+                    if (player in event.winningTeam.players) "module.win.coins.won" else "module.win.coins.participation")
+                )
             }
         }
     }
@@ -73,12 +75,12 @@ class WinModule(
             }
             for (p in parent.players) {
                 if (team.players.contains(p)) {
-                    p.showTitle(Title.title(Component.text("VICTORY!",
+                    p.showTitle(Title.title(Component.translatable("module.win.title.won",
                         NamedTextColor.GOLD,
                         TextDecoration.BOLD), Component.empty()))
                     scheduleWinFireworks(p)
-                } else p.showTitle(Title.title(Component.text("GAME OVER!", NamedTextColor.RED, TextDecoration.BOLD),
-                    Component.text("Better luck next time!", NamedTextColor.RED)))
+                } else p.showTitle(Title.title(Component.translatable("module.win.title.lost", NamedTextColor.RED, TextDecoration.BOLD),
+                    Component.translatable("module.win.subtitle.lost", NamedTextColor.RED)))
             }
             parent.endGame(Duration.ofSeconds(5))
         }

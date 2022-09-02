@@ -160,10 +160,9 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
             }
 
             // GAME SELECT (left)
-            // todo: waiting on https://github.com/Minestom/Minestom/pull/1275 to translate NPC names
             addNPC(instance = this@Lobby.getInstance(),
                 position = Pos(-2.5, 61.0, -18.5),
-                customName = Component.text("All Games", NamedTextColor.YELLOW, TextDecoration.BOLD),
+                customName = Component.translatable("lobby.npc.all_games", NamedTextColor.YELLOW, TextDecoration.BOLD),
                 skin = NPCModule.NPCSkins.GAME_SELECT.skin,
                 lookAtPlayer = false,
                 interaction = {
@@ -173,7 +172,7 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
             // RANDOM GAME (right)
             addNPC(instance = this@Lobby.getInstance(),
                 position = Pos(3.5, 61.0, -18.5),
-                customName = Component.text("Random Game", NamedTextColor.YELLOW, TextDecoration.BOLD),
+                customName = Component.translatable("lobby.npc.random_game", NamedTextColor.YELLOW, TextDecoration.BOLD),
                 skin = NPCModule.NPCSkins.RANDOM_GAME.skin,
                 lookAtPlayer = false,
                 interaction = {
@@ -183,7 +182,7 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
             // SHOPKEEPER
             addNPC(instance = this@Lobby.getInstance(),
                 position = Pos(-12.5, 61.0, -6.5, -145.0f, 0.0f),
-                customName = Component.text("Shop", NamedTextColor.YELLOW, TextDecoration.BOLD),
+                customName = Component.translatable("lobby.npc.shop", NamedTextColor.YELLOW, TextDecoration.BOLD),
                 skin = NPCModule.NPCSkins.SHOP.skin,
                 lookAtPlayer = false,
                 enableFullSkin = false,
@@ -201,7 +200,7 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
                     loadXPBar(event.player)
                     event.player.showTitle(Title.title(
                         SERVER_NAME_GRADIENT,
-                        splashes.random() withColor BRAND_COLOR_PRIMARY_2,
+                        Component.translatable(splashes.random(), BRAND_COLOR_PRIMARY_2),
                         Title.Times.times(Duration.ZERO, Duration.ofMillis(1500), Duration.ofMillis(100))
                     ))
                     event.player.inventory.setItemStack(0, gameSelectItem)
@@ -229,16 +228,13 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
         val tips = CircularList(config.node("tips").getList(Component::class.java)!!.shuffled())
         var index = 0
         MinecraftServer.getSchedulerManager().buildTask {
-            getInstance().players.forEach {
-                it.sendMessage(tips[index].surroundWithSeparators())
-            }
-            ++index
+            getInstance().sendMessage(tips[index++].surroundWithSeparators())
             playSound(Sound.sound(SoundEvent.BLOCK_NOTE_BLOCK_PLING, Sound.Source.MASTER, 1.0F, 1.0F))
         }.repeat(Duration.ofMinutes(5)).schedule()
 
         Hologram(getInstance(),
             Pos(16.975, 63.65, 0.0),
-            Component.text("World Tour Parkour", NamedTextColor.GREEN, TextDecoration.BOLD),
+            Component.translatable("lobby.hologram.parkour", NamedTextColor.GREEN, TextDecoration.BOLD),
             true)
 
         // Font is from https://www.1001freefonts.com/minecraft.font
@@ -331,23 +327,23 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
         font.getStringBounds(string, FontRenderContext(graphics.transform, false, false)).width.toFloat()
 
     private val gameSelectItem =
-        ItemStack.of(Material.COMPASS).withDisplayName(("Game Menu" withColor ALT_COLOR_1).noItalic())
+        ItemStack.of(Material.COMPASS).withDisplayName((Component.translatable("lobby.game_menu", ALT_COLOR_1)).noItalic())
 
     private lateinit var gameSelect: GuiModule.Menu
     private lateinit var leaderboardBrowser: GuiModule.Menu
 
     private fun populateLeaderboardBrowser(config: ConfigurationNode) {
         val categories = config.node("leaderboard-browser").getList(LeaderboardCategory::class.java)!!
-        leaderboardBrowser = getModule<GuiModule>().createMenu(Component.text("Leaderboard Browser"), InventoryType.CHEST_3_ROW, false, true) {
+        leaderboardBrowser = getModule<GuiModule>().createMenu(Component.translatable("lobby.menu.lb.title"), InventoryType.CHEST_3_ROW, false, true) {
             categories.forEachIndexed { categoryIndex, category ->
                 // Build a menu for each leaderboard in the category
-                val lbMenu = getModule<GuiModule>().createMenu(Component.text(category.name), InventoryType.CHEST_3_ROW, false, true) {
+                val lbMenu = getModule<GuiModule>().createMenu(Component.translatable(category.name), InventoryType.CHEST_3_ROW, false, true) {
                     slot(26, Material.ARROW, {
-                        displayName(Component.text("Back to ${category.name}", NamedTextColor.RED).noItalic())
+                        displayName(Component.translatable("lobby.menu.lb.back", NamedTextColor.RED, Component.translatable(category.name)).noItalic())
                     }) { leaderboardBrowser.open(player) }
                     for ((entryIndex, entry) in category.leaderboards.withIndex()) {
                         slot(entryIndex, entry.icon, {
-                            displayName(Component.text(entry.title, BRAND_COLOR_PRIMARY_2).noItalic())
+                            displayName(Component.translatable(entry.title, BRAND_COLOR_PRIMARY_2).noItalic())
 
                             val leaderboardComponent = runBlocking {
                                 getModule<StatisticsModule>().rankPlayersByStatistic(entry.statistic, entry.orderBy)
@@ -358,7 +354,7 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
                             }
 
                             if(entry.subtitle.isNotEmpty()) {
-                                lore(Component.text(entry.subtitle, BRAND_COLOR_PRIMARY_1).noItalic(),
+                                lore(Component.translatable(entry.subtitle, BRAND_COLOR_PRIMARY_1).noItalic(),
                                     Component.empty(),
                                     *leaderboardComponent.toTypedArray())
                             } else {
@@ -367,24 +363,23 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
                         })
                     }
                 }
-                slot(categoryIndex, category.icon, { displayName(Component.text(category.name, BRAND_COLOR_PRIMARY_1).noItalic()) }) { lbMenu.open(player) }
+                slot(categoryIndex, category.icon, { displayName(Component.translatable(category.name, BRAND_COLOR_PRIMARY_1).noItalic()) }) { lbMenu.open(player) }
             }
-            slot(26, Material.ARROW, { displayName(Component.text("Back", NamedTextColor.RED).noItalic()) }) { menu.close(player) }
+            slot(26, Material.ARROW, { displayName(Component.translatable("lobby.menu.lb.exit", NamedTextColor.RED).noItalic()) }) { menu.close(player) }
         }
     }
 
     private fun populateGameSelector(config: ConfigurationNode) {
         val games = config.node("games").getList(GameEntry::class.java)!!
-        gameSelect = getModule<GuiModule>().createMenu(Component.text("Game Select"), InventoryType.CHEST_1_ROW,
-            isPerPlayer = false,
+        gameSelect = getModule<GuiModule>().createMenu(Component.translatable("lobby.menu.game.title"), InventoryType.CHEST_1_ROW,
+            isPerPlayer = true,
             allowSpectatorClicks = true
         ) {
             games.forEachIndexed { index, (game, category, desc, time, material) ->
-                slot(index, material, {
+                slot(index, material, { player ->
                     displayName(Component.text(game, Style.style(TextDecoration.BOLD)).noItalic()
                         .withGradient(BRAND_COLOR_PRIMARY_1, BRAND_COLOR_PRIMARY_3))
-                    val lore =
-                        desc.split("\\n").map { Component.text(it, NamedTextColor.YELLOW).noItalic() }.toMutableList()
+                    val lore = splitAndFormatLore(miniMessage.deserialize(desc), ALT_COLOR_1, player).toMutableList()
                     lore.add(0, Component.text("$category \u2014 \u231a $time", NamedTextColor.RED).noItalic())
                     lore(lore)
                 }) {

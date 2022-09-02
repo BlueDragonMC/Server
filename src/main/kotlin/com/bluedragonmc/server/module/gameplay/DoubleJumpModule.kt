@@ -1,9 +1,12 @@
 package com.bluedragonmc.server.module.gameplay
 
+import com.bluedragonmc.server.ALT_COLOR_1
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.CancellablePlayerEvent
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.utils.abilityProgressBar
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.TextDecoration
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
@@ -59,9 +62,13 @@ class DoubleJumpModule(
             eventNode.addListener(PlayerTickEvent::class.java) { event ->
                 val remainingMs = cooldownMillis - getTimeSinceLastJump(event.player)
                 if (remainingMs >= 0)
-                    event.player.sendActionBar(abilityProgressBar("Double Jump",
-                        remainingMs.toInt(),
-                        cooldownMillis.toInt()))
+                    event.player.sendActionBar(
+                        abilityProgressBar(
+                            Component.translatable("global.ability.double_jump", ALT_COLOR_1, TextDecoration.BOLD),
+                            remainingMs.toInt(),
+                            cooldownMillis.toInt()
+                        )
+                    )
             }
     }
 

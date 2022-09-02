@@ -45,17 +45,16 @@ class WackyMazeGame(mapName: String) : Game("WackyMaze", mapName) {
 
         ready()
     }
-}
 
-class WackyMazeStickModule : GameModule() {
-    override fun initialize(parent: Game, eventNode: EventNode<Event>) {
-        eventNode.addListener(GameStartEvent::class.java) { event ->
+    class WackyMazeStickModule : GameModule() {
+        override fun initialize(parent: Game, eventNode: EventNode<Event>) {
+            eventNode.addListener(GameStartEvent::class.java) {
 
-            val stickItem = ItemUtils.knockbackStick(10)
-
-            parent.players.forEach { player ->
-                player.inventory.setItemStack(0, stickItem)
+                parent.players.forEach { player ->
+                    player.inventory.setItemStack(0, ItemUtils.knockbackStick(10, player))
+                }
             }
         }
     }
+
 }

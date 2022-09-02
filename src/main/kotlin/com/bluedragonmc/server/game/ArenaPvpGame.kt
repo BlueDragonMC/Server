@@ -101,7 +101,7 @@ class ArenaPvpGame(mapName: String) : Game("ArenaPvP", mapName) {
 
         getModule<NPCModule>().addNPC(
             position = Pos(-31.5, 127.0, 284.5, -135.0f, 0.0f),
-            customName = Component.text("Change Kit", ALT_COLOR_1, TextDecoration.BOLD),
+            customName = Component.translatable("game.arenapvp.npc.change_kit", ALT_COLOR_1, TextDecoration.BOLD),
             entityType = EntityType.VILLAGER,
             interaction = { getModule<KitsModule>().selectKit(it.player) },
             lookAtPlayer = false,

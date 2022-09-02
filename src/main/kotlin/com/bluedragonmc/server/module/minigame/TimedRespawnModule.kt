@@ -23,8 +23,8 @@ class TimedRespawnModule(private val seconds: Int = 5) : GameModule() {
                 event.player.gameMode = GameMode.SPECTATOR
                 event.player.showTitle(
                     Title.title(
-                        Component.text("YOU DIED", NamedTextColor.RED),
-                        Component.text("Respawning in $seconds seconds...", NamedTextColor.RED)
+                        Component.translatable("module.respawn.title", NamedTextColor.RED),
+                        Component.translatable("module.respawn.subtitle", NamedTextColor.RED, Component.text(seconds))
                     )
                 )
                 MinecraftServer.getSchedulerManager().buildTask {

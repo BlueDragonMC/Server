@@ -1,5 +1,6 @@
 package com.bluedragonmc.server.module.gameplay
 
+import com.bluedragonmc.server.ALT_COLOR_1
 import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.GuiModule
@@ -7,6 +8,7 @@ import com.bluedragonmc.server.module.minigame.TeamModule
 import com.bluedragonmc.server.utils.displayName
 import com.bluedragonmc.server.utils.noItalic
 import com.bluedragonmc.server.utils.plus
+import com.bluedragonmc.server.utils.splitAndFormatLore
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.entity.Player
@@ -20,8 +22,8 @@ import net.minestom.server.item.Material
 class ShopModule : GuiModule() {
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {}
 
-    fun createShop(title: String, shopItemsBuilder: ShopItemsBuilder.() -> Unit): Shop {
-        val menu = createMenu(Component.text(title), InventoryType.CHEST_6_ROW, true) {
+    fun createShop(title: Component, shopItemsBuilder: ShopItemsBuilder.() -> Unit): Shop {
+        val menu = createMenu(title, InventoryType.CHEST_6_ROW, true) {
             shopItemsBuilder(ShopItemsBuilder(this))
         }
         return Shop(menu)
@@ -53,7 +55,7 @@ class ShopModule : GuiModule() {
         ) {
             itemsBuilder.slot(itemsBuilder.pos(row, column), itemStack.material(), { player ->
                 if (virtualItem != null) {
-                    displayName(Component.text(virtualItem.name).noItalic())
+                    displayName(virtualItem.name.noItalic())
                 } else {
                     displayName(
                         itemStack.material().displayName(NamedTextColor.WHITE)
@@ -61,27 +63,25 @@ class ShopModule : GuiModule() {
                     )
                 }
 
-                val lore = listOf(
+                val info = listOf(
                     // Price
                     Component.text("Price: ", NamedTextColor.GRAY).noItalic() + Component.text(
                         "$price ", NamedTextColor.WHITE
                     ).noItalic() + currency.displayName(NamedTextColor.WHITE).noItalic(),
                     // Whether the player can afford the item or not
-                    if (virtualItem?.isOwnedBy(player) == true) Component.text(
-                        "You already own this item!",
-                        NamedTextColor.YELLOW
-                    ).noItalic()
+                    if (virtualItem?.isOwnedBy(player) == true)
+                        Component.translatable("module.shop.already_owned", NamedTextColor.RED).noItalic()
                     else if (player.inventory.takeItemStack(
                             ItemStack.of(currency, price), TransactionOption.DRY_RUN
                         )
-                    ) Component.text("Click to purchase!", NamedTextColor.GREEN).noItalic()
-                    else Component.text("You cannot afford this item!", NamedTextColor.RED).noItalic()
+                    ) Component.translatable("module.shop.click_to_purchase", NamedTextColor.GREEN).noItalic()
+                    else Component.translatable("module.shop.not_enough_currency", NamedTextColor.RED, currency.displayName()).noItalic()
                 )
 
                 if (virtualItem != null && virtualItem is TeamUpgrade) {
                     // Display team upgrade descriptions if applicable
-                    lore(listOf(Component.text(virtualItem.description, NamedTextColor.WHITE).noItalic()) + lore)
-                } else lore(lore)
+                    lore(splitAndFormatLore(virtualItem.description, ALT_COLOR_1, player) + info)
+                } else lore(info)
 
                 meta { metaBuilder ->
                     metaBuilder.enchantments(itemStack.meta().enchantmentMap)
@@ -126,13 +126,13 @@ class ShopModule : GuiModule() {
         }
     }
 
-    open class VirtualItem(val name: String, val obtainedCallback: (Player, VirtualItem) -> Unit) {
+    open class VirtualItem(val name: Component, val obtainedCallback: (Player, VirtualItem) -> Unit) {
         open fun isOwnedBy(player: Player) = (player as CustomPlayer).virtualItems.contains(this)
     }
 
     class TeamUpgrade(
-        name: String,
-        val description: String,
+        name: Component,
+        val description: Component,
         val displayItem: Material,
         val baseObtainedCallback: (Player, VirtualItem) -> Unit,
     ) : VirtualItem(name, { player, item ->
@@ -141,13 +141,10 @@ class ShopModule : GuiModule() {
             baseObtainedCallback(it, item)
             (it as CustomPlayer).virtualItems.add(item)
         }
-        team?.players?.forEach {
-            it.sendMessage(
-                Component.translatable("module.shop.team_upgrade.purchased",
-                    NamedTextColor.GREEN,
-                    player.name,
-                    Component.text(name))
+        team?.sendMessage(
+            Component.translatable("module.shop.team_upgrade.purchased", NamedTextColor.GREEN,
+                player.name, name
             )
-        }
+        )
     })
 }

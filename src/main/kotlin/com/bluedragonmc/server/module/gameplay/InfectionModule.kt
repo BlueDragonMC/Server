@@ -34,9 +34,9 @@ import java.time.Duration
 class InfectionModule(val scoreboardBinding: SidebarModule.ScoreboardBinding? = null) : GameModule() {
     private lateinit var parent: Game
     private val survivorsTeam =
-        TeamModule.Team(Component.text("Survivors", NamedTextColor.GREEN), allowFriendlyFire = false)
+        TeamModule.Team(Component.translatable("game.infection.team.survivors", NamedTextColor.GREEN), allowFriendlyFire = false)
     private val infectedTeam =
-        TeamModule.Team(Component.text("Infected", NamedTextColor.RED), allowFriendlyFire = true)
+        TeamModule.Team(Component.text("game.infection.team.infected", NamedTextColor.RED), allowFriendlyFire = true)
     private val skins = hashMapOf<Player, PlayerSkin?>()
 
     override val dependencies = listOf(DatabaseModule::class,
@@ -87,7 +87,7 @@ class InfectionModule(val scoreboardBinding: SidebarModule.ScoreboardBinding? = 
     }
 
     fun infect(player: Player) {
-        parent.sendMessage(player.name + Component.translatable("game.infection.infected",
+        parent.sendMessage(Component.translatable("game.infection.infected",
             BRAND_COLOR_PRIMARY_2,
             player.name))
         player.skin = NPCModule.NPCSkins.ZOMBIE.skin
