@@ -86,6 +86,7 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
         val subtitle: String = "",
         val show: Int = 10,
         val displayMode: DisplayMode = DisplayMode.WHOLE_NUMBER,
+        val orderBy: OrderBy = OrderBy.DESC,
         val topLeft: Pos = Pos.ZERO,
         val bottomRight: Pos = Pos.ZERO,
         val orientation: Orientation = Orientation.EAST
@@ -109,7 +110,8 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
         val subtitle: String = "",
         val icon: Material = Material.WHITE_STAINED_GLASS,
         val statistic: String = "",
-        val displayMode: Leaderboard.DisplayMode = Leaderboard.DisplayMode.WHOLE_NUMBER
+        val displayMode: Leaderboard.DisplayMode = Leaderboard.DisplayMode.WHOLE_NUMBER,
+        val orderBy: OrderBy = OrderBy.DESC
     )
 
     init {
@@ -273,7 +275,7 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
                     graphics.font = font36
                     graphics.drawString(lb.subtitle, 10f, 110f)
                     runBlocking {
-                        val leaderboardPlayers = getModule<StatisticsModule>().rankPlayersByStatistic(lb.statistic, OrderBy.DESC, 10)
+                        val leaderboardPlayers = getModule<StatisticsModule>().rankPlayersByStatistic(lb.statistic, lb.orderBy, 10)
                         val it = leaderboardPlayers.entries.iterator()
                         graphics.color = Color.WHITE
                         for (i in 1 .. lb.show) {
@@ -344,7 +346,7 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
                             displayName(Component.text(entry.title, BRAND_COLOR_PRIMARY_2).noItalic())
 
                             val leaderboardComponent = runBlocking {
-                                getModule<StatisticsModule>().rankPlayersByStatistic(entry.statistic)
+                                getModule<StatisticsModule>().rankPlayersByStatistic(entry.statistic, entry.orderBy)
                             }.map { (doc, value) ->
                                 Component.text(doc.username, doc.highestGroup?.color ?: NamedTextColor.GRAY).noItalic() +
                                         Component.text(": ", BRAND_COLOR_PRIMARY_2) +
