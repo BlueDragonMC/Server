@@ -187,8 +187,10 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
     }
 
     private var playerHasJoined = false
+    private val creationTime = System.currentTimeMillis()
+
     private fun shouldRemoveInstance(instance: Instance) =
-        autoRemoveInstance && instance.players.isEmpty() && playerHasJoined
+        autoRemoveInstance && instance.players.isEmpty() && (playerHasJoined || System.currentTimeMillis() - creationTime > 60_000L)
 
     fun ready() {
         val modules = dependencyTree.elementsAtDepth(1)
