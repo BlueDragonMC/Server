@@ -28,6 +28,7 @@ object Commands : Bootstrap() {
             PartyCommand("party", "/party <invite|kick|promote|warp|chat|list> ...", "p"),
             PermissionCommand("permission", "/permission ...", "lp", "perm"),
             PingCommand("ping", "/ping", "latency"),
+            PlaysoundCommand("playsound", "/playsound <sound> <source> <target> [position] [volume] [pitch]", "ps"),
             PunishCommand("ban", "/<ban|mute> <player> <duration> <reason>", "mute"),
             SetBlockCommand("setblock", "/setblock <x> <y> <z> <block>"),
             StopCommand("stop", "/stop"),
