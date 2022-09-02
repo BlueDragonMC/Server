@@ -37,6 +37,25 @@ object GlobalBlockHandlers : Bootstrap() {
             Tag.String("Lock"),
             Tag.Integer("RecipesUsed").list()
         ))
+        registerHandler("minecraft:banner", listOf(
+            Tag.String("CustomName"),
+            Tag.NBT("Patterns").list()
+        ))
+        registerHandler("minecraft:dropper", listOf(
+            Tag.String("CustomName"),
+            Tag.ItemStack("Items").list(),
+            Tag.String("Lock"),
+            Tag.String("LootTable"),
+            Tag.Long("LootTableSeed")
+        ))
+        registerHandler("minecraft:daylight_detector", listOf())
+        registerHandler("minecraft:chest", listOf(
+            Tag.String("CustomName"),
+            Tag.ItemStack("Items").list(),
+            Tag.String("Lock"),
+            Tag.String("LootTable"),
+            Tag.Long("LootTableSeed")
+        ))
     }
 
     private fun registerHandler(registryName: String, blockEntityTags: List<Tag<*>>) =
