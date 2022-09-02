@@ -25,8 +25,6 @@ class JukeboxMenuBlockHandler(val instance: Instance, val x: Int, val y: Int, va
             allowSpectatorClicks = false
         ) {
             val materials = Material.values()
-            println(materials)
-            println(materials.size)
             var i = 0
             materials.forEach { disc ->
                 if (!disc.name().startsWith("minecraft:music_disc_")) return@forEach
