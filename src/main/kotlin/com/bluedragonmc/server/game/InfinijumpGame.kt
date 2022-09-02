@@ -154,7 +154,7 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
                             }
                         }
                     }
-                    if (event.newPosition.y < blocks.minOf { it.pos.blockY() }) {
+                    if (event.newPosition.y < blocks.filter { !it.isRemoved }.minOf { it.pos.blockY() }) {
                         event.player.damage(DamageType.VOID, Float.MAX_VALUE)
                     }
                 }
@@ -162,6 +162,11 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
         })
 
         use(StatisticsModule(recordWins = false))
+
+        getInstance().let {
+            it.time = 18000
+            it.timeRate = 0
+        }
 
         ready()
     }
