@@ -2,6 +2,7 @@ package com.bluedragonmc.server.game
 
 import com.bluedragonmc.messages.GameType
 import com.bluedragonmc.server.*
+import com.bluedragonmc.server.block.JukeboxMenuBlockHandler
 import com.bluedragonmc.server.event.DataLoadedEvent
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.GuiModule
@@ -35,6 +36,7 @@ import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.player.PlayerSpawnEvent
 import net.minestom.server.event.player.PlayerUseItemEvent
+import net.minestom.server.instance.block.Block
 import net.minestom.server.inventory.InventoryType
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
@@ -128,7 +130,7 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
         use(SpawnpointModule(SpawnpointModule.SingleSpawnpointProvider(Pos(0.5, 64.0, 0.5, 180F, 0F))))
         use(PlayerResetModule(defaultGameMode = GameMode.ADVENTURE))
         use(InventoryPermissionsModule(allowDropItem = false, allowMoveItem = false))
-        use(WorldPermissionsModule(allowBlockBreak = false, allowBlockPlace = false, allowBlockInteract = false))
+        use(WorldPermissionsModule(allowBlockBreak = false, allowBlockPlace = false, allowBlockInteract = true))
 
         val menus = mutableMapOf<String, GuiModule.Menu>()
 
@@ -301,6 +303,8 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
                 }
             }.repeat(Duration.ofMinutes(5)).schedule()
         }
+
+        getInstance().setBlock(0, 60, -19, Block.JUKEBOX.withHandler(JukeboxMenuBlockHandler(getInstance(), 0, 60, -19)))
 
         ready()
     }
