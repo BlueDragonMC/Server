@@ -38,6 +38,7 @@ class StatisticsModule(private val recordWins: Boolean = true) : GameModule() {
                     val statName = if (parent.mode == null) "game_${parent.name.lowercase()}_wins"
                     else "game_${parent.name.lowercase()}_${parent.mode.lowercase()}_wins"
                     recordStatistic(player, statName) { value -> value?.plus(1) ?: 1.0 }
+                    logger.info("Incremented '$statName' statistic for player ${player.username}.")
                 }
             }
         }
@@ -50,7 +51,7 @@ class StatisticsModule(private val recordWins: Boolean = true) : GameModule() {
         player as CustomPlayer
         DatabaseModule.IO.launch {
             player.data.compute(PlayerDocument::statistics) { stats -> stats[key] = value; stats }
-            logger.debug("Recorded statistic '$key' = '$value' for player '${player.username}'.")
+            logger.info("Recorded statistic '$key' = '$value' for player '${player.username}'.")
         }
     }
 
@@ -63,7 +64,7 @@ class StatisticsModule(private val recordWins: Boolean = true) : GameModule() {
         DatabaseModule.IO.launch {
             val newValue = mapper.apply(player.data.statistics[key])
             player.data.compute(PlayerDocument::statistics) { stats -> stats[key] = newValue; stats }
-            logger.debug("Recorded statistic '$key' = '$newValue' for player '${player.username}'.")
+            logger.info("Recorded statistic '$key' = '$newValue' for player '${player.username}'.")
         }
     }
 
@@ -77,7 +78,7 @@ class StatisticsModule(private val recordWins: Boolean = true) : GameModule() {
             val currentValue = player.data.statistics[key]
             if (predicate.test(currentValue)) {
                 player.data.compute(PlayerDocument::statistics) { stats -> stats[key] = value; stats }
-                logger.debug("Recorded statistic '$key' = '$value' for player '${player.username}'.")
+                logger.info("Recorded statistic '$key' = '$value' for player '${player.username}'.")
             }
         }
     }
@@ -101,7 +102,7 @@ class StatisticsModule(private val recordWins: Boolean = true) : GameModule() {
             val newValue = mapper.apply(currentValue)
             if (predicate.test(currentValue, newValue)) {
                 player.data.compute(PlayerDocument::statistics) { stats -> stats[key] = newValue; stats }
-                logger.debug("Recorded statistic '$key' = '$newValue' for player '${player.username}'.")
+                logger.info("Recorded statistic '$key' = '$newValue' for player '${player.username}'.")
             }
         }
     }

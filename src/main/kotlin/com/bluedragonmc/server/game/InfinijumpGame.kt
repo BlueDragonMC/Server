@@ -127,6 +127,9 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
                         )
                     )
                     endGame(Duration.ofSeconds(3))
+                    getModule<StatisticsModule>().recordStatistic(event.player, "game_infinijump_highest_score", score.toDouble()) { prev ->
+                        prev == null || prev < score
+                    }
                 }
                 eventNode.addListener(InstanceTickEvent::class.java) {
                     if (state == GameState.INGAME) handleTick(it.instance.worldAge)
@@ -158,7 +161,7 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
             }
         })
 
-        use(StatisticsModule())
+        use(StatisticsModule(recordWins = false))
 
         ready()
     }

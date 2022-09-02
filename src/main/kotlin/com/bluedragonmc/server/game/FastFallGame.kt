@@ -1,9 +1,6 @@
 package com.bluedragonmc.server.game
 
-import com.bluedragonmc.server.ALT_COLOR_2
-import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
-import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
-import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.*
 import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.combat.CustomDeathMessageModule
@@ -89,21 +86,31 @@ class FastFallGame(mapName: String?) : Game("FastFall", "Chaos") {
         use(VoidDeathModule(threshold = 0.0, respawnMode = true))
         use(WorldPermissionsModule(exceptions = listOf(Block.GLASS)))
         use(CustomDeathMessageModule())
+
         var lead: Player? = null
         var lastLeadChange = 0L
-        use(object : GameModule() {
+        var isSingleplayer by Delegates.notNull<Boolean>()
+        var startTime: Long? = null
 
-            private var startTime by Delegates.notNull<Long>()
+        use(object : GameModule() {
 
             override fun initialize(parent: Game, eventNode: EventNode<Event>) {
                 eventNode.addListener(GameStartEvent::class.java) {
                     startTime = System.currentTimeMillis()
+                    isSingleplayer = parent.players.size <= 1
+
+                    if (isSingleplayer) parent.players.forEach {
+                        it.sendMessage(Component.translatable("game.fastfall.singleplayer_warning", ALT_COLOR_1))
+                    }
                 }
                 eventNode.addListener(WinModule.WinnerDeclaredEvent::class.java) { event ->
                     event.winningTeam.players.forEach {
-                        if (it.health == it.maxHealth) parent.getModule<AwardsModule>().awardCoins(
-                            it, 50, Component.translatable("game.fastfall.award.no_damage_taken", ALT_COLOR_2)
-                        )
+                        if (it.health == it.maxHealth) {
+                            val amount = if (isSingleplayer) 10 else 50
+                            parent.getModule<AwardsModule>().awardCoins(
+                                it, amount, Component.translatable("game.fastfall.award.no_damage_taken", ALT_COLOR_2)
+                            )
+                        }
                     }
                 }
                 eventNode.addListener(InstanceTickEvent::class.java) { event ->
@@ -152,15 +159,15 @@ class FastFallGame(mapName: String?) : Game("FastFall", "Chaos") {
                         event.player.isOnGround
                     ) {
                         getModule<WinModule>().declareWinner(event.player)
-                        val time = System.currentTimeMillis() - startTime
+                        val time = System.currentTimeMillis() - startTime!!
                         // Record the players' best times (only update the statistic if the new value is less than the old value)
                         getModule<StatisticsModule>().recordStatistic(event.player, "game_fastfall_best_time", time.toDouble()) { prev ->
                             prev == null || prev > time
                         }
-                        if (parent.players.size > 1) {
+                        if (!isSingleplayer) {
                             // Only record wins in multiplayer
-                            getModule<StatisticsModule>().recordStatistic(event.player,
-                                "game.fastfall.wins") { prev -> prev?.plus(1.0) ?: 1.0 }
+                            getModule<StatisticsModule>().recordStatistic(event.player, "game.fastfall.wins")
+                                { prev -> prev?.plus(1.0) ?: 1.0 }
                         }
                     }
                 }
@@ -170,19 +177,26 @@ class FastFallGame(mapName: String?) : Game("FastFall", "Chaos") {
         // MINIGAME MODULES
         use(CountdownModule(threshold = 1, allowMoveDuringCountdown = false))
         use(WinModule(winCondition = WinModule.WinCondition.MANUAL) { player, winningTeam ->
-            if (player in winningTeam.players) 150 else 15
+            if (isSingleplayer) 10
+            else if (player in winningTeam.players) 150
+            else 15
         })
 
         // SIDEBAR DISPLAY
         val binding = getModule<SidebarModule>().bind {
-            players.map {
+            val duration = Duration.ofMillis(System.currentTimeMillis() - (startTime ?: return@bind emptySet()))
+            val elapsed = "_time-elapsed" to (
+                    Component.text("Time elapsed: ", BRAND_COLOR_PRIMARY_2) +
+                    Component.text(String.format("%02d:%02d", duration.toMinutesPart(), duration.toSecondsPart()))
+            )
+            setOf(elapsed) + players.map {
                 "player-y-${it.username}" to it.name + Component.text(
                     ": ", BRAND_COLOR_PRIMARY_2
                 ) + Component.text("${it.position.y.toInt() - (257 - 2 * radius)}", BRAND_COLOR_PRIMARY_1)
             }
         }
         MinecraftServer.getSchedulerManager().buildTask {
-            binding.update()
+            if (state == GameState.INGAME) binding.update()
         }.repeat(Duration.ofMillis(500)).schedule()
 
         use(StatisticsModule(recordWins = false))
