@@ -28,7 +28,7 @@ class WinModule(
 ) : GameModule() {
     private lateinit var parent: Game
 
-    private var winnerDeclared = false
+    internal var isWinnerDeclared = false
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         this.parent = parent
@@ -63,9 +63,9 @@ class WinModule(
      * All players are notified of the winning team.
      */
     fun declareWinner(team: TeamModule.Team) {
-        if (winnerDeclared) return
+        if (isWinnerDeclared) return
         MinecraftServer.getGlobalEventHandler().callCancellable(WinnerDeclaredEvent(parent, team)) {
-            winnerDeclared = true
+            isWinnerDeclared = true
             // Normal message
             parent.players.forEach {
                 it.sendMessage(Component.translatable("module.win.team_won", BRAND_COLOR_PRIMARY_2, team.name)

@@ -159,16 +159,19 @@ class FastFallGame(mapName: String?) : Game("FastFall", "Chaos") {
                         event.player.isOnGround
                     ) {
                         getModule<WinModule>().declareWinner(event.player)
-                        val time = System.currentTimeMillis() - startTime!!
-                        // Record the players' best times (only update the statistic if the new value is less than the old value)
-                        getModule<StatisticsModule>().recordStatistic(event.player, "game_fastfall_best_time", time.toDouble()) { prev ->
-                            prev == null || prev > time
-                        }
-                        if (!isSingleplayer) {
-                            // Only record wins in multiplayer
-                            getModule<StatisticsModule>().recordStatistic(event.player, "game.fastfall.wins")
-                                { prev -> prev?.plus(1.0) ?: 1.0 }
-                        }
+                    }
+                }
+                eventNode.addListener(WinModule.WinnerDeclaredEvent::class.java) { event ->
+                    val time = System.currentTimeMillis() - startTime!!
+                    val player = event.winningTeam.players.first()
+                    // Record the players' best times (only update the statistic if the new value is less than the old value)
+                    getModule<StatisticsModule>().recordStatistic(player, "game_fastfall_best_time", time.toDouble()) { prev ->
+                        prev == null || prev > time
+                    }
+                    if (!isSingleplayer) {
+                        // Only record wins in multiplayer
+                        getModule<StatisticsModule>().recordStatistic(player, "game.fastfall.wins")
+                        { prev -> prev?.plus(1.0) ?: 1.0 }
                     }
                 }
             }
