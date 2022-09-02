@@ -32,6 +32,7 @@ object Commands : Bootstrap() {
             SetBlockCommand("setblock", "/setblock <x> <y> <z> <block>"),
             StopCommand("stop", "/stop"),
             TeleportCommand("tp", "/tp <player|<x> <y> <z>> [player|<x> <y> <z>]"),
+            TimeCommand("time", "/time <add|query|rate|set> ..."),
             ViewPunishmentCommand("punishment", "/punishment <id>", "vp"),
             ViewPunishmentsCommand("punishments", "/punishments <player>", "vps", "history"),
         ).forEach(MinecraftServer.getCommandManager()::register)
