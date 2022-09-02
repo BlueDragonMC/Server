@@ -46,6 +46,13 @@ npcs:
     skin:
       textures: "ewogICJ0aW1lc3RhbXAiIDogMTY2MDUxNTk1ODA4MiwKICAicHJvZmlsZUlkIiA6ICIzYWJkYjI5ZDI2MTU0YTAxOWEzZWQ3OGRlMzI4OWUxNCIsCiAgInByb2ZpbGVOYW1lIiA6ICJFcmljSHViZXIiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNmUyZDc4MmM5ZWQ4Yzc5ZGIzZWYxNTU0MDc3YWI5OGZlM2ZkMjNkYWI1NjllZDM2MzgwNTkxYWE2OTgxY2I1YSIKICAgIH0KICB9Cn0="
       signature: "adcENH0HEN3Le9gFy2Mvoeu+Hln1kDZSGF5fvJ8q+I1FluRH18GgjhYr/WGmHlIZ6JvSkb4+TN8p02au+i6KlOhXUkzVGWAWYeD0sr1IxtX+0T1vRgjRT1ybRA3M/fjkDRXLhiZwDGtgP5Uo5y0k1X71GOhetDWRCdLw8Hty0jU6L4h2Lf19N1oRaEgTRNFBsZaPGAwWCiItjEfSMu/voaOkmnIUPRLOHLRccMM+XZBClrcemVzWHlh9x9m2CLZWpngFBqEwZrmzM3/J4MtHP/vD7FDBGFV6waKft3pwBcHCYR1sKB9EMbjlafOtcoFeo1+07HDzLOEygqv2cvfGlBWmwvb4b/7iO7AcswNVVn9IaUUF7kYEEFjjP5Aznv8/8PCTLGTruHp7xk3BL2xAHbGaJ0XpvpO7RnB1WfFxNcOxE71Er35m7m4hj8m4n02r5+vZ6xJuVhnD0SeCQyrE7jSnXg/KyksV1e4HIVM1VGuZbCNsRMhuHfnU0zmpsYISh/cZlW4CRmBtPWowHQzLGXpP7SmnD4cvs3FUjx2m7G9U7K+3SxuL3vfxxI6XX4IBiA/TjX6bbJfogDvKurR6hwfSxuDnMeoGhbjrGW6Xg1NNi1WC469b6AB999HzjR3Q9RGUSSbsb34n09WQ21XdtPBUiktfsGccbismhKUKe80="
+  - name: "<bold><a1>Leaderboards"
+    pos: 49.5, 61.0, -28.5, 45.0, 0.0 # Leaderboard island area
+    look-at: 47.5, 62.5, -27.5 # Looking at the pathway
+    menu: leaderboard_browser
+    skin:
+      textures: "ewogICJ0aW1lc3RhbXAiIDogMTY2MDUxNTk1ODA4MiwKICAicHJvZmlsZUlkIiA6ICIzYWJkYjI5ZDI2MTU0YTAxOWEzZWQ3OGRlMzI4OWUxNCIsCiAgInByb2ZpbGVOYW1lIiA6ICJFcmljSHViZXIiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNmUyZDc4MmM5ZWQ4Yzc5ZGIzZWYxNTU0MDc3YWI5OGZlM2ZkMjNkYWI1NjllZDM2MzgwNTkxYWE2OTgxY2I1YSIKICAgIH0KICB9Cn0="
+      signature: "adcENH0HEN3Le9gFy2Mvoeu+Hln1kDZSGF5fvJ8q+I1FluRH18GgjhYr/WGmHlIZ6JvSkb4+TN8p02au+i6KlOhXUkzVGWAWYeD0sr1IxtX+0T1vRgjRT1ybRA3M/fjkDRXLhiZwDGtgP5Uo5y0k1X71GOhetDWRCdLw8Hty0jU6L4h2Lf19N1oRaEgTRNFBsZaPGAwWCiItjEfSMu/voaOkmnIUPRLOHLRccMM+XZBClrcemVzWHlh9x9m2CLZWpngFBqEwZrmzM3/J4MtHP/vD7FDBGFV6waKft3pwBcHCYR1sKB9EMbjlafOtcoFeo1+07HDzLOEygqv2cvfGlBWmwvb4b/7iO7AcswNVVn9IaUUF7kYEEFjjP5Aznv8/8PCTLGTruHp7xk3BL2xAHbGaJ0XpvpO7RnB1WfFxNcOxE71Er35m7m4hj8m4n02r5+vZ6xJuVhnD0SeCQyrE7jSnXg/KyksV1e4HIVM1VGuZbCNsRMhuHfnU0zmpsYISh/cZlW4CRmBtPWowHQzLGXpP7SmnD4cvs3FUjx2m7G9U7K+3SxuL3vfxxI6XX4IBiA/TjX6bbJfogDvKurR6hwfSxuDnMeoGhbjrGW6Xg1NNi1WC469b6AB999HzjR3Q9RGUSSbsb34n09WQ21XdtPBUiktfsGccbismhKUKe80="
 tips:
   - "<p2><click:open_url:'https://bluedragonmc.com'><lang:lobby.tips.forum></click>"
   - "<p2><click:open_url:'https://discord.gg/3gvSPdW'><lang:lobby.tips.discord></click>"
@@ -101,10 +108,79 @@ games:
     description: An endless, singleplayer parkour game.\nTry to beat your own high score\nor even climb the leaderboards.
     material: minecraft:feather
 leaderboards:
-  - title: WackyMaze
+  - title: FastFall # LEFT
+    subtitle: Fastest time
+    statistic: game_fastfall_best_time
+    display-mode: DURATION
+    top-left: 52.0,64.0,-29.0
+    bottom-right: 52.0,61.0,-26.0
+    orientation: WEST
+  - title: WackyMaze # MIDDLE
     subtitle: Most wins
     statistic: game_wackymaze_wins
     display-mode: WHOLE_NUMBER # one of: WHOLE_NUMBER, DECIMAL, or DURATION
     top-left: 52.0,64.0,-24.0
     bottom-right: 52.0,61.0,-21.0
     orientation: WEST
+  - title: Infinijump # RIGHT
+    subtitle: Highest score
+    statistic: game_infinijump_highest_score
+    display-mode: WHOLE_NUMBER
+    top-left: 52.0,64.0,-19.0
+    bottom-right: 52.0,61.0,-16.0
+    orientation: WEST
+leaderboard-browser:
+  - name: WackyMaze
+    icon: minecraft:stick
+    leaderboards:
+      - title: Most Wins
+        icon: minecraft:gold_block
+        statistic: game_wackymaze_wins
+        display-mode: WHOLE_NUMBER
+  - name: PvPMaster
+    icon: minecraft:netherite_sword
+    leaderboards:
+      - title: Most Wins
+        icon: minecraft:gold_block
+        statistic: game_pvpmaster_wins
+        display-mode: WHOLE_NUMBER
+  - name: FastFall
+    icon: minecraft:iron_boots
+    leaderboards:
+      - title: Most Wins
+        subtitle: Singleplayer mode not included.
+        icon: minecraft:gold_block
+        statistic: game_fastfall_wins
+        display-mode: WHOLE_NUMBER
+      - title: Fastest Time
+        icon: minecraft:feather
+        statistic: game_fastfall_best_time
+        display-mode: DURATION
+  - name: Infection
+    icon: minecraft:rotten_flesh
+    leaderboards:
+      - title: Most Wins
+        icon: minecraft:gold_block
+        statistic: game_infection_wins
+        display-mode: WHOLE_NUMBER
+  - name: SkyWars
+    icon: minecraft:iron_sword
+    leaderboards:
+      - title: Most Wins
+        icon: minecraft:gold_block
+        statistic: game_skywars_wins
+        display-mode: WHOLE_NUMBER
+  - name: BedWars
+    icon: minecraft:red_bed
+    leaderboards:
+      - title: Most Wins
+        icon: minecraft:gold_block
+        statistic: game_bedwars_wins
+        display-mode: WHOLE_NUMBER
+  - name: Infinijump
+    icon: minecraft:feather
+    leaderboards:
+      - title: Highest Score
+        icon: minecraft:gold_block
+        statistic: game_infinijump_highest_score
+        display-mode: WHOLE_NUMBER

@@ -64,6 +64,7 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
         val entityType: EntityType? = null,
         val skin: PlayerSkin? = null,
         val game: String? = null,
+        val menu: String? = null,
         val map: String? = null,
         val mode: String? = null,
         val lookAt: Pos? = null
@@ -94,6 +95,23 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
         }
     }
 
+    @ConfigSerializable
+    data class LeaderboardCategory(
+        val name: String = "",
+        val description: String = "",
+        val icon: Material = Material.WHITE_STAINED_GLASS,
+        val leaderboards: List<LeaderboardEntry> = emptyList()
+    )
+
+    @ConfigSerializable
+    data class LeaderboardEntry(
+        val title: String = "",
+        val subtitle: String = "",
+        val icon: Material = Material.WHITE_STAINED_GLASS,
+        val statistic: String = "",
+        val displayMode: Leaderboard.DisplayMode = Leaderboard.DisplayMode.WHOLE_NUMBER
+    )
+
     init {
 
         val config = use(ConfigModule("lobby.yml")).getConfig()
@@ -110,11 +128,14 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
         use(InventoryPermissionsModule(allowDropItem = false, allowMoveItem = false))
         use(WorldPermissionsModule(allowBlockBreak = false, allowBlockPlace = false, allowBlockInteract = false))
 
+        val menus = mutableMapOf<String, GuiModule.Menu>()
+
         // NPCs
         use(NPCModule())
         getModule<NPCModule>().apply {
 
             val npcs = config.node("npcs").getList(ConfigurableNPC::class.java)!!
+
             npcs.forEach {
                 addNPC(
                     instance = this@Lobby.getInstance(),
@@ -125,6 +146,8 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
                     interaction = { (player, _) ->
                         if (it.game != null)
                             queue.queue(player, GameType(it.game, it.mode, it.map))
+                        if(it.menu != null)
+                            menus[it.menu]?.open(player)
                     },
                     entityType = it.entityType ?: EntityType.PLAYER
                 ).run {
@@ -191,6 +214,13 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
         use(GuiModule())
 
         populateGameSelector(config)
+        populateLeaderboardBrowser(config)
+
+        MinecraftServer.getSchedulerManager().buildTask {
+            // Re-create the leaderboard browser GUIs every 5 minutes to use new information
+            populateLeaderboardBrowser(config)
+        }.repeat(Duration.ofMinutes(5)).delay(Duration.ofMinutes(5)).schedule()
+        menus["leaderboard_browser"] = leaderboardBrowser
 
         val tips = CircularList(config.node("tips").getList(Component::class.java)!!.shuffled())
         var index = 0
@@ -255,14 +285,7 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
                             val (player, value) = it.next()
 
                             // Create the text to display based on the display mode
-                            val displayText = when(lb.displayMode) {
-                                Leaderboard.DisplayMode.DURATION -> {
-                                    val duration = Duration.ofMillis(value.toLong())
-                                    String.format("%02d:%02d:%02d.%03d", duration.toHoursPart(), duration.toMinutesPart(), duration.toSecondsPart(), duration.toMillisPart())
-                                }
-                                Leaderboard.DisplayMode.DECIMAL -> String.format("%.2f", value)
-                                Leaderboard.DisplayMode.WHOLE_NUMBER -> value.toInt().toString()
-                            }
+                            val displayText = formatValue(value, lb.displayMode)
                             // Draw player name
                             val remainingPixels = 128 * 4 - stringWidth(graphics, font36, displayText) - 60f - 10f
                             val playerNameFont = fontSizes.lastOrNull {
@@ -278,6 +301,15 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
         }
 
         ready()
+    }
+
+    private fun formatValue(value: Double, displayMode: Leaderboard.DisplayMode) = when(displayMode) {
+        Leaderboard.DisplayMode.DURATION -> {
+            val duration = Duration.ofMillis(value.toLong())
+            String.format("%02d:%02d:%02d.%03d", duration.toHoursPart(), duration.toMinutesPart(), duration.toSecondsPart(), duration.toMillisPart())
+        }
+        Leaderboard.DisplayMode.DECIMAL -> String.format("%.2f", value)
+        Leaderboard.DisplayMode.WHOLE_NUMBER -> value.toInt().toString()
     }
 
     private fun Graphics2D.drawString(string: String, x: Float, y: Float, color: Color, font: Font) {
@@ -296,6 +328,44 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
         ItemStack.of(Material.COMPASS).withDisplayName(("Game Menu" withColor ALT_COLOR_1).noItalic())
 
     private lateinit var gameSelect: GuiModule.Menu
+    private lateinit var leaderboardBrowser: GuiModule.Menu
+
+    private fun populateLeaderboardBrowser(config: ConfigurationNode) {
+        val categories = config.node("leaderboard-browser").getList(LeaderboardCategory::class.java)!!
+        leaderboardBrowser = getModule<GuiModule>().createMenu(Component.text("Leaderboard Browser"), InventoryType.CHEST_3_ROW, false, true) {
+            categories.forEachIndexed { categoryIndex, category ->
+                // Build a menu for each leaderboard in the category
+                val lbMenu = getModule<GuiModule>().createMenu(Component.text(category.name), InventoryType.CHEST_3_ROW, false, true) {
+                    slot(26, Material.ARROW, {
+                        displayName(Component.text("Back to ${category.name}", NamedTextColor.RED).noItalic())
+                    }) { leaderboardBrowser.open(player) }
+                    for ((entryIndex, entry) in category.leaderboards.withIndex()) {
+                        slot(entryIndex, entry.icon, {
+                            displayName(Component.text(entry.title, BRAND_COLOR_PRIMARY_2).noItalic())
+
+                            val leaderboardComponent = runBlocking {
+                                getModule<StatisticsModule>().rankPlayersByStatistic(entry.statistic)
+                            }.map { (doc, value) ->
+                                Component.text(doc.username, doc.highestGroup?.color ?: NamedTextColor.GRAY).noItalic() +
+                                        Component.text(": ", BRAND_COLOR_PRIMARY_2) +
+                                        Component.text(formatValue(value, entry.displayMode), BRAND_COLOR_PRIMARY_1)
+                            }
+
+                            if(entry.subtitle.isNotEmpty()) {
+                                lore(Component.text(entry.subtitle, BRAND_COLOR_PRIMARY_1).noItalic(),
+                                    Component.empty(),
+                                    *leaderboardComponent.toTypedArray())
+                            } else {
+                                lore(*leaderboardComponent.toTypedArray())
+                            }
+                        })
+                    }
+                }
+                slot(categoryIndex, category.icon, { displayName(Component.text(category.name, BRAND_COLOR_PRIMARY_1).noItalic()) }) { lbMenu.open(player) }
+            }
+            slot(26, Material.ARROW, { displayName(Component.text("Back", NamedTextColor.RED).noItalic()) }) { menu.close(player) }
+        }
+    }
 
     private fun populateGameSelector(config: ConfigurationNode) {
         val games = config.node("games").getList(GameEntry::class.java)!!
