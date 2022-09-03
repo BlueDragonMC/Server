@@ -30,7 +30,9 @@ import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
 import net.minestom.server.entity.hologram.Hologram
 import net.minestom.server.event.Event
+import net.minestom.server.event.EventListener
 import net.minestom.server.event.EventNode
+import net.minestom.server.event.inventory.InventoryPreClickEvent
 import net.minestom.server.event.player.PlayerSpawnEvent
 import net.minestom.server.event.player.PlayerUseItemEvent
 import net.minestom.server.instance.block.Block
@@ -91,7 +93,7 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
                     },
                     entityType = it.entityType ?: EntityType.PLAYER
                 ).run {
-                    if(it.lookAt != null) lookAt(it.lookAt)
+                    if (it.lookAt != null) lookAt(it.lookAt)
                 }
             }
         }
@@ -111,8 +113,13 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
                     event.player.inventory.setItemStack(0, gameSelectItem)
                 }
                 eventNode.addListener(PlayerUseItemEvent::class.java) { event ->
-                    if (event.itemStack.material() == Material.COMPASS) menus["all_games"]?.open(event.player)
+                    if (event.itemStack.isSimilar(gameSelectItem)) menus["all_games"]?.open(event.player)
                 }
+                eventNode.addListener(
+                    EventListener.builder(InventoryPreClickEvent::class.java).ignoreCancelled(false).handler { event ->
+                        if (event.clickedItem.isSimilar(gameSelectItem)) menus["all_games"]?.open(event.player)
+                    }.build()
+                )
             }
         })
         use(DoubleJumpModule())
@@ -141,7 +148,8 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
     }
 
     private val gameSelectItem =
-        ItemStack.of(Material.COMPASS).withDisplayName((Component.translatable("lobby.game_menu", ALT_COLOR_1)).noItalic())
+        ItemStack.of(Material.COMPASS)
+            .withDisplayName((Component.translatable("lobby.game_menu", ALT_COLOR_1)).noItalic())
 
     fun loadXPBar(player: Player) {
         lateinit var loadXPTask: Task
