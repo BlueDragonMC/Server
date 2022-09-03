@@ -61,7 +61,7 @@ object MapUtils {
             else -> maxY - minY
         } + 1
 
-        logger.info("Creating map board with width $width and height $height (${width * height} item frames).")
+        logger.debug("Creating map board with width $width and height $height (${width * height} item frames).")
 
         val framebuffer = LargeGraphics2DFramebuffer(width * 128, height * 128)
         renderFunction.accept(framebuffer.renderer)
@@ -92,7 +92,7 @@ object MapUtils {
         }
 
         if (startingMapId < 0) mapId += mapPackets.size
-        logger.info("Created ${mapPackets.size} maps in ${(System.nanoTime() - startTime) / 1_000_000}ms.")
+        logger.debug("Created ${mapPackets.size} maps in ${(System.nanoTime() - startTime) / 1_000_000}ms.")
     }
 
     private fun getAllInBox(pos1: Pos, pos2: Pos): List<Pos> {

@@ -35,6 +35,7 @@ class JukeboxMenuBlockHandler(val instance: Instance, val x: Int, val y: Int, va
 
     private var mostRecentSong: String? = null
     private val guiModule = GuiModule()
+
     val menu = guiModule.createMenu(
         title = Component.translatable("lobby.menu.jukebox.title"),
         inventoryType = InventoryType.CHEST_3_ROW,
@@ -44,7 +45,7 @@ class JukeboxMenuBlockHandler(val instance: Instance, val x: Int, val y: Int, va
         val materials = Material.values()
         val discs = materials.filter { it.name().startsWith("minecraft:music_disc_") }.sortedBy { it.name() }
         discs.forEachIndexed { i, disc ->
-            this.slot(i, disc, { player ->
+            slot(i, disc, {
                 displayName(disc.displayName().noItalic())
             }) {
                 instance.players.forEach { it.playEffect(Effects.PLAY_RECORD, x, y, z, disc.id(), false) }
@@ -55,11 +56,12 @@ class JukeboxMenuBlockHandler(val instance: Instance, val x: Int, val y: Int, va
     }
 
     override fun getNamespaceId(): NamespaceID = NamespaceID.from("$NAMESPACE:jukebox")
+
     override fun onInteract(interaction: BlockHandler.Interaction): Boolean {
         menu.open(interaction.player)
         return false
     }
 
-    fun discToSound(discName: String): String =
+    private fun discToSound(discName: String): String =
         "minecraft:music_disc.${discName.substringAfter("minecraft:music_disc_")}"
 }

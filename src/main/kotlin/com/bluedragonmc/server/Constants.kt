@@ -10,9 +10,19 @@ import net.kyori.adventure.text.format.TextDecoration
 import org.apache.commons.net.util.Base64
 import java.io.File
 import java.nio.charset.Charset
-import java.util.Locale
+import java.util.*
 
-val DEFAULT_LOCALE = Locale.ENGLISH
+/**
+ * The namespace used for custom
+ * BlueDragon registry keys.
+ */
+const val NAMESPACE = "bluedragon"
+
+/**
+ * The default locale used when flattening
+ * and translating components.
+ */
+val DEFAULT_LOCALE: Locale = Locale.ENGLISH
 
 /**
  * Light color, often used for emphasis.

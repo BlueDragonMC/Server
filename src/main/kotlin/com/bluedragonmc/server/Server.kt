@@ -14,7 +14,6 @@ import net.minestom.server.utils.NamespaceID
 import net.minestom.server.world.DimensionType
 import org.slf4j.LoggerFactory
 
-const val NAMESPACE = "bluedragon"
 lateinit var lobby: Game
 fun isLobbyInitialized() = ::lobby.isInitialized
 private val logger = LoggerFactory.getLogger("ServerKt")

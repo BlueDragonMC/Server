@@ -2,6 +2,7 @@ package com.bluedragonmc.server.module.database
 
 import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.event.DataLoadedEvent
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.minigame.WinModule
 import com.github.benmanes.caffeine.cache.Cache
@@ -28,10 +29,14 @@ class StatisticsModule(private val recordWins: Boolean = true) : GameModule() {
     companion object {
         // Caches should be static to reduce the number of expensive DB queries
         private val statisticsCache: Cache<String, List<PlayerDocument>> =
-            Caffeine.newBuilder().expireAfterWrite(Duration.ofMinutes(20)).build()
+            Caffeine.newBuilder().expireAfterWrite(Duration.ofMinutes(10)).build()
     }
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
+        eventNode.addListener(DataLoadedEvent::class.java) { event ->
+            parent.getModuleOrNull<StatisticsModule>()
+                ?.recordStatistic(event.player, "times_data_loaded") { i -> i?.plus(1.0) ?: 1.0 }
+        }
         if (recordWins) {
             eventNode.addListener(WinModule.WinnerDeclaredEvent::class.java) { event ->
                 event.winningTeam.players.forEach { player ->

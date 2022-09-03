@@ -1,5 +1,6 @@
 package com.bluedragonmc.server.bootstrap
 
+import com.bluedragonmc.server.DEFAULT_LOCALE
 import com.bluedragonmc.server.NAMESPACE
 import net.kyori.adventure.key.Key
 import net.kyori.adventure.text.Component
@@ -40,7 +41,7 @@ object GlobalTranslation : Bootstrap() {
             registry.registerAll(locale, bundle, true)
             logger.info("Registered language $language (locale: $locale) from file ${translations.getProperty(language)}")
         }
-        registry.defaultLocale(MinestomAdventure.getDefaultLocale())
+        registry.defaultLocale(DEFAULT_LOCALE)
 
         GlobalTranslator.translator().addSource(registry)
     }

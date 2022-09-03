@@ -171,7 +171,7 @@ class FastFallGame(mapName: String?) : Game("FastFall", "Chaos") {
                     }
                     if (!isSingleplayer) {
                         // Only record wins in multiplayer
-                        getModule<StatisticsModule>().recordStatistic(player, "game.fastfall.wins")
+                        getModule<StatisticsModule>().recordStatistic(player, "game_fastfall_wins")
                         { prev -> prev?.plus(1.0) ?: 1.0 }
                     }
                 }
