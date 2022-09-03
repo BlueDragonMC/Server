@@ -4,6 +4,7 @@ import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.GuiModule
 import com.bluedragonmc.server.module.combat.CustomDeathMessageModule
 import com.bluedragonmc.server.module.combat.OldCombatModule
+import com.bluedragonmc.server.module.combat.ProjectileModule
 import com.bluedragonmc.server.module.config.ConfigModule
 import com.bluedragonmc.server.module.database.AwardsModule
 import com.bluedragonmc.server.module.database.StatisticsModule
@@ -44,6 +45,7 @@ class SkyWarsGame(mapName: String) : Game("SkyWars", mapName) {
                 ChestModule()
             )
         )
+        use(ProjectileModule())
         use(WinModule(WinModule.WinCondition.LAST_TEAM_ALIVE) { player, winningTeam ->
             if (player in winningTeam.players) 250 else 25
         })

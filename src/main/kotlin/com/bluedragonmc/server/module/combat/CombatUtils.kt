@@ -39,7 +39,13 @@ object CombatUtils {
             enchants[Enchantment.BANE_OF_ARTHROPODS]!! * 2.5f
         } else 0.0f
 
-    private fun isUndead(entity: Entity) = setOf(
+    fun getArrowDamageModifier(enchants: Map<Enchantment, Short>, targetEntity: Entity): Float =
+        if (enchants.containsKey(Enchantment.POWER))
+            0.5f + enchants[Enchantment.POWER]!! * 0.5f
+        else 0.0f
+
+
+    private val UNDEAD_MOBS = setOf(
         EntityType.DROWNED,
         EntityType.HUSK,
         EntityType.PHANTOM,
@@ -52,7 +58,8 @@ object CombatUtils {
         EntityType.ZOMBIE,
         EntityType.ZOMBIE_VILLAGER,
         EntityType.ZOMBIFIED_PIGLIN,
-    ).contains(entity.entityType)
+    )
+    private fun isUndead(entity: Entity) = UNDEAD_MOBS.contains(entity.entityType)
 
     private fun isArthropod(entity: Entity) =
         entity.entityType == EntityType.SPIDER || entity.entityType == EntityType.CAVE_SPIDER || entity.entityType == EntityType.ENDERMITE || entity.entityType == EntityType.SILVERFISH

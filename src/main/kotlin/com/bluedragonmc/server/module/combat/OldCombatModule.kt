@@ -35,6 +35,31 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
         val HURT_RESISTANT_TIME: Tag<Int> = Tag.Integer("hurt_resistant_time").defaultValue(0)
         val MAX_HURT_RESISTANT_TIME: Tag<Int> = Tag.Integer("max_hurt_resistant_time").defaultValue(20)
         val LAST_DAMAGE: Tag<Float> = Tag.Float("last_damage").defaultValue(0.0f)
+
+        fun takeKnockback(xComponent: Double, zComponent: Double, target: Entity, multiplier: Double) {
+            var xKnockback = xComponent
+            var zKnockback = zComponent
+            while (xKnockback * xKnockback + zKnockback * zKnockback < 0.0001) {
+                xKnockback = (Math.random() - Math.random()) * 0.01
+                zKnockback = (Math.random() - Math.random()) * 0.01
+            }
+            val magnitude = hypot(xComponent, zComponent)
+
+            // see https://github.com/TogAr2/MinestomPvP/blob/4b2aa1e05b7a877ffe62183ed9b0b09088a7ca88/src/main/java/io/github/bloepiloepi/pvp/legacy/LegacyKnockbackSettings.java#L10
+            // for more info on these constants
+            val horizontal = MinecraftServer.TICK_PER_SECOND * 0.8 * 0.4
+            val vertical = (0.4 - 0.04) * MinecraftServer.TICK_PER_SECOND
+            val verticalLimit = 0.4 * MinecraftServer.TICK_PER_SECOND
+            val extra = multiplier + 1.0
+
+            target.velocity = target.velocity.apply { x, y, z ->
+                Vec(
+                    x / 2.0 - (xKnockback / magnitude * horizontal) * extra,
+                    (y / 2.0 + vertical).coerceAtMost(verticalLimit),
+                    z / 2.0 - (zKnockback / magnitude * horizontal) * extra
+                )
+            }
+        }
     }
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
@@ -182,31 +207,11 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
 
             // Standard knockback that is unaffected by modifiers
             if (target is LivingEntity) {
-                var xKnockback: Double = player.position.x - target.getPosition().x
-                var zKnockback: Double = player.position.z - target.getPosition().z
-
-                while (xKnockback * xKnockback + zKnockback * zKnockback < 0.0001) {
-                    xKnockback = (Math.random() - Math.random()) * 0.01
-                    zKnockback = (Math.random() - Math.random()) * 0.01
-                }
-                val magnitude = hypot(xKnockback, zKnockback)
-
-                // see https://github.com/TogAr2/MinestomPvP/blob/4b2aa1e05b7a877ffe62183ed9b0b09088a7ca88/src/main/java/io/github/bloepiloepi/pvp/legacy/LegacyKnockbackSettings.java#L10
-                // for more info on these constants
-                val horizontal = MinecraftServer.TICK_PER_SECOND * 0.8 * 0.4
-                val vertical = (0.4 - 0.04) * MinecraftServer.TICK_PER_SECOND
-                val verticalLimit = 0.4 * MinecraftServer.TICK_PER_SECOND
-                val extra = knockback + 1.0
-
-                if (knockback > 0.0) player.isSprinting = false
-
-                target.velocity = target.velocity.apply { x, y, z ->
-                    Vec(
-                        x / 2.0 - (xKnockback / magnitude * horizontal) * extra,
-                        (y / 2.0 + vertical).coerceAtMost(verticalLimit),
-                        z / 2.0 - (zKnockback / magnitude * horizontal) * extra
-                    )
-                }
+                takeKnockback(
+                    player.position.x - target.getPosition().x,
+                    player.position.z - target.getPosition().z,
+                    target, knockback.toDouble()
+                )
             }
 
             // Send crit particles
