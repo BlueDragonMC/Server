@@ -4,13 +4,13 @@ import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.GameState
+import com.bluedragonmc.server.block.JukeboxMenuBlockHandler
 import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.combat.CustomDeathMessageModule
 import com.bluedragonmc.server.module.database.StatisticsModule
 import com.bluedragonmc.server.module.gameplay.InstantRespawnModule
 import com.bluedragonmc.server.module.instance.CustomGeneratorInstanceModule
-import com.bluedragonmc.server.module.minigame.CountdownModule
 import com.bluedragonmc.server.module.minigame.PlayerResetModule
 import com.bluedragonmc.server.module.minigame.SpawnpointModule
 import com.bluedragonmc.server.module.minigame.SpectatorModule
@@ -174,19 +174,18 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
                                 event.player.position.sub(0.0, 1.0, 0.0), block.entity
                             )
                         ) {
-                            block.markReached(event.player)
-                            MinecraftServer.getSchedulerManager().scheduleNextTick {
-                                // Mark all blocks before this one as reached, just in case a block was skipped
-                                blocks.forEachIndexed { j, previous ->
-                                    if (j < i) {
-                                        previous.markReached(event.player)
-                                        previous.destroy()
-                                    }
+                            // Mark all blocks before this one as reached, just in case a block was skipped
+                            blocks.forEachIndexed { j, previous ->
+                                if (j < i) {
+                                    previous.markReached(event.player, show = false)
+                                    previous.destroy()
                                 }
                             }
+                            block.markReached(event.player)
                         }
                     }
-                    if (event.newPosition.y < blocks.filter { !it.isRemoved }.minOf { it.pos.blockY() }) {
+                    val nonRemovedBlocks = blocks.filter { !it.isRemoved }
+                    if (nonRemovedBlocks.isEmpty() || event.newPosition.y < nonRemovedBlocks.minOf { it.pos.blockY() }) {
                         event.player.damage(DamageType.VOID, Float.MAX_VALUE)
                     }
                 }
@@ -273,32 +272,35 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
         var isReached = false
         var isRemoved = false
 
-        fun markReached(player: Player) {
+        fun markReached(player: Player, show: Boolean = true) {
             if (isReached) return
             isReached = true
             game.score++
             val packet = PacketUtils.createBlockParticle(player.position, placedBlockType, 10)
-            val sound = Sound.sound(
-                when (game.difficulty) {
-                    0 -> SoundEvent.BLOCK_NOTE_BLOCK_PLING
-                    1 -> SoundEvent.ENTITY_EXPERIENCE_ORB_PICKUP
-                    2 -> SoundEvent.BLOCK_AMETHYST_BLOCK_BREAK
-                    3 -> SoundEvent.BLOCK_BASALT_BREAK
-                    else -> SoundEvent.BLOCK_NOTE_BLOCK_PLING
-                },
-                Sound.Source.BLOCK,
-                1.0f,
-                if (game.score >= 4 * blocksPerDifficulty) 2.0f else 0.5f + (game.score % blocksPerDifficulty) * (1.5f / blocksPerDifficulty) // Max pitch = 2
-            )
-            player.sendPacket(packet)
-            player.playSound(sound)
-            player.showTitle(
-                Title.title(
-                    Component.empty(),
-                    Component.text(game.score, NamedTextColor.GOLD),
-                    Title.Times.times(Duration.ZERO, Duration.ZERO, Duration.ofSeconds(60))
+            if (show) {
+                val sound = Sound.sound(
+                    when (game.difficulty) {
+                        0 -> SoundEvent.BLOCK_NOTE_BLOCK_PLING
+                        1 -> SoundEvent.ENTITY_EXPERIENCE_ORB_PICKUP
+                        2 -> SoundEvent.BLOCK_AMETHYST_BLOCK_BREAK
+                        3 -> SoundEvent.BLOCK_BASALT_BREAK
+                        else -> SoundEvent.BLOCK_NOTE_BLOCK_PLING
+                    },
+                    Sound.Source.BLOCK,
+                    1.0f,
+                    if (game.score >= 4 * blocksPerDifficulty) 2.0f else 0.5f + (game.score % blocksPerDifficulty) * (1.5f / blocksPerDifficulty) // Max pitch = 2
                 )
-            )
+                player.playSound(sound)
+                player.sendPacket(packet)
+
+                player.showTitle(
+                    Title.title(
+                        Component.empty(),
+                        Component.text(game.score, NamedTextColor.GOLD),
+                        Title.Times.times(Duration.ZERO, Duration.ZERO, Duration.ofSeconds(60))
+                    )
+                )
+            }
 
             MinecraftServer.getSchedulerManager().scheduleNextTick { game.addNewBlock() }
         }
@@ -369,11 +371,6 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
             isRemoved = true
             instance.setBlock(pos, Block.AIR)
             entity.remove()
-
-            val packet = PacketUtils.createParticlePacket(center, Particle.DRIPPING_LAVA, 5)
-            val sound = Sound.sound(SoundEvent.BLOCK_STONE_BREAK, Sound.Source.BLOCK, 1.0f, 1.0f)
-            instance.sendGroupedPacket(packet)
-            SoundUtils.playSoundInWorld(sound, instance, center)
         }
     }
 
