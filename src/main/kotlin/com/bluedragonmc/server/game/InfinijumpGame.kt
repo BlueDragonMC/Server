@@ -1,5 +1,7 @@
 package com.bluedragonmc.server.game
 
+import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
+import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.GameState
 import com.bluedragonmc.server.event.GameStartEvent
@@ -15,6 +17,7 @@ import com.bluedragonmc.server.module.minigame.SpectatorModule
 import com.bluedragonmc.server.utils.SoundUtils
 import com.bluedragonmc.server.utils.packet.GlowingEntityUtils
 import com.bluedragonmc.server.utils.packet.PacketUtils
+import com.bluedragonmc.server.utils.withColor
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -35,6 +38,7 @@ import net.minestom.server.event.EventNode
 import net.minestom.server.event.instance.InstanceTickEvent
 import net.minestom.server.event.player.PlayerDeathEvent
 import net.minestom.server.event.player.PlayerMoveEvent
+import net.minestom.server.event.player.PlayerSpawnEvent
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
 import net.minestom.server.network.packet.server.play.BlockBreakAnimationPacket
@@ -82,7 +86,13 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
             field = value
             playSound(Sound.sound(SoundEvent.ENTITY_ENDER_DRAGON_GROWL, Sound.Source.PLAYER, 1.0f, 1.0f))
             players.forEach {
-                it.sendMessage(Component.translatable("game.infinijump.difficulty_increased", color, Component.translatable(title)))
+                it.sendMessage(
+                    Component.translatable(
+                        "game.infinijump.difficulty_increased",
+                        color,
+                        Component.translatable(title)
+                    )
+                )
                 it.level = value
             }
         }
@@ -91,9 +101,11 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
     private val spawnPosition = Pos(0.5, 64.0, 0.5)
     private val blocks: MutableList<ParkourBlock>
 
+    private var started = false
+    private var playerSpawnTime = 0L
+
     init {
         use(PlayerResetModule(defaultGameMode = GameMode.ADVENTURE))
-        use(CountdownModule(threshold = 1, allowMoveDuringCountdown = false, countdownSeconds = 3))
         use(SpawnpointModule(SpawnpointModule.SingleSpawnpointProvider(spawnPosition)))
         use(CustomGeneratorInstanceModule(
             CustomGeneratorInstanceModule.getFullbrightDimension()
@@ -107,13 +119,22 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
         )
 
         use(object : GameModule() {
-            var started = false
             override fun initialize(parent: Game, eventNode: EventNode<Event>) {
+                eventNode.addListener(PlayerSpawnEvent::class.java) { event ->
+                    event.player.showTitle(
+                        Title.title(
+                            "Infinijump" withColor BRAND_COLOR_PRIMARY_1,
+                            "Move to start" withColor BRAND_COLOR_PRIMARY_2
+                        )
+                    )
+                    playerSpawnTime = getInstance().worldAge
+                }
                 eventNode.addListener(GameStartEvent::class.java) {
                     started = true
                     blocks.forEachIndexed { i, block ->
                         block.spawnTime = getInstance().worldAge + 40 * i // Reset age of the block
                     }
+                    parent.state = GameState.INGAME
                 }
                 eventNode.addListener(PlayerDeathEvent::class.java) { event ->
                     if (state != GameState.INGAME) return@addListener
@@ -126,21 +147,32 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
                             Component.translatable("game.infinijump.loss_score", NamedTextColor.RED, Component.text(score))
                         )
                     )
-                    endGame(Duration.ofSeconds(3))
+                    endGame(Duration.ofMillis(((3 + score / 50f) * 1000).toLong()))
                     getModule<StatisticsModule>().recordStatistic(event.player, "game_infinijump_highest_score", score.toDouble()) { prev ->
                         prev == null || prev < score
                     }
+
+                    blocks.forEach { it.instance.setBlock(it.pos, it.placedBlockType) }
+
                 }
                 eventNode.addListener(InstanceTickEvent::class.java) {
                     if (state == GameState.INGAME) handleTick(it.instance.worldAge)
                     if (blocks.size <= 3) addNewBlock() // Add a new block every tick until there are 3 blocks
                 }
                 eventNode.addListener(PlayerMoveEvent::class.java) { event ->
-                    if (!started) return@addListener
+                    if (!started) {
+                        // If the game hasn't started and the player moved their position (not just their yaw and pitch)
+                        val old = event.player.position
+                        val new = event.newPosition
+                        if (old.x != new.x || old.z != new.z) {
+                            parent.callEvent(GameStartEvent(parent))
+                        }
+                        return@addListener
+                    }
                     blocks.forEachIndexed { i, block ->
                         if (!block.isReached && !block.isRemoved && event.isOnGround && event.player.boundingBox.intersectEntity(
-                                event.player.position.sub(0.0, 1.0, 0.0),
-                                block.entity)
+                                event.player.position.sub(0.0, 1.0, 0.0), block.entity
+                            )
                         ) {
                             block.markReached(event.player)
                             MinecraftServer.getSchedulerManager().scheduleNextTick {
@@ -220,7 +252,7 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
          * Setting the placed block type will determine whether the breaking animation is visible.
          * Placed barriers have no breaking animation.
          */
-        protected open val placedBlockType: Block = Block.STONE_BRICKS
+        internal open val placedBlockType: Block = Block.STONE_BRICKS
 
         /**
          *
