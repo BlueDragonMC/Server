@@ -163,6 +163,7 @@ class FastFallGame(mapName: String?) : Game("FastFall", "Chaos") {
                     }
                 }
                 eventNode.addListener(WinModule.WinnerDeclaredEvent::class.java) { event ->
+                    if (event.winningTeam.players.isEmpty()) return@addListener // The game was ended before a winner was declared, or there was no winner
                     val time = System.currentTimeMillis() - startTime!!
                     val player = event.winningTeam.players.first()
                     // Record the players' best times (only update the statistic if the new value is less than the old value)

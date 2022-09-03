@@ -89,12 +89,17 @@ class SkyWarsGame(mapName: String) : Game("SkyWars", mapName) {
     abstract class SkyWarsLootProvider(private val game: Game) : ChestLootModule.ChestLootProvider {
 
         override fun getLoot(chestLocation: Point): Collection<ItemStack> {
+            val availableSlots = (0..26).toMutableList()
+            val items = MutableList(27) { ItemStack.AIR }
             val lootItems = getLootItems(chestLocation)
-            return lootItems.filter {
+            lootItems.filter {
                 Math.random() < it.chance
-            }.map {
-                it.item.withAmount(it.quantity.random())
+            }.forEach {
+                val slot = availableSlots.random()
+                availableSlots.remove(slot)
+                items[slot] = it.item.withAmount(it.quantity.random())
             }
+            return items
         }
 
         private fun getLootItems(chestLocation: Point): Collection<SkyWarsLootItem> {

@@ -1,8 +1,9 @@
 package com.bluedragonmc.server.command
 
+import com.bluedragonmc.server.GameState
 import com.bluedragonmc.server.event.GameStartEvent
-import com.bluedragonmc.server.module.minigame.TeamModule
 import com.bluedragonmc.server.module.instance.InstanceModule
+import com.bluedragonmc.server.module.minigame.TeamModule
 import com.bluedragonmc.server.module.minigame.WinModule
 import com.bluedragonmc.server.utils.withColor
 import net.kyori.adventure.text.Component
@@ -22,8 +23,10 @@ class GameCommand(name: String, usageString: String, vararg aliases: String?) : 
 
     subcommand("end") {
         syntax {
+            if (game.state == GameState.INGAME) {
+                game.callEvent(WinModule.WinnerDeclaredEvent(game, TeamModule.Team()))
+            }
             game.endGame(Duration.ZERO)
-            game.callEvent(WinModule.WinnerDeclaredEvent(game, TeamModule.Team()))
             sender.sendMessage(formatMessageTranslated("command.game.ended"))
         }.requireInGame()
     }
