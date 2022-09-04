@@ -2,8 +2,10 @@ package com.bluedragonmc.server.module.combat
 
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.GameModule
+import com.bluedragonmc.server.utils.MapUtils
 import net.minestom.server.MinecraftServer
 import net.minestom.server.attribute.Attribute
+import net.minestom.server.coordinate.Point
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.*
 import net.minestom.server.entity.damage.DamageType
@@ -15,6 +17,9 @@ import net.minestom.server.event.entity.projectile.ProjectileCollideWithEntityEv
 import net.minestom.server.event.item.ItemUpdateStateEvent
 import net.minestom.server.event.player.PlayerItemAnimationEvent
 import net.minestom.server.event.player.PlayerUseItemEvent
+import net.minestom.server.instance.EntityTracker
+import net.minestom.server.instance.Explosion
+import net.minestom.server.instance.Instance
 import net.minestom.server.inventory.TransactionOption
 import net.minestom.server.item.Enchantment
 import net.minestom.server.item.Material
@@ -30,6 +35,7 @@ class ProjectileModule : GameModule() {
         private val CHARGE_START_TAG = Tag.Long("bow_charge_start").defaultValue(Long.MAX_VALUE)
         private val ARROW_DAMAGE_TAG = Tag.Short("entity_arrow_power").defaultValue(0) // the power enchantment level
         private val PUNCH_TAG = Tag.Short("entity_projectile_punch").defaultValue(0) // the punch enchantment level
+
         private val SNOWBALL_DAMAGE_TYPE = DamageType("snowball")
         private val EGG_DAMAGE_TYPE = DamageType("egg")
     }
@@ -38,6 +44,7 @@ class ProjectileModule : GameModule() {
         hookBowEvents(eventNode)
         hookSnowballEvents(eventNode)
         hookEggEvents(eventNode)
+        hookFireballEvents(eventNode)
     }
 
     /**
@@ -156,6 +163,71 @@ class ProjectileModule : GameModule() {
         eventNode.addListener(ProjectileCollideWithBlockEvent::class.java) { event ->
             if (event.entity.entityType == EntityType.SNOWBALL) {
                 event.entity.scheduleRemove(Duration.ofSeconds(5))
+            }
+        }
+    }
+
+    private fun hookFireballEvents(eventNode: EventNode<Event>) {
+        eventNode.addListener(PlayerUseItemEvent::class.java) { event ->
+            val itemStack = event.player.getItemInHand(event.hand)
+            if (itemStack.material() == Material.FIRE_CHARGE) {
+
+                if (event.player.gameMode != GameMode.CREATIVE) {
+                    event.player.inventory.setItemInHand(event.hand, itemStack.withAmount(itemStack.amount() - 1))
+                }
+
+                // Shoot a snowball from the player's position
+                val snowball = EntityProjectile(event.player, EntityType.FIREBALL)
+                snowball.setInstance(event.instance, getEyePos(event.player))
+                snowball.shoot(getLaunchPos(event.player), 3.0, 1.0)
+                snowball.scheduleRemove(Duration.ofSeconds(30))
+            }
+        }
+        eventNode.addListener(ProjectileCollideWithEntityEvent::class.java) { event ->
+            if (event.entity.entityType == EntityType.FIREBALL) {
+                explodeFireball(event.entity)
+            }
+        }
+        eventNode.addListener(ProjectileCollideWithBlockEvent::class.java) { event ->
+            if (event.entity.entityType == EntityType.FIREBALL) {
+                explodeFireball(event.entity)
+            }
+        }
+    }
+
+    private fun explodeFireball(projectile: Entity) {
+        projectile as EntityProjectile
+        projectile.remove()
+        val pos = projectile.position
+
+        if (projectile.instance?.explosionSupplier == null) {
+            projectile.instance?.setExplosionSupplier { centerX, centerY, centerZ, strength, _ ->
+                object : Explosion(centerX, centerY, centerZ, strength) {
+
+                    override fun prepare(instance: Instance?): List<Point> = MapUtils.getAllInBox(
+                        Pos(centerX.toDouble() - strength, centerY.toDouble() - strength, centerZ.toDouble() - strength),
+                        Pos(centerX.toDouble() + strength, centerY.toDouble() + strength, centerZ.toDouble() + strength)
+                    ).filter { pos ->
+                        val distance = pos.distanceSquared(centerX.toDouble(), centerY.toDouble(), centerZ.toDouble())
+                        val resistance = instance!!.getBlock(pos).registry().explosionResistance()
+                        Random.nextDouble(0.0, strength * 1.5 - resistance / 2.0) > distance
+                    }
+                }
+            }
+        }
+
+        val radius = 8.0f
+        projectile.instance?.explode(pos.x.toFloat(), pos.y.toFloat(), pos.z.toFloat(), radius)
+
+        val center = Pos(pos.x, pos.y, pos.z)
+        projectile.instance!!.entityTracker.nearbyEntities(
+            center, 5.0, EntityTracker.Target.ENTITIES
+        ) { entity ->
+            val distanceSq = entity.position.distanceSquared(center)
+            val multiplier = (1.0f / radius) * distanceSq
+            OldCombatModule.takeKnockback(-projectile.velocity.x, -projectile.velocity.z, entity, multiplier)
+            if (entity is LivingEntity) {
+                entity.damage(DamageType.fromProjectile(projectile.shooter, projectile), multiplier.toFloat() * 8.0f)
             }
         }
     }

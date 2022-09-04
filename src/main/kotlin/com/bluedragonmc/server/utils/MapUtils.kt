@@ -95,7 +95,7 @@ object MapUtils {
         logger.debug("Created ${mapPackets.size} maps in ${(System.nanoTime() - startTime) / 1_000_000}ms.")
     }
 
-    private fun getAllInBox(pos1: Pos, pos2: Pos): List<Pos> {
+    fun getAllInBox(pos1: Pos, pos2: Pos): List<Pos> {
         val dx = abs(pos2.blockX() - pos1.blockX())
         val dy = abs(pos2.blockY() - pos1.blockY())
         val dz = abs(pos2.blockZ() - pos1.blockZ())
