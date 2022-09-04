@@ -7,6 +7,7 @@ import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.combat.CustomDeathMessageModule
 import com.bluedragonmc.server.module.combat.OldCombatModule
+import com.bluedragonmc.server.module.combat.ProjectileModule
 import com.bluedragonmc.server.module.config.ConfigModule
 import com.bluedragonmc.server.module.database.AwardsModule
 import com.bluedragonmc.server.module.database.StatisticsModule
@@ -72,6 +73,7 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
                 TimedRespawnModule(seconds = 5)
             )
         )
+        use(ProjectileModule())
         use(WinModule(WinModule.WinCondition.LAST_TEAM_ALIVE) { player, winningTeam ->
             if (player in winningTeam.players) 500 else 50
         })

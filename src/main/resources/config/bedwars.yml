@@ -132,6 +132,17 @@ shop:
     amount: 1
     price: 5
     currency: minecraft:emerald
+  - row: 3
+    column: 4
+    item:
+      material: minecraft:stick
+      enchants:
+        minecraft:knockback: 3
+      lore:
+        - <gray>Use this to wack your enemies
+        - <gray>off the map!
+    price: 3
+    currency: minecraft:emerald
   - row: 4
     column: 1
     material: minecraft:iron_helmet
@@ -156,14 +167,36 @@ shop:
     amount: 1
     price: 20
     currency: minecraft:gold_ingot
-  - row: 3
-    column: 4
+  - row: 5
+    column: 1
+    material: minecraft:fire_charge
+    amount: 1
+    price: 50
+    currency: minecraft:iron_ingot
+  - row: 5
+    column: 2
+    material: minecraft:bow
+    amount: 1
+    price: 20
+    currency: minecraft:gold_ingot
+  - row: 5
+    column: 2
     item:
-      material: minecraft:stick
+      material: minecraft:bow
       enchants:
-        minecraft:knockback: 3
-      lore:
-        - <gray>Use this to wack your enemies
-        - <gray>off the map!
-    price: 3
+        minecraft:punch: 1
+    amount: 1
+    price: 6
     currency: minecraft:emerald
+  - row: 5
+    column: 3
+    material: minecraft:arrow
+    amount: 8
+    price: 20
+    currency: minecraft:iron_ingot
+  - row: 5
+    column: 4
+    material: minecraft:egg
+    amount: 16
+    price: 20
+    currency: minecraft:iron_ingot
