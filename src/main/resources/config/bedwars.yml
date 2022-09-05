@@ -180,7 +180,7 @@ shop:
     price: 20
     currency: minecraft:gold_ingot
   - row: 5
-    column: 2
+    column: 3
     item:
       material: minecraft:bow
       enchants:
@@ -189,13 +189,13 @@ shop:
     price: 6
     currency: minecraft:emerald
   - row: 5
-    column: 3
+    column: 4
     material: minecraft:arrow
     amount: 8
     price: 20
     currency: minecraft:iron_ingot
   - row: 5
-    column: 4
+    column: 5
     material: minecraft:egg
     amount: 16
     price: 20
