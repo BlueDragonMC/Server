@@ -1,5 +1,6 @@
 package com.bluedragonmc.games.pvpmaster
 
+import com.bluedragonmc.games.pvpmaster.module.ArmorLevelsModule
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.combat.CustomDeathMessageModule
 import com.bluedragonmc.server.module.combat.OldCombatModule
