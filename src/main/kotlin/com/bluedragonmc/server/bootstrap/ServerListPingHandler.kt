@@ -1,6 +1,7 @@
 package com.bluedragonmc.server.bootstrap
 
 import com.bluedragonmc.server.*
+import com.bluedragonmc.server.queue.DevelopmentEnvironment
 import com.bluedragonmc.server.utils.buildComponent
 import com.bluedragonmc.server.utils.center
 import com.bluedragonmc.server.utils.withColor
@@ -27,7 +28,7 @@ object ServerListPingHandler : Bootstrap() {
                     +title.withGradient(BRAND_COLOR_PRIMARY_1, BRAND_COLOR_PRIMARY_3)
 
                 +(" [" withColor NamedTextColor.DARK_GRAY)
-                if (Environment.current is Environment.DevelopmentEnvironment) {
+                if (Environment.current is DevelopmentEnvironment) {
                     +("Dev on ${InetAddress.getLocalHost().hostName}" withColor NamedTextColor.RED)
                 } else {
                     +(event.responseData.version withColor NamedTextColor.GREEN)

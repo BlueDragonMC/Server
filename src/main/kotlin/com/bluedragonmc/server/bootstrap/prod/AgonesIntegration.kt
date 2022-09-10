@@ -1,8 +1,8 @@
 package com.bluedragonmc.server.bootstrap.prod
 
-import com.bluedragonmc.server.Environment
 import com.bluedragonmc.server.bootstrap.Bootstrap
 import com.bluedragonmc.server.module.database.DatabaseModule
+import com.bluedragonmc.server.queue.ProductionEnvironment
 import dev.cubxity.libs.agones.AgonesSDK
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flow
@@ -13,7 +13,7 @@ import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import java.time.Duration
 
-object AgonesIntegration : Bootstrap(Environment.ProductionEnvironment::class) {
+object AgonesIntegration : Bootstrap(ProductionEnvironment::class) {
 
     val sdk = AgonesSDK()
 

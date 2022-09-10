@@ -2,11 +2,11 @@ package com.bluedragonmc.server.bootstrap.prod
 
 import com.bluedragonmc.messages.SendPlayerToInstanceMessage
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
-import com.bluedragonmc.server.Environment
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.bootstrap.Bootstrap
 import com.bluedragonmc.server.lobby
 import com.bluedragonmc.server.module.messaging.MessagingModule
+import com.bluedragonmc.server.queue.ProductionEnvironment
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import net.kyori.adventure.text.Component
@@ -19,7 +19,7 @@ import net.minestom.server.instance.Instance
 import java.time.Duration
 import java.util.*
 
-object InitialInstanceRouter : Bootstrap(Environment.ProductionEnvironment::class) {
+object InitialInstanceRouter : Bootstrap(ProductionEnvironment::class) {
 
     private val futureInstances: Cache<UUID, Instance> = Caffeine.newBuilder()
         .maximumSize(10_000)
