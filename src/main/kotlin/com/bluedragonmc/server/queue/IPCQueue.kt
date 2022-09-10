@@ -2,6 +2,7 @@ package com.bluedragonmc.server.queue
 
 import com.bluedragonmc.messages.*
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.api.Queue
 import com.bluedragonmc.server.module.messaging.MessagingModule
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -27,7 +28,7 @@ object IPCQueue : Queue() {
             if (message.containerId == MessagingModule.containerId) {
                 logger.info("Received request to create instance with type ${message.gameType}.")
                 val start = System.nanoTime()
-                val constructor = gameClasses[message.gameType.name] ?: return@subscribe
+                val constructor = games[message.gameType.name] ?: return@subscribe
                 val map = message.gameType.mapName ?: randomMap(message.gameType.name) ?: run {
                     logger.error("No map name was specified and a random map was not found. A new instance cannot be created.")
                     return@subscribe

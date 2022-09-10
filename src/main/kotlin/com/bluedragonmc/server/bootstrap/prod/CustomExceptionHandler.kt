@@ -1,17 +1,17 @@
 package com.bluedragonmc.server.bootstrap.prod
 
 import com.bluedragonmc.messages.ReportErrorMessage
-import com.bluedragonmc.server.Environment
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.bootstrap.Bootstrap
 import com.bluedragonmc.server.module.database.DatabaseModule
 import com.bluedragonmc.server.module.messaging.MessagingModule
+import com.bluedragonmc.server.queue.ProductionEnvironment
 import kotlinx.coroutines.launch
 import net.minestom.server.MinecraftServer
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 
-object CustomExceptionHandler : Bootstrap(Environment.ProductionEnvironment::class) {
+object CustomExceptionHandler : Bootstrap(ProductionEnvironment::class) {
     override fun hook(eventNode: EventNode<Event>) {
         // Automatically report errors to Puffin in addition to logging them
         MinecraftServer.getExceptionManager().setExceptionHandler { e ->

@@ -2,6 +2,7 @@ package com.bluedragonmc.server.queue
 
 import com.bluedragonmc.messages.GameType
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.api.Queue
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import net.kyori.adventure.text.Component
@@ -65,7 +66,7 @@ class TestQueue : Queue() {
             try {
                 instanceStarting = false
                 queuedPlayers.asMap().forEach { (player, gameType) ->
-                    if (!gameClasses.containsKey(gameType.name)) {
+                    if (!games.containsKey(gameType.name)) {
                         player.sendMessage(
                             Component.translatable("queue.error.invalid_game_type", NamedTextColor.RED)
                         )
@@ -85,7 +86,7 @@ class TestQueue : Queue() {
                     player.sendMessage(Component.translatable("queue.creating_instance", NamedTextColor.GREEN))
                     val map = gameType.mapName ?: randomMap(gameType.name)
                     logger.info("Map chosen: $map")
-                    gameClasses[gameType.name]!!.call(map)
+                    games[gameType.name]!!.call(map)
                     instanceStarting = true
                 }
             } catch (e: Exception) {

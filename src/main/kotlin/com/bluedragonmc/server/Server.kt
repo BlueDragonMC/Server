@@ -1,5 +1,6 @@
 package com.bluedragonmc.server
 
+import com.bluedragonmc.games.lobby.Lobby
 import com.bluedragonmc.server.bootstrap.*
 import com.bluedragonmc.server.bootstrap.dev.DevInstanceRouter
 import com.bluedragonmc.server.bootstrap.dev.MojangAuthentication
@@ -8,7 +9,7 @@ import com.bluedragonmc.server.bootstrap.prod.AgonesIntegration
 import com.bluedragonmc.server.bootstrap.prod.CustomExceptionHandler
 import com.bluedragonmc.server.bootstrap.prod.InitialInstanceRouter
 import com.bluedragonmc.server.bootstrap.prod.VelocityForwarding
-import com.bluedragonmc.server.game.Lobby
+import com.bluedragonmc.server.queue.createEnvironment
 import net.minestom.server.MinecraftServer
 import net.minestom.server.utils.NamespaceID
 import net.minestom.server.world.DimensionType
@@ -20,6 +21,7 @@ private val logger = LoggerFactory.getLogger("ServerKt")
 
 fun main() {
 
+    Environment.setEnvironment(createEnvironment())
     logger.info("Starting Minecraft server in environment ${Environment.current::class.simpleName}")
 
     val minecraftServer = MinecraftServer.init()

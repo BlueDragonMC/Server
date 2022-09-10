@@ -2,13 +2,12 @@ package com.bluedragonmc.server.command
 
 import com.bluedragonmc.messages.GameType
 import com.bluedragonmc.server.Environment
-import com.bluedragonmc.server.queue.Queue
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.command.builder.arguments.ArgumentWord
 
 class JoinCommand(name: String, private val usageString: String, vararg aliases: String) : BlueDragonCommand(name, aliases, null, block = {
-    val gameArgument = ArgumentWord("game").from(*Queue.gameClasses.keys.toTypedArray())
+    val gameArgument = ArgumentWord("game").from(*Environment.current.gameClasses.toTypedArray())
     val mapArgument = ArgumentWord("map")
     usage(usageString)
     syntax(gameArgument) {
