@@ -1,5 +1,6 @@
 package com.bluedragonmc.games.bedwars
 
+import com.bluedragonmc.games.bedwars.module.ItemGeneratorsModule
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.Game
@@ -11,7 +12,10 @@ import com.bluedragonmc.server.module.combat.ProjectileModule
 import com.bluedragonmc.server.module.config.ConfigModule
 import com.bluedragonmc.server.module.database.AwardsModule
 import com.bluedragonmc.server.module.database.StatisticsModule
-import com.bluedragonmc.server.module.gameplay.*
+import com.bluedragonmc.server.module.gameplay.NPCModule
+import com.bluedragonmc.server.module.gameplay.ShopModule
+import com.bluedragonmc.server.module.gameplay.SidebarModule
+import com.bluedragonmc.server.module.gameplay.WorldPermissionsModule
 import com.bluedragonmc.server.module.instance.InstanceContainerModule
 import com.bluedragonmc.server.module.map.AnvilFileMapProviderModule
 import com.bluedragonmc.server.module.minigame.*

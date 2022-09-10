@@ -1,4 +1,4 @@
-package com.bluedragonmc.server.module.gameplay
+package com.bluedragonmc.games.pvpmaster.module
 
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.GameStartEvent
@@ -26,7 +26,7 @@ class ArmorLevelsModule(private val levels: List<KitsModule.Kit>) : GameModule()
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         this.parent = parent
-        eventNode.addListener(GameStartEvent::class.java) { event ->
+        eventNode.addListener(GameStartEvent::class.java) {
             for (player in parent.players) {
                 player.setArmorLevel(levels.size - 1)
             }
@@ -41,7 +41,7 @@ class ArmorLevelsModule(private val levels: List<KitsModule.Kit>) : GameModule()
     /**
      * Sets the player's armor level, notifies them, and gives them all the right items.
      */
-    fun Player.setArmorLevel(newLevel: Int) {
+    private fun Player.setArmorLevel(newLevel: Int) {
         if (newLevel <= 0) {
             parent.getModule<WinModule>().declareWinner(this)
             inventory.clear()

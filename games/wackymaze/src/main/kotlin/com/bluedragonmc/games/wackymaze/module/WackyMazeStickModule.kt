@@ -10,7 +10,6 @@ import net.minestom.server.event.EventNode
 class WackyMazeStickModule : GameModule() {
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         eventNode.addListener(GameStartEvent::class.java) {
-
             parent.players.forEach { player ->
                 player.inventory.setItemStack(0, ItemUtils.knockbackStick(10, player))
             }

@@ -1,4 +1,4 @@
-package com.bluedragonmc.server.module.gameplay
+package com.bluedragonmc.games.bedwars.module
 
 import com.bluedragonmc.server.ALT_COLOR_1
 import com.bluedragonmc.server.Game
@@ -40,7 +40,7 @@ class ItemGeneratorsModule : GameModule() {
       addGenerator(ItemGenerator(instance, pos, items, hasHologram))
     }
 
-    fun addGenerator(generator: ItemGenerator) {
+    private fun addGenerator(generator: ItemGenerator) {
         generators.add(generator)
         generator.countdownTasks.forEach { tasks.add(it.schedule()) }
     }
@@ -50,7 +50,7 @@ class ItemGeneratorsModule : GameModule() {
         generators.forEach { it.removeHolograms() }
     }
 
-    data class ItemGenerator(
+    private data class ItemGenerator(
         val instance: Instance,
         val location: Pos,
         val items: Map<ItemStack, Int>,
