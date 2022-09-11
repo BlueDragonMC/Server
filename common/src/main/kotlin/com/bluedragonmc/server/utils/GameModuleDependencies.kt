@@ -18,5 +18,5 @@ data class FilledModuleDependency<T : GameModule>(override val type: KClass<T>, 
 }
 
 data class EmptyModuleDependency<T : GameModule>(override val type: KClass<T>) : ModuleDependency<T> {
-    override fun toString(): String = type.simpleName ?: type.toString()
+    override fun toString(): String = "[" + (type.simpleName ?: type.toString()) + "]"
 }

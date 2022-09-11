@@ -91,10 +91,13 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
     }
 
     fun <T: GameModule> use(module: T): T {
-
+        logger.debug("Attempting to register module $module")
         if (modules.any { it == module }) throw IllegalStateException("Tried to register module that is already registered: $module")
 
+        // Create a node in the dependency tree for this module
         val moduleDependencyNode = Node<ModuleDependency<*>>(FilledModuleDependency(module::class, module))
+        // Add this module's dependencies as children in its branch of the tree,
+        // and satisfy all dependencies which have a module that's already registered of the required type.
         moduleDependencyNode.addChildren(module.dependencies.map {
             modules.firstOrNull { module -> it.isInstance(module) }?.let { found ->
                 return@map FilledModuleDependency(found::class, found)
@@ -102,12 +105,17 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
             EmptyModuleDependency(it)
         })
         dependencyTree.addChild(moduleDependencyNode)
+        logger.trace("Added node to dependency tree: node: $moduleDependencyNode")
+        // If not all the module's dependencies were found, delay the loading of
+        // the module until after all of its dependencies have been registered.
         if (!module.dependencies.all { dep ->
                 modules.any { module -> dep.isInstance(module) }
             }) {
             logger.debug("Waiting for dependencies of module $module to load before registering.")
             return module
         }
+
+        // At this point, the module can be registered.
 
         // Create an event node for the module.
         val eventNode = createEventNode(module)
@@ -122,11 +130,12 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
         val entries = dependencyTree.elementsAtDepth(depth)
         entries.forEach { node ->
             if (node.value is EmptyModuleDependency && node.value!!.type.isInstance(module)) {
-                logger.debug("Dependency of module ${node.value} SOLVED with $module")
+                logger.debug("Dependency [${node.value!!.type}] of module ${node.parent.value} SOLVED with $module")
                 node.value = FilledModuleDependency(node.value!!.type, module)
                 // If all dependencies have been filled, use this module.
                 if (node.parent.value is FilledModuleDependency) { // This will never be false at a tree depth <2 because the nodes at depth=1 are always instances of FilledModuleDependency
-                    if (node.parent.getChildren().filterIsInstance<EmptyModuleDependency<*>>().isEmpty()) {
+                    logger.trace("Sibling module dependencies of ${node.value?.toString()}: ${node.getSiblings().map { it.value?.toString() }}")
+                    if (node.getSiblings().none { sibling -> sibling.value is EmptyModuleDependency<*> }) {
                         val parentModule = (node.parent.value as FilledModuleDependency<*>).instance
                         logger.debug("Using module because its dependencies have been solved: $parentModule")
                         use(parentModule)

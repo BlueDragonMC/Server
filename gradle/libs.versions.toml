@@ -19,7 +19,9 @@ protobuf-kotlin = "3.21.3"
 
 [libraries]
 kotlin-jvm = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
-minestom = { group = "com.github.Minestom", name = "Minestom", version.ref = "minestom" }
+#minestom = { group = "com.github.Minestom", name = "Minestom", version.ref = "minestom" }
+#minestom = { group = "net.minestom.server", name = "Minestom", version = "1.0" } # Uncomment to use a version of Minestom from maven local
+minestom = { group = "com.github.BlueDragonMC", name = "Minestom", version = "23fe55428c" } # Uncomment to use a version of Minestom from maven local
 configurate = { group = "org.spongepowered", name = "configurate-yaml", version.ref = "configurate" }
 configurate-extra-kotlin = { group = "org.spongepowered", name = "configurate-extra-kotlin", version.ref = "configurate" }
 minimessage = { group = "net.kyori", name = "adventure-text-minimessage", version.ref = "minimessage" }

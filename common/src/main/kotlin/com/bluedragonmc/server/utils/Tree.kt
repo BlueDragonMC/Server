@@ -8,6 +8,7 @@ open class Node<T>(var value: T?) {
     lateinit var parent: Node<T>
 
     fun getChildren(): List<Node<T>> = children
+    fun getSiblings(): List<Node<T>> = parent.children
 
     fun addChild(element: T) {
         val node = Node(element)
@@ -55,11 +56,14 @@ open class Node<T>(var value: T?) {
     private val symbols = listOf("", "-", ">")
 
     override fun toString(): String {
+        if (children.isEmpty()) {
+            return this.value.toString()
+        }
         return buildString {
             append("Tree ${this@Node::class.simpleName}@${this.hashCode()}:\n")
             dfs { node, depth ->
                 if (node is Root) return@dfs
-                append("${"\t".repeat(depth - 1)} ${symbols[depth % symbols.size]} ${node.value}\n")
+                append("${"\t".repeat(depth)} ${symbols[depth % symbols.size]} ${node.value}\n")
             }
         }
     }
