@@ -1,11 +1,16 @@
 package com.bluedragonmc.games.pvpmaster.module
 
+import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.event.PlayerKillPlayerEvent
 import com.bluedragonmc.server.module.GameModule
+import com.bluedragonmc.server.module.gameplay.SidebarModule
 import com.bluedragonmc.server.module.minigame.KitsModule
 import com.bluedragonmc.server.module.minigame.WinModule
+import com.bluedragonmc.server.utils.plus
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.title.Title
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
@@ -19,16 +24,25 @@ import net.minestom.server.event.EventNode
  */
 class ArmorLevelsModule(private val levels: List<KitsModule.Kit>) : GameModule() {
 
-    override val dependencies = listOf(WinModule::class) // TODO scoreboard bindings
+    override val dependencies = listOf(WinModule::class, SidebarModule::class)
 
     private val armorLevels = hashMapOf<Player, Int>()
     private lateinit var parent: Game
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         this.parent = parent
+
+        val binding = parent.getModule<SidebarModule>().bind {
+            parent.players.map { player ->
+                "armor-level-${player.username}" to
+                        (player.name + Component.text(": ", BRAND_COLOR_PRIMARY_2) + player.getArmorLevel().name.decorate(TextDecoration.BOLD))
+            }
+        }
+
         eventNode.addListener(GameStartEvent::class.java) {
             for (player in parent.players) {
                 player.setArmorLevel(levels.size - 1)
+                binding.update()
             }
         }
 
@@ -37,6 +51,8 @@ class ArmorLevelsModule(private val levels: List<KitsModule.Kit>) : GameModule()
             event.attacker.health = event.attacker.health + 10
         }
     }
+
+    private fun Player.getArmorLevel(): KitsModule.Kit = levels[armorLevels.getOrDefault(this, levels.size - 1)]
 
     /**
      * Sets the player's armor level, notifies them, and gives them all the right items.

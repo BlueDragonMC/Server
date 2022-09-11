@@ -1,7 +1,6 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    application
     id("server.common-conventions")
     id("com.github.johnrengelman.shadow") version "7.1.0"
     kotlin("plugin.serialization") version "1.6.21"
@@ -13,7 +12,15 @@ version = "1.0-SNAPSHOT"
 repositories {
     mavenCentral()
     mavenLocal()
-    maven("https://jitpack.io")
+    maven(url = "https://jitpack.io")
+}
+
+subprojects {
+    repositories {
+        mavenCentral()
+        mavenLocal()
+        maven(url = "https://jitpack.io")
+    }
 }
 
 dependencies {
