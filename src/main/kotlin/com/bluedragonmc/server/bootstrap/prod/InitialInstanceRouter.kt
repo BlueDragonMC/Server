@@ -1,15 +1,15 @@
 package com.bluedragonmc.server.bootstrap.prod
 
+import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.bootstrap.Bootstrap
 import com.bluedragonmc.server.queue.ProductionEnvironment
-import com.github.benmanes.caffeine.cache.Cache
-import com.github.benmanes.caffeine.cache.Caffeine
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.MinecraftServer
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
+import net.minestom.server.event.player.PlayerDisconnectEvent
 import net.minestom.server.event.player.PlayerLoginEvent
 import net.minestom.server.extras.velocity.VelocityProxy
 import net.minestom.server.instance.Instance
@@ -23,28 +23,64 @@ import net.minestom.server.network.player.PlayerSocketConnection
 import net.minestom.server.utils.binary.BinaryReader
 import java.net.InetSocketAddress
 import java.nio.charset.StandardCharsets
-import java.time.Duration
 import java.util.concurrent.ThreadLocalRandom
+import java.util.concurrent.locks.ReentrantLock
 
 object InitialInstanceRouter : Bootstrap(ProductionEnvironment::class) {
 
     private const val BLUEDRAGON_GET_DEST_CHANNEL = "bluedragonmc:get_dest"
     private const val VELOCITY_PLAYER_INFO_CHANNEL = VelocityProxy.PLAYER_INFO_CHANNEL
 
-    private val INVALID_PROXY_RESPONSE = Component.text("Invalid proxy response!", NamedTextColor.RED)
-    private val NO_WORLD_FOUND = Component.text("Couldn't find which world to put you in!", NamedTextColor.RED)
+    private val INVALID_PROXY_RESPONSE =
+        Component.text("Your session could not be validated! (Invalid proxy response)", NamedTextColor.RED)
+    private val NO_WORLD_FOUND =
+        Component.text("Couldn't find which world to put you in! (No world obtained from handshake)",
+            NamedTextColor.RED)
+    private val INVALID_WORLD =
+        Component.text("Couldn't find which world to put you in! (Invalid world name)", NamedTextColor.RED)
+    private val HANDSHAKE_FAILED =
+        Component.text("Couldn't find which world to put you in! (Handshake failed)", NamedTextColor.RED)
 
-    private val cache: Cache<String, PartialPlayer> = Caffeine.newBuilder()
-        .expireAfterWrite(Duration.ofSeconds(5))
-        .build()
+    private val players = mutableMapOf<String, PartialPlayer>()
 
-    private val instanceCache: Cache<Player, Instance> = Caffeine.newBuilder()
-        .expireAfterWrite(Duration.ofSeconds(5))
-        .build()
+    private class PartialPlayer {
 
-    private data class PartialPlayer(var player: Player? = null, var startingInstance: Instance? = null) {
         companion object {
-            val EMPTY = PartialPlayer(null, null)
+            val lock = ReentrantLock()
+
+            fun <T> withLock(block: () -> T): T {
+                lock.lock()
+                try {
+                    return block()
+                } finally {
+                    lock.unlock()
+                }
+            }
+        }
+
+        @Volatile
+        var player: Player? = null
+
+        @Volatile
+        var startingInstance: Instance? = null
+
+        @Volatile
+        private var playing = false
+
+        fun isReady() =
+            !playing && player != null && startingInstance != null && player!!.playerConnection.connectionState == ConnectionState.LOGIN
+
+        fun tryStartPlayState() {
+            logger.trace("Trying to start play state")
+            if (!isReady()) {
+                logger.trace("Not ready, can't start play state; player = '$player', startingInstance = '$startingInstance'")
+                return
+            }
+            withLock { playing = true }
+            MinecraftServer.getSchedulerManager().scheduleNextTick {
+                logger.debug("Starting PLAY state for Player '${player!!.username}'")
+                MinecraftServer.getConnectionManager().startPlayState(player!!, true)
+            }
         }
     }
 
@@ -55,12 +91,17 @@ object InitialInstanceRouter : Bootstrap(ProductionEnvironment::class) {
             .setListener(LoginPluginResponsePacket::class.java, ::handleLoginPluginMessage)
         MinecraftServer.getGlobalEventHandler()
             .addListener(PlayerLoginEvent::class.java, ::handlePlayerLogin)
+        MinecraftServer.getGlobalEventHandler().addListener(PlayerDisconnectEvent::class.java) { event ->
+            PartialPlayer.withLock {
+                players.remove(event.player.username)
+            }
+        }
     }
 
     private fun handleLoginStart(packet: LoginStartPacket, connection: PlayerConnection) {
-        logger.trace("Player login start: ${packet.username} (${packet.profileId})")
+        if (connection !is PlayerSocketConnection) return
+        logger.debug("Player login start: ${packet.username} (${packet.profileId})")
         // Send a request to Velocity to confirm the player's spawning instance
-        val connection = connection as? PlayerSocketConnection ?: return
         val messageId = ThreadLocalRandom.current().nextInt()
         val bytes = packet.profileId.toString().toByteArray(StandardCharsets.UTF_8)
         connection.addPluginRequestEntry(messageId, BLUEDRAGON_GET_DEST_CHANNEL)
@@ -91,18 +132,20 @@ object InitialInstanceRouter : Bootstrap(ProductionEnvironment::class) {
         val instanceUid = reader.readUuid()
         val instance = MinecraftServer.getInstanceManager().getInstance(instanceUid)
         val username = connection.loginUsername!!
-        logger.info("Desired instance for player $username: $instance ($instanceUid)")
+        logger.debug("Desired instance for player $username: $instance ($instanceUid)")
         if (instance == null) {
-            logger.info("Disconnecting player - desired instance ($instanceUid) is null")
-            connection.sendPacket(LoginDisconnectPacket(NO_WORLD_FOUND))
+            logger.trace("Disconnecting player - desired instance ($instanceUid) is null")
+            connection.sendPacket(LoginDisconnectPacket(INVALID_WORLD))
+            return
         }
         logger.debug("Trying to send player $username to instance $instance")
-        synchronized(cache) {
-            cache.put(username,
-                (cache.getIfPresent(username) ?: PartialPlayer.EMPTY).apply {
-                    this.startingInstance = instance
-                })
-            tryStartPlayState(username)
+        PartialPlayer.withLock {
+            logger.trace("Instance destination trace - acquired lock")
+            players.getOrPut(username) { PartialPlayer() }.apply {
+                startingInstance = instance
+                tryStartPlayState()
+            }
+            logger.trace("Instance destination trace - releasing lock")
         }
     }
 
@@ -112,62 +155,64 @@ object InitialInstanceRouter : Bootstrap(ProductionEnvironment::class) {
         val reader = BinaryReader(packet.data)
         val success = VelocityProxy.checkIntegrity(reader)
 
-        if (success) {
-            val addr = VelocityProxy.readAddress(reader)
-            val port = (connection.remoteAddress as InetSocketAddress).port
-            val providedUuid = reader.readUuid()
-            val username = reader.readSizedString(16)
-            val skin = VelocityProxy.readSkin(reader)
-            connection.remoteAddress = InetSocketAddress(addr, port)
-            connection.UNSAFE_setLoginUsername(username)
-            val uuid = providedUuid ?: MinecraftServer.getConnectionManager()
-                .getPlayerConnectionUuid(connection, username)
-            val player = MinecraftServer.getConnectionManager().playerProvider.createPlayer(uuid,
-                username,
-                connection)
-            player.skin = skin
-            logger.debug("Velocity modern forwarding succeeded for $username; created player object: $player")
-            synchronized(cache) {
-                cache.put(username,
-                    (cache.getIfPresent(username) ?: PartialPlayer.EMPTY).apply { this.player = player })
-                tryStartPlayState(username)
-            }
-        } else {
-            logger.warn("Velocity proxy validation failed")
+        if (!success) {
+            logger.warn("Velocity proxy validation failed for connection: ${connection.identifier}")
             connection.sendPacket(LoginDisconnectPacket(INVALID_PROXY_RESPONSE))
+            return
+        }
+
+        val addr = VelocityProxy.readAddress(reader)
+        val port = (connection.remoteAddress as InetSocketAddress).port
+        val providedUuid = reader.readUuid()
+        val username = reader.readSizedString(16)
+        val skin = VelocityProxy.readSkin(reader)
+        connection.remoteAddress = InetSocketAddress(addr, port)
+        connection.UNSAFE_setLoginUsername(username)
+        val uuid = providedUuid ?: MinecraftServer.getConnectionManager().getPlayerConnectionUuid(connection, username)
+        val player = MinecraftServer.getConnectionManager().playerProvider.createPlayer(uuid, username, connection)
+        player.skin = skin
+        logger.debug("Velocity modern forwarding succeeded for $username; created player object: $player")
+        PartialPlayer.withLock {
+            logger.trace("Velocity forwarding trace - acquired lock")
+            players.getOrPut(username) { PartialPlayer() }.apply {
+                this.player = player
+                tryStartPlayState()
+            }
+            logger.trace("Velocity forwarding trace - releasing lock")
         }
     }
 
     private fun handlePlayerLogin(event: PlayerLoginEvent) {
         // Check if the player's spawning instance was retrieved from Velocity
-        val instance = instanceCache.getIfPresent(event.player)
-        logger.info("Player ${event.player.username} is logging in to instance $instance...")
-        instanceCache.invalidate(event.player)
+        PartialPlayer.lock.lock()
+        val instance: Instance?
+        try {
+            if (!players.containsKey(event.player.username)) {
+                // If there is no entry for the player, the handshake must have failed.
+                event.player.sendPacket(LoginDisconnectPacket(HANDSHAKE_FAILED))
+                event.player.playerConnection.disconnect()
+                return
+            }
+            instance = players[event.player.username]?.startingInstance
+            players.remove(event.player.username)
+        } finally {
+            PartialPlayer.lock.unlock()
+        }
         if (instance == null) {
             // If the instance was not set or doesn't exist, disconnect the player.
-            logger.info("No instance found for ${event.player.username} to join!")
-            event.player.kick(NO_WORLD_FOUND)
+            logger.warn("No instance found for ${event.player.username} to join!")
+            event.player.sendPacket(LoginDisconnectPacket(NO_WORLD_FOUND))
             return
         }
         // If the instance exists, set the player's spawning instance and allow them to connect.
         logger.info("Spawning player ${event.player.username} in instance $instance")
         event.setSpawningInstance(instance)
-    }
 
-    private fun tryStartPlayState(id: String) {
-        logger.debug("Trying to start play state for '$id'")
-        val entry = cache.getIfPresent(id) ?: return
-        if (entry.startingInstance != null && entry.player != null && entry.player!!.playerConnection.connectionState == ConnectionState.LOGIN) {
-            logger.debug("Starting PLAY state for Player '$id'")
-            cache.invalidate(id)
-            instanceCache.put(entry.player!!, entry.startingInstance!!)
-            logger.debug("connection before setting PLAY state: ${entry.player?.playerConnection}")
-            MinecraftServer.getConnectionManager().startPlayState(entry.player!!, true)
-            MinecraftServer.getSchedulerManager().scheduleNextTick {
-                logger.debug("connection after setting PLAY state (next tick): ${entry.player?.playerConnection}")
-            }
-        } else {
-            logger.debug("Missing required info before starting play state: instance='${entry.startingInstance}', player='${entry.player}'")
+        MinecraftServer.getSchedulerManager().scheduleNextTick {
+            event.player.sendMessage(Component.translatable("global.instance.placing",
+                NamedTextColor.GRAY,
+                Component.text(instance.uniqueId.toString())))
+            Game.findGame(instance.uniqueId)?.addPlayer(event.player)
         }
     }
 }
