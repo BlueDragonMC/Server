@@ -11,6 +11,7 @@ import com.bluedragonmc.server.module.database.MapData
 import com.bluedragonmc.server.module.instance.InstanceModule
 import com.bluedragonmc.server.module.map.AnvilFileMapProviderModule
 import com.bluedragonmc.server.module.messaging.MessagingModule
+import com.bluedragonmc.server.module.minigame.SpawnpointModule
 import com.bluedragonmc.server.module.packet.PerInstanceChatModule
 import com.bluedragonmc.server.utils.*
 import kotlinx.coroutines.runBlocking
@@ -239,8 +240,16 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
         }
 
         if (preloadSpawnChunks && !shouldRemoveInstance(cachedInstance)) {
-            ChunkUtils.forChunksInRange(Pos.ZERO, MinecraftServer.getChunkViewDistance()) { chunkX, chunkZ ->
-                cachedInstance.loadOptionalChunk(chunkX, chunkZ)
+            if (hasModule<SpawnpointModule>()) {
+                // If the spawnpoint module is present, preload the chunks of each spawnpoint.
+                getModule<SpawnpointModule>().spawnpointProvider.getAllSpawnpoints().forEach {
+                    cachedInstance.loadOptionalChunk(it.chunkX(), it.chunkZ())
+                }
+            } else {
+                // If not, we can make an educated guess and load the chunks around (0, 0)
+                ChunkUtils.forChunksInRange(Pos.ZERO, MinecraftServer.getChunkViewDistance() / 2) { chunkX, chunkZ ->
+                    cachedInstance.loadOptionalChunk(chunkX, chunkZ)
+                }
             }
         }
     }
@@ -268,7 +277,9 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
     fun addPlayer(player: Player) {
         findGame(player)?.players?.remove(player)
         players.add(player)
-        player.setInstance(getInstance())
+        if (player.instance != getInstanceOrNull()) {
+            player.setInstance(getInstance())
+        }
     }
 
     inline fun <reified T : GameModule> hasModule(): Boolean = modules.any { it is T }

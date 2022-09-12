@@ -189,7 +189,7 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
 
                 eventNode.addListener(PlayerDeathEvent::class.java) { event ->
                     val team = parent.getModule<TeamModule>().getTeam(event.player)
-                    if (!bedWarsTeamInfo[team]!!.bedIntact && !parent.getModule<SpectatorModule>()
+                    if (bedWarsTeamInfo[team]?.bedIntact == false && !parent.getModule<SpectatorModule>()
                             .isSpectating(event.player)
                     ) {
                         parent.getModule<SpectatorModule>().addSpectator(event.player)

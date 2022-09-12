@@ -8,9 +8,9 @@ import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.MinecraftServer
 import net.minestom.server.entity.Player
+import net.minestom.server.network.ConnectionState
 import org.slf4j.LoggerFactory
 import java.io.File
-import kotlin.random.Random
 
 object IPCQueue : Queue() {
     private val logger = LoggerFactory.getLogger(IPCQueue::class.java)
@@ -44,9 +44,11 @@ object IPCQueue : Queue() {
         MessagingModule.subscribe(SendPlayerToInstanceMessage::class) { message ->
             val instance = MinecraftServer.getInstanceManager().getInstance(message.instance) ?: return@subscribe
             val player = MessagingModule.findPlayer(message.player) ?: return@subscribe
+            // Only allow players that have fully logged in, preventing them from being sent to the game twice
+            if (player.playerConnection.connectionState != ConnectionState.PLAY) return@subscribe
             player.sendMessage(Component.translatable("queue.sending", NamedTextColor.DARK_GRAY, Component.text(message.instance.toString())))
             logger.info("Sending player ${player.username} to instance ${message.instance}.")
-            if (player.instance == instance) return@subscribe
+            if (player.instance == instance || player.instance == null) return@subscribe
             val game = Game.findGame(instance.uniqueId) ?: run {
                 player.sendMessage(Component.translatable("queue.error_sending", NamedTextColor.RED, Component.translatable("queue.error.no_game_found")))
                 return@subscribe
@@ -55,31 +57,13 @@ object IPCQueue : Queue() {
         }
     }
 
-    fun getMaps(gameType: String): Array<File>? {
+    private fun getMaps(gameType: String): Array<File>? {
         val worldFolder = "worlds/$gameType"
         val file = File(worldFolder)
         if (!(file.exists() && file.isDirectory)) arrayOf<File>()
         return file.listFiles()
     }
 
-    fun getMapNames(gameType: String): ArrayList<String> {
-        val maps = getMaps(gameType) ?: return arrayListOf()
-        val mapNames = ArrayList<String>()
-        for (map in maps) {
-            mapNames.add(map.name)
-        }
-        return mapNames
-    }
+    private fun randomMap(gameType: String): String? = getMaps(gameType)?.randomOrNull()?.name
 
-    fun randomMap(gameType: String): String? {
-        val allMaps = getMaps(gameType)
-        if (allMaps != null) return allMaps[Random.nextInt(allMaps.size)].name
-        return null
-    }
-
-    fun randomMapOrDefault(gameType: String, defaultMap: String): String {
-        val map = randomMap(gameType)
-        if (map == null) return defaultMap
-        else return map
-    }
 }

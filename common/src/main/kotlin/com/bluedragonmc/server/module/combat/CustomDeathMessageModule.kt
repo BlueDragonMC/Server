@@ -3,6 +3,7 @@ package com.bluedragonmc.server.module.combat
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.GameModule
+import com.bluedragonmc.server.utils.GameState
 import net.kyori.adventure.text.Component
 import net.minestom.server.entity.Player
 import net.minestom.server.entity.damage.DamageType
@@ -16,6 +17,7 @@ class CustomDeathMessageModule : GameModule() {
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         eventNode.addListener(PlayerDeathEvent::class.java) { event ->
+            if (parent.state != GameState.INGAME) return@addListener
             val player = event.player
             event.chatMessage = when (val src = event.player.lastDamageSource) {
                 is EntityDamage -> {
