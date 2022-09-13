@@ -1,8 +1,11 @@
 package com.bluedragonmc.server.bootstrap.prod
 
+import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.bootstrap.Bootstrap
+import com.bluedragonmc.server.module.database.DatabaseModule
 import com.bluedragonmc.server.queue.ProductionEnvironment
+import kotlinx.coroutines.launch
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.MinecraftServer
@@ -60,6 +63,14 @@ object InitialInstanceRouter : Bootstrap(ProductionEnvironment::class) {
 
         @Volatile
         var player: Player? = null
+            set(value) {
+                field = value
+                // Fetch the player's data document
+                if (value != null) DatabaseModule.IO.launch {
+                    DatabaseModule.loadDataDocument(value as CustomPlayer)
+                    withLock { tryStartPlayState() }
+                }
+            }
 
         @Volatile
         var startingInstance: Instance? = null
@@ -76,7 +87,9 @@ object InitialInstanceRouter : Bootstrap(ProductionEnvironment::class) {
                 logger.trace("Not ready, can't start play state; player = '$player', startingInstance = '$startingInstance'")
                 return
             }
-            withLock { playing = true }
+            withLock {
+                playing = true
+            }
             MinecraftServer.getSchedulerManager().scheduleNextTick {
                 logger.debug("Starting PLAY state for Player '${player!!.username}'")
                 MinecraftServer.getConnectionManager().startPlayState(player!!, true)

@@ -19,12 +19,12 @@ import net.minestom.server.MinecraftServer
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
-import net.minestom.server.event.player.AsyncPlayerPreLoginEvent
 import net.minestom.server.event.player.PlayerChatEvent
 import net.minestom.server.event.player.PlayerCommandEvent
 import net.minestom.server.event.player.PlayerMoveEvent
 import net.minestom.server.event.trait.CancellableEvent
 import net.minestom.server.event.trait.PlayerEvent
+import net.minestom.server.network.packet.server.login.LoginDisconnectPacket
 import org.litote.kmongo.coroutine.CoroutineClient
 import org.litote.kmongo.coroutine.CoroutineCollection
 import org.litote.kmongo.coroutine.CoroutineDatabase
@@ -121,30 +121,30 @@ class DatabaseModule : GameModule() {
             return result
         }
 
-        init {
-            MinecraftServer.getGlobalEventHandler().addListener(AsyncPlayerPreLoginEvent::class.java) { event ->
-                // Load players' data from the database when they spawn
-                val player = event.player as CustomPlayer
-                if (!player.isDataInitialized()) IO.launch {
-                    try {
-                        player.data = getPlayerDocument(player)
-                    } catch (e: Throwable) {
-                        logger.error("Player data for ${player.username} failed to load.")
-                        MinecraftServer.getExceptionManager().handleException(e)
-                        player.kick(Component.translatable("module.database.data_load_fail", NamedTextColor.RED))
-                    }
-                    if (player.username != player.data.username || player.data.username.isBlank()) {
-                        // Keep an up-to-date record of player usernames
-                        player.data.update(PlayerDocument::username, player.username)
-                        player.data.update(PlayerDocument::usernameLower, player.username.lowercase())
-                        logger.info("Updated username for ${player.uuid}: ${player.data.username} -> ${player.username}")
-                    }
-                    if (player.data.usernameLower != player.username.lowercase()) {
-                        player.data.update(PlayerDocument::usernameLower, player.username.lowercase())
-                    }
-                    MinecraftServer.getGlobalEventHandler().call(DataLoadedEvent(player))
-                    logger.info("Loaded player data for ${player.username}")
+        fun loadDataDocument(player: CustomPlayer) {
+            // Load players' data from the database when they spawn
+            if (player.isDataInitialized()) return
+            runBlocking {
+                try {
+                    player.data = getPlayerDocument(player)
+                } catch (e: Throwable) {
+                    logger.error("Player data for ${player.username} failed to load.")
+                    MinecraftServer.getExceptionManager().handleException(e)
+                    player.sendPacket(LoginDisconnectPacket(Component.translatable("module.database.data_load_fail", NamedTextColor.RED)))
+                    player.playerConnection.disconnect()
+                    return@runBlocking
                 }
+                if (player.username != player.data.username || player.data.username.isBlank()) {
+                    // Keep an up-to-date record of player usernames
+                    player.data.update(PlayerDocument::username, player.username)
+                    player.data.update(PlayerDocument::usernameLower, player.username.lowercase())
+                    logger.info("Updated username for ${player.uuid}: ${player.data.username} -> ${player.username}")
+                }
+                if (player.data.usernameLower != player.username.lowercase()) {
+                    player.data.update(PlayerDocument::usernameLower, player.username.lowercase())
+                }
+                MinecraftServer.getGlobalEventHandler().call(DataLoadedEvent(player))
+                logger.info("Loaded player data for ${player.username}")
             }
         }
     }
