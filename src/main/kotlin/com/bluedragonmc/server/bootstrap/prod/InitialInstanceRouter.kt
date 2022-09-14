@@ -16,6 +16,7 @@ import net.minestom.server.event.player.PlayerDisconnectEvent
 import net.minestom.server.event.player.PlayerLoginEvent
 import net.minestom.server.extras.velocity.VelocityProxy
 import net.minestom.server.instance.Instance
+import net.minestom.server.listener.LoginStartListener
 import net.minestom.server.network.ConnectionState
 import net.minestom.server.network.packet.client.login.LoginPluginResponsePacket
 import net.minestom.server.network.packet.client.login.LoginStartPacket
@@ -122,7 +123,7 @@ object InitialInstanceRouter : Bootstrap(ProductionEnvironment::class) {
             BLUEDRAGON_GET_DEST_CHANNEL,
             bytes)) // send to proxy
         // Use Minestom's handler to process the packet, which will send a request to Velocity for the player's UUID, username, skin, etc.
-        packet.process(connection)
+        LoginStartListener.listener(packet, connection)
     }
 
     private fun handleLoginPluginMessage(packet: LoginPluginResponsePacket, connection: PlayerConnection) {

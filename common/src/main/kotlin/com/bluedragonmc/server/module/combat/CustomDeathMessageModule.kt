@@ -18,7 +18,7 @@ class CustomDeathMessageModule : GameModule() {
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         eventNode.addListener(PlayerDeathEvent::class.java) { event ->
             if (parent.state != GameState.INGAME) {
-                event.chatMessage = Component.empty()
+                event.chatMessage = null
                 return@addListener
             }
             val player = event.player
