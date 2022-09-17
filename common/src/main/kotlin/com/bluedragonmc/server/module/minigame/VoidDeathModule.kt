@@ -15,7 +15,7 @@ import net.minestom.server.event.player.PlayerMoveEvent
 class VoidDeathModule(private val threshold: Double, private val respawnMode: Boolean = false) : GameModule() {
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         eventNode.addListener(PlayerMoveEvent::class.java) { event ->
-            if(event.player.position.y < threshold && !event.player.isDead) {
+            if (event.player.position.y < threshold && !event.player.isDead) {
                 if (respawnMode) {
                     event.player.respawn()
                     event.player.teleport(event.player.respawnPoint)

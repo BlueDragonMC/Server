@@ -109,8 +109,8 @@ class NPCModule : GameModule() {
                 else emptyList(),
                 GameMode.CREATIVE,
                 0,
-                Component.text("[NPC] $randomName", NamedTextColor.DARK_GRAY, TextDecoration.ITALIC),
-                null)
+                Component.text("[NPC] $randomName", NamedTextColor.DARK_GRAY, TextDecoration.ITALIC)
+            )
         )
         private val removePlayerPacket: PlayerInfoPacket =
             PlayerInfoPacket(PlayerInfoPacket.Action.REMOVE_PLAYER, PlayerInfoPacket.RemovePlayer(uuid))

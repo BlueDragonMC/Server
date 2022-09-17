@@ -26,7 +26,6 @@ import net.minestom.server.network.player.PlayerConnection
 import net.minestom.server.network.player.PlayerSocketConnection
 import net.minestom.server.utils.binary.BinaryReader
 import java.net.InetSocketAddress
-import java.nio.charset.StandardCharsets
 import java.util.concurrent.ThreadLocalRandom
 import java.util.concurrent.locks.ReentrantLock
 
@@ -114,14 +113,11 @@ object InitialInstanceRouter : Bootstrap(ProductionEnvironment::class) {
 
     private fun handleLoginStart(packet: LoginStartPacket, connection: PlayerConnection) {
         if (connection !is PlayerSocketConnection) return
-        logger.debug("Player login start: ${packet.username} (${packet.profileId})")
+        logger.debug("Player login start: ${packet.username}")
         // Send a request to Velocity to confirm the player's spawning instance
         val messageId = ThreadLocalRandom.current().nextInt()
-        val bytes = packet.profileId.toString().toByteArray(StandardCharsets.UTF_8)
         connection.addPluginRequestEntry(messageId, BLUEDRAGON_GET_DEST_CHANNEL)
-        connection.sendPacket(LoginPluginRequestPacket(messageId,
-            BLUEDRAGON_GET_DEST_CHANNEL,
-            bytes)) // send to proxy
+        connection.sendPacket(LoginPluginRequestPacket(messageId, BLUEDRAGON_GET_DEST_CHANNEL, byteArrayOf())) // send to proxy
         // Use Minestom's handler to process the packet, which will send a request to Velocity for the player's UUID, username, skin, etc.
         LoginStartListener.listener(packet, connection)
     }
