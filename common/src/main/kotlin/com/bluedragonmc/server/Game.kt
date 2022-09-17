@@ -182,7 +182,7 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
                 is InstanceEvent -> event.instance == getInstanceOrNull()
                 is GameEvent -> event.game == this
                 is PlayerSpawnEvent -> event.spawnInstance == getInstanceOrNull() // Workaround for PlayerSpawnEvent not being an InstanceEvent
-                is PlayerEvent -> event.player.instance == getInstanceOrNull()
+                is PlayerEvent -> event.player.instance == getInstanceOrNull() && event.player.isActive
                 else -> false
             }
         }.apply { priority = module.eventPriority }
@@ -241,13 +241,15 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
 
         if (preloadSpawnChunks && !shouldRemoveInstance(cachedInstance)) {
             if (hasModule<SpawnpointModule>()) {
-                // If the spawnpoint module is present, preload the chunks of each spawnpoint.
-                getModule<SpawnpointModule>().spawnpointProvider.getAllSpawnpoints().forEach {
-                    cachedInstance.loadOptionalChunk(it.chunkX(), it.chunkZ())
+                // If the spawnpoint module is present, preload the chunks around each spawnpoint.
+                getModule<SpawnpointModule>().spawnpointProvider.getAllSpawnpoints().forEach { spawnpoint ->
+                    ChunkUtils.forChunksInRange(spawnpoint, MinecraftServer.getChunkViewDistance()) { chunkX, chunkZ ->
+                        cachedInstance.loadOptionalChunk(chunkX, chunkZ)
+                    }
                 }
             } else {
                 // If not, we can make an educated guess and load the chunks around (0, 0)
-                ChunkUtils.forChunksInRange(Pos.ZERO, MinecraftServer.getChunkViewDistance() / 2) { chunkX, chunkZ ->
+                ChunkUtils.forChunksInRange(Pos.ZERO, MinecraftServer.getChunkViewDistance()) { chunkX, chunkZ ->
                     cachedInstance.loadOptionalChunk(chunkX, chunkZ)
                 }
             }
