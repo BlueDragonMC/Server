@@ -14,6 +14,8 @@ import com.bluedragonmc.server.module.messaging.MessagingModule
 import com.bluedragonmc.server.module.minigame.SpawnpointModule
 import com.bluedragonmc.server.module.packet.PerInstanceChatModule
 import com.bluedragonmc.server.utils.*
+import com.github.benmanes.caffeine.cache.Cache
+import com.github.benmanes.caffeine.cache.Caffeine
 import kotlinx.coroutines.runBlocking
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -27,7 +29,6 @@ import net.minestom.server.event.EventNode
 import net.minestom.server.event.instance.RemoveEntityFromInstanceEvent
 import net.minestom.server.event.player.PlayerDisconnectEvent
 import net.minestom.server.event.player.PlayerSpawnEvent
-import net.minestom.server.event.trait.CancellableEvent
 import net.minestom.server.event.trait.InstanceEvent
 import net.minestom.server.event.trait.PlayerEvent
 import net.minestom.server.instance.Instance
@@ -72,26 +73,38 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
             MessagingModule.publish(getGameStateUpdateMessage())
         }
 
-    init {
+    private val recentSpawns: Cache<Player, Instance> = Caffeine.newBuilder()
+        .weakKeys()
+        .weakValues()
+        .expireAfterWrite(Duration.ofSeconds(5))
+        .build()
 
-        // Initialize mandatory modules for core functionality, like game state updates
-        useMandatoryModules()
-
-        // Load map data from the database (or from cache)
-        runBlocking {
-            mapData = getModule<DatabaseModule>().getMapOrNull(mapName)
-            if (mapData == null) logger.warn("No map data found for $mapName!")
-        }
-
-        // Ensure the game was registered with `ready()` method
-        MinecraftServer.getSchedulerManager().buildTask {
-            if (!games.contains(this)) {
-                logger.warn("Game was not registered after 5 seconds! Games MUST call the ready() method after they are constructed or they will not be joinable.")
+    private val eventNode = EventNode.event("$name-$mapName-$mode", EventFilter.ALL) { event ->
+        when (event) {
+            is DataLoadedEvent -> true
+            is InstanceEvent -> event.instance == getInstanceOrNull()
+            is GameEvent -> event.game == this
+            is PlayerSpawnEvent -> {
+                val instance = getInstanceOrNull() ?: return@event false
+                if (event.spawnInstance == instance) {
+                    // Prevent `PlayerSpawnEvent`s being called very close to one another for the same instance
+                    if (recentSpawns.getIfPresent(event.player) == instance) {
+                        logger.warn("Player ${event.player.username} was already spawned in instance ${instance.uniqueId} in the last 5 seconds!")
+                        return@event false
+                    } else {
+                        recentSpawns.put(event.player, event.spawnInstance)
+                    }
+                    return@event true
+                }
+                // Workaround for PlayerSpawnEvent not being an InstanceEvent
+                return@event false
             }
-        }.delay(Duration.ofSeconds(5)).schedule()
+            is PlayerEvent -> event.player.instance == getInstanceOrNull() && event.player.isActive
+            else -> false
+        }
     }
 
-    fun <T: GameModule> use(module: T): T {
+    fun <T : GameModule> use(module: T): T {
         logger.debug("Attempting to register module $module")
         if (modules.any { it == module }) throw IllegalStateException("Tried to register module that is already registered: $module")
 
@@ -121,7 +134,6 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
         // Create an event node for the module.
         val eventNode = createEventNode(module)
 
-        MinecraftServer.getGlobalEventHandler().addChild(eventNode)
         module.eventNode = eventNode
         module.initialize(this, eventNode)
         modules.add(module)
@@ -135,7 +147,9 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
                 node.value = FilledModuleDependency(node.value!!.type, module)
                 // If all dependencies have been filled, use this module.
                 if (node.parent.value is FilledModuleDependency) { // This will never be false at a tree depth <2 because the nodes at depth=1 are always instances of FilledModuleDependency
-                    logger.trace("Sibling module dependencies of ${node.value?.toString()}: ${node.getSiblings().map { it.value?.toString() }}")
+                    logger.trace("Sibling module dependencies of ${node.value?.toString()}: ${
+                        node.getSiblings().map { it.value?.toString() }
+                    }")
                     if (node.getSiblings().none { sibling -> sibling.value is EmptyModuleDependency<*> }) {
                         val parentModule = (node.parent.value as FilledModuleDependency<*>).instance
                         logger.debug("Using module because its dependencies have been solved: $parentModule")
@@ -175,17 +189,12 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
         })
     }
 
-    private fun createEventNode(module: GameModule) =
-        EventNode.event(module::class.simpleName.orEmpty(), EventFilter.ALL) { event ->
-            when (event) {
-                is DataLoadedEvent -> true
-                is InstanceEvent -> event.instance == getInstanceOrNull()
-                is GameEvent -> event.game == this
-                is PlayerSpawnEvent -> event.spawnInstance == getInstanceOrNull() // Workaround for PlayerSpawnEvent not being an InstanceEvent
-                is PlayerEvent -> event.player.instance == getInstanceOrNull() && event.player.isActive
-                else -> false
-            }
-        }.apply { priority = module.eventPriority }
+    private fun createEventNode(module: GameModule): EventNode<Event> {
+        val child = EventNode.all(module::class.simpleName.orEmpty())
+        child.setPriority(module.eventPriority)
+        eventNode.addChild(child)
+        return child
+    }
 
     fun unregister(module: GameModule) {
         logger.debug("Unregistering module $module")
@@ -257,14 +266,11 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
     }
 
     fun callEvent(event: Event) {
-        ArrayList(modules).forEach { it.eventNode?.call(event) }
+        eventNode.call(event)
     }
 
     fun callCancellable(event: Event, successCallback: () -> Unit) {
-        ArrayList(modules).forEach {
-            it.eventNode?.call(event)
-        }
-        if (event is CancellableEvent && !event.isCancelled) successCallback()
+        eventNode.callCancellable(event, successCallback)
     }
 
     fun getInstanceOrNull() = getModuleOrNull<InstanceModule>()?.getInstance()
@@ -318,6 +324,28 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
                 Environment.current.queue.queue(it, GameType(name, null, null))
             }
         }
+    }
+
+    init {
+
+        // Initialize mandatory modules for core functionality, like game state updates
+        useMandatoryModules()
+
+        // Load map data from the database (or from cache)
+        runBlocking {
+            mapData = getModule<DatabaseModule>().getMapOrNull(mapName)
+            if (mapData == null) logger.warn("No map data found for $mapName!")
+        }
+
+        // Ensure the game was registered with `ready()` method
+        MinecraftServer.getSchedulerManager().buildTask {
+            if (!games.contains(this)) {
+                logger.warn("Game was not registered after 5 seconds! Games MUST call the ready() method after they are constructed or they will not be joinable.")
+            }
+        }.delay(Duration.ofSeconds(5)).schedule()
+
+        // Allow the game to start receiving events
+        MinecraftServer.getGlobalEventHandler().addChild(eventNode)
     }
 
     override fun toString(): String {

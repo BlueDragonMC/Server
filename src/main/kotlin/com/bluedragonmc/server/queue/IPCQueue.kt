@@ -46,9 +46,9 @@ object IPCQueue : Queue() {
             val player = MessagingModule.findPlayer(message.player) ?: return@subscribe
             // Only allow players that have fully logged in, preventing them from being sent to the game twice
             if (player.playerConnection.connectionState != ConnectionState.PLAY) return@subscribe
-            player.sendMessage(Component.translatable("queue.sending", NamedTextColor.DARK_GRAY, Component.text(message.instance.toString())))
-            logger.info("Sending player ${player.username} to instance ${message.instance}.")
             if (player.instance == instance || player.instance == null) return@subscribe
+            player.sendMessage(Component.translatable("queue.sending", NamedTextColor.DARK_GRAY, Component.text(message.instance.toString())))
+            logger.info("Sending player ${player.username} to instance ${message.instance}. (current instance: ${player.instance?.uniqueId})")
             val game = Game.findGame(instance.uniqueId) ?: run {
                 player.sendMessage(Component.translatable("queue.error_sending", NamedTextColor.RED, Component.translatable("queue.error.no_game_found")))
                 return@subscribe
