@@ -1,11 +1,14 @@
-package com.bluedragonmc.games.lobby
+package com.bluedragonmc.games.lobby.module
 
+import com.bluedragonmc.games.lobby.Leaderboard
+import com.bluedragonmc.games.lobby.LeaderboardBrowser
+import com.bluedragonmc.games.lobby.Lobby
+import com.bluedragonmc.games.lobby.util.MapUtils
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_3
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.LOBBY_NEWS_ITEMS
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.database.StatisticsModule
-import com.bluedragonmc.server.utils.MapUtils
 import kotlinx.coroutines.runBlocking
 import net.minestom.server.MinecraftServer
 import net.minestom.server.coordinate.Pos

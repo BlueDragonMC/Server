@@ -1,5 +1,6 @@
-package com.bluedragonmc.server.utils
+package com.bluedragonmc.games.lobby.util
 
+import com.bluedragonmc.server.utils.CoordinateUtils
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.Entity
 import net.minestom.server.entity.EntityType
@@ -15,7 +16,6 @@ import net.minestom.server.network.packet.server.play.MapDataPacket
 import org.slf4j.LoggerFactory
 import java.awt.Graphics2D
 import java.util.function.Consumer
-import kotlin.math.abs
 import kotlin.math.absoluteValue
 import kotlin.math.max
 import kotlin.math.min
@@ -67,7 +67,7 @@ object MapUtils {
         renderFunction.accept(framebuffer.renderer)
         val mapPackets = mapPackets(framebuffer, if (startingMapId < 0) mapId else startingMapId, width, height)
 
-        val positions = getAllInBox(start, end)
+        val positions = CoordinateUtils.getAllInBox(start, end)
         for (pos in positions) {
             // The upper left corner is the [start] position.
             val relX = pos.blockX() - start.blockX()
@@ -93,22 +93,6 @@ object MapUtils {
 
         if (startingMapId < 0) mapId += mapPackets.size
         logger.debug("Created ${mapPackets.size} maps in ${(System.nanoTime() - startTime) / 1_000_000}ms.")
-    }
-
-    fun getAllInBox(pos1: Pos, pos2: Pos): List<Pos> {
-        val dx = abs(pos2.blockX() - pos1.blockX())
-        val dy = abs(pos2.blockY() - pos1.blockY())
-        val dz = abs(pos2.blockZ() - pos1.blockZ())
-        val minX = min(pos1.blockX(), pos2.blockX())
-        val minY = min(pos1.blockY(), pos2.blockY())
-        val minZ = min(pos1.blockZ(), pos2.blockZ())
-        return (0 .. dx).map { x ->
-            (0 .. dy).map { y ->
-                (0 .. dz).map { z ->
-                    Pos(x.toDouble() + minX, y.toDouble() + minY, z.toDouble() + minZ)
-                }
-            }
-        }.flatten().flatten()
     }
 
     /**

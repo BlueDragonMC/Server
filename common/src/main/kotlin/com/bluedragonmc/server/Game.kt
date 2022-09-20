@@ -13,7 +13,7 @@ import com.bluedragonmc.server.module.map.AnvilFileMapProviderModule
 import com.bluedragonmc.server.module.messaging.MessagingModule
 import com.bluedragonmc.server.module.minigame.SpawnpointModule
 import com.bluedragonmc.server.module.packet.PerInstanceChatModule
-import com.bluedragonmc.server.utils.*
+import com.bluedragonmc.server.utils.GameState
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import kotlinx.coroutines.runBlocking
@@ -40,26 +40,16 @@ import java.util.*
 import kotlin.concurrent.timer
 import kotlin.reflect.jvm.jvmName
 
-open class Game(val name: String, val mapName: String, val mode: String? = null) : PacketGroupingAudience {
+open class Game(val name: String, val mapName: String, val mode: String? = null) : ModuleHolder(), PacketGroupingAudience {
 
     internal val players = mutableListOf<Player>()
 
     var mapData: MapData? = null
 
-    protected val logger: Logger = LoggerFactory.getLogger(this.javaClass)
+    protected val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
     open val autoRemoveInstance: Boolean = true
     open val preloadSpawnChunks: Boolean = true
-
-    /**
-     * A list of modules that have been added with the [use] method, but their dependencies have not been added.
-     */
-    private val dependencyTree = Root<ModuleDependency<*>>()
-
-    /**
-     * A list of modules that have been loaded and subscribed to an event node.
-     */
-    val modules = mutableListOf<GameModule>()
 
     var instanceId: UUID? = null
         get() = field ?: getInstanceOrNull()?.uniqueId?.also { instanceId = it }
@@ -104,61 +94,12 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
         }
     }
 
-    fun <T : GameModule> use(module: T): T {
-        logger.debug("Attempting to register module $module")
-        if (modules.any { it == module }) throw IllegalStateException("Tried to register module that is already registered: $module")
-
-        // Create a node in the dependency tree for this module
-        val moduleDependencyNode = Node<ModuleDependency<*>>(FilledModuleDependency(module::class, module))
-        // Add this module's dependencies as children in its branch of the tree,
-        // and satisfy all dependencies which have a module that's already registered of the required type.
-        moduleDependencyNode.addChildren(module.dependencies.map {
-            modules.firstOrNull { module -> it.isInstance(module) }?.let { found ->
-                return@map FilledModuleDependency(found::class, found)
-            }
-            EmptyModuleDependency(it)
-        })
-        dependencyTree.addChild(moduleDependencyNode)
-        logger.trace("Added node to dependency tree: node: $moduleDependencyNode")
-        // If not all the module's dependencies were found, delay the loading of
-        // the module until after all of its dependencies have been registered.
-        if (!module.dependencies.all { dep ->
-                modules.any { module -> dep.isInstance(module) }
-            }) {
-            logger.debug("Waiting for dependencies of module $module to load before registering.")
-            return module
-        }
-
-        // At this point, the module can be registered.
-
+    override fun <T : GameModule> register(module: T) {
         // Create an event node for the module.
         val eventNode = createEventNode(module)
 
         module.eventNode = eventNode
         module.initialize(this, eventNode)
-        modules.add(module)
-
-        val depth = dependencyTree.maxDepth()
-        if (depth == 0) return module
-        val entries = dependencyTree.elementsAtDepth(depth)
-        entries.forEach { node ->
-            if (node.value is EmptyModuleDependency && node.value!!.type.isInstance(module)) {
-                logger.debug("Dependency [${node.value!!.type}] of module ${node.parent.value} SOLVED with $module")
-                node.value = FilledModuleDependency(node.value!!.type, module)
-                // If all dependencies have been filled, use this module.
-                if (node.parent.value is FilledModuleDependency) { // This will never be false at a tree depth <2 because the nodes at depth=1 are always instances of FilledModuleDependency
-                    logger.trace("Sibling module dependencies of ${node.value?.toString()}: ${
-                        node.getSiblings().map { it.value?.toString() }
-                    }")
-                    if (node.getSiblings().none { sibling -> sibling.value is EmptyModuleDependency<*> }) {
-                        val parentModule = (node.parent.value as FilledModuleDependency<*>).instance
-                        logger.debug("Using module because its dependencies have been solved: $parentModule")
-                        use(parentModule)
-                    }
-                }
-            }
-        }
-        return module
     }
 
     private fun useMandatoryModules() {
@@ -191,7 +132,7 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
 
     private fun createEventNode(module: GameModule): EventNode<Event> {
         val child = EventNode.all(module::class.simpleName.orEmpty())
-        child.setPriority(module.eventPriority)
+        child.priority = module.eventPriority
         eventNode.addChild(child)
         return child
     }
@@ -213,14 +154,9 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
         autoRemoveInstance && instance.players.isEmpty() && (playerHasJoined || System.currentTimeMillis() - creationTime > 60_000L)
 
     fun ready() {
-        val modules = dependencyTree.elementsAtDepth(1)
-        val unfilledDependencies = modules.filter { it.value !is FilledModuleDependency<*> }
-        if (unfilledDependencies.isNotEmpty()) {
-            for (dep in unfilledDependencies) {
-                throw IllegalStateException("Game has unfilled module dependencies: Module '${dep.parent.value?.type}' requires a module of type '${dep.value?.type}', but none were found.")
-            }
-        }
-        logger.debug("Initializing game with modules: ${modules.map { it.value?.type?.simpleName ?: "<Anonymous module>" }}")
+        checkUnmetDependencies()
+
+        logger.debug("Initializing game with modules: ${modules.map { it::class.simpleName ?: it::class.jvmName }}")
         logger.debug(dependencyTree.toString())
 
         // Set time of day according to the MapData
@@ -265,13 +201,8 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
         }
     }
 
-    fun callEvent(event: Event) {
-        eventNode.call(event)
-    }
-
-    fun callCancellable(event: Event, successCallback: () -> Unit) {
-        eventNode.callCancellable(event, successCallback)
-    }
+    fun callEvent(event: Event) = eventNode.call(event)
+    fun callCancellable(event: Event, successCallback: Runnable) = eventNode.callCancellable(event, successCallback)
 
     fun getInstanceOrNull() = getModuleOrNull<InstanceModule>()?.getInstance()
     fun getInstance() = getInstanceOrNull() ?: error("No InstanceModule found.")
@@ -288,19 +219,6 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
         if (player.instance != getInstanceOrNull()) {
             player.setInstance(getInstance())
         }
-    }
-
-    inline fun <reified T : GameModule> hasModule(): Boolean = modules.any { it is T }
-
-    inline fun <reified T : GameModule> getModule(): T {
-        return getModuleOrNull() ?: error("No module found of type ${T::class.simpleName} on game $this.")
-    }
-
-    inline fun <reified T : GameModule> getModuleOrNull(): T? {
-        for (module in modules) {
-            if (module is T) return module
-        }
-        return null
     }
 
     override fun getPlayers(): MutableCollection<Player> = players
@@ -339,8 +257,10 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
 
         // Ensure the game was registered with `ready()` method
         MinecraftServer.getSchedulerManager().buildTask {
-            if (!games.contains(this)) {
-                logger.warn("Game was not registered after 5 seconds! Games MUST call the ready() method after they are constructed or they will not be joinable.")
+            if (!games.contains(this) && !playerHasJoined) {
+                logger.error("Game was not registered after 5 seconds!")
+                endGameInstantly(false)
+                games.remove(this)
             }
         }.delay(Duration.ofSeconds(5)).schedule()
 

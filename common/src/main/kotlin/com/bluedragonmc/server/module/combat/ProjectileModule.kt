@@ -2,7 +2,7 @@ package com.bluedragonmc.server.module.combat
 
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.GameModule
-import com.bluedragonmc.server.utils.MapUtils
+import com.bluedragonmc.server.utils.CoordinateUtils
 import net.minestom.server.MinecraftServer
 import net.minestom.server.attribute.Attribute
 import net.minestom.server.coordinate.Point
@@ -204,13 +204,15 @@ class ProjectileModule : GameModule() {
             projectile.instance?.setExplosionSupplier { centerX, centerY, centerZ, strength, _ ->
                 object : Explosion(centerX, centerY, centerZ, strength) {
 
-                    override fun prepare(instance: Instance?): List<Point> = MapUtils.getAllInBox(
+                    override fun prepare(instance: Instance?): List<Point> = CoordinateUtils.getAllInBox(
                         Pos(centerX.toDouble() - strength, centerY.toDouble() - strength, centerZ.toDouble() - strength),
                         Pos(centerX.toDouble() + strength, centerY.toDouble() + strength, centerZ.toDouble() + strength)
                     ).filter { pos ->
                         val distance = pos.distanceSquared(centerX.toDouble(), centerY.toDouble(), centerZ.toDouble())
                         val resistance = instance!!.getBlock(pos).registry().explosionResistance()
-                        Random.nextDouble(0.0, strength * 1.5 - resistance / 2.0) > distance
+                        val maxStrength = strength * 1.5 - resistance / 2.0
+                        if (maxStrength <= 0) false
+                        else Random.nextDouble(0.0, maxStrength) > distance
                     }
                 }
             }

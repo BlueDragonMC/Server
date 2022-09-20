@@ -1,5 +1,6 @@
 package com.bluedragonmc.games.lobby
 
+import com.bluedragonmc.games.lobby.module.LeaderboardsModule
 import com.bluedragonmc.messages.GameType
 import com.bluedragonmc.server.*
 import com.bluedragonmc.server.Game
