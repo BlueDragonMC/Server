@@ -1,9 +1,9 @@
 package com.bluedragonmc.games.lobby
 
+import com.bluedragonmc.games.lobby.module.BossBarDisplayModule
 import com.bluedragonmc.games.lobby.module.LeaderboardsModule
 import com.bluedragonmc.messages.GameType
 import com.bluedragonmc.server.*
-import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.block.JukeboxMenuBlockHandler
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.GuiModule
@@ -69,8 +69,7 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
         val menus = mutableMapOf<String, LobbyMenu>()
 
         // NPCs
-        use(NPCModule())
-        getModule<NPCModule>().apply {
+        use(NPCModule()).apply {
 
             val npcs = config.node("npcs").getList(ConfigurableNPC::class.java)!!
             val gameNames = mutableSetOf<String>()
@@ -101,7 +100,9 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
         }
 
         val splashes = config.node("splashes").getList(String::class.java)!!
+        val bossBars = config.node("boss-bars").getList(Component::class.java)!!
 
+        use(BossBarDisplayModule(bossBars))
         use(StatisticsModule())
         use(object : GameModule() {
             override fun initialize(parent: Game, eventNode: EventNode<Event>) {

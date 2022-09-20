@@ -21,6 +21,7 @@ object DevInstanceRouter : Bootstrap(DevelopmentEnvironment::class) {
 
             if (!isLobbyInitialized()) {
                 event.player.sendPacket(LoginDisconnectPacket(Component.text("Lobby not initialized yet! Please wait a few seconds...", NamedTextColor.RED)))
+                event.player.playerConnection.disconnect()
             }
         }
         eventNode.addListener(PlayerLoginEvent::class.java) { event ->

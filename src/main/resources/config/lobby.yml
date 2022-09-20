@@ -84,6 +84,10 @@ splashes:
   - Enjoy your stay!
   - Professional software!
   - Have you seen Joe?
+boss-bars:
+  - "<bold><a1>LEADERBOARD UPDATE"
+  - "<bold><a1>NEW GAME: INFINIJUMP"
+  - "<bold><a1>NEW GAME: ARENAPVP"
 games:
   - game: WackyMaze
     category: Combat
