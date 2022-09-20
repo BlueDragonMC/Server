@@ -31,7 +31,6 @@ import net.minestom.server.event.EventNode
 import net.minestom.server.event.instance.InstanceTickEvent
 import net.minestom.server.event.player.PlayerMoveEvent
 import net.minestom.server.instance.block.Block
-import net.minestom.server.message.Messenger.sendMessage
 import net.minestom.server.sound.SoundEvent
 import java.time.Duration
 import kotlin.properties.Delegates
@@ -164,7 +163,13 @@ class FastFallGame(mapName: String?) : Game("FastFall", mapName ?: "Chaos") {
                     val player = event.winningTeam.players.first()
                     // Record the players' best times (only update the statistic if the new value is less than the old value)
                     getModule<StatisticsModule>().recordStatistic(player, "game_fastfall_best_time", time.toDouble()) { prev ->
-                        prev == null || prev > time
+                        if (prev == null || prev > time) { // This time is a new record
+                            val duration = Duration.ofMillis(time)
+                            val str = formatTime(duration)
+                            player.sendMessage(Component.translatable("game.fastfall.new_record", ALT_COLOR_2, setOf(TextDecoration.BOLD), Component.text(str, ALT_COLOR_1)))
+                            player.playSound(Sound.sound(SoundEvent.ENTITY_PLAYER_LEVELUP, Sound.Source.PLAYER, 1.0f, 1.0f))
+                            true // Yes, record the statistic
+                        } else false // No, don't record the statistic; it isn't the player's fastest time
                     }
                     if (!isSingleplayer) {
                         // Only record wins in multiplayer
@@ -204,4 +209,10 @@ class FastFallGame(mapName: String?) : Game("FastFall", mapName ?: "Chaos") {
 
         ready()
     }
+
+    private fun formatTime(duration: Duration) = String.format("%02d:%02d:%02d.%03d",
+        duration.toHoursPart(),
+        duration.toMinutesPart(),
+        duration.toSecondsPart(),
+        duration.toMillisPart())
 }
