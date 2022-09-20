@@ -7,6 +7,8 @@ import com.bluedragonmc.server.*
 import com.bluedragonmc.server.block.JukeboxMenuBlockHandler
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.GuiModule
+import com.bluedragonmc.server.module.combat.CustomDeathMessageModule
+import com.bluedragonmc.server.module.combat.OldCombatModule
 import com.bluedragonmc.server.module.config.ConfigModule
 import com.bluedragonmc.server.module.database.StatisticsModule
 import com.bluedragonmc.server.module.gameplay.*
@@ -33,6 +35,7 @@ import net.minestom.server.event.Event
 import net.minestom.server.event.EventListener
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.inventory.InventoryPreClickEvent
+import net.minestom.server.event.player.PlayerDeathEvent
 import net.minestom.server.event.player.PlayerSpawnEvent
 import net.minestom.server.event.player.PlayerUseItemEvent
 import net.minestom.server.instance.block.Block
@@ -67,6 +70,25 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
         use(WorldPermissionsModule(allowBlockBreak = false, allowBlockPlace = false, allowBlockInteract = true))
 
         val menus = mutableMapOf<String, LobbyMenu>()
+        // Combat zone
+        use(OldCombatModule())
+        // TODO make this configurable
+        val combatZone = use(MapZonesModule()).createZone(Pos(12.0, 56.0, -43.0), Pos(-6.0, 62.0, -61.0), "Combat")
+        use(CombatZonesModule(allowLeaveDuringCombat = false, minCombatSeconds = 10))
+        use(CustomDeathMessageModule())
+        combatZone.eventNode.addListener(MapZonesModule.PlayerPostEnterZoneEvent::class.java) { event ->
+            val inv = event.player.inventory
+            inv.helmet = ItemStack.of(Material.IRON_HELMET)
+            inv.chestplate = ItemStack.of(Material.IRON_CHESTPLATE)
+            inv.leggings = ItemStack.of(Material.IRON_LEGGINGS)
+            inv.boots = ItemStack.of(Material.IRON_BOOTS)
+            inv.setItemStack(0, ItemStack.of(Material.DIAMOND_SWORD))
+        }
+        combatZone.eventNode.addListener(MapZonesModule.PlayerPostLeaveZoneEvent::class.java) { event ->
+            event.player.health = event.player.maxHealth
+            event.player.inventory.clear()
+            event.player.inventory.setItemStack(0, gameSelectItem)
+        }
 
         // NPCs
         use(NPCModule()).apply {
@@ -123,6 +145,10 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
                         if (event.clickedItem.isSimilar(gameSelectItem)) menus["all_games"]?.open(event.player)
                     }.build()
                 )
+                eventNode.addListener(PlayerDeathEvent::class.java) { event ->
+                    event.player.inventory.clear()
+                    event.player.inventory.setItemStack(0, gameSelectItem)
+                }
             }
         })
         use(DoubleJumpModule())
