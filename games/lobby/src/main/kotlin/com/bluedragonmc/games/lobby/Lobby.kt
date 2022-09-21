@@ -47,7 +47,7 @@ import java.nio.file.Paths
 import java.time.Duration
 import kotlin.collections.set
 
-class Lobby : Game("Lobby", "lobbyv2.1") {
+class Lobby : Game("Lobby", "lobbyv2.2") {
 
     override val autoRemoveInstance = false
 
