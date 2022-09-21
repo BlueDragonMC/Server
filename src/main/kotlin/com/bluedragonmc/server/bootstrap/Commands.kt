@@ -11,6 +11,7 @@ import net.minestom.server.event.EventNode
 object Commands : Bootstrap() {
     override fun hook(eventNode: EventNode<Event>) {
         listOf(
+            EffectCommand("effect", "/effect <take|give> ..."),
             FlyCommand("fly"),
             GameCommand("game", "/game <start|end>"),
             GameModeCommand("gamemode", "/gamemode <survival|creative|adventure|spectator> [player]", "gm", "gmc", "gms", "gma", "gmsp"),
