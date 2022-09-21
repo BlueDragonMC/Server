@@ -86,8 +86,14 @@ class TestQueue : Queue() {
                     player.sendMessage(Component.translatable("queue.creating_instance", NamedTextColor.GREEN))
                     val map = gameType.mapName ?: randomMap(gameType.name)
                     logger.info("Map chosen: $map")
-                    games[gameType.name]!!.call(map)
-                    instanceStarting = true
+                    try {
+                        games[gameType.name]!!.call(map)
+                        instanceStarting = true
+                    } catch (e: Throwable) {
+                        e.printStackTrace()
+                        player.sendMessage(Component.text(e.message.orEmpty(), NamedTextColor.RED))
+                        queuedPlayers.invalidate(player)
+                    }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()

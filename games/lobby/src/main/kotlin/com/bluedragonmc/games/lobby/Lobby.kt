@@ -73,7 +73,7 @@ class Lobby : Game("Lobby", "lobbyv2.1") {
         // Combat zone
         use(OldCombatModule())
         // TODO make this configurable
-        val combatZone = use(MapZonesModule()).createZone(Pos(12.0, 56.0, -43.0), Pos(-6.0, 62.0, -61.0), "Combat")
+        val combatZone = use(MapZonesModule()).createZone(Pos(14.0, 56.0, -44.0), Pos(-5.0, 64.0, -63.0), "Combat")
         use(CombatZonesModule(allowLeaveDuringCombat = false, minCombatSeconds = 10))
         use(CustomDeathMessageModule())
         combatZone.eventNode.addListener(MapZonesModule.PlayerPostEnterZoneEvent::class.java) { event ->

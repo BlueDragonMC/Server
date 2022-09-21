@@ -19,7 +19,7 @@ abstract class ModuleHolder {
      */
     val modules = mutableListOf<GameModule>()
 
-    fun <T : GameModule> hasModule(type: KClass<T>): Boolean = modules.any { type.isInstance(it) }
+    private fun <T : GameModule> hasModule(type: KClass<T>): Boolean = modules.any { type.isInstance(it) }
     inline fun <reified T : GameModule> hasModule(): Boolean = modules.any { it is T }
 
     inline fun <reified T : GameModule> getModule(): T {
@@ -77,8 +77,10 @@ abstract class ModuleHolder {
         if (module.dependencies.any { module::class.isInstance(it) })
             throw IllegalStateException("Tried to register module which depends on itself: $module")
 
-        // Create a node in the dependency tree for this module
-        addNode(module)
+        // Create a node in the dependency tree for this module if it doesn't already exist
+        if (dependencyTree.getChildren().none { it.value!!.type == module::class }) {
+            addNode(module)
+        }
 
         // If not all the module's dependencies were found, delay the loading of
         // the module until after all of its dependencies have been registered.
