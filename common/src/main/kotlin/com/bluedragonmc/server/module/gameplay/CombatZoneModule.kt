@@ -10,6 +10,7 @@ import net.minestom.server.coordinate.Point
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
+import net.minestom.server.event.player.PlayerRespawnEvent
 import java.time.Duration
 
 /**
@@ -79,6 +80,11 @@ class CombatZonesModule(
         zone.eventNode.addListener(MapZonesModule.PlayerPostLeaveZoneEvent::class.java) { event ->
             if (parent.hasModule<DoubleJumpModule>())
                 DoubleJumpModule.unblockDoubleJump(event.player, "combat")
+        }
+        eventNode!!.addListener(PlayerRespawnEvent::class.java) { event ->
+            if (!checkInZone(event.respawnPosition) && parent.hasModule<DoubleJumpModule>()) {
+                DoubleJumpModule.unblockDoubleJump(event.player, "combat")
+            }
         }
     }
 

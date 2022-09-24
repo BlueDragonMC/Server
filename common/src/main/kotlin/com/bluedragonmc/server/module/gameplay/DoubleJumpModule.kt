@@ -38,7 +38,7 @@ class DoubleJumpModule(
 
         fun blockDoubleJump(player: Player, reason: String, updateFlying: Boolean = true) {
             val reasons = player.getTag(DOUBLE_JUMP_BLOCKERS_TAG).toMutableList().apply {
-                add(reason)
+                if (!contains(reason)) add(reason)
             }
             player.setTag(DOUBLE_JUMP_BLOCKERS_TAG, reasons)
             if (updateFlying) player.isAllowFlying = false
