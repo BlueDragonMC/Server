@@ -9,7 +9,12 @@ class LobbyCommand(name: String, vararg aliases: String?) : BlueDragonCommand(na
     requirePlayers()
     syntax {
         if (player.instance == lobby.getInstance()) {
-            player.sendMessage(formatErrorTranslated("command.lobby.already_in_lobby"))
+            val pos = lobby.getModuleOrNull<SpawnpointModule>()?.spawnpointProvider?.getSpawnpoint(player)
+            if (pos != null) {
+                player.teleport(pos)
+            } else {
+                player.sendMessage(formatErrorTranslated("command.lobby.already_in_lobby"))
+            }
             return@syntax
         }
         player.setInstance(
