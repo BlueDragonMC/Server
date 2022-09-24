@@ -98,6 +98,8 @@ class NPCModule : GameModule() {
 
         override fun isImmune(type: DamageType) = true
         override fun damage(type: DamageType, value: Float) = false
+        override fun hasVelocity() = false
+        override fun hasNoGravity() = false
 
         private val randomName = UUID.randomUUID().toString().substringBefore('-')
         private val addPlayerPacket: PlayerInfoPacket = PlayerInfoPacket(PlayerInfoPacket.Action.ADD_PLAYER,
@@ -125,6 +127,7 @@ class NPCModule : GameModule() {
             standMeta.setNotifyAboutChanges(false)
             standMeta.isSmall = true
             standMeta.isInvisible = true
+            standMeta.isHasNoGravity = true
             standMeta.setNotifyAboutChanges(true)
 
             setInstance(instance, position).join()
@@ -132,6 +135,7 @@ class NPCModule : GameModule() {
 
             if (customNameVisible) {
                 hologram = Hologram(instance, position.withY(position.y + eyeHeight + 0.2), customName, true)
+                hologram.entity.setNoGravity(true)
                 hologram.entity.isAutoViewable = false
             }
         }

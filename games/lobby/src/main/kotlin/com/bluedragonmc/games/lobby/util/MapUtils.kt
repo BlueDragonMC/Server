@@ -128,5 +128,8 @@ object MapUtils {
             isAutoViewable = true
             meta.setNotifyAboutChanges(true)
         }
+
+        override fun hasVelocity() = false
+        override fun hasNoGravity() = true
     }
 }
