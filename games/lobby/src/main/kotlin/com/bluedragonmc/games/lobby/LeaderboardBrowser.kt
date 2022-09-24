@@ -5,6 +5,7 @@ import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.GuiModule
 import com.bluedragonmc.server.module.database.StatisticsModule
+import com.bluedragonmc.server.utils.formatDuration
 import com.bluedragonmc.server.utils.noItalic
 import com.bluedragonmc.server.utils.plus
 import kotlinx.coroutines.runBlocking
@@ -14,7 +15,6 @@ import net.minestom.server.inventory.InventoryType
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import org.spongepowered.configurate.ConfigurationNode
-import java.time.Duration
 
 class LeaderboardBrowser(private val config: ConfigurationNode, private val parent: Game) : Lobby.LobbyMenu() {
 
@@ -73,14 +73,7 @@ class LeaderboardBrowser(private val config: ConfigurationNode, private val pare
 
     companion object {
         internal fun formatValue(value: Double, displayMode: Leaderboard.DisplayMode) = when (displayMode) {
-            Leaderboard.DisplayMode.DURATION -> {
-                val duration = Duration.ofMillis(value.toLong())
-                String.format("%02d:%02d:%02d.%03d",
-                    duration.toHoursPart(),
-                    duration.toMinutesPart(),
-                    duration.toSecondsPart(),
-                    duration.toMillisPart())
-            }
+            Leaderboard.DisplayMode.DURATION -> formatDuration(value.toLong())
             Leaderboard.DisplayMode.DECIMAL -> String.format("%.2f", value)
             Leaderboard.DisplayMode.WHOLE_NUMBER -> value.toInt().toString()
         }

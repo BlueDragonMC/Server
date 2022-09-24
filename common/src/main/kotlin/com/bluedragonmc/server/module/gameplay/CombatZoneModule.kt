@@ -1,6 +1,5 @@
 package com.bluedragonmc.server.module.gameplay
 
-import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.combat.OldCombatModule
@@ -19,18 +18,23 @@ import java.time.Duration
  * Optionally, the module prevents the player from leaving the zone if they are in a fight.
  * Requires the [MapZonesModule]
  */
-class CombatZonesModule(val allowLeaveDuringCombat: Boolean, val minCombatSeconds: Int, val startingCombatZones: MutableList<MapZonesModule.MapZone> = mutableListOf()): GameModule() {
+class CombatZonesModule(
+    val allowLeaveDuringCombat: Boolean,
+    val minCombatSeconds: Int,
+    private val startingCombatZones: MutableList<MapZonesModule.MapZone> = mutableListOf(),
+) : GameModule() {
 
     override val dependencies = listOf(MapZonesModule::class, OldCombatModule::class)
 
-    private val playersInCombatZone = mutableListOf<Player>()
     private val combatStatus = hashMapOf<Player, Int>()
 
     private lateinit var mapZonesModule: MapZonesModule
+    private lateinit var parent: Game
 
     private val combatZones = mutableListOf<MapZonesModule.MapZone>()
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
+        this.parent = parent
         mapZonesModule = parent.getModule()
         startingCombatZones.forEach { zone ->
             addCombatZone(zone)
@@ -61,10 +65,20 @@ class CombatZonesModule(val allowLeaveDuringCombat: Boolean, val minCombatSecond
         zone.eventNode.addListener(MapZonesModule.PlayerPreLeaveZoneEvent::class.java) { event ->
             if (!allowLeaveDuringCombat && combatStatus.getOrDefault(event.player, 1000) < minCombatSeconds) {
                 event.player.sendActionBar("You cannot leave while in combat!" withColor NamedTextColor.RED)
-                event.player.velocity = event.player.position.sub(event.zone.centerOnGround.x(), event.zone.centerOnGround.y(), event.zone.centerOnGround.z()).mul(-1.5).withY(4.0).asVec()
+                event.player.velocity = event.player.position.sub(event.zone.centerOnGround.x(),
+                    event.zone.centerOnGround.y(),
+                    event.zone.centerOnGround.z()).mul(-1.5).withY(4.0).asVec()
                 event.isCancelled = true
                 return@addListener
             }
+        }
+        zone.eventNode.addListener(MapZonesModule.PlayerPostEnterZoneEvent::class.java) { event ->
+            if (parent.hasModule<DoubleJumpModule>())
+               DoubleJumpModule.blockDoubleJump(event.player, "combat")
+        }
+        zone.eventNode.addListener(MapZonesModule.PlayerPostLeaveZoneEvent::class.java) { event ->
+            if (parent.hasModule<DoubleJumpModule>())
+                DoubleJumpModule.unblockDoubleJump(event.player, "combat")
         }
     }
 
@@ -74,9 +88,10 @@ class CombatZonesModule(val allowLeaveDuringCombat: Boolean, val minCombatSecond
     fun checkInZone(point: Point): Boolean = combatZones.any { it.checkInZone(point) }
 
     data class CombatZone(val startPos: Point, val endPos: Point) {
-        private val xRange = if (startPos.x() < endPos.x()) startPos.x() .. endPos.x() else endPos.x() .. startPos.x()
-        private val yRange = if (startPos.y() < endPos.y()) startPos.y() .. endPos.y() else endPos.y() .. startPos.y()
-        private val zRange = if (startPos.z() < endPos.z()) startPos.z() .. endPos.z() else endPos.z() .. startPos.z()
+        private val xRange = if (startPos.x() < endPos.x()) startPos.x()..endPos.x() else endPos.x()..startPos.x()
+        private val yRange = if (startPos.y() < endPos.y()) startPos.y()..endPos.y() else endPos.y()..startPos.y()
+        private val zRange = if (startPos.z() < endPos.z()) startPos.z()..endPos.z() else endPos.z()..startPos.z()
+
         /**
          * Checks if the specified [position] is in this [CombatZone].
          */

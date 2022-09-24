@@ -77,10 +77,11 @@ object MapUtils {
                 Orientation.DOWN -> TODO()
                 Orientation.UP -> TODO()
                 Orientation.NORTH -> TODO()
-                Orientation.SOUTH -> TODO()
+                Orientation.SOUTH -> relY.absoluteValue * width + relX
                 Orientation.WEST -> relY.absoluteValue * width + relZ.absoluteValue
                 Orientation.EAST -> relY * width + relZ
             }.absoluteValue
+            logger.trace("Creating map at position $pos (relative: $relX, $relY, $relZ) and index $index")
             // Remove old item frames that are already there
             for (entity in instance.getNearbyEntities(pos, 0.5)) {
                 if (entity is MapItemFrame) {

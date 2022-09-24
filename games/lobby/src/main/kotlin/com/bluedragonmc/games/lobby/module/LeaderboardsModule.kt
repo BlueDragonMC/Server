@@ -36,7 +36,7 @@ class LeaderboardsModule(config: ConfigurationNode) : GameModule() {
     private val font72 = baseFont.deriveFont(Font.PLAIN, 72f)
 
     // Create a list of font sizes to use for dynamic text scaling
-    private val fontSizes = (12 .. 36 step 2).map { baseFont.deriveFont(Font.PLAIN, it.toFloat()) }
+    private val fontSizes = (12 .. 72 step 2).map { baseFont.deriveFont(Font.PLAIN, it.toFloat()) }
 
     private val gray = 0x727272
 
@@ -72,7 +72,7 @@ class LeaderboardsModule(config: ConfigurationNode) : GameModule() {
 
     private fun createLeaderboard(parent: Game, lbIndex: Int, lb: Leaderboard) {
         MapUtils.createMaps(parent.getInstance(), lb.topLeft, lb.bottomRight, lb.orientation, 5000 + lbIndex * 200) { graphics ->
-            graphics.drawString(lb.title, 10f, 70f, Color.WHITE, font72)
+            graphics.drawString(lb.title, 10f, 70f, Color.WHITE, getLargestFont(graphics, 128f * 4f, lb.title, 72) ?: fontSizes.first())
             graphics.drawString(lb.subtitle, 10f, 110f, Color(gray), font36)
             runBlocking {
                 val leaderboardPlayers = parent.getModule<StatisticsModule>().rankPlayersByStatistic(lb.statistic, lb.orderBy, 10)
@@ -89,9 +89,7 @@ class LeaderboardsModule(config: ConfigurationNode) : GameModule() {
                     val displayText = LeaderboardBrowser.formatValue(value, lb.displayMode)
                     // Draw player name
                     val remainingPixels = 128 * 4 - stringWidth(graphics, font36, displayText) - 60f - 10f
-                    val playerNameFont = fontSizes.lastOrNull {
-                        stringWidth(graphics, it, player.username) < remainingPixels
-                    } ?: continue
+                    val playerNameFont = getLargestFont(graphics, remainingPixels, player.username) ?: continue
                     val nameColor = Color(player.highestGroup?.color?.value() ?: gray)
                     graphics.drawString(player.username, 60f, lineStartY, nameColor, playerNameFont)
                     // Draw leaderboard value
@@ -105,6 +103,12 @@ class LeaderboardsModule(config: ConfigurationNode) : GameModule() {
         this.font = font
         this.color = color
         drawString(string, x, y)
+    }
+
+    private fun getLargestFont(graphics: Graphics2D, boxWidth: Float, text: String, maxSize: Int = 36): Font? {
+        return fontSizes.lastOrNull {
+            it.size <= maxSize && stringWidth(graphics, it, text) < boxWidth
+        }
     }
 
     private fun stringWidth(graphics: Graphics2D, string: String) =

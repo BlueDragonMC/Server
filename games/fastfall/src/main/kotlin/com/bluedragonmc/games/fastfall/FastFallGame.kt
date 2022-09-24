@@ -15,6 +15,7 @@ import com.bluedragonmc.server.module.instance.CustomGeneratorInstanceModule
 import com.bluedragonmc.server.module.minigame.*
 import com.bluedragonmc.server.module.vanilla.FallDamageModule
 import com.bluedragonmc.server.utils.GameState
+import com.bluedragonmc.server.utils.formatDuration
 import com.bluedragonmc.server.utils.plus
 import com.bluedragonmc.server.utils.withTransition
 import net.kyori.adventure.sound.Sound
@@ -164,8 +165,7 @@ class FastFallGame(mapName: String?) : Game("FastFall", mapName ?: "Chaos") {
                     // Record the players' best times (only update the statistic if the new value is less than the old value)
                     getModule<StatisticsModule>().recordStatistic(player, "game_fastfall_best_time", time.toDouble()) { prev ->
                         if (prev == null || prev > time) { // This time is a new record
-                            val duration = Duration.ofMillis(time)
-                            val str = formatTime(duration)
+                            val str = formatDuration(time)
                             player.sendMessage(Component.translatable("game.fastfall.new_record", ALT_COLOR_2, setOf(TextDecoration.BOLD), Component.text(str, ALT_COLOR_1)))
                             player.playSound(Sound.sound(SoundEvent.ENTITY_PLAYER_LEVELUP, Sound.Source.PLAYER, 1.0f, 1.0f))
                             true // Yes, record the statistic
@@ -210,9 +210,4 @@ class FastFallGame(mapName: String?) : Game("FastFall", mapName ?: "Chaos") {
         ready()
     }
 
-    private fun formatTime(duration: Duration) = String.format("%02d:%02d:%02d.%03d",
-        duration.toHoursPart(),
-        duration.toMinutesPart(),
-        duration.toSecondsPart(),
-        duration.toMillisPart())
 }

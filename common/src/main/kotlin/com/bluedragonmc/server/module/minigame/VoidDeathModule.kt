@@ -5,6 +5,7 @@ import com.bluedragonmc.server.module.GameModule
 import net.minestom.server.entity.damage.DamageType
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
+import net.minestom.server.event.player.PlayerDeathEvent
 import net.minestom.server.event.player.PlayerMoveEvent
 
 /**
@@ -19,6 +20,7 @@ class VoidDeathModule(private val threshold: Double, private val respawnMode: Bo
                 if (respawnMode) {
                     event.player.respawn()
                     event.player.teleport(event.player.respawnPoint)
+                    parent.callEvent(PlayerDeathEvent(event.player, null, null))
                 } else {
                     event.player.damage(DamageType.VOID, Float.MAX_VALUE)
                 }

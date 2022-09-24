@@ -32,18 +32,42 @@ class DoubleJumpModule(
 
     companion object {
         val LAST_DOUBLE_JUMP_TAG = Tag.Long("last_double_jump_timestamp")
+        private val DOUBLE_JUMP_BLOCKERS_TAG: Tag<List<String>> = Tag.String("double_jump_blockers")
+            .list()
+            .defaultValue(emptyList())
+
+        fun blockDoubleJump(player: Player, reason: String, updateFlying: Boolean = true) {
+            val reasons = player.getTag(DOUBLE_JUMP_BLOCKERS_TAG).toMutableList().apply {
+                add(reason)
+            }
+            player.setTag(DOUBLE_JUMP_BLOCKERS_TAG, reasons)
+            if (updateFlying) player.isAllowFlying = false
+        }
+
+        fun unblockDoubleJump(player: Player, reason: String, updateFlying: Boolean = true) {
+            val reasons = player.getTag(DOUBLE_JUMP_BLOCKERS_TAG).toMutableList().apply {
+                remove(reason)
+            }
+            player.setTag(DOUBLE_JUMP_BLOCKERS_TAG, reasons)
+            if (updateFlying && player.getTag(DOUBLE_JUMP_BLOCKERS_TAG).isEmpty()) {
+                player.isAllowFlying = true
+            }
+        }
     }
+
+    private fun canDoubleJump(player: Player) = !player.isAllowFlying &&
+            isOffCooldown(player) &&
+            player.getTag(DOUBLE_JUMP_BLOCKERS_TAG)?.isNotEmpty() != true
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         eventNode.addListener(PlayerPacketOutEvent::class.java) { event ->
-            if (event.packet is ChangeGameStatePacket) {
+            if (event.packet is ChangeGameStatePacket && canDoubleJump(event.player)) {
                 event.player.isAllowFlying = true
             }
         }
         eventNode.addListener(PlayerMoveEvent::class.java) { event ->
-            if (event.isOnGround) {
-                if (!event.player.isAllowFlying && isOffCooldown(event.player)) event.player.isAllowFlying = true
-            }
+            if (event.isOnGround && canDoubleJump(event.player))
+                event.player.isAllowFlying = true
         }
         eventNode.addListener(PlayerStartFlyingEvent::class.java) { event ->
             if (event.player.gameMode == GameMode.CREATIVE || event.player.gameMode == GameMode.SPECTATOR) return@addListener
@@ -51,10 +75,9 @@ class DoubleJumpModule(
             event.player.isAllowFlying = false
             parent.callCancellable(PlayerDoubleJumpEvent(event.player)) {
                 val x = -sin(Math.toRadians(event.player.position.yaw.toDouble())) * strength
+                val y = verticalStrength + pitchInfluence * (-event.player.position.pitch.toDouble()).coerceAtLeast(0.0)
                 val z = cos(Math.toRadians(event.player.position.yaw.toDouble())) * strength
-                event.player.velocity = event.player.velocity.add(
-                    x, 0.0, z
-                ).withY(verticalStrength + pitchInfluence * (-event.player.position.pitch.toDouble()).coerceAtLeast(0.0))
+                event.player.velocity = event.player.velocity.add(x, 0.0, z).withY(y)
                 event.player.setTag(LAST_DOUBLE_JUMP_TAG, System.currentTimeMillis())
             }
         }

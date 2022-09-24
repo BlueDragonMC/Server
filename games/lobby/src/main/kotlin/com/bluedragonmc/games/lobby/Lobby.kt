@@ -2,6 +2,7 @@ package com.bluedragonmc.games.lobby
 
 import com.bluedragonmc.games.lobby.module.BossBarDisplayModule
 import com.bluedragonmc.games.lobby.module.LeaderboardsModule
+import com.bluedragonmc.games.lobby.module.ParkourModule
 import com.bluedragonmc.messages.GameType
 import com.bluedragonmc.server.*
 import com.bluedragonmc.server.block.JukeboxMenuBlockHandler
@@ -22,15 +23,12 @@ import com.bluedragonmc.server.utils.noItalic
 import com.bluedragonmc.server.utils.surroundWithSeparators
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.format.NamedTextColor
-import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.title.Title
 import net.minestom.server.MinecraftServer
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.EntityType
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
-import net.minestom.server.entity.hologram.Hologram
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventListener
 import net.minestom.server.event.EventNode
@@ -154,6 +152,7 @@ class Lobby : Game("Lobby", "lobbyv2.2") {
         use(DoubleJumpModule())
         use(GuiModule())
         use(LeaderboardsModule(config))
+        use(ParkourModule(config.node("parkour")))
 
         menus["leaderboard_browser"] = LeaderboardBrowser(config, this)
         menus["all_games"] = GameSelector(config, this)
@@ -165,11 +164,6 @@ class Lobby : Game("Lobby", "lobbyv2.2") {
             getInstance().sendMessage(tips[index++].surroundWithSeparators())
             playSound(Sound.sound(SoundEvent.BLOCK_NOTE_BLOCK_PLING, Sound.Source.MASTER, 1.0F, 1.0F))
         }.repeat(Duration.ofMinutes(5)).schedule()
-
-        Hologram(getInstance(),
-            Pos(16.975, 63.65, 0.0),
-            Component.translatable("lobby.hologram.parkour", NamedTextColor.GREEN, TextDecoration.BOLD),
-            true)
 
         getInstance().setBlock(0, 60, -19, Block.JUKEBOX.withHandler(JukeboxMenuBlockHandler(getInstance(), 0, 60, -19)))
 
