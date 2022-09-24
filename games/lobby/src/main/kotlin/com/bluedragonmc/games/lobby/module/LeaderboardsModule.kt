@@ -6,7 +6,6 @@ import com.bluedragonmc.games.lobby.Lobby
 import com.bluedragonmc.games.lobby.util.MapUtils
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_3
 import com.bluedragonmc.server.Game
-import com.bluedragonmc.server.LOBBY_NEWS_ITEMS
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.database.StatisticsModule
 import kotlinx.coroutines.runBlocking
@@ -28,6 +27,7 @@ import javax.imageio.ImageIO
 class LeaderboardsModule(config: ConfigurationNode) : GameModule() {
 
     private val leaderboards = config.node("leaderboards").getList(Leaderboard::class.java)
+    private val newsItems = config.node("news").getList(String::class.java)
 
     // Font is from https://www.1001freefonts.com/minecraft.font
     private val baseFont = Font.createFont(Font.TRUETYPE_FONT, this::class.java.getResourceAsStream("/font/Minecraft.otf"))
@@ -63,7 +63,7 @@ class LeaderboardsModule(config: ConfigurationNode) : GameModule() {
             graphics.drawRenderedImage(image, AffineTransform.getScaleInstance(scale, scale))
             graphics.font = font36
             graphics.color = Color.BLACK
-            LOBBY_NEWS_ITEMS.forEachIndexed { index, str ->
+            newsItems?.forEachIndexed { index, str ->
                 graphics.drawString(str, 10, 200 + index * 30)
             }
             graphics.drawString("Join our community at bluedragonmc.com", 10f, 128f * 3f - 10f, Color(BRAND_COLOR_PRIMARY_3.value()), font28)
