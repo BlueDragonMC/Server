@@ -268,20 +268,24 @@ leaderboard-browser:
         display-mode: WHOLE_NUMBER
 parkour:
   - id: world_tour
-    start: 17.0, 62.0, 0.0
-    end: 38.0, 75.0, -32.0
+    start: 17.5, 62.0, 0.5, -45.0, 0.0
+    end: 38.5, 75.0, -31.5
     name: <bold><yellow><lang:lobby.parkour.world.hologram>
     checkpoints:
-      - -44.0, 72.0, -13.0
-      - -28.0, 81.0, -71.0
+      - -43.5, 72.0, -12.5
+      - -27.5, 81.0, -70.5
+    reset-to: 15.0, 62.0, -2.0, -45.0, 0.0
   - id: cave
-    start: 10.0, 47.0, -28.0
-    end: -2.0, 47.0, -37.0
+    start: 10.5, 47.0, -27.5, -45.0, 10.0
+    end: -2.5, 47.0, -37.5
     name: <bold><yellow><lang:lobby.parkour.cave.hologram>
     checkpoints:
-      - 1.0, 53.0, -4.0
-      - 11.0, 51.0, -34.0
-      - 3.0, 49.0, -46.0
+      - 1.5, 53.0, -3.5
+      - 11.5, 51.0, -34.5
+      - 3.5, 49.0, -46.5
+    deadly-blocks:
+      - minecraft:water
+    reset-to: 6.5, 48.0, -27.5, -90.0, 20.0
 news:
   - "Sep 24: Lobby update!"
   - "Aug 31: Added leaderboards!"

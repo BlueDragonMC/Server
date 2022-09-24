@@ -12,6 +12,12 @@ operator fun Point.component3() = z()
 operator fun Pos.component4() = yaw
 operator fun Pos.component5() = pitch
 
+fun Pos.round() = Pos(
+    (if (x < 0) (x - 0.5).toInt() else x.toInt()).toDouble(),
+    y.toInt().toDouble(),
+    (if (z < 0) (z - 0.5).toInt() else z.toInt()).toDouble(),
+)
+
 object CoordinateUtils {
     fun getAllInBox(pos1: Pos, pos2: Pos): List<Pos> {
         val dx = abs(pos2.blockX() - pos1.blockX())
