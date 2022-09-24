@@ -67,7 +67,6 @@ class ParkourModule(private val config: ConfigurationNode) : GameModule() {
         val instance = parent.getInstance()
         courses.forEach { course ->
             // Parkour start
-            logger.info("start pos: ${course.start} => ${course.start.round()}")
             instance.setBlock(course.start.round(), Block.HEAVY_WEIGHTED_PRESSURE_PLATE.withHandler(PressurePlateHandler { player ->
                 // Starting pressure plate
                 if (getCourse(player) == null) {

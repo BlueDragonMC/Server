@@ -1,5 +1,6 @@
 package com.bluedragonmc.server.command
 
+import net.kyori.adventure.text.Component
 import net.minestom.server.command.builder.arguments.ArgumentWord
 import net.minestom.server.entity.GameMode
 
@@ -9,39 +10,37 @@ class GameModeCommand(name: String, usageString: String, vararg aliases: String)
 
     usage(usageString)
 
-    syntax {
-        val gameMode = getGameModeFromCommandName(ctx.commandName) ?: return@syntax
-        player.gameMode = gameMode
-        sender.sendMessage(formatMessageTranslated("command.gamemode.own", gameMode.toString().lowercase()))
-    }.requirePlayers()
-
-    syntax(playerArgument) {
-        val gameMode = getGameModeFromCommandName(ctx.commandName) ?: return@syntax
-        val player = getFirstPlayer(playerArgument)
-        player.gameMode = gameMode
-        sender.sendMessage(formatMessageTranslated("command.gamemode.other", player.name, gameMode.toString().lowercase()))
-        player.sendMessage(formatMessageTranslated("command.gamemode.own", gameMode.toString().lowercase()))
-    }
-
     syntax(gameModeArgument) {
-        player.gameMode = GameMode.valueOf(get(gameModeArgument).uppercase())
-        sender.sendMessage(formatMessageTranslated("command.gamemode.own", get(gameModeArgument).lowercase()))
+        val gameMode = get(gameModeArgument)
+        player.gameMode = GameMode.valueOf(gameMode.uppercase())
+        sender.sendMessage(formatMessageTranslated("commands.gamemode.success.self", Component.translatable("gameMode.${gameMode.lowercase()}")))
     }.requirePlayers()
 
     syntax(gameModeArgument, playerArgument) {
+        val gameMode = get(gameModeArgument)
         val player = getFirstPlayer(playerArgument)
-        player.gameMode = GameMode.valueOf(get(gameModeArgument).uppercase())
-        player.sendMessage(formatMessageTranslated("command.gamemode.own", get(gameModeArgument).lowercase()))
-        sender.sendMessage(formatMessageTranslated("command.gamemode.other", player.name, get(gameModeArgument).lowercase()))
+        player.gameMode = GameMode.valueOf(gameMode.uppercase())
+        sender.sendMessage(formatMessageTranslated("commands.gamemode.success.other", player.name, Component.translatable("gameMode.${gameMode.lowercase()}")))
     }
 }) {
-    companion object {
-        internal fun getGameModeFromCommandName(commandName: String) = when (commandName) {
-            "gms" -> GameMode.SURVIVAL
-            "gmc" -> GameMode.CREATIVE
-            "gmsp" -> GameMode.SPECTATOR
-            "gma" -> GameMode.ADVENTURE
-            else -> null
+
+    open class SingleGameModeCommand(name: String, private val gameMode: GameMode) : BlueDragonCommand(name, permission = "command.gamemode", block = {
+        val component = Component.translatable("gameMode.${gameMode.toString().lowercase()}")
+
+        val otherArgument by PlayerArgument
+        syntax {
+            player.gameMode = gameMode
+            player.sendMessage(formatMessageTranslated("commands.gamemode.success.self", component))
         }
-    }
+        syntax(otherArgument) {
+            val other = getFirstPlayer(otherArgument)
+            other.gameMode = gameMode
+            sender.sendMessage(formatMessageTranslated("commands.gamemode.success.other", other.name, component))
+        }
+    })
+
+    class GameModeSurvivalCommand : SingleGameModeCommand("gms", GameMode.SURVIVAL)
+    class GameModeCreativeCommand : SingleGameModeCommand("gmc", GameMode.CREATIVE)
+    class GameModeAdventureCommand : SingleGameModeCommand("gma", GameMode.ADVENTURE)
+    class GameModeSpectatorCommand : SingleGameModeCommand("gmsp", GameMode.SPECTATOR)
 }
