@@ -3,6 +3,8 @@ package com.bluedragonmc.server.module.combat
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.utils.CoordinateUtils
+import com.bluedragonmc.server.utils.SoundUtils
+import net.kyori.adventure.sound.Sound
 import net.minestom.server.MinecraftServer
 import net.minestom.server.attribute.Attribute
 import net.minestom.server.coordinate.Point
@@ -24,6 +26,7 @@ import net.minestom.server.inventory.TransactionOption
 import net.minestom.server.item.Enchantment
 import net.minestom.server.item.Material
 import net.minestom.server.network.packet.server.play.ChangeGameStatePacket
+import net.minestom.server.sound.SoundEvent
 import net.minestom.server.tag.Tag
 import java.time.Duration
 import kotlin.math.ceil
@@ -38,6 +41,8 @@ class ProjectileModule : GameModule() {
 
         private val SNOWBALL_DAMAGE_TYPE = DamageType("snowball")
         private val EGG_DAMAGE_TYPE = DamageType("egg")
+
+        private val PEARL_OWNER_TAG = Tag.UUID("ender_pearl_owner")
     }
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
@@ -45,6 +50,7 @@ class ProjectileModule : GameModule() {
         hookSnowballEvents(eventNode)
         hookEggEvents(eventNode)
         hookFireballEvents(eventNode)
+        hookEnderPearlEvents(eventNode)
     }
 
     /**
@@ -77,6 +83,7 @@ class ProjectileModule : GameModule() {
 
                 projectile.setInstance(event.player.instance!!, eyePos)
                 projectile.shoot(getLaunchPos(event.player), power * 3.0, 1.0)
+                event.player.instance?.playSound(Sound.sound(SoundEvent.ENTITY_ARROW_SHOOT, Sound.Source.MASTER, 1.0f, 1.0f), event.player.position)
                 projectile.setTag(PUNCH_TAG, event.itemStack.meta().enchantmentMap[Enchantment.PUNCH] ?: 0)
                 projectile.setTag(ARROW_DAMAGE_TAG, event.itemStack.meta().enchantmentMap[Enchantment.POWER] ?: 0)
             }
@@ -144,6 +151,7 @@ class ProjectileModule : GameModule() {
                 val snowball = EntityProjectile(event.player, EntityType.SNOWBALL)
                 snowball.setInstance(event.instance, getEyePos(event.player))
                 snowball.shoot(getLaunchPos(event.player), 3.0, 1.0)
+                event.player.instance?.playSound(Sound.sound(SoundEvent.ENTITY_SNOWBALL_THROW, Sound.Source.MASTER, 1.0f, 0.5f), event.player.position)
                 snowball.scheduleRemove(Duration.ofSeconds(30))
             }
         }
@@ -180,6 +188,7 @@ class ProjectileModule : GameModule() {
                 val snowball = EntityProjectile(event.player, EntityType.FIREBALL)
                 snowball.setInstance(event.instance, getEyePos(event.player))
                 snowball.shoot(getLaunchPos(event.player), 3.0, 1.0)
+                event.player.instance?.playSound(Sound.sound(SoundEvent.ITEM_FIRECHARGE_USE, Sound.Source.MASTER, 1.0f, 1.0f), event.player.position)
                 snowball.scheduleRemove(Duration.ofSeconds(30))
             }
         }
@@ -247,6 +256,7 @@ class ProjectileModule : GameModule() {
                 val snowball = EntityProjectile(event.player, EntityType.EGG)
                 snowball.setInstance(event.instance, getEyePos(event.player))
                 snowball.shoot(getLaunchPos(event.player), 3.0, 1.0)
+                event.player.instance?.playSound(Sound.sound(SoundEvent.ENTITY_EGG_THROW, Sound.Source.MASTER, 1.0f, 0.5f), event.player.position)
                 snowball.scheduleRemove(Duration.ofSeconds(30))
             }
         }
@@ -265,6 +275,31 @@ class ProjectileModule : GameModule() {
         }
         eventNode.addListener(ProjectileCollideWithBlockEvent::class.java) { event ->
             if (event.entity.entityType == EntityType.EGG) {
+                event.entity.remove()
+            }
+        }
+    }
+
+    private fun hookEnderPearlEvents(eventNode: EventNode<Event>) {
+        eventNode.addListener(PlayerUseItemEvent::class.java) { event ->
+            val itemStack = event.player.getItemInHand(event.hand)
+            if (itemStack.material() == Material.ENDER_PEARL) {
+                val pearl = EntityProjectile(event.player, EntityType.ENDER_PEARL)
+                pearl.setTag(PEARL_OWNER_TAG, event.player.uuid)
+                pearl.setInstance(event.instance, getEyePos(event.player))
+                pearl.shoot(getLaunchPos(event.player), 2.5, 1.0)
+                event.player.instance?.playSound(Sound.sound(SoundEvent.ENTITY_ENDER_PEARL_THROW, Sound.Source.MASTER, 1.0f, 0.5f), event.player.position)
+                pearl.scheduleRemove(Duration.ofSeconds(30))
+            }
+        }
+
+        eventNode.addListener(ProjectileCollideWithBlockEvent::class.java) { event ->
+            if (event.entity.entityType == EntityType.ENDER_PEARL) {
+                event.entity.instance?.players?.firstOrNull { it.uuid == event.entity.getTag(PEARL_OWNER_TAG) }?.apply {
+                    teleport(event.entity.position.add(0.0, 1.0, 0.0))
+                    damage(DamageType.GRAVITY, 5.0f)
+                    event.entity.instance?.playSound(Sound.sound(SoundEvent.ENTITY_ENDERMAN_TELEPORT, Sound.Source.MASTER, 1.0f, 1.0f), event.entity.position)
+                }
                 event.entity.remove()
             }
         }
