@@ -100,14 +100,12 @@ class RandomGameMenu(private val games: List<GameEntry>, private val parent: Lob
 
         val radius = (7 - (frame / 2 * 2)).coerceAtLeast(1)
         val startingSlot = 13 - radius / 2
-        var i = frame
-        while (true) {
-            val game = circularList[i + offset]
-            if (i >= radius + frame) break
+        for (j in 0 until radius) {
+            val game = circularList[j + frame + offset]
+            val slot = startingSlot + j
             val item = ItemStack.builder(game.material)
                 .displayName(Component.text(game.game, ALT_COLOR_1).noItalic()).build()
-            menu.setItemStack(player, startingSlot + i - frame, item)
-            i++
+            menu.setItemStack(player, slot, item)
         }
     }
 }
