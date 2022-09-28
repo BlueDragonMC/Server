@@ -7,6 +7,7 @@ import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.inventory.InventoryCloseEvent
+import net.minestom.server.event.player.PlayerTickEvent
 import net.minestom.server.inventory.Inventory
 import net.minestom.server.inventory.InventoryType
 import net.minestom.server.inventory.click.ClickType
@@ -40,7 +41,14 @@ open class GuiModule : GameModule() {
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         eventNode.addListener(InventoryCloseEvent::class.java) { event ->
             inventories[event.inventory?.windowId]?.let {
+                it.destroy(event.player)
                 it.onClosedAction?.invoke(event.player)
+            }
+        }
+        eventNode.addListener(PlayerTickEvent::class.java) { event ->
+            val openInv = event.player.openInventory?.windowId ?: return@addListener
+            inventories[openInv]?.let {
+                it.onTickAction?.invoke(event.player)
             }
         }
     }
@@ -66,12 +74,15 @@ open class GuiModule : GameModule() {
     ) {
 
         private lateinit var cachedInventory: Inventory
+        private var cachedInventories = mutableMapOf<Player, Inventory>()
 
-        internal var onClosedAction: ((Player) -> Unit)? = null
         private var onOpenedAction: ((Player) -> Unit)? = null
+        internal var onTickAction: ((Player) -> Unit)? = null
+        internal var onClosedAction: ((Player) -> Unit)? = null
 
         private fun getInventory(player: Player): Inventory {
             if (!isPerPlayer && this::cachedInventory.isInitialized) return cachedInventory
+            if (isPerPlayer && cachedInventories.containsKey(player)) return cachedInventories[player]!!
             return Inventory(inventoryType, title).apply {
                 items.forEach { item ->
                     setItemStack(item.index, item.itemStackBuilder(ItemStack.builder(item.material), player).build())
@@ -90,6 +101,7 @@ open class GuiModule : GameModule() {
                 inventories[windowId] = this@Menu
             }.also { inventory ->
                 if (!isPerPlayer) cachedInventory = inventory
+                else cachedInventories[player] = inventory
             }
         }
 
@@ -113,8 +125,16 @@ open class GuiModule : GameModule() {
             onOpenedAction = function
         }
 
+        fun onTick(function: (Player) -> Unit) {
+            onTickAction = function
+        }
+
         fun onClosed(function: (Player) -> Unit) {
             onClosedAction = function
+        }
+
+        fun destroy(player: Player) {
+            cachedInventories.remove(player)
         }
 
         val viewers: Collection<Player>
@@ -147,8 +167,16 @@ open class GuiModule : GameModule() {
             require(inventoryType.size >= 9) { "InventoryType has less than 9 slots." }
             val rows = inventoryType.size / 9
             for (i in 1..rows) {
-                slot(pos(i, 1), material, itemStackBuilder, action)
-                slot(pos(i, 9), material, itemStackBuilder, action)
+                // Top and bottom
+                if (i == 1 || i == rows) {
+                    for (j in 1 .. 9) {
+                        slot(pos(i, j), material, itemStackBuilder, action)
+                    }
+                } else {
+                    // Sides
+                    slot(pos(i, 1), material, itemStackBuilder, action)
+                    slot(pos(i, 9), material, itemStackBuilder, action)
+                }
             }
         }
 

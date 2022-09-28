@@ -1,5 +1,9 @@
-package com.bluedragonmc.games.lobby
+package com.bluedragonmc.games.lobby.menu
 
+import com.bluedragonmc.games.lobby.Leaderboard
+import com.bluedragonmc.games.lobby.LeaderboardCategory
+import com.bluedragonmc.games.lobby.LeaderboardEntry
+import com.bluedragonmc.games.lobby.Lobby
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.Game

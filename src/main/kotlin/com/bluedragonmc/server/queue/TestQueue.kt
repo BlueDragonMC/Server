@@ -101,14 +101,14 @@ class TestQueue : Queue() {
         }.repeat(Duration.ofMillis(500)).schedule()
     }
 
-    fun getMaps(gameType: String): Array<File>? {
+    override fun getMaps(gameType: String): Array<File>? {
         val worldFolder = "worlds/$gameType"
         val file = File(worldFolder)
         if (!(file.exists() && file.isDirectory)) arrayOf<File>()
         return file.listFiles()
     }
 
-    fun getMapNames(gameType: String): ArrayList<String> {
+    private fun getMapNames(gameType: String): ArrayList<String> {
         val maps = getMaps(gameType) ?: return arrayListOf()
         val mapNames = ArrayList<String>()
         for (map in maps) {
@@ -117,7 +117,7 @@ class TestQueue : Queue() {
         return mapNames
     }
 
-    fun randomMap(gameType: String): String? {
+    override fun randomMap(gameType: String): String? {
         val allMaps = getMaps(gameType)
         if (allMaps != null) return allMaps[Random.nextInt(allMaps.size)].name
         return null

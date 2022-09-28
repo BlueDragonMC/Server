@@ -1,7 +1,7 @@
 package com.bluedragonmc.games.lobby.module
 
 import com.bluedragonmc.games.lobby.Leaderboard
-import com.bluedragonmc.games.lobby.LeaderboardBrowser
+import com.bluedragonmc.games.lobby.menu.LeaderboardBrowser
 import com.bluedragonmc.games.lobby.Lobby
 import com.bluedragonmc.games.lobby.util.MapUtils
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_3

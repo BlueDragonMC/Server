@@ -14,12 +14,18 @@ import net.minestom.server.MinecraftServer
 import net.minestom.server.utils.NamespaceID
 import net.minestom.server.world.DimensionType
 import org.slf4j.LoggerFactory
+import kotlin.system.measureTimeMillis
 
 lateinit var lobby: Game
 fun isLobbyInitialized() = ::lobby.isInitialized
 private val logger = LoggerFactory.getLogger("ServerKt")
 
 fun main() {
+    val time = measureTimeMillis(::start)
+    logger.info("Game server started in ${time}ms.")
+}
+
+fun start() {
 
     Environment.setEnvironment(createEnvironment())
     logger.info("Starting Minecraft server in environment ${Environment.current::class.simpleName}")

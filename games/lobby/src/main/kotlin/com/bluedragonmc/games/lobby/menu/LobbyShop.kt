@@ -1,5 +1,6 @@
-package com.bluedragonmc.games.lobby
+package com.bluedragonmc.games.lobby.menu
 
+import com.bluedragonmc.games.lobby.Lobby
 import com.bluedragonmc.server.ALT_COLOR_1
 import com.bluedragonmc.server.ALT_COLOR_2
 import com.bluedragonmc.server.Game

@@ -1,7 +1,10 @@
-package com.bluedragonmc.games.lobby
+package com.bluedragonmc.games.lobby.menu
 
-import com.bluedragonmc.messages.GameType
-import com.bluedragonmc.server.*
+import com.bluedragonmc.games.lobby.GameEntry
+import com.bluedragonmc.games.lobby.Lobby
+import com.bluedragonmc.server.ALT_COLOR_1
+import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
+import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_3
 import com.bluedragonmc.server.module.GuiModule
 import com.bluedragonmc.server.utils.miniMessage
 import com.bluedragonmc.server.utils.noItalic
@@ -14,16 +17,13 @@ import net.kyori.adventure.text.format.TextDecoration
 import net.minestom.server.inventory.InventoryType
 import org.spongepowered.configurate.ConfigurationNode
 
-class GameSelector(private val config: ConfigurationNode, private val parent: Game) : Lobby.LobbyMenu() {
+class GameSelector(private val config: ConfigurationNode, private val parent: Lobby) : Lobby.LobbyMenu() {
 
     override lateinit var menu: GuiModule.Menu
 
     override fun populate() {
         val games = config.node("games").getList(GameEntry::class.java)!!
-        menu = parent.getModule<GuiModule>().createMenu(Component.translatable("lobby.menu.game.title"),
-            InventoryType.CHEST_1_ROW,
-            isPerPlayer = true,
-            allowSpectatorClicks = true) {
+        menu = parent.getModule<GuiModule>().createMenu(Component.translatable("lobby.menu.game.title"), InventoryType.CHEST_1_ROW, true, true) {
             games.forEachIndexed { index, (game, category, desc, time, material) ->
                 slot(index, material, { player ->
                     displayName(Component.text(game, Style.style(TextDecoration.BOLD)).noItalic()
@@ -34,8 +34,7 @@ class GameSelector(private val config: ConfigurationNode, private val parent: Ga
                     lore.add(0, Component.text("$category \u2014 \u231a $time", NamedTextColor.RED).noItalic())
                     lore(lore)
                 }) {
-                    Environment.current.queue.queue(player, GameType(game))
-                    menu.close(player)
+                    parent.getMenu<GameMenu>(game)?.open(player)
                 }
             }
         }

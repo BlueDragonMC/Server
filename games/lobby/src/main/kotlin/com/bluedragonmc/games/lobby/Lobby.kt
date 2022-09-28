@@ -1,5 +1,6 @@
 package com.bluedragonmc.games.lobby
 
+import com.bluedragonmc.games.lobby.menu.*
 import com.bluedragonmc.games.lobby.module.BossBarDisplayModule
 import com.bluedragonmc.games.lobby.module.LeaderboardsModule
 import com.bluedragonmc.games.lobby.module.ParkourModule
@@ -49,7 +50,20 @@ class Lobby : Game("Lobby", "lobbyv2.2") {
 
     override val autoRemoveInstance = false
 
-    private val queue = Environment.current.queue
+    private val menus = mutableMapOf<String, LobbyMenu>()
+
+    private fun registerMenu(menu: LobbyMenu, qualifier: String? = null) {
+        val key = if (qualifier != null) menu::class.qualifiedName!! + "$" + qualifier
+        else menu::class.qualifiedName!!
+        menus[key] = menu
+    }
+
+    internal inline fun <reified T : LobbyMenu> getMenu(qualifier: String? = null): T? =
+        getRegisteredMenu(
+            if (qualifier != null) T::class.qualifiedName!! + "$" + qualifier else T::class.qualifiedName!!
+        ) as? T
+
+    internal fun getRegisteredMenu(key: String): LobbyMenu? = menus[key]
 
     init {
 
@@ -67,7 +81,6 @@ class Lobby : Game("Lobby", "lobbyv2.2") {
         use(InventoryPermissionsModule(allowDropItem = false, allowMoveItem = false))
         use(WorldPermissionsModule(allowBlockBreak = false, allowBlockPlace = false, allowBlockInteract = true))
 
-        val menus = mutableMapOf<String, LobbyMenu>()
         // Combat zone
         use(OldCombatModule())
         // TODO make this configurable
@@ -105,12 +118,15 @@ class Lobby : Game("Lobby", "lobbyv2.2") {
                     interaction = { (player, _) ->
                         if (it.game != null) {
                             if (it.game == "random") {
-                                queue.queue(player, GameType(gameNames.random(), null, null))
+                                Environment.current.queue.queue(player, GameType(gameNames.random(), null, null))
                             } else {
-                                queue.queue(player, GameType(it.game, it.mode, it.map))
+                                Environment.current.queue.queue(player, GameType(it.game, it.mode, it.map))
                             }
                         }
-                        if (it.menu != null) menus[it.menu]?.open(player)
+                        if (it.menu != null) {
+                            val menu = getRegisteredMenu(it.menu)
+                            menu?.open(player)
+                        }
                     },
                     entityType = it.entityType ?: EntityType.PLAYER
                 ).run {
@@ -136,11 +152,15 @@ class Lobby : Game("Lobby", "lobbyv2.2") {
                     event.player.inventory.setItemStack(0, gameSelectItem)
                 }
                 eventNode.addListener(PlayerUseItemEvent::class.java) { event ->
-                    if (event.itemStack.isSimilar(gameSelectItem)) menus["all_games"]?.open(event.player)
+                    if (event.itemStack.isSimilar(gameSelectItem)) {
+                        getMenu<GameSelector>()!!.open(event.player)
+                    }
                 }
                 eventNode.addListener(
                     EventListener.builder(InventoryPreClickEvent::class.java).ignoreCancelled(false).handler { event ->
-                        if (event.clickedItem.isSimilar(gameSelectItem)) menus["all_games"]?.open(event.player)
+                        if (event.clickedItem.isSimilar(gameSelectItem)) {
+                            getMenu<GameSelector>()!!.open(event.player)
+                        }
                     }.build()
                 )
                 eventNode.addListener(PlayerDeathEvent::class.java) { event ->
@@ -154,9 +174,20 @@ class Lobby : Game("Lobby", "lobbyv2.2") {
         use(LeaderboardsModule(config))
         use(ParkourModule(config.node("parkour")))
 
-        menus["leaderboard_browser"] = LeaderboardBrowser(config, this)
-        menus["all_games"] = GameSelector(config, this)
-        menus["shop"] = LobbyShop(config, this)
+        val games = config.node("games").getList(GameEntry::class.java)!!
+
+        registerMenu(LeaderboardBrowser(config, this))
+        registerMenu(GameSelector(config, this))
+        registerMenu(LobbyShop(config, this))
+        registerMenu(RandomGameMenu(games, this))
+
+        for (entry in games) {
+            val gameName = entry.game
+            val parent: Lobby = this
+            // Register a menu for each game type
+            registerMenu(GameMenu(entry, parent), gameName)
+            registerMenu(MapSelectMenu(gameName, parent), gameName)
+        }
 
         val tips = CircularList(config.node("tips").getList(Component::class.java)!!.shuffled())
         var index = 0

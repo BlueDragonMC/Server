@@ -57,13 +57,13 @@ object IPCQueue : Queue() {
         }
     }
 
-    private fun getMaps(gameType: String): Array<File>? {
+    override fun getMaps(gameType: String): Array<File>? {
         val worldFolder = "worlds/$gameType"
         val file = File(worldFolder)
         if (!(file.exists() && file.isDirectory)) arrayOf<File>()
         return file.listFiles()
     }
 
-    private fun randomMap(gameType: String): String? = getMaps(gameType)?.randomOrNull()?.name
+    override fun randomMap(gameType: String): String? = getMaps(gameType)?.randomOrNull()?.name
 
 }
