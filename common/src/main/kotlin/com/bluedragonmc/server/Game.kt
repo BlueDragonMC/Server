@@ -5,6 +5,7 @@ import com.bluedragonmc.messages.GameType
 import com.bluedragonmc.server.event.DataLoadedEvent
 import com.bluedragonmc.server.event.GameEvent
 import com.bluedragonmc.server.event.PlayerLeaveGameEvent
+import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.database.DatabaseModule
 import com.bluedragonmc.server.module.database.MapData
@@ -106,8 +107,7 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
         use(DatabaseModule())
         use(PerInstanceChatModule)
         use(MessagingModule())
-        use(object : GameModule() {
-            override val dependencies = listOf(MessagingModule::class)
+        use(@DependsOn(MessagingModule::class) object : GameModule() {
 
             override fun initialize(parent: Game, eventNode: EventNode<Event>) {
                 eventNode.addListener(PlayerSpawnEvent::class.java) {

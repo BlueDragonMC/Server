@@ -1,9 +1,11 @@
 package com.bluedragonmc.server
 
+import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.utils.*
 import org.slf4j.LoggerFactory
 import kotlin.reflect.KClass
+import kotlin.reflect.full.findAnnotation
 
 abstract class ModuleHolder {
 
@@ -74,7 +76,7 @@ abstract class ModuleHolder {
         if (hasModule(module::class))
             throw IllegalStateException("Tried to register module that is already registered: $module")
         // Ensure this module does not depend on itself
-        if (module.dependencies.any { module::class.isInstance(it) })
+        if (getDependencies(module).any { module::class.isInstance(it) })
             throw IllegalStateException("Tried to register module which depends on itself: $module")
 
         // Create a node in the dependency tree for this module if it doesn't already exist
@@ -113,7 +115,7 @@ abstract class ModuleHolder {
     private fun addNode(module: GameModule) {
         val moduleDependencyNode = Node<ModuleDependency<*>>(FilledModuleDependency(module::class, module))
         // Add this module's dependencies as children in its branch of the tree
-        moduleDependencyNode.addChildren(module.dependencies.map { EmptyModuleDependency(it) })
+        moduleDependencyNode.addChildren(getDependencies(module).map { EmptyModuleDependency(it) })
         // Fill all dependencies which have already been registered.
         fillDependencies(moduleDependencyNode)
         // Add the node to the tree
@@ -134,11 +136,13 @@ abstract class ModuleHolder {
      * dependencies must be loaded first.
      * @return true if the module can be immediately loaded
      */
-    private fun canAddModule(module: GameModule): Boolean = module.dependencies.all { type ->
+    private fun canAddModule(module: GameModule): Boolean = getDependencies(module).all { type ->
         // Look for filled module dependencies at the root of the tree
         modules.any { module ->
             // If the node is a filled dependency, check if its type corresponds with the given parameter's type
             type.isInstance(module)
         }
     }
+
+    private fun getDependencies(module: GameModule) = module::class.findAnnotation<DependsOn>()?.dependencies ?: emptyArray()
 }

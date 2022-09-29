@@ -1,6 +1,7 @@
 package com.bluedragonmc.server.module.instance
 
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.map.AnvilFileMapProviderModule
 import net.minestom.server.MinecraftServer
 import net.minestom.server.event.Event
@@ -9,9 +10,8 @@ import net.minestom.server.instance.AnvilLoader
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.InstanceContainer
 
+@DependsOn(AnvilFileMapProviderModule::class)
 class InstanceContainerModule : InstanceModule() {
-
-    override val dependencies = listOf(AnvilFileMapProviderModule::class)
 
     private lateinit var instance: InstanceContainer
     override fun getInstance(): Instance = instance

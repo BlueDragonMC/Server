@@ -1,6 +1,7 @@
 package com.bluedragonmc.server.module.gameplay
 
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.combat.OldCombatModule
 import com.bluedragonmc.server.utils.withColor
@@ -19,13 +20,12 @@ import java.time.Duration
  * Optionally, the module prevents the player from leaving the zone if they are in a fight.
  * Requires the [MapZonesModule]
  */
+@DependsOn(MapZonesModule::class, OldCombatModule::class)
 class CombatZonesModule(
     val allowLeaveDuringCombat: Boolean,
     val minCombatSeconds: Int,
     private val startingCombatZones: MutableList<MapZonesModule.MapZone> = mutableListOf(),
 ) : GameModule() {
-
-    override val dependencies = listOf(MapZonesModule::class, OldCombatModule::class)
 
     private val combatStatus = hashMapOf<Player, Int>()
 

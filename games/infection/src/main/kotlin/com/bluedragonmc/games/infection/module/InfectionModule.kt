@@ -6,6 +6,7 @@ import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.event.PlayerLeaveGameEvent
+import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.combat.OldCombatModule
 import com.bluedragonmc.server.module.database.DatabaseModule
@@ -32,6 +33,13 @@ import java.time.Duration
  * Uses `additionalLocations[0][0]` in the map database for the single infected spawnpoint.
  * Requires on start: [DatabaseModule], [SpawnpointModule], [TeamModule], [TimedRespawnModule], [WinModule]
  */
+@DependsOn(
+    DatabaseModule::class,
+    SpawnpointModule::class,
+    TeamModule::class,
+    TimedRespawnModule::class,
+    WinModule::class
+)
 class InfectionModule(val scoreboardBinding: SidebarModule.ScoreboardBinding? = null) : GameModule() {
     private lateinit var parent: Game
     private val survivorsTeam =
@@ -39,12 +47,6 @@ class InfectionModule(val scoreboardBinding: SidebarModule.ScoreboardBinding? = 
     private val infectedTeam =
         TeamModule.Team(Component.text("game.infection.team.infected", NamedTextColor.RED), allowFriendlyFire = true)
     private val skins = hashMapOf<Player, PlayerSkin?>()
-
-    override val dependencies = listOf(DatabaseModule::class,
-        SpawnpointModule::class,
-        TeamModule::class,
-        TimedRespawnModule::class,
-        WinModule::class)
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         this.parent = parent

@@ -3,6 +3,7 @@ package com.bluedragonmc.server.module.vanilla
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.ChestOpenEvent
 import com.bluedragonmc.server.event.ChestPopulateEvent
+import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.GuiModule
 import com.bluedragonmc.server.utils.SoundUtils
@@ -26,9 +27,9 @@ import java.awt.Menu
  * Additionally, assigns an ender chest to every player, which can be accessed using any ender chest block.
  * Combine with [ChestLootModule] to add auto-generated loot to chests.
  */
+@DependsOn(GuiModule::class)
 class ChestModule : GameModule() {
 
-    override val dependencies = listOf(GuiModule::class)
     private lateinit var parent: Game
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {

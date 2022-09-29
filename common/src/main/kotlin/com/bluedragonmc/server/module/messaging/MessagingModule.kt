@@ -6,6 +6,7 @@ import com.bluedragonmc.messagingsystem.message.Message
 import com.bluedragonmc.messagingsystem.message.RPCErrorMessage
 import com.bluedragonmc.server.Environment
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.database.DatabaseModule
 import com.bluedragonmc.server.module.instance.InstanceModule
@@ -24,9 +25,8 @@ import kotlin.concurrent.timer
 import kotlin.reflect.KClass
 import kotlin.system.exitProcess
 
+@DependsOn(InstanceModule::class)
 class MessagingModule : GameModule() {
-
-    override val dependencies = listOf(InstanceModule::class)
 
     companion object {
 

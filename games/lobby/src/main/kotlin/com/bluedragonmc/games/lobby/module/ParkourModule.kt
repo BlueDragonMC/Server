@@ -2,6 +2,7 @@ package com.bluedragonmc.games.lobby.module
 
 import com.bluedragonmc.server.*
 import com.bluedragonmc.server.event.PlayerLeaveGameEvent
+import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.database.StatisticsModule
 import com.bluedragonmc.server.module.gameplay.DoubleJumpModule
@@ -31,9 +32,8 @@ import net.minestom.server.utils.NamespaceID
 import org.spongepowered.configurate.ConfigurationNode
 import org.spongepowered.configurate.objectmapping.ConfigSerializable
 
+@DependsOn(InstanceModule::class)
 class ParkourModule(private val config: ConfigurationNode) : GameModule() {
-
-    override val dependencies = listOf(InstanceModule::class)
 
     @ConfigSerializable
     data class ParkourCourse(

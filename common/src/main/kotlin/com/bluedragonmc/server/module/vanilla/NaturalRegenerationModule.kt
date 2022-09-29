@@ -2,6 +2,7 @@ package com.bluedragonmc.server.module.vanilla
 
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.GameStartEvent
+import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.combat.OldCombatModule
 import net.minestom.server.MinecraftServer
@@ -13,9 +14,8 @@ import java.time.Duration
 /**
  * Regenerates a player's health by 0.5 every second when they have been out of combat for at least 15 seconds.
  */
+@DependsOn(OldCombatModule::class)
 class NaturalRegenerationModule : GameModule() {
-
-    override val dependencies = listOf(OldCombatModule::class)
 
     private val combatStatus = hashMapOf<Player, Int>()
 

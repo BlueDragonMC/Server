@@ -17,10 +17,10 @@ import net.minestom.server.event.player.PlayerSpawnEvent
  */
 class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule() {
 
-    override val dependencies =
-        if (spawnpointProvider is TeamDatabaseSpawnpointProvider) listOf(TeamModule::class) else emptyList()
-
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
+        if (spawnpointProvider is TeamDatabaseSpawnpointProvider && !parent.hasModule<TeamModule>()) {
+            error("Team module not present! TeamDatabaseSpawnpointProvider cannot determine players' teams.")
+        }
         spawnpointProvider.initialize(parent)
         logger.info("Initialized spawnpoint provider: ${spawnpointProvider::class.simpleName}")
         eventNode.addListener(PlayerSpawnEvent::class.java) { event ->

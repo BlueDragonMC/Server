@@ -3,6 +3,7 @@ package com.bluedragonmc.server.module.minigame
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.event.KitSelectedEvent
+import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.GuiModule
 import com.bluedragonmc.server.utils.splitAndFormatLore
@@ -24,14 +25,13 @@ import net.minestom.server.item.Material
  * Use the `giveKit` function to manually give a player their selected kit.
  * When the module is unloaded, players keep their kits.
  */
+@DependsOn(GuiModule::class)
 class KitsModule(
     val showMenu: Boolean = false,
     val giveKitsOnStart: Boolean = true,
     val giveKitsOnSelect: Boolean = false,
     val selectableKits: List<Kit>,
 ) : GameModule() {
-
-    override val dependencies = listOf(GuiModule::class)
 
     private lateinit var parent: Game
 

@@ -4,6 +4,7 @@ import com.bluedragonmc.server.ALT_COLOR_1
 import com.bluedragonmc.server.ALT_COLOR_2
 import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.utils.*
 import kotlinx.coroutines.launch
@@ -18,9 +19,8 @@ import net.minestom.server.event.EventNode
 import net.minestom.server.sound.SoundEvent
 import java.time.Duration
 
+@DependsOn(DatabaseModule::class)
 class AwardsModule : GameModule() {
-
-    override val dependencies = listOf(DatabaseModule::class)
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {}
 

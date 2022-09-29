@@ -2,6 +2,7 @@ package com.bluedragonmc.server.module.gameplay
 
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.ChestPopulateEvent
+import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.vanilla.ChestModule
 import net.minestom.server.coordinate.Point
@@ -10,9 +11,8 @@ import net.minestom.server.event.EventNode
 import net.minestom.server.item.ItemStack
 import kotlin.random.Random
 
+@DependsOn(ChestModule::class)
 class ChestLootModule(private val lootProvider: ChestLootProvider) : GameModule() {
-
-    override val dependencies = listOf(ChestModule::class)
 
     interface ChestLootProvider {
         fun getLoot(chestLocation: Point): Collection<ItemStack>

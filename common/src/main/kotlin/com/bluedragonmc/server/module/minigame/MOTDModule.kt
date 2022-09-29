@@ -3,6 +3,7 @@ package com.bluedragonmc.server.module.minigame
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.database.DatabaseModule
 import com.bluedragonmc.server.module.database.MapData
@@ -21,9 +22,8 @@ import net.minestom.server.event.player.PlayerSpawnEvent
 /**
  * Displays a message to players when they join the game.
  */
+@DependsOn(DatabaseModule::class)
 class MOTDModule(val motd: Component, val showMapName: Boolean = true) : GameModule() {
-
-    override val dependencies = listOf(DatabaseModule::class)
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         val mapData = parent.mapData ?: MapData(parent.mapName)

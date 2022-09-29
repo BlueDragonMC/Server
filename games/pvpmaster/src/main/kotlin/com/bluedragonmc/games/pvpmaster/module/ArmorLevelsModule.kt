@@ -4,6 +4,7 @@ import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.event.PlayerKillPlayerEvent
+import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.gameplay.SidebarModule
 import com.bluedragonmc.server.module.minigame.KitsModule
@@ -22,9 +23,8 @@ import net.minestom.server.event.EventNode
  * When a player gets a kill with the lowest armor level (leather), they win the game.
  * This module was designed for PvPMaster, but it can be used for other games.
  */
+@DependsOn(WinModule::class, SidebarModule::class)
 class ArmorLevelsModule(private val levels: List<KitsModule.Kit>) : GameModule() {
-
-    override val dependencies = listOf(WinModule::class, SidebarModule::class)
 
     private val armorLevels = hashMapOf<Player, Int>()
     private lateinit var parent: Game

@@ -3,6 +3,7 @@ package com.bluedragonmc.server.module.database
 import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.DataLoadedEvent
+import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.minigame.WinModule
 import com.github.benmanes.caffeine.cache.Cache
@@ -22,9 +23,8 @@ import java.util.function.Predicate
  * A module to save and retrieve players' statistics,
  * as well as rank players by their statistic values.
  */
+@DependsOn(DatabaseModule::class)
 class StatisticsModule(private val recordWins: Boolean = true) : GameModule() {
-
-    override val dependencies = listOf(DatabaseModule::class)
 
     companion object {
         // Caches should be static to reduce the number of expensive DB queries
