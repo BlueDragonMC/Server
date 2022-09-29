@@ -12,6 +12,7 @@ import com.bluedragonmc.server.module.GuiModule
 import com.bluedragonmc.server.module.combat.CustomDeathMessageModule
 import com.bluedragonmc.server.module.combat.OldCombatModule
 import com.bluedragonmc.server.module.config.ConfigModule
+import com.bluedragonmc.server.module.database.CosmeticsModule
 import com.bluedragonmc.server.module.database.StatisticsModule
 import com.bluedragonmc.server.module.gameplay.*
 import com.bluedragonmc.server.module.instance.SharedInstanceModule
@@ -140,6 +141,8 @@ class Lobby : Game("Lobby", "lobbyv2.2") {
 
         use(BossBarDisplayModule(bossBars))
         use(StatisticsModule())
+        use(CosmeticsModule())
+        use(LobbyCosmeticsModule())
         use(object : GameModule() {
             override fun initialize(parent: Game, eventNode: EventNode<Event>) {
                 eventNode.addListener(PlayerSpawnEvent::class.java) { event ->

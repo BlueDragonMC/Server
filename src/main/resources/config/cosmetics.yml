@@ -1,0 +1,10 @@
+groups:
+  - name: Double Jump Effect
+    cosmetics:
+      - lobby_double_jump_note
+cosmetics:
+  - id: lobby_double_jump_note
+    name: Note Double Jump Effect
+    material: minecraft:note_block
+    description: ""
+    cost: 50

@@ -10,7 +10,6 @@ import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextColor
 import net.minestom.server.coordinate.Pos
-import net.minestom.server.item.Material
 import org.litote.kmongo.setValue
 import java.time.Duration
 import java.time.Instant
@@ -29,7 +28,7 @@ data class PlayerDocument @OptIn(ExperimentalSerializationApi::class) constructo
     var punishments: MutableList<Punishment> = mutableListOf(),
     var statistics: MutableMap<String, Double> = mutableMapOf(),
     var achievements: List<Achievement> = emptyList(),
-    var ownedCosmetics: List<Cosmetic> = emptyList(),
+    var cosmetics: List<CosmeticEntry> = emptyList(),
     var permissions: MutableList<String> = mutableListOf(),
 ) {
 
@@ -66,7 +65,8 @@ data class PlayerDocument @OptIn(ExperimentalSerializationApi::class) constructo
     }
 }
 
-enum class Cosmetic(val displayName: String, val description: String, val icon: Material, val unlockCost: Int)
+@Serializable
+data class CosmeticEntry(val id: String, val equipped: Boolean = false)
 
 enum class PunishmentType {
     BAN, MUTE, WARNING, COMPETITIVE_BAN
@@ -97,16 +97,9 @@ data class Punishment(
     }
 }
 
-enum class AchievementType(
-    val displayName: String,
-    val description: String,
-) {
-    JOIN_SERVER("Welcome to BlueDragon!", "Join the server for the first time"),
-}
-
 @Serializable
 data class Achievement(
-    val key: AchievementType,
+    val id: String,
     @Serializable(with = DateSerializer::class) val earnedAt: Date,
 )
 
