@@ -1,11 +1,14 @@
 package com.bluedragonmc.server.module.minigame
 
+import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_3
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.GameEvent
 import com.bluedragonmc.server.module.GameModule
+import com.bluedragonmc.server.module.GlobalCosmeticModule
 import com.bluedragonmc.server.module.database.AwardsModule
+import com.bluedragonmc.server.utils.CircularList
 import com.bluedragonmc.server.utils.FireworkUtils
 import com.bluedragonmc.server.utils.surroundWithSeparators
 import net.kyori.adventure.text.Component
@@ -28,7 +31,7 @@ class WinModule(
 ) : GameModule() {
     private lateinit var parent: Game
 
-    internal var isWinnerDeclared = false
+    private var isWinnerDeclared = false
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         this.parent = parent
@@ -54,7 +57,8 @@ class WinModule(
                 if (coins == 0) return@forEach
                 parent.getModule<AwardsModule>().awardCoins(
                     player, coins, Component.translatable(
-                    if (player in event.winningTeam.players) "module.win.coins.won" else "module.win.coins.participation")
+                        if (player in event.winningTeam.players) "module.win.coins.won" else "module.win.coins.participation"
+                    )
                 )
             }
         }
@@ -79,8 +83,12 @@ class WinModule(
                         NamedTextColor.GOLD,
                         TextDecoration.BOLD), Component.empty()))
                     scheduleWinFireworks(p)
-                } else p.showTitle(Title.title(Component.translatable("module.win.title.lost", NamedTextColor.RED, TextDecoration.BOLD),
-                    Component.translatable("module.win.subtitle.lost", NamedTextColor.RED)))
+                } else p.showTitle(
+                    Title.title(
+                        Component.translatable("module.win.title.lost", NamedTextColor.RED, TextDecoration.BOLD),
+                        Component.translatable("module.win.subtitle.lost", NamedTextColor.RED)
+                    )
+                )
             }
             parent.endGame(Duration.ofSeconds(5))
         }
@@ -88,30 +96,43 @@ class WinModule(
 
     class WinnerDeclaredEvent(game: Game, val winningTeam: TeamModule.Team) : GameEvent(game)
 
-    fun scheduleWinFireworks(player: Player) {
-        var color = player.name.color() ?: BRAND_COLOR_PRIMARY_3
-        if (color.asHSV() == NamedTextColor.GRAY.asHSV()) color = BRAND_COLOR_PRIMARY_3
+    private fun scheduleWinFireworks(player: Player) {
+        val colors = if (parent.hasModule<GlobalCosmeticModule>()) {
+            parent.getModule<GlobalCosmeticModule>().getFireworkColor(player)
+        } else {
+            if (player.name.color() != null && player.name.color() != NamedTextColor.GRAY) {
+                arrayOf(player.name.color()!!)
+            } else {
+                arrayOf(BRAND_COLOR_PRIMARY_1, BRAND_COLOR_PRIMARY_2, BRAND_COLOR_PRIMARY_3)
+            }
+        }
         val instance = parent.getInstance()
         val availablePositions = parent.getModule<SpawnpointModule>().spawnpointProvider.getAllSpawnpoints()
-        val fireworkMeta = FireworkMeta.Builder().effects(
+        val fireworkMeta = colors.map {
+            FireworkMeta.Builder().effects(
                 listOf(
                     FireworkEffect(
                         true,
                         true,
                         FireworkEffectType.SMALL_BALL,
-                        listOf(Color(color.red(), color.green(), color.blue())),
-                        listOf(Color(color.red(), color.green(), color.blue()))
+                        listOf(Color(it.red(), it.green(), it.blue())),
+                        listOf(Color(it.red(), it.green(), it.blue()))
                     )
                 )
-            )
-            // .flightDuration(3)
-            .build()
+            ).build()
+        }
+        val circular = CircularList(fireworkMeta)
         var delay = 0L
-        for (i in 1 .. 3) {
-            for (fireworkPosition in availablePositions) {
+        for (i in 1..3) {
+            availablePositions.forEachIndexed { index, fireworkPosition ->
                 MinecraftServer.getSchedulerManager().buildTask {
                     if (player.instance?.uniqueId != instance.uniqueId) return@buildTask
-                    FireworkUtils.spawnFirework(player.instance!!, fireworkPosition.add(0.0, 0.0, 0.0), 1500, fireworkMeta)
+                    FireworkUtils.spawnFirework(
+                        player.instance!!,
+                        fireworkPosition.add(0.0, 0.0, 0.0),
+                        1500,
+                        circular[index]
+                    )
                 }.delay(Duration.ofMillis(delay)).schedule()
                 delay += 350
             }

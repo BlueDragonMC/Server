@@ -45,7 +45,7 @@ data class PlayerDocument @OptIn(ExperimentalSerializationApi::class) constructo
     }
 
     suspend fun getAllPermissions(): List<String> =
-        permissions + getGroups().map { it.permissions }.flatten().distinct()
+        permissions + getGroups().flatMap { it.permissions }.distinct()
 
     suspend fun <T> update(field: KMutableProperty<T>, value: T) {
         DatabaseModule.getPlayersCollection().updateOneById(uuid.toString(), setValue(field, value))
@@ -66,7 +66,7 @@ data class PlayerDocument @OptIn(ExperimentalSerializationApi::class) constructo
 }
 
 @Serializable
-data class CosmeticEntry(val id: String, val equipped: Boolean = false)
+data class CosmeticEntry(val id: String, var equipped: Boolean = false)
 
 enum class PunishmentType {
     BAN, MUTE, WARNING, COMPETITIVE_BAN
@@ -119,7 +119,7 @@ data class PermissionGroup(
     }
 
     suspend fun getAllPermissions(): List<String> {
-        return permissions + getChildGroups().map { getAllPermissions() }.flatten()
+        return permissions + getChildGroups().flatMap { getAllPermissions() }
     }
 
     suspend fun <T> update(field: KMutableProperty<T>, value: T) {

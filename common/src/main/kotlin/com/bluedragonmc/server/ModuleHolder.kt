@@ -100,10 +100,10 @@ abstract class ModuleHolder {
     abstract fun <T : GameModule> register(module: T)
 
     protected fun checkUnmetDependencies() {
-        val unmetDependencies = dependencyTree.elementsAtDepth(1)
-            .filter { it.value !is FilledModuleDependency<*> }
-        for (dep in unmetDependencies) {
-            throw IllegalStateException("Unmet dependency: ${dep.parent.value?.type} requires a dependency of type ${dep.value?.type}, but none was found.")
+        dependencyTree.dfs { node, _ ->
+            if (node.value is EmptyModuleDependency<*>) {
+                throw IllegalStateException("Unmet dependency: ${node.value?.type} was not found, but is required by ${node.parent.value?.type}.")
+            }
         }
     }
 

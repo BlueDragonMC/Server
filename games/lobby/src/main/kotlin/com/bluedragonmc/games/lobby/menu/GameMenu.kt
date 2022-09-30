@@ -63,7 +63,7 @@ class GameMenu(private val config: GameEntry, private val parent: Lobby) : Lobby
 
             // Back button (bottom left)
             slot(pos(5, 1), Material.ARROW, {
-                displayName(Component.translatable("lobby.menu.lb.exit", NamedTextColor.RED).noItalic())
+                displayName(Component.translatable("lobby.menu.back", NamedTextColor.RED).noItalic())
             }) {
                 parent.getMenu<GameSelector>()?.open(player)
             }

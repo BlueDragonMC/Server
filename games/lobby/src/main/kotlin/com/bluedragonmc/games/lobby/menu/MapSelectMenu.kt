@@ -30,7 +30,7 @@ class MapSelectMenu(private val gameName: String, private val parent: Lobby) : L
 
             // Back button
             slot(26, Material.ARROW, {
-                displayName(Component.translatable("lobby.menu.lb.exit", NamedTextColor.RED).noItalic())
+                displayName(Component.translatable("lobby.menu.back", NamedTextColor.RED).noItalic())
             }) {
                 parent.getMenu<GameMenu>(gameName)?.open(player)
             }

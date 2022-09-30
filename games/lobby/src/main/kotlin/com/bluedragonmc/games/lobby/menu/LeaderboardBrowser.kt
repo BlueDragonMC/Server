@@ -36,7 +36,7 @@ class LeaderboardBrowser(private val config: ConfigurationNode, private val pare
                     }) { lbMenu.open(player) }
                 }
                 slot(26, Material.ARROW, {
-                    displayName(Component.translatable("lobby.menu.lb.exit", NamedTextColor.RED).noItalic())
+                    displayName(Component.translatable("lobby.menu.back", NamedTextColor.RED).noItalic())
                 }) { menu.close(player) }
             }
     }
@@ -44,7 +44,7 @@ class LeaderboardBrowser(private val config: ConfigurationNode, private val pare
     private fun createCategoryMenu(category: LeaderboardCategory) = parent.getModule<GuiModule>()
         .createMenu(Component.translatable(category.name), InventoryType.CHEST_3_ROW, false, true) {
             slot(26, Material.ARROW, {
-                displayName(Component.translatable("lobby.menu.lb.back",
+                displayName(Component.translatable("lobby.menu.back.to",
                     NamedTextColor.RED,
                     Component.translatable(category.name)).noItalic())
             }) { open(player) }

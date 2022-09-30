@@ -137,6 +137,13 @@ open class GuiModule : GameModule() {
             cachedInventories.remove(player)
         }
 
+        fun rerender(player: Player) {
+            if (isPerPlayer) {
+                cachedInventories.remove(player)
+                player.openInventory(getInventory(player))
+            }
+        }
+
         val viewers: Collection<Player>
             get() {
                 require(!isPerPlayer) { "Per-player inventories are not supported" }

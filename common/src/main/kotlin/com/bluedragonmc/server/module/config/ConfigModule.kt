@@ -21,7 +21,7 @@ import org.spongepowered.configurate.yaml.YamlConfigurationLoader
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
-class ConfigModule(private val configFileName: String) : GameModule() {
+class ConfigModule(private val configFileName: String? = null) : GameModule() {
 
     private lateinit var root: ConfigurationNode
     private val filePrefix = "config/"
@@ -50,11 +50,17 @@ class ConfigModule(private val configFileName: String) : GameModule() {
     }
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
-        root = loadFile(configFileName)
+        if (configFileName != null) {
+            root = loadFile(configFileName)
+        }
     }
 
     fun getConfig(): ConfigurationNode {
-        return root
+        if (::root.isInitialized) {
+            return root
+        } else {
+            throw IllegalStateException("ConfigModule created with no default config file path!")
+        }
     }
 
     fun loadExtra(fileName: String): ConfigurationNode? {

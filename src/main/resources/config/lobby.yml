@@ -74,19 +74,19 @@ npcs:
       signature: "lbRumGqQFHNNV+CiT3bkc6cEE+bx7daVuBG0wUwY11ZC+hgLJjNAWu/9XUDsqkgxBQBLRb3SfGYXFPzK9mcdOICB7WAJuiyhu3DIsRjtko+MUBahwpBSq51LZs2/48EkaYc1aXkd6IzuN7346QqOZGd2wOLM+eEmmbReS94DMMiKke0xF9ZfmIoVMrXx9MWxKQQ+ORjTFiSDwG+MflP6K7MdTBns+wD87BtVI3s3T1HwWX0mMtKG7ojBLGQ1tgNSVkSDYChJtQclC5eblP3i38UuECdQWJycmA+4UTRlf3qBCpUC1rm1oXyRUZlAFa1FMn64sSc/313dTegUj5PMfCo8jUCkrQmJS4Rxl2bQteltqIHNDIvf5Mp/up+jLUbrzJHG9fRhkS/QIuqRz19ynsawq2b9Ckgbyyn4XWo4ELa90KaI+U4o1MkqZ+Y4mxYbNSUU96ZF0jdZAIXiH589myx4FtnEpQDOUtYh4tIMZqgUcvoZGsHN895IM17PMl8JSCAiYSWOXuzEZu0iGcRtwQn2Zxjet8TAWzKD7wPx3P0sh8L418g12RDRvShEOfY1kHkcs5qQpTTE08Bm+IlVL5UVpmdoDNiWpGv2i/rzmDOoVJpt8zq7fEwTtH38Iuh/pKhxv4EBH+J9bnJ5WM9fqQB3yuAiQTExt3aLm10Mi8Y="
   - name: "<bold><a1><lang:lobby.npc.shop>"
     pos: -12.5, 61.0, -6.5, -145.0, 0.0 # SHOPKEEPER
-    menu: com.bluedragonmc.games.lobby.menu.LobbyShop
+    menu: com.bluedragonmc.games.lobby.menu.cosmetic.CosmeticsMenu
     skin:
       textures: "ewogICJ0aW1lc3RhbXAiIDogMTU5ODY4MDQzMzgyMywKICAicHJvZmlsZUlkIiA6ICI3MzgyZGRmYmU0ODU0NTVjODI1ZjkwMGY4OGZkMzJmOCIsCiAgInByb2ZpbGVOYW1lIiA6ICJ4cWwiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTNjNDY4OTIzMzY1ZmU2NjczYjgwZWQ3ZGNmYzVjYjBiYzI2YzQzYWQ5MWQ2ZjA0ZWFmYTFhMWViMDQ4Y2ZlMCIsCiAgICAgICJtZXRhZGF0YSIgOiB7CiAgICAgICAgIm1vZGVsIiA6ICJzbGltIgogICAgICB9CiAgICB9CiAgfQp9"
       signature: "DvOnmAJDZqihPpk+xbI3K6NtbKyjij1afaoiZ4vWpM7a6b380YN9nl29kUXLAQUUDl9DZ7vGtsarTU6B0TMVqLg97NH1S/v3tFsveOgyS1TVMYBexz1jEfwxPlq1FPaONTJpiN1+kvT3UQfvh6+cS3UiHVdyd08KDgir5vZyvo5bU6arJJEwQLuPexR7SGHLmwXfWBzUkJd9b16XVcdkrWMefmFRXIsMJzmE9Bqtm6p5pY923g4BFeah7J8zKywPbzcMUkWU0PlAhdkAjxn09Y/UmTGYt3heP6Clk+DTre/9mkw4iPWqihbVLI3Xyt0qczjYXmPMre1sIhDLxst0OyvJhGjex0LlI40C+BDDoYJpJVtz8qFTrudB3+BctpMOreT68RCJtrId0Hq63dkstuQq4Nc/YXK9ssztgzQUp7k64L+FV0VCwmDihwKOmzpju2fz7x2hs2FJNDbtm0gtfugxp2Idy1QgBW24MiVyZa4WtnK480sGJwgpsu8bCE4r57ko6jMaZDBOa8T1kR4Ejofiiy+J60AN0JsiKdF6qMFBHLfNdtAX7CvZWle/Tt2JUHKrHubO63UP+iej2BuR0K/E8Vc0r2SG1jVUIZSySKIA4l09p2TGtqKLvCXSKk6/dXjR49E2pAHHI8fZZkdzL4IiYpW+paFzyL6KyT53iN8="
   - name: "<bold><a1><lang:lobby.npc.shop>"
     pos: 37.5, 65.0, 2.5, 120.0, 0.0 # SHOPKEEPER (FAR ISLAND, RIGHT)
-    menu: com.bluedragonmc.games.lobby.menu.LobbyShop
+    menu: com.bluedragonmc.games.lobby.menu.cosmetic.CosmeticsMenu
     skin:
       textures: "ewogICJ0aW1lc3RhbXAiIDogMTU5ODY4MDQzMzgyMywKICAicHJvZmlsZUlkIiA6ICI3MzgyZGRmYmU0ODU0NTVjODI1ZjkwMGY4OGZkMzJmOCIsCiAgInByb2ZpbGVOYW1lIiA6ICJ4cWwiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTNjNDY4OTIzMzY1ZmU2NjczYjgwZWQ3ZGNmYzVjYjBiYzI2YzQzYWQ5MWQ2ZjA0ZWFmYTFhMWViMDQ4Y2ZlMCIsCiAgICAgICJtZXRhZGF0YSIgOiB7CiAgICAgICAgIm1vZGVsIiA6ICJzbGltIgogICAgICB9CiAgICB9CiAgfQp9"
       signature: "DvOnmAJDZqihPpk+xbI3K6NtbKyjij1afaoiZ4vWpM7a6b380YN9nl29kUXLAQUUDl9DZ7vGtsarTU6B0TMVqLg97NH1S/v3tFsveOgyS1TVMYBexz1jEfwxPlq1FPaONTJpiN1+kvT3UQfvh6+cS3UiHVdyd08KDgir5vZyvo5bU6arJJEwQLuPexR7SGHLmwXfWBzUkJd9b16XVcdkrWMefmFRXIsMJzmE9Bqtm6p5pY923g4BFeah7J8zKywPbzcMUkWU0PlAhdkAjxn09Y/UmTGYt3heP6Clk+DTre/9mkw4iPWqihbVLI3Xyt0qczjYXmPMre1sIhDLxst0OyvJhGjex0LlI40C+BDDoYJpJVtz8qFTrudB3+BctpMOreT68RCJtrId0Hq63dkstuQq4Nc/YXK9ssztgzQUp7k64L+FV0VCwmDihwKOmzpju2fz7x2hs2FJNDbtm0gtfugxp2Idy1QgBW24MiVyZa4WtnK480sGJwgpsu8bCE4r57ko6jMaZDBOa8T1kR4Ejofiiy+J60AN0JsiKdF6qMFBHLfNdtAX7CvZWle/Tt2JUHKrHubO63UP+iej2BuR0K/E8Vc0r2SG1jVUIZSySKIA4l09p2TGtqKLvCXSKk6/dXjR49E2pAHHI8fZZkdzL4IiYpW+paFzyL6KyT53iN8="
   - name: "<bold><a1><lang:lobby.npc.shop>"
     pos: 41.5, 65.0, -2.5, 145.0, 0.0 # SHOPKEEPER (FAR ISLAND, LEFT)
-    menu: com.bluedragonmc.games.lobby.menu.LobbyShop
+    menu: com.bluedragonmc.games.lobby.menu.cosmetic.CosmeticsMenu
     skin:
       textures: "ewogICJ0aW1lc3RhbXAiIDogMTU5ODY4MDQzMzgyMywKICAicHJvZmlsZUlkIiA6ICI3MzgyZGRmYmU0ODU0NTVjODI1ZjkwMGY4OGZkMzJmOCIsCiAgInByb2ZpbGVOYW1lIiA6ICJ4cWwiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTNjNDY4OTIzMzY1ZmU2NjczYjgwZWQ3ZGNmYzVjYjBiYzI2YzQzYWQ5MWQ2ZjA0ZWFmYTFhMWViMDQ4Y2ZlMCIsCiAgICAgICJtZXRhZGF0YSIgOiB7CiAgICAgICAgIm1vZGVsIiA6ICJzbGltIgogICAgICB9CiAgICB9CiAgfQp9"
       signature: "DvOnmAJDZqihPpk+xbI3K6NtbKyjij1afaoiZ4vWpM7a6b380YN9nl29kUXLAQUUDl9DZ7vGtsarTU6B0TMVqLg97NH1S/v3tFsveOgyS1TVMYBexz1jEfwxPlq1FPaONTJpiN1+kvT3UQfvh6+cS3UiHVdyd08KDgir5vZyvo5bU6arJJEwQLuPexR7SGHLmwXfWBzUkJd9b16XVcdkrWMefmFRXIsMJzmE9Bqtm6p5pY923g4BFeah7J8zKywPbzcMUkWU0PlAhdkAjxn09Y/UmTGYt3heP6Clk+DTre/9mkw4iPWqihbVLI3Xyt0qczjYXmPMre1sIhDLxst0OyvJhGjex0LlI40C+BDDoYJpJVtz8qFTrudB3+BctpMOreT68RCJtrId0Hq63dkstuQq4Nc/YXK9ssztgzQUp7k64L+FV0VCwmDihwKOmzpju2fz7x2hs2FJNDbtm0gtfugxp2Idy1QgBW24MiVyZa4WtnK480sGJwgpsu8bCE4r57ko6jMaZDBOa8T1kR4Ejofiiy+J60AN0JsiKdF6qMFBHLfNdtAX7CvZWle/Tt2JUHKrHubO63UP+iej2BuR0K/E8Vc0r2SG1jVUIZSySKIA4l09p2TGtqKLvCXSKk6/dXjR49E2pAHHI8fZZkdzL4IiYpW+paFzyL6KyT53iN8="
@@ -287,7 +287,7 @@ parkour:
       - minecraft:water
     reset-to: 6.5, 48.0, -27.5, -90.0, 20.0
 news:
+  - "Sep 30: New Cosmetics!"
   - "Sep 24: Lobby update!"
   - "Aug 31: Added leaderboards!"
   - "Aug 28: FastFall updates!"
-  - "Aug 18: New game: ArenaPvP!"

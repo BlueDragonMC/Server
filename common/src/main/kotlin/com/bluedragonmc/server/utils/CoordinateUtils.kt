@@ -26,12 +26,12 @@ object CoordinateUtils {
         val minX = min(pos1.blockX(), pos2.blockX())
         val minY = min(pos1.blockY(), pos2.blockY())
         val minZ = min(pos1.blockZ(), pos2.blockZ())
-        return (0 .. dx).map { x ->
-            (0 .. dy).map { y ->
+        return (0 .. dx).flatMap { x ->
+            (0 .. dy).flatMap { y ->
                 (0 .. dz).map { z ->
                     Pos(x.toDouble() + minX, y.toDouble() + minY, z.toDouble() + minZ)
                 }
             }
-        }.flatten().flatten()
+        }
     }
 }

@@ -156,7 +156,7 @@ class ArgumentPermission(id: String) : Argument<String>(id) {
     companion object {
         val allPermissions by lazy {
             runBlocking {
-                DatabaseModule.getAllGroups().map { it.permissions }.flatten().distinct()
+                DatabaseModule.getAllGroups().flatMap { it.permissions }.distinct()
             }
         }
     }

@@ -1,6 +1,9 @@
 package com.bluedragonmc.games.lobby
 
 import com.bluedragonmc.games.lobby.menu.*
+import com.bluedragonmc.games.lobby.menu.cosmetic.CosmeticCategoryMenu
+import com.bluedragonmc.games.lobby.menu.cosmetic.CosmeticGroupMenu
+import com.bluedragonmc.games.lobby.menu.cosmetic.CosmeticsMenu
 import com.bluedragonmc.games.lobby.module.BossBarDisplayModule
 import com.bluedragonmc.games.lobby.module.LeaderboardsModule
 import com.bluedragonmc.games.lobby.module.ParkourModule
@@ -181,8 +184,8 @@ class Lobby : Game("Lobby", "lobbyv2.2") {
 
         registerMenu(LeaderboardBrowser(config, this))
         registerMenu(GameSelector(config, this))
-        registerMenu(LobbyShop(config, this))
         registerMenu(RandomGameMenu(games, this))
+        registerMenu(CosmeticsMenu(this))
 
         for (entry in games) {
             val gameName = entry.game
@@ -190,6 +193,14 @@ class Lobby : Game("Lobby", "lobbyv2.2") {
             // Register a menu for each game type
             registerMenu(GameMenu(entry, parent), gameName)
             registerMenu(MapSelectMenu(gameName, parent), gameName)
+        }
+
+        for (category in getModule<CosmeticsModule>().getCategories()) {
+            registerMenu(CosmeticCategoryMenu(this, category.name), category.name)
+        }
+
+        for (group in getModule<CosmeticsModule>().getGroups()) {
+            registerMenu(CosmeticGroupMenu(this, group.name), group.name)
         }
 
         val tips = CircularList(config.node("tips").getList(Component::class.java)!!.shuffled())

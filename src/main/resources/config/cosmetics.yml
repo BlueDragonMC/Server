@@ -1,10 +1,96 @@
-groups:
-  - name: Double Jump Effect
-    cosmetics:
-      - lobby_double_jump_note
-cosmetics:
-  - id: lobby_double_jump_note
-    name: Note Double Jump Effect
-    material: minecraft:note_block
-    description: ""
-    cost: 50
+categories:
+  - name: WackyMaze
+    material: minecraft:stick
+    groups:
+      - name: Knockback Stick
+        material: minecraft:stick
+        description: |
+          Fancy upgrades for the standard
+          knockback stick.
+        cosmetics:
+          - id: wackymaze_stick_fish
+            name: Fish
+            material: minecraft:cod
+            description: "A fish? Really?"
+            cost: 5000
+          - id: wackymaze_stick_door
+            name: Oak Door
+            material: minecraft:oak_door
+            description: "Doesn't seem very aerodynamic..."
+            cost: 5000
+          - id: wackymaze_stick_bamboo
+            name: Bamboo
+            material: minecraft:bamboo
+            description: "Environmentally friendly!"
+            cost: 5000
+          - id: wackymaze_stick_hoe
+            name: Netherite Hoe
+            material: minecraft:netherite_hoe
+            description: "Overkill."
+            cost: 5000
+          - id: wackymaze_stick_deadbush
+            name: Dead Bush
+            material: minecraft:dead_bush
+            description: "Hopefully not as dead as you are."
+            cost: 5000
+  - name: Global
+    material: minecraft:diamond_block
+    groups:
+      - name: Firework Color
+        material: minecraft:firework_rocket
+        description: |
+          The color of fireworks set off
+          when you win a game on BlueDragon.
+        cosmetics:
+          - id: global_firework_red
+            name: Red
+            material: minecraft:red_wool
+            description: "Red fireworks as a win effect."
+            cost: 500
+          - id: global_firework_orange
+            name: Orange
+            material: minecraft:orange_wool
+            description: "Orange fireworks as a win effect."
+            cost: 500
+          - id: global_firework_yellow
+            name: Yellow
+            material: minecraft:yellow_wool
+            description: "Yellow fireworks as a win effect."
+            cost: 500
+          - id: global_firework_green
+            name: Green
+            material: minecraft:green_wool
+            description: "Green fireworks as a win effect."
+            cost: 500
+          - id: global_firework_blue
+            name: Blue
+            material: minecraft:blue_wool
+            description: "Blue fireworks as a win effect."
+            cost: 500
+          - id: global_firework_purple
+            name: Purple
+            material: minecraft:purple_wool
+            description: "Purple fireworks as a win effect."
+            cost: 500
+          - id: global_firework_rainbow
+            name: Rainbow
+            material: minecraft:emerald_block
+            description: "Rainbow fireworks as a win effect."
+            cost: 2000
+  - name: Lobby
+    material: minecraft:dragon_head
+    groups:
+      - name: Double Jump Effect
+        material: minecraft:iron_boots
+        description: |
+          Sweet particles and other effects
+          that show up when you double jump
+          in the Lobby.
+        cosmetics:
+          - id: lobby_double_jump_note
+            name: Note
+            material: minecraft:note_block
+            description: |
+              A musical effect which appears 
+              all around you when you double jump.
+            cost: 1500
