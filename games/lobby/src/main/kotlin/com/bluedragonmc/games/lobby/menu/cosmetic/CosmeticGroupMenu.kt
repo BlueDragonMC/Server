@@ -37,13 +37,16 @@ class CosmeticGroupMenu(private val parent: Lobby, private val groupName: String
                     displayName(cosmetic.name.withColor(BRAND_COLOR_PRIMARY_2).noItalic())
                     val owned = cosmetics.hasCosmetic(player, c)
                     val equipped = owned && cosmetics.isCosmeticEquipped(player, c)
+                    val balance = (player as CustomPlayer).data.coins
 
                     val status = if (equipped) {
                         Component.translatable("lobby.menu.cosmetics.equipped", BRAND_COLOR_PRIMARY_1)
                     } else if (owned) {
                         Component.translatable("lobby.menu.cosmetics.owned", BRAND_COLOR_PRIMARY_2)
-                    } else {
+                    } else if (balance >= cosmetic.cost) {
                         Component.translatable("lobby.menu.cosmetics.purchase", ALT_COLOR_2, Component.text(cosmetic.cost))
+                    } else {
+                        Component.translatable("lobby.menu.cosmetics.cannot_afford.short", NamedTextColor.RED, Component.text(balance), Component.text(cosmetic.cost))
                     }
                     val description = splitAndFormatLore(cosmetic.description, NamedTextColor.GRAY, player) + status.noItalic()
 
