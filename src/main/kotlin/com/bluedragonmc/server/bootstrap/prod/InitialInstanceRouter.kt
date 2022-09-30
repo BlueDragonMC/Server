@@ -27,7 +27,6 @@ import net.minestom.server.network.player.PlayerSocketConnection
 import net.minestom.server.utils.binary.BinaryReader
 import java.net.InetSocketAddress
 import java.util.concurrent.ThreadLocalRandom
-import java.util.concurrent.locks.ReentrantLock
 
 object InitialInstanceRouter : Bootstrap(ProductionEnvironment::class) {
 
@@ -48,34 +47,18 @@ object InitialInstanceRouter : Bootstrap(ProductionEnvironment::class) {
 
     private class PartialPlayer {
 
-        companion object {
-            val lock = ReentrantLock()
-
-            fun <T> withLock(block: () -> T): T {
-                lock.lock()
-                try {
-                    return block()
-                } finally {
-                    lock.unlock()
-                }
-            }
-        }
-
-        @Volatile
         var player: Player? = null
             set(value) {
                 field = value
                 // Fetch the player's data document
                 if (value != null) DatabaseModule.IO.launch {
                     DatabaseModule.loadDataDocument(value as CustomPlayer)
-                    withLock { tryStartPlayState() }
+                    tryStartPlayState()
                 }
             }
 
-        @Volatile
         var startingInstance: Instance? = null
 
-        @Volatile
         private var playing = false
 
         fun isReady() =
@@ -87,9 +70,7 @@ object InitialInstanceRouter : Bootstrap(ProductionEnvironment::class) {
                 logger.trace("Not ready, can't start play state; player = '$player', startingInstance = '$startingInstance'")
                 return
             }
-            withLock {
-                playing = true
-            }
+            playing = true
             MinecraftServer.getSchedulerManager().scheduleNextTick {
                 logger.debug("Starting PLAY state for Player '${player!!.username}'")
                 MinecraftServer.getConnectionManager().startPlayState(player!!, true)
@@ -105,9 +86,7 @@ object InitialInstanceRouter : Bootstrap(ProductionEnvironment::class) {
         MinecraftServer.getGlobalEventHandler()
             .addListener(PlayerLoginEvent::class.java, ::handlePlayerLogin)
         MinecraftServer.getGlobalEventHandler().addListener(PlayerDisconnectEvent::class.java) { event ->
-            PartialPlayer.withLock {
-                players.remove(event.player.username)
-            }
+            players.remove(event.player.username)
         }
     }
 
@@ -149,13 +128,9 @@ object InitialInstanceRouter : Bootstrap(ProductionEnvironment::class) {
             return
         }
         logger.debug("Trying to send player $username to instance $instance")
-        PartialPlayer.withLock {
-            logger.trace("Instance destination trace - acquired lock")
-            players.getOrPut(username) { PartialPlayer() }.apply {
-                startingInstance = instance
-                tryStartPlayState()
-            }
-            logger.trace("Instance destination trace - releasing lock")
+        players.getOrPut(username) { PartialPlayer() }.apply {
+            startingInstance = instance
+            tryStartPlayState()
         }
     }
 
@@ -182,36 +157,27 @@ object InitialInstanceRouter : Bootstrap(ProductionEnvironment::class) {
         val player = MinecraftServer.getConnectionManager().playerProvider.createPlayer(uuid, username, connection)
         player.skin = skin
         logger.debug("Velocity modern forwarding succeeded for $username; created player object: $player")
-        PartialPlayer.withLock {
-            logger.trace("Velocity forwarding trace - acquired lock")
-            players.getOrPut(username) { PartialPlayer() }.apply {
-                this.player = player
-                tryStartPlayState()
-            }
-            logger.trace("Velocity forwarding trace - releasing lock")
+        players.getOrPut(username) { PartialPlayer() }.apply {
+            this.player = player
+            tryStartPlayState()
         }
     }
 
     private fun handlePlayerLogin(event: PlayerLoginEvent) {
         // Check if the player's spawning instance was retrieved from Velocity
-        PartialPlayer.lock.lock()
-        val instance: Instance?
-        try {
-            if (!players.containsKey(event.player.username)) {
-                // If there is no entry for the player, the handshake must have failed.
-                event.player.sendPacket(LoginDisconnectPacket(HANDSHAKE_FAILED))
-                event.player.playerConnection.disconnect()
-                return
-            }
-            instance = players[event.player.username]?.startingInstance
-            players.remove(event.player.username)
-        } finally {
-            PartialPlayer.lock.unlock()
+        if (!players.containsKey(event.player.username)) {
+            // If there is no entry for the player, the handshake must have failed.
+            event.player.sendPacket(LoginDisconnectPacket(HANDSHAKE_FAILED))
+            event.player.playerConnection.disconnect()
+            return
         }
+        val instance = players[event.player.username]?.startingInstance
+        players.remove(event.player.username)
         if (instance == null) {
             // If the instance was not set or doesn't exist, disconnect the player.
             logger.warn("No instance found for ${event.player.username} to join!")
             event.player.sendPacket(LoginDisconnectPacket(NO_WORLD_FOUND))
+            event.player.playerConnection.disconnect()
             return
         }
         // If the instance exists, set the player's spawning instance and allow them to connect.
