@@ -40,6 +40,7 @@ fun start() {
         DevInstanceRouter,
         GlobalBlockHandlers,
         GlobalChatFormat,
+        GlobalConfig,
         GlobalPlayerNameFormat,
         GlobalPunishments,
         GlobalTranslation,

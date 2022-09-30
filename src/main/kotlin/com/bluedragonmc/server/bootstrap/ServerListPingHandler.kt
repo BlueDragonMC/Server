@@ -1,12 +1,11 @@
 package com.bluedragonmc.server.bootstrap
 
-import com.bluedragonmc.server.*
+import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
+import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_3
+import com.bluedragonmc.server.Environment
+import com.bluedragonmc.server.FAVICON
 import com.bluedragonmc.server.queue.DevelopmentEnvironment
-import com.bluedragonmc.server.utils.buildComponent
-import com.bluedragonmc.server.utils.center
-import com.bluedragonmc.server.utils.withColor
-import com.bluedragonmc.server.utils.plus
-import com.bluedragonmc.server.utils.withGradient
+import com.bluedragonmc.server.utils.*
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
@@ -19,6 +18,9 @@ import java.net.InetAddress
 
 object ServerListPingHandler : Bootstrap() {
     override fun hook(eventNode: EventNode<Event>) {
+
+        val serverNews = GlobalConfig.config.node("server-news").get(Component::class.java)
+
         eventNode.addListener(ServerListPingEvent::class.java) { event ->
             val title = buildComponent {
                 val title = Component.text("BlueDragon", BRAND_COLOR_PRIMARY_3, TextDecoration.BOLD)
@@ -41,7 +43,8 @@ object ServerListPingHandler : Bootstrap() {
                     +("Update to Minecraft ${MinecraftServer.VERSION_NAME} to join BlueDragon." withColor NamedTextColor.RED)
                     return@buildComponent
                 }
-                +SERVER_NEWS
+                if (serverNews != null)
+                    +serverNews
             }.center(92)
             if (event.pingType == ServerListPingType.OPEN_TO_LAN) {
                 event.responseData.description = title
