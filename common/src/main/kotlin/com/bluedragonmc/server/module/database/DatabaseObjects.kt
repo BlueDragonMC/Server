@@ -119,7 +119,7 @@ data class PermissionGroup(
     }
 
     suspend fun getAllPermissions(): List<String> {
-        return permissions + getChildGroups().flatMap { getAllPermissions() }
+        return permissions + getChildGroups().filter { it?.name != this.name }.flatMap { getAllPermissions() }
     }
 
     suspend fun <T> update(field: KMutableProperty<T>, value: T) {

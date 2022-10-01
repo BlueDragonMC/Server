@@ -13,7 +13,7 @@ object Permissions {
     fun hasPermission(playerData: PlayerDocument, node: String) = serverOwners.contains(playerData.uuid) || getPermission(playerData, node)
 
     fun getPermission(playerData: PlayerDocument, node: String) = runBlocking {
-        val groupPermissions = playerData.getGroups().map { it.getAllPermissions() }.flatten()
+        val groupPermissions = playerData.getGroups().flatMap { it.getAllPermissions() }
         val playerPermissions = playerData.permissions
         return@runBlocking (playerPermissions + groupPermissions).contains(node) // TODO wildcard permissions
     }
