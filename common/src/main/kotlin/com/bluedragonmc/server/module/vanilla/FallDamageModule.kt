@@ -9,6 +9,7 @@ import net.minestom.server.entity.Player
 import net.minestom.server.entity.damage.DamageType
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
+import net.minestom.server.event.player.PlayerMoveEvent
 import net.minestom.server.event.player.PlayerTickEvent
 import net.minestom.server.instance.block.Block
 import net.minestom.server.item.Enchantment
@@ -19,6 +20,7 @@ import kotlin.math.floor
 object FallDamageModule : GameModule() {
 
     private val FALL_START_TAG = Tag.Double("fall_start")
+    private val LAST_Y_TAG = Tag.Double("last_y") // Only used for elytra because player.velocity.y is unreliable
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         eventNode.addListener(PlayerTickEvent::class.java) { event ->
@@ -37,11 +39,13 @@ object FallDamageModule : GameModule() {
                 player.removeTag(FALL_START_TAG)
             }
 
-            if (player.isFlyingWithElytra && player.velocity.y >= -0.5) {
+            if (player.isFlyingWithElytra && player.getTag(LAST_Y_TAG) - player.position.y <= 0.5) {
                 // Fall distance is reset to 1 block when a player is flying level,
                 // upwards, or downwards at a rate <= 0.5 blocks per tick.
                 player.setTag(FALL_START_TAG, event.player.position.y + 1.0)
             }
+
+            player.setTag(LAST_Y_TAG, player.position.y)
 
             if (event.player.isOnGround) {
                 // When the player touches the ground, compare their fall start to their current y-position.

@@ -1,0 +1,154 @@
+loot:
+  spawn:
+  - material: diamond_pickaxe
+    quantity: 1
+    chance: 0.1
+  - material: stone_shovel
+    quantity: 1
+    chance: 0.1
+  - material: stone_sword
+    quantity: 1
+    chance: 0.7
+  - material: iron_sword
+    quantity: 1
+    chance: 0.2
+  - material: leather_helmet
+    quantity: 1
+    chance: 0.2
+  - material: leather_chestplate
+    quantity: 1
+    chance: 0.2
+  - material: leather_leggings
+    quantity: 1
+    chance: 0.2
+  - material: leather_boots
+    quantity: 1
+    chance: 0.2
+  - material: chainmail_helmet
+    quantity: 1
+    chance: 0.1
+  - material: chainmail_leggings
+    quantity: 1
+    chance: 0.1
+  - material: chainmail_boots
+    quantity: 1
+    chance: 0.1
+  - material: iron_helmet
+    quantity: 1
+    chance: 0.02
+  - material: iron_boots
+    quantity: 1
+    chance: 0.02
+  - material: golden_apple
+    quantity: 1-2
+    chance: 0.2
+  - material: egg
+    quantity: 8-16
+    chance: 0.2
+  - material: snowball
+    quantity: 8-16
+    chance: 0.2
+  - material: bow
+    quantity: 1
+    chance: 0.2
+  - material: arrow
+    quantity: 8-16
+    chance: 0.2
+  - material: ender_pearl
+    quantity: 1-2
+    chance: 0.1
+  middle:
+  - material: golden_apple
+    quantity: 2-3
+    chance: 0.2
+  - item:
+      material: iron_helmet
+      enchants:
+      - minecraft:protection: 2
+    chance: 0.2
+  - item:
+      material: iron_chestplate
+      enchants:
+      - minecraft:protection: 2
+    chance: 0.2
+  - item:
+      material: iron_leggings
+      enchants:
+      - minecraft:protection: 2
+    chance: 0.2
+  - item:
+      material: iron_boots
+      enchants:
+      - minecraft:protection: 2
+    chance: 0.2
+  - item:
+      material: diamond_helmet
+      enchants:
+      - minecraft:protection: 1
+    chance: 0.1
+  - item:
+      material: diamond_chestplate
+      enchants:
+        - minecraft:protection: 1
+    chance: 0.05
+  - item:
+      material: diamond_leggings
+      enchants:
+        - minecraft:protection: 1
+    chance: 0.05
+  - item:
+      material: diamond_boots
+      enchants:
+        - minecraft:protection: 1
+    chance: 0.1
+  - material: diamond_sword
+    quantity: 1
+    chance: 0.2
+  - material: ender_pearl
+    quantity: 1-4
+    chance: 0.2
+  - material: bow
+    quantity: 1
+    chance: 0.2
+  - item:
+      material: bow
+      enchants:
+        - minecraft:power: 1
+    chance: 0.1
+  - material: arrow
+    quantity: 16-32
+    chance: 0.2
+  - item:
+      material: minecraft:stick
+      enchants:
+        minecraft:knockback: 2
+      name: Knockback Stick
+      lore:
+        - <gray>Use this to wack your enemies
+        - <gray>off the map!
+    chance: 0.16
+    quantity: 1
+  - item:
+      material: minecraft:slime_ball
+      enchants:
+        minecraft:knockback: 10
+      name: Knockback Slime Ball (of death)
+      lore:
+        - <gray>Use this to wack your enemies
+        - <gray>off the map!
+    chance: 0.001
+    quantity: 1
+
+  supply:
+  - material: apple
+    quantity: 2-3
+    chance: 0.5
+  - material: cooked_beef
+    quantity: 1-2
+    chance: 0.3
+  - material: firework_rocket
+    quantity: 1
+    chance: 0.2
+  - material: golden_apple
+    quantity: 1
+    chance: 0.2
