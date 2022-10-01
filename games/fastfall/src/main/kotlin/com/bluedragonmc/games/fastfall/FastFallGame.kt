@@ -2,42 +2,67 @@ package com.bluedragonmc.games.fastfall
 
 import com.bluedragonmc.server.*
 import com.bluedragonmc.server.event.GameStartEvent
+import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
+import com.bluedragonmc.server.module.GlobalCosmeticModule
 import com.bluedragonmc.server.module.combat.CustomDeathMessageModule
 import com.bluedragonmc.server.module.config.ConfigModule
 import com.bluedragonmc.server.module.database.AwardsModule
+import com.bluedragonmc.server.module.database.CosmeticsModule
+import com.bluedragonmc.server.module.database.CosmeticsModule.Companion.isEquipped
 import com.bluedragonmc.server.module.database.StatisticsModule
-import com.bluedragonmc.server.module.gameplay.InstantRespawnModule
-import com.bluedragonmc.server.module.gameplay.MaxHealthModule
-import com.bluedragonmc.server.module.gameplay.SidebarModule
-import com.bluedragonmc.server.module.gameplay.WorldPermissionsModule
+import com.bluedragonmc.server.module.gameplay.*
 import com.bluedragonmc.server.module.instance.CustomGeneratorInstanceModule
 import com.bluedragonmc.server.module.minigame.*
 import com.bluedragonmc.server.module.vanilla.FallDamageModule
-import com.bluedragonmc.server.utils.GameState
-import com.bluedragonmc.server.utils.formatDuration
-import com.bluedragonmc.server.utils.plus
-import com.bluedragonmc.server.utils.withTransition
+import com.bluedragonmc.server.utils.*
+import com.bluedragonmc.server.utils.ItemUtils.withArmorColor
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.title.Title
 import net.minestom.server.MinecraftServer
+import net.minestom.server.color.Color
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.instance.InstanceTickEvent
+import net.minestom.server.event.player.PlayerDeathEvent
 import net.minestom.server.event.player.PlayerMoveEvent
+import net.minestom.server.event.player.PlayerSpawnEvent
 import net.minestom.server.instance.block.Block
+import net.minestom.server.item.ItemStack
+import net.minestom.server.item.Material
+import net.minestom.server.network.packet.server.play.ExplosionPacket
 import net.minestom.server.sound.SoundEvent
 import java.time.Duration
 import kotlin.properties.Delegates
 
 class FastFallGame(mapName: String?) : Game("FastFall", mapName ?: "Chaos") {
     private val radius = (38..55).random()
+
+    companion object {
+        /**
+         * Blocks that cannot be modified by the Midas cosmetic.
+         */
+        val indestructibleBlocks = setOf(
+            Block.SLIME_BLOCK,
+            Block.GLASS,
+            Block.BEDROCK,
+            Block.EMERALD_BLOCK,
+            // The following are not full blocks, so they cause the player to get stuck
+            Block.SOUL_SAND,
+            Block.STONE_SLAB,
+            Block.OAK_PRESSURE_PLATE,
+            Block.IRON_TRAPDOOR,
+            Block.CHEST,
+            Block.NETHER_BRICK_FENCE,
+            Block.RED_BED
+        )
+    }
 
     init {
 
@@ -82,21 +107,34 @@ class FastFallGame(mapName: String?) : Game("FastFall", mapName ?: "Chaos") {
         use(VoidDeathModule(threshold = 0.0, respawnMode = true))
         use(WorldPermissionsModule(exceptions = listOf(Block.GLASS)))
         use(CustomDeathMessageModule())
+        use(InventoryPermissionsModule(allowDropItem = false, allowMoveItem = false))
 
         var lead: Player? = null
         var lastLeadChange = 0L
         var isSingleplayer by Delegates.notNull<Boolean>()
         var startTime: Long? = null
 
-        use(object : GameModule() {
+        use(@DependsOn(CosmeticsModule::class) object : GameModule() {
 
             override fun initialize(parent: Game, eventNode: EventNode<Event>) {
+                eventNode.addListener(PlayerSpawnEvent::class.java) { event ->
+                    event.player.boots =
+                        parent.getModule<CosmeticsModule>().getCosmeticInGroup<FastFallBoots>(event.player)?.item
+                            ?: return@addListener
+                }
                 eventNode.addListener(GameStartEvent::class.java) {
                     startTime = System.currentTimeMillis()
                     isSingleplayer = parent.players.size <= 1
 
                     if (isSingleplayer) parent.players.forEach {
                         it.sendMessage(Component.translatable("game.fastfall.singleplayer_warning", ALT_COLOR_1))
+                    }
+
+                    players.forEach {
+                        val boots = parent.getModule<CosmeticsModule>().getCosmeticInGroup<FastFallBoots>(it)?.item
+                        if (boots != null) {
+                            it.boots = boots
+                        }
                     }
                 }
                 eventNode.addListener(WinModule.WinnerDeclaredEvent::class.java) { event ->
@@ -107,6 +145,21 @@ class FastFallGame(mapName: String?) : Game("FastFall", mapName ?: "Chaos") {
                                 it, amount, Component.translatable("game.fastfall.award.no_damage_taken", ALT_COLOR_2)
                             )
                         }
+                    }
+                }
+                eventNode.addListener(PlayerDeathEvent::class.java) { event ->
+                    if (getModule<CosmeticsModule>().isCosmeticEquipped(event.player, FastFallBoots.TNT)) {
+                        val pos = event.player.position
+                        // Play explosion effect
+                        sendGroupedPacket(ExplosionPacket(
+                            pos.x.toFloat(), pos.y.toFloat(), pos.z.toFloat(),
+                            5.0f, ByteArray(0), 0.0f, 0.0f, 0.0f))
+                        // Play a sound
+                        SoundUtils.playSoundInWorld(
+                            Sound.sound(
+                                SoundEvent.ENTITY_GENERIC_EXPLODE, Sound.Source.BLOCK, 1.0f, 1.0f
+                            ), getInstance(), pos
+                        )
                     }
                 }
                 eventNode.addListener(InstanceTickEvent::class.java) { event ->
@@ -151,11 +204,14 @@ class FastFallGame(mapName: String?) : Game("FastFall", mapName ?: "Chaos") {
                     }
                 }
                 eventNode.addListener(PlayerMoveEvent::class.java) { event ->
-                    if (
-                        event.player.instance?.getBlock(event.player.position.sub(0.0, 0.2, 0.0)) == Block.EMERALD_BLOCK &&
-                        event.player.isOnGround
-                    ) {
+                    val posBelow = event.player.position.sub(0.0, 0.2, 0.0)
+                    val blockBelow = event.player.instance?.getBlock(posBelow)
+                        ?: return@addListener
+                    if (blockBelow == Block.EMERALD_BLOCK && event.player.isOnGround) {
                         getModule<WinModule>().declareWinner(event.player)
+                    } else if (event.isOnGround && blockBelow !in indestructibleBlocks
+                        && blockBelow.isSolid && event.player.isEquipped(FastFallBoots.MIDAS)) {
+                            event.player.instance?.setBlock(posBelow, Block.GOLD_BLOCK)
                     }
                 }
                 eventNode.addListener(WinModule.WinnerDeclaredEvent::class.java) { event ->
@@ -206,8 +262,17 @@ class FastFallGame(mapName: String?) : Game("FastFall", mapName ?: "Chaos") {
         }.repeat(Duration.ofMillis(500)).schedule()
 
         use(StatisticsModule(recordWins = false))
+        use(CosmeticsModule())
+        use(GlobalCosmeticModule())
 
         ready()
+    }
+
+    enum class FastFallBoots(override val id: String, val item: ItemStack) : CosmeticsModule.Cosmetic {
+        STANDARD("fastfall_boots_standard", ItemStack.of(Material.LEATHER_BOOTS)),
+        NETHERITE("fastfall_boots_netherite", ItemStack.of(Material.NETHERITE_BOOTS)),
+        MIDAS("fastfall_boots_gold", ItemStack.of(Material.GOLDEN_BOOTS)),
+        TNT("fastfall_boots_tnt", ItemStack.of(Material.LEATHER_BOOTS).withArmorColor(Color(255, 0, 0))),
     }
 
 }

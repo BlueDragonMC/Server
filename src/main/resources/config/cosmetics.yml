@@ -1,4 +1,40 @@
 categories:
+  - name: FastFall
+    material: minecraft:iron_boots
+    groups:
+      - name: Boots (Decorative)
+        material: minecraft:leather_boots
+        description: |
+          Boots for your feet! They
+          must be uncomfortable after
+          falling so many times...
+          
+          * All FastFall cosmetics
+          are decorative and have 
+          no impact on gameplay.
+        cosmetics:
+          - id: fastfall_boots_standard
+            name: Standard
+            material: minecraft:leather_boots
+            description: "Can't get more simple than this."
+            cost: 250
+          - id: fastfall_boots_netherite
+            name: Netherite
+            material: minecraft:netherite_boots
+            description: "You know they don't protect against fall damage, right?"
+            cost: 1000
+          - id: fastfall_boots_gold
+            name: Midas
+            material: minecraft:golden_boots
+            description: "\"Everything I touch turns to gold...\""
+            cost: 15000
+          - id: fastfall_boots_tnt
+            name: TNT
+            item:
+              material: minecraft:leather_boots
+              dye: 255, 0, 0
+            description: "Explode the competition when you die! (Decorative)"
+            cost: 15000
   - name: WackyMaze
     material: minecraft:stick
     groups:

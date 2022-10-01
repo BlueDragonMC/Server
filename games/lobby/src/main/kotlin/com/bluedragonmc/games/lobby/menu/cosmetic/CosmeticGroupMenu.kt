@@ -33,7 +33,10 @@ class CosmeticGroupMenu(private val parent: Lobby, private val groupName: String
         ) {
             group.cosmetics.forEachIndexed { i, cosmetic ->
                 val c = cosmetics.withId(cosmetic.id)
-                slot(i, cosmetic.material, { player ->
+                val itemStack = cosmetic.itemStack
+                val material = itemStack.material()
+                slot(i, material, { player ->
+                    meta(itemStack.meta())
                     displayName(cosmetic.name.withColor(BRAND_COLOR_PRIMARY_2).noItalic())
                     val owned = cosmetics.hasCosmetic(player, c)
                     val equipped = owned && cosmetics.isCosmeticEquipped(player, c)

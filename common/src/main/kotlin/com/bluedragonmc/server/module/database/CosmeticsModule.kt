@@ -9,6 +9,7 @@ import net.kyori.adventure.text.Component
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
+import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import org.spongepowered.configurate.ConfigurationNode
 import org.spongepowered.configurate.objectmapping.ConfigSerializable
@@ -24,6 +25,24 @@ class CosmeticsModule : GameModule() {
         private lateinit var cosmeticsById: Map<String, CosmeticEntry>
 
         private fun isConfigLoaded() = ::config.isInitialized
+
+        // Extension functions to statically use [CosmeticModule] methods.
+        // These methods still require a player to be in a game with a CosmeticModule.
+
+        fun Player.isEquipped(cosmetic: Cosmetic): Boolean {
+            val game = Game.findGame(this)
+            return game!!.getModule<CosmeticsModule>().isCosmeticEquipped(this, cosmetic)
+        }
+
+        fun Player.hasCosmetic(cosmetic: Cosmetic): Boolean {
+            val game = Game.findGame(this)
+            return game!!.getModule<CosmeticsModule>().hasCosmetic(this, cosmetic)
+        }
+
+        inline fun <reified T : Cosmetic> Player.getCosmeticInGroup(): Cosmetic? {
+            val game = Game.findGame(this)
+            return game!!.getModule<CosmeticsModule>().getCosmeticInGroup<T>(this)
+        }
     }
 
     @ConfigSerializable
@@ -46,9 +65,15 @@ class CosmeticsModule : GameModule() {
         val id: String = "",
         val name: Component = Component.empty(),
         val material: Material = Material.AIR,
+        val item: ItemStack = ItemStack.AIR,
         val description: Component = Component.empty(),
         val cost: Int = Int.MAX_VALUE
-    )
+    ) {
+        val itemStack: ItemStack
+            get() = if (material == Material.AIR) {
+                item
+            } else ItemStack.of(material)
+    }
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         if (!isConfigLoaded()) {
@@ -136,5 +161,6 @@ class CosmeticsModule : GameModule() {
     }
 
     private class CosmeticImpl(override val id: String) : Cosmetic
+
     fun withId(id: String): Cosmetic = CosmeticImpl(id)
 }
