@@ -42,7 +42,8 @@ class SkyWarsGame(mapName: String) : Game("SkyWars", mapName) {
             CountdownModule(2, true,
                 OldCombatModule(allowDamage = true, allowKnockback = true),
                 SpectatorModule(spectateOnDeath = true),
-                ChestModule()
+                ChestModule(),
+                NaturalRegenerationModule()
             )
         )
         use(ProjectileModule())
@@ -67,7 +68,6 @@ class SkyWarsGame(mapName: String) : Game("SkyWars", mapName) {
             }))
         use(SpawnpointModule(SpawnpointModule.TeamDatabaseSpawnpointProvider(allowRandomOrder = true)))
         use(FallDamageModule)
-        use(NaturalRegenerationModule())
         use(InventoryPermissionsModule(allowDropItem = true, allowMoveItem = true))
         use(AwardsModule())
 
