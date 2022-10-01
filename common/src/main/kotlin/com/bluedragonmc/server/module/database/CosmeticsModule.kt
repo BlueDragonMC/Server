@@ -30,18 +30,15 @@ class CosmeticsModule : GameModule() {
         // These methods still require a player to be in a game with a CosmeticModule.
 
         fun Player.isEquipped(cosmetic: Cosmetic): Boolean {
-            val game = Game.findGame(this)
-            return game!!.getModule<CosmeticsModule>().isCosmeticEquipped(this, cosmetic)
+            return Game.findGame(this)?.getModuleOrNull<CosmeticsModule>()?.isCosmeticEquipped(this, cosmetic) ?: false
         }
 
         fun Player.hasCosmetic(cosmetic: Cosmetic): Boolean {
-            val game = Game.findGame(this)
-            return game!!.getModule<CosmeticsModule>().hasCosmetic(this, cosmetic)
+            return Game.findGame(this)?.getModuleOrNull<CosmeticsModule>()?.hasCosmetic(this, cosmetic) ?: false
         }
 
         inline fun <reified T : Cosmetic> Player.getCosmeticInGroup(): Cosmetic? {
-            val game = Game.findGame(this)
-            return game!!.getModule<CosmeticsModule>().getCosmeticInGroup<T>(this)
+            return Game.findGame(this)?.getModuleOrNull<CosmeticsModule>()?.getCosmeticInGroup<T>(this)
         }
     }
 
