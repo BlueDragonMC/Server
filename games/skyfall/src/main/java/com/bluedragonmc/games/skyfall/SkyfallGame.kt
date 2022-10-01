@@ -3,6 +3,9 @@ package com.bluedragonmc.games.skyfall
 import com.bluedragonmc.games.skyfall.module.SkyfallChickensModule
 import com.bluedragonmc.server.ALT_COLOR_1
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.event.PlayerKillPlayerEvent
+import com.bluedragonmc.server.module.DependsOn
+import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.GuiModule
 import com.bluedragonmc.server.module.combat.CustomDeathMessageModule
 import com.bluedragonmc.server.module.combat.OldCombatModule
@@ -23,6 +26,8 @@ import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.coordinate.Point
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.GameMode
+import net.minestom.server.event.Event
+import net.minestom.server.event.EventNode
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import net.minestom.server.utils.inventory.PlayerInventoryUtils
@@ -37,6 +42,7 @@ import java.nio.file.Paths
  */
 class SkyfallGame(mapName: String) : Game("Skyfall", mapName) {
     val config = use(ConfigModule("skyfall.yml")).getConfig()
+
     init {
         use(GuiModule())
         // Combat
@@ -77,7 +83,10 @@ class SkyfallGame(mapName: String) : Game("Skyfall", mapName) {
         use(PlayerResetModule(defaultGameMode = GameMode.SURVIVAL))
         use(SpawnpointModule(SpawnpointModule.DatabaseSpawnpointProvider()))
         use(SpectatorModule(spectateOnDeath = true))
-        use(WinModule(winCondition = WinModule.WinCondition.LAST_PLAYER_ALIVE)) // TODO award coins on win
+        use(WinModule(winCondition = WinModule.WinCondition.LAST_PLAYER_ALIVE) { player, winningTeam ->
+            if (winningTeam.players.contains(player)) 200
+            else 20
+        })
 
         // Vanilla
         use(ChestModule())
@@ -89,6 +98,16 @@ class SkyfallGame(mapName: String) : Game("Skyfall", mapName) {
 
         // Game-specific
         use(SkyfallChickensModule(mapData?.additionalLocations?.get(0) ?: listOf()))
+        use(@DependsOn(StatisticsModule::class) object : GameModule() {
+            override fun initialize(parent: Game, eventNode: EventNode<Event>) {
+                eventNode.addListener(PlayerKillPlayerEvent::class.java) { event ->
+                    getModule<StatisticsModule>().recordStatistic(
+                        event.attacker,
+                        "game_skyfall_kills"
+                    ) { value -> value?.plus(1.0) ?: 1.0 }
+                }
+            }
+        })
 
         ready()
     }
@@ -135,7 +154,7 @@ class SkyfallGame(mapName: String) : Game("Skyfall", mapName) {
 
                 val itemStack =
                     if (material == null) node.node("item").get<ItemStack>()!!.withAmount(qtyRange.random())
-                else ItemStack.of(material, qtyRange.random())
+                    else ItemStack.of(material, qtyRange.random())
 
                 val slot = availableSlots.random()
                 items[slot] = itemStack
