@@ -66,41 +66,49 @@ loot:
       enchants:
       - minecraft:protection: 2
     chance: 0.2
+    quantity: 1
   - item:
       material: iron_chestplate
       enchants:
       - minecraft:protection: 2
     chance: 0.2
+    quantity: 1
   - item:
       material: iron_leggings
       enchants:
       - minecraft:protection: 2
     chance: 0.2
+    quantity: 1
   - item:
       material: iron_boots
       enchants:
       - minecraft:protection: 2
     chance: 0.2
+    quantity: 1
   - item:
       material: diamond_helmet
       enchants:
       - minecraft:protection: 1
     chance: 0.1
+    quantity: 1
   - item:
       material: diamond_chestplate
       enchants:
         - minecraft:protection: 1
     chance: 0.05
+    quantity: 1
   - item:
       material: diamond_leggings
       enchants:
         - minecraft:protection: 1
     chance: 0.05
+    quantity: 1
   - item:
       material: diamond_boots
       enchants:
         - minecraft:protection: 1
     chance: 0.1
+    quantity: 1
   - material: diamond_sword
     quantity: 1
     chance: 0.2
@@ -115,6 +123,7 @@ loot:
       enchants:
         - minecraft:power: 1
     chance: 0.1
+    quantity: 1
   - material: arrow
     quantity: 16-32
     chance: 0.2
