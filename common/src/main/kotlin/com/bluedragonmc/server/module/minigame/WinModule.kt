@@ -96,14 +96,16 @@ class WinModule(
 
     class WinnerDeclaredEvent(game: Game, val winningTeam: TeamModule.Team) : GameEvent(game)
 
+    private val defaultColors = arrayOf(BRAND_COLOR_PRIMARY_1, BRAND_COLOR_PRIMARY_2, BRAND_COLOR_PRIMARY_3)
+
     private fun scheduleWinFireworks(player: Player) {
         val colors = if (parent.hasModule<GlobalCosmeticModule>()) {
-            parent.getModule<GlobalCosmeticModule>().getFireworkColor(player)
+            parent.getModule<GlobalCosmeticModule>().getFireworkColor(player).ifEmpty { defaultColors }
         } else {
             if (player.name.color() != null && player.name.color() != NamedTextColor.GRAY) {
                 arrayOf(player.name.color()!!)
             } else {
-                arrayOf(BRAND_COLOR_PRIMARY_1, BRAND_COLOR_PRIMARY_2, BRAND_COLOR_PRIMARY_3)
+                defaultColors
             }
         }
         val instance = parent.getInstance()
