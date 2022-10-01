@@ -149,7 +149,7 @@ games:
     time: "\u221e" # Infinite
     description: <lang:game.infinijump.motd>
     material: minecraft:feather
-  - name: Skyfall
+  - game: Skyfall
     category: Combat
     time: "7min"
     description: <lang:game.skyfall.motd>
@@ -277,6 +277,10 @@ leaderboard-browser:
       - title: Most Wins
         icon: minecraft:gold_block
         statistic: game_skyfall_wins
+        display-mode: WHOLE_NUMBER
+      - title: Most Kills
+        icon: minecraft:golden_sword
+        statistic: game_skyfall_kills
         display-mode: WHOLE_NUMBER
 parkour:
   - id: world_tour
