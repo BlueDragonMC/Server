@@ -130,3 +130,93 @@ categories:
               A musical effect which appears 
               all around you when you double jump.
             cost: 1500
+      - name: Hat
+        material: minecraft:player_head
+        description: |
+          Protect your head and look
+          stylish at the same time.
+        cosmetics:
+          - id: lobby_hat_glass
+            name: Space Helmet
+            material: minecraft:glass
+            description: |
+              Liftoff!
+            cost: 500
+          - id: lobby_hat_ice
+            name: Ice
+            material: minecraft:ice
+            description: |
+              This doesn't look very comfortable.
+            cost: 500
+          - id: lobby_hat_slime
+            name: Slime
+            material: minecraft:slime_block
+            description: |
+              Someone get this off me!
+            cost: 500
+          - id: lobby_hat_honey
+            name: Honey
+            material: minecraft:honey_block
+            description: |
+              Sweet and tasty.
+            cost: 500
+          - id: lobby_hat_jack_o_lantern
+            name: Jack-o-Lantern
+            material: minecraft:jack_o_lantern
+            description: |
+              Spooky!
+            cost: 500
+          - id: lobby_hat_compass
+            name: Compass
+            material: minecraft:compass
+            description: |
+              Always know where you're going.
+            cost: 500
+          - id: lobby_hat_clock
+            name: Clock
+            material: minecraft:clock
+            description: |
+              Always know what time it is.
+            cost: 500
+          - id: lobby_hat_netherite_helmet
+            name: Helmet
+            material: minecraft:netherite_helmet
+            description: |
+              The ultimate protection.
+            cost: 500
+          - id: lobby_hat_creeper_head
+            name: Creeper Head
+            material: minecraft:creeper_head
+            description: |
+              Shh.
+            cost: 500
+          - id: lobby_hat_zombie_head
+            name: Zombie Head
+            material: minecraft:zombie_head
+            description: |
+              Braaains.
+            cost: 500
+          - id: lobby_hat_steve_head
+            name: Steve Head
+            material: minecraft:player_head
+            description: |
+              A fresh new look.
+            cost: 500
+          - id: lobby_hat_skeleton_skull
+            name: Skeleton Skull
+            material: minecraft:skeleton_skull
+            description: |
+              Bow not included.
+            cost: 500
+          - id: lobby_hat_wither_skeleton_skull
+            name: Wither Skeleton Skull
+            material: minecraft:wither_skeleton_skull
+            description: |
+              Defender of the fortress.
+            cost: 500
+          - id: lobby_hat_dragon_head
+            name: Dragon Head
+            material: minecraft:dragon_head
+            description: |
+              Terrify the other players in the lobby.
+            cost: 5000

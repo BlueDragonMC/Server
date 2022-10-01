@@ -10,12 +10,15 @@ import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.item.ItemStack
+import net.minestom.server.event.trait.PlayerEvent
 import net.minestom.server.item.Material
 import org.spongepowered.configurate.ConfigurationNode
 import org.spongepowered.configurate.objectmapping.ConfigSerializable
 
 @DependsOn(DatabaseModule::class, ConfigModule::class)
 class CosmeticsModule : GameModule() {
+
+    private lateinit var parent: Game
 
     companion object {
         private lateinit var config: ConfigurationNode
@@ -73,6 +76,7 @@ class CosmeticsModule : GameModule() {
     }
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
+        this.parent = parent
         if (!isConfigLoaded()) {
             config = parent.getModule<ConfigModule>().loadExtra("cosmetics.yml")
                 ?: error("Failed to load cosmetics configuration.")
@@ -127,6 +131,7 @@ class CosmeticsModule : GameModule() {
             }
             cosmetics
         }
+        parent.callEvent(PlayerEquipCosmeticEvent(player, cosmetic, group!!))
     }
 
     suspend fun unequipCosmeticsInGroup(player: Player, groupName: String) {
@@ -140,6 +145,7 @@ class CosmeticsModule : GameModule() {
             }
             cosmetics
         }
+        parent.callEvent(PlayerUnequipCosmeticEvent(player, group))
     }
 
     fun getCategories() = categories
@@ -160,4 +166,12 @@ class CosmeticsModule : GameModule() {
     private class CosmeticImpl(override val id: String) : Cosmetic
 
     fun withId(id: String): Cosmetic = CosmeticImpl(id)
+
+    class PlayerEquipCosmeticEvent(private val player: Player, val newCosmetic: Cosmetic, val newCosmeticGroup: Group) : PlayerEvent {
+        override fun getPlayer(): Player = player
+    }
+
+    class PlayerUnequipCosmeticEvent(private val player: Player, val oldCosmeticGroup: Group) : PlayerEvent {
+        override fun getPlayer(): Player = player
+    }
 }
