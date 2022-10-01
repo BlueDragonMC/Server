@@ -6,6 +6,7 @@ import com.bluedragonmc.games.fastfall.FastFallGame
 import com.bluedragonmc.games.infection.InfectionGame
 import com.bluedragonmc.games.infinijump.InfinijumpGame
 import com.bluedragonmc.games.pvpmaster.PvpMasterGame
+import com.bluedragonmc.games.skyfall.SkyfallGame
 import com.bluedragonmc.games.skywars.SkyWarsGame
 import com.bluedragonmc.games.wackymaze.WackyMazeGame
 import com.bluedragonmc.server.Environment
@@ -23,7 +24,8 @@ val games = hashMapOf(
     "Infection" to ::InfectionGame,
     "Infinijump" to ::InfinijumpGame,
     "PvPMaster" to ::PvpMasterGame,
-    "ArenaPvP" to ::ArenaPvpGame
+    "ArenaPvP" to ::ArenaPvpGame,
+    "Skyfall" to ::SkyfallGame,
 )
 
 fun createEnvironment() = if (isDev()) DevelopmentEnvironment() else ProductionEnvironment()

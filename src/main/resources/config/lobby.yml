@@ -149,6 +149,11 @@ games:
     time: "\u221e" # Infinite
     description: <lang:game.infinijump.motd>
     material: minecraft:feather
+  - name: Skyfall
+    category: Combat
+    time: "7min"
+    description: <lang:game.skyfall.motd>
+    material: minecraft:elytra
 leaderboards:
   - title: FastFall # LEFT
     subtitle: Fastest time
@@ -265,6 +270,13 @@ leaderboard-browser:
       - title: Highest Score
         icon: minecraft:gold_block
         statistic: game_infinijump_highest_score
+        display-mode: WHOLE_NUMBER
+  - name: Skyfall
+    icon: minecraft:elytra
+    leaderboards:
+      - title: Most Wins
+        icon: minecraft:gold_block
+        statistic: game_skyfall_wins
         display-mode: WHOLE_NUMBER
 parkour:
   - id: world_tour

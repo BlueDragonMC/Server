@@ -35,6 +35,7 @@ dependencies {
     implementation(libs.bundles.messaging) // Messaging
 
     implementation(project(":common"))
+    implementation(project(":games:skyfall"))
     implementation(project(":games:arenapvp"))
     implementation(project(":games:bedwars"))
     implementation(project(":games:fastfall"))

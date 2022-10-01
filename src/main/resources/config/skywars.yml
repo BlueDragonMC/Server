@@ -48,6 +48,11 @@ loot:
   - material: minecraft:iron_boots
     chance: 0.05
     quantity: 1
+  - material: minecraft:bow
+    chance: 0.2
+  - material: minecraft:arrow
+    chance: 0.2
+    quantity: 15
   middle:
   - material: minecraft:white_wool
     chance: 1.0
@@ -100,6 +105,14 @@ loot:
   - material: minecraft:netherite_boots
     chance: 0.01
     quantity: 1
+  - item:
+      material: minecraft:bow
+      chance: 0.1
+      enchants:
+        - minecraft:power: 1
+  - material: minecraft:arrow
+    chance: 0.2
+    quantity: 32
   - item:
       material: minecraft:stick
       enchants:
