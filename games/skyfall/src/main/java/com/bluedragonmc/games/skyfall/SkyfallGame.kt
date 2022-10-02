@@ -15,7 +15,7 @@ import com.bluedragonmc.server.module.database.AwardsModule
 import com.bluedragonmc.server.module.database.StatisticsModule
 import com.bluedragonmc.server.module.gameplay.ChestLootModule
 import com.bluedragonmc.server.module.gameplay.SidebarModule
-import com.bluedragonmc.server.module.instance.SharedInstanceModule
+import com.bluedragonmc.server.module.instance.InstanceContainerModule
 import com.bluedragonmc.server.module.map.AnvilFileMapProviderModule
 import com.bluedragonmc.server.module.minigame.*
 import com.bluedragonmc.server.module.vanilla.*
@@ -59,7 +59,7 @@ class SkyfallGame(mapName: String) : Game("Skyfall", mapName) {
         use(SidebarModule(name))
 
         // Instance
-        use(SharedInstanceModule())
+        use(InstanceContainerModule())
 
         // Map
         use(AnvilFileMapProviderModule(Paths.get("worlds/$name/$mapName")))
