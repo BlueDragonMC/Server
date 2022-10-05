@@ -25,6 +25,9 @@ subprojects {
 
 dependencies {
     testImplementation(kotlin("test"))
+    testImplementation(libs.mockk)
+    testImplementation(libs.junit.api)
+    testRuntimeOnly(libs.junit.engine)
 
     implementation(libs.minestom) // Minestom
     implementation(libs.minimessage) // MiniMessage

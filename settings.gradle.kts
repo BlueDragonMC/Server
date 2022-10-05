@@ -17,4 +17,3 @@ include("games:skywars")
 include("games:teamdeathmatch")
 include("games:wackymaze")
 include("games:skyfall")
-findProject(":games:skyfall")?.name = "skyfall"

@@ -76,7 +76,7 @@ abstract class ModuleHolder {
         if (hasModule(module::class))
             throw IllegalStateException("Tried to register module that is already registered: $module")
         // Ensure this module does not depend on itself
-        if (getDependencies(module).any { module::class.isInstance(it) })
+        if (getDependencies(module).any { it.isInstance(module) })
             throw IllegalStateException("Tried to register module which depends on itself: $module")
 
         // Create a node in the dependency tree for this module if it doesn't already exist
@@ -99,7 +99,7 @@ abstract class ModuleHolder {
 
     abstract fun <T : GameModule> register(module: T)
 
-    protected fun checkUnmetDependencies() {
+    fun checkUnmetDependencies() {
         dependencyTree.dfs { node, _ ->
             if (node.value is EmptyModuleDependency<*>) {
                 throw IllegalStateException("Unmet dependency: ${node.value?.type} was not found, but is required by ${node.parent.value?.type}.")

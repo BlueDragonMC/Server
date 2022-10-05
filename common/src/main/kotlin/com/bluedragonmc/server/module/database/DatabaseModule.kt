@@ -61,7 +61,7 @@ class DatabaseModule : GameModule() {
         }
 
         private val database: CoroutineDatabase by lazy {
-            client.getDatabase("bluedragon")
+            client.getDatabase(Environment.current.dbName)
         }
 
         private val logger = LoggerFactory.getLogger(Companion::class.java)
@@ -80,7 +80,7 @@ class DatabaseModule : GameModule() {
         internal fun getGroupsCollection(): CoroutineCollection<PermissionGroup> = database.getCollection("groups")
         internal fun getMapsCollection(): CoroutineCollection<MapData> = database.getCollection("maps")
 
-        internal suspend fun getGroupByName(name: String): PermissionGroup? =
+        suspend fun getGroupByName(name: String): PermissionGroup? =
             groupCache.getIfPresent(name) ?: getGroupsCollection().findOneById(name)
                 .also { group -> if (group != null) groupCache.put(name, group) }
 

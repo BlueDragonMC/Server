@@ -2,7 +2,7 @@ metadata.format.version = "1.1"
 
 [versions]
 kotlin = "1.7.10"
-minestom = "5f8842084c"
+minestom = "c4edd73dde"
 configurate = "4.1.2"
 minimessage = "4.11.0"
 kmongo = "4.6.1"
@@ -16,12 +16,14 @@ grpc-protobuf = "1.48.0"
 grpc-netty = "1.37.0"
 grpc-kotlin-stub = "1.3.0"
 protobuf-kotlin = "3.21.3"
+mockk = "1.13.2"
+junit = "5.9.0"
 
 [libraries]
 kotlin-jvm = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
 #minestom = { group = "com.github.Minestom", name = "Minestom", version.ref = "minestom" }
 #minestom = { group = "net.minestom.server", name = "Minestom", version = "1.0" } # Uncomment to use a version of Minestom from maven local
-minestom = { group = "com.github.BlueDragonMC", name = "Minestom", version = "341865626c" }
+minestom = { group = "com.github.BlueDragonMC", name = "Minestom", version = "c4edd73dde" }
 configurate = { group = "org.spongepowered", name = "configurate-yaml", version.ref = "configurate" }
 configurate-extra-kotlin = { group = "org.spongepowered", name = "configurate-extra-kotlin", version.ref = "configurate" }
 minimessage = { group = "net.kyori", name = "adventure-text-minimessage", version.ref = "minimessage" }
@@ -34,6 +36,9 @@ grpc-protobuf = { group = "io.grpc", name = "grpc-protobuf", version.ref = "grpc
 grpc-netty = { group = "io.grpc", name = "grpc-netty", version.ref = "grpc-netty" }
 grpc-kotlin-stub = { group = "io.grpc", name = "grpc-kotlin-stub", version.ref = "grpc-kotlin-stub" }
 protobuf-kotlin = { group = "com.google.protobuf", name = "protobuf-kotlin", version.ref = "protobuf-kotlin" }
+mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
+junit-api = { group = "org.junit.jupiter", name ="junit-jupiter-api", version.ref = "junit" }
+junit-engine = { group = "org.junit.jupiter", name ="junit-jupiter-engine", version.ref = "junit" }
 
 [bundles]
 configurate = ["configurate", "configurate-extra-kotlin"]

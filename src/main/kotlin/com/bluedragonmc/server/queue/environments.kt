@@ -49,3 +49,15 @@ class ProductionEnvironment : Environment() {
             ?: AgonesIntegration.sdk.getGameServer().objectMeta.uid)
     }
 }
+
+class LocalTestingEnvironment : Environment() {
+    override val queue: Queue
+        get() = error("Testing environment has no default Queue.")
+    override val messagingDisabled: Boolean = false
+    override val mongoHostname: String = "localhost"
+    override val gameClasses = games.keys
+    override val dbName: String = "TESTENV"
+
+    override suspend fun getContainerId() = UUID(0L, 0L)
+
+}

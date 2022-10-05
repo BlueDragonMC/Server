@@ -19,5 +19,6 @@ abstract class Environment {
     abstract val messagingDisabled: Boolean
     abstract val mongoHostname: String
     abstract val gameClasses: Collection<String>
+    open val dbName: String = "bluedragon"
     abstract suspend fun getContainerId(): UUID
 }
