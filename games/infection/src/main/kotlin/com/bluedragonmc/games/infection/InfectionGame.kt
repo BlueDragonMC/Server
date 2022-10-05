@@ -2,6 +2,7 @@ package com.bluedragonmc.games.infection
 
 import com.bluedragonmc.games.infection.module.InfectionModule
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.module.GuiModule
 import com.bluedragonmc.server.module.combat.CustomDeathMessageModule
 import com.bluedragonmc.server.module.combat.OldCombatModule
 import com.bluedragonmc.server.module.database.AwardsModule
@@ -49,6 +50,7 @@ class InfectionGame(mapName: String) : Game("Infection", mapName) {
         // GAMEPLAY
         use(AwardsModule())
         use(InventoryPermissionsModule(allowDropItem = false, allowMoveItem = false))
+        use(GuiModule())
         use(
             KitsModule(
                 showMenu = false, giveKitsOnStart = true, selectableKits = listOf(

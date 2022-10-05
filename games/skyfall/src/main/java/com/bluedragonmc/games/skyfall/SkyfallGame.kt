@@ -97,7 +97,7 @@ class SkyfallGame(mapName: String) : Game("Skyfall", mapName) {
         use(NaturalRegenerationModule())
 
         // Game-specific
-        use(SkyfallChickensModule(mapData?.additionalLocations?.get(0) ?: listOf()))
+        use(SkyfallChickensModule(mapData?.additionalLocations?.getOrNull(0) ?: listOf()))
         use(@DependsOn(StatisticsModule::class) object : GameModule() {
             override fun initialize(parent: Game, eventNode: EventNode<Event>) {
                 eventNode.addListener(PlayerKillPlayerEvent::class.java) { event ->

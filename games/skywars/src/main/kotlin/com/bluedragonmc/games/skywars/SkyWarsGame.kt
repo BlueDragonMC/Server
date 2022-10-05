@@ -43,7 +43,8 @@ class SkyWarsGame(mapName: String) : Game("SkyWars", mapName) {
                 OldCombatModule(allowDamage = true, allowKnockback = true),
                 SpectatorModule(spectateOnDeath = true),
                 ChestModule(),
-                NaturalRegenerationModule()
+                NaturalRegenerationModule(),
+                ChestLootModule(NormalSkyWarsLootProvider(config, this))
             )
         )
         use(ProjectileModule())
@@ -72,7 +73,6 @@ class SkyWarsGame(mapName: String) : Game("SkyWars", mapName) {
         use(AwardsModule())
 
         use(GuiModule())
-        use(ChestLootModule(NormalSkyWarsLootProvider(config, this)))
 
         use(StatisticsModule())
 

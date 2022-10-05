@@ -1,6 +1,7 @@
 package com.bluedragonmc.games.teamdeathmatch
 
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.module.GuiModule
 import com.bluedragonmc.server.module.combat.CustomDeathMessageModule
 import com.bluedragonmc.server.module.combat.OldCombatModule
 import com.bluedragonmc.server.module.database.StatisticsModule
@@ -38,6 +39,7 @@ class TeamDeathmatchGame(mapName: String) : Game("Team Deathmatch", mapName) {
         use(TeamModule(autoTeams = true, autoTeamMode = TeamModule.AutoTeamMode.TEAM_COUNT, 2))
         use(CustomDeathMessageModule())
         use(InventoryPermissionsModule(allowDropItem = false, allowMoveItem = false))
+        use(GuiModule())
 
         val ironHelmet = ItemStack.builder(Material.IRON_HELMET).build()
         val ironChestplate = ItemStack.builder(Material.IRON_CHESTPLATE).build()

@@ -97,6 +97,15 @@ abstract class ModuleHolder {
         return module // Return the module for method chaining
     }
 
+    /**
+     * Uses all the modules in the list, then
+     * checks for unmet module dependencies.
+     */
+    fun useModules(modules: Iterable<GameModule>) {
+        modules.forEach(::use)
+        checkUnmetDependencies()
+    }
+
     abstract fun <T : GameModule> register(module: T)
 
     fun checkUnmetDependencies() {

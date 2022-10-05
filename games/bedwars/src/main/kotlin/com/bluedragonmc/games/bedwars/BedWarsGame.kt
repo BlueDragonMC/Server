@@ -72,6 +72,7 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
                 2,
                 true,
                 OldCombatModule(allowDamage = true, allowKnockback = true),
+                NaturalRegenerationModule(),
                 SpectatorModule(spectateOnDeath = false),
                 TimedRespawnModule(seconds = 5)
             )
@@ -97,7 +98,6 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
         use(ShopModule())
         use(ItemPickupModule())
         use(ChestModule())
-        use(NaturalRegenerationModule())
         use(CustomDeathMessageModule())
         use(
             WorldPermissionsModule(
