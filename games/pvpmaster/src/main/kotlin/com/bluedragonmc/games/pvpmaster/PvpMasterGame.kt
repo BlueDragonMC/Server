@@ -7,7 +7,10 @@ import com.bluedragonmc.server.module.combat.OldCombatModule
 import com.bluedragonmc.server.module.config.ConfigModule
 import com.bluedragonmc.server.module.database.AwardsModule
 import com.bluedragonmc.server.module.database.StatisticsModule
-import com.bluedragonmc.server.module.gameplay.*
+import com.bluedragonmc.server.module.gameplay.DoubleJumpModule
+import com.bluedragonmc.server.module.gameplay.InventoryPermissionsModule
+import com.bluedragonmc.server.module.gameplay.SidebarModule
+import com.bluedragonmc.server.module.gameplay.WorldPermissionsModule
 import com.bluedragonmc.server.module.instance.SharedInstanceModule
 import com.bluedragonmc.server.module.map.AnvilFileMapProviderModule
 import com.bluedragonmc.server.module.minigame.*
@@ -25,7 +28,6 @@ class PvpMasterGame(mapName: String) : Game("PvPMaster", mapName) {
 
         // COMBAT
         use(CustomDeathMessageModule())
-        use(OldCombatModule())
 
         // GAMEPLAY
         use(ArmorLevelsModule(levels))
@@ -33,7 +35,6 @@ class PvpMasterGame(mapName: String) : Game("PvPMaster", mapName) {
         use(FallDamageModule)
         use(InventoryPermissionsModule(allowDropItem = false, allowMoveItem = false))
         use(MOTDModule(Component.translatable("game.pvpmaster.motd")))
-        use(NaturalRegenerationModule())
         use(PlayerResetModule(defaultGameMode = GameMode.ADVENTURE))
         use(SidebarModule(name))
         use(SpawnpointModule(spawnpointProvider = SpawnpointModule.DatabaseSpawnpointProvider(allowRandomOrder = true)))
@@ -48,7 +49,7 @@ class PvpMasterGame(mapName: String) : Game("PvPMaster", mapName) {
         use(AnvilFileMapProviderModule(Paths.get("worlds/$name/$mapName")))
 
         // MINIGAME
-        use(CountdownModule(threshold = 2, allowMoveDuringCountdown = true, countdownSeconds = 10, useOnStart = arrayOf(OldCombatModule())))
+        use(CountdownModule(threshold = 2, allowMoveDuringCountdown = true, countdownSeconds = 10, useOnStart = arrayOf(OldCombatModule(), NaturalRegenerationModule())))
         use(WinModule(WinModule.WinCondition.LAST_PLAYER_ALIVE) { player, winningTeam -> // "Last player alive" so if players leave the game, a winner is still declared
             if (player in winningTeam.players) 50 else 5
         })

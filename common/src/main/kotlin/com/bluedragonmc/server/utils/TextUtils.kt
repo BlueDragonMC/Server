@@ -153,9 +153,6 @@ fun splitComponentToCharacters(component: Component): Component {
                 +Component.text(c, component.style())
             }
         }
-        component.children().forEach { child ->
-            +splitComponentToCharacters(child)
-        }
     }
 }
 

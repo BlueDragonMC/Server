@@ -97,7 +97,7 @@ class CountdownModule(
 
         eventNode.addListener(GameStartEvent::class.java) { event ->
             cancelCountdown()
-            for (module in useOnStart) parent.use(module)
+            parent.useModules(useOnStart.asIterable())
             parent.state = GameState.INGAME
             MinecraftServer.getSchedulerManager().scheduleNextTick {
                 countdownEnded = true
