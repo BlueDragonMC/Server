@@ -15,24 +15,24 @@ import net.kyori.adventure.text.format.TextDecoration
 import net.minestom.server.inventory.InventoryType
 import net.minestom.server.item.Material
 
-class CosmeticCategoryMenu(private val parent: Lobby, private val categoryName: String) : Lobby.LobbyMenu() {
+class CosmeticCategoryMenu(private val parent: Lobby, private val categoryId: String) : Lobby.LobbyMenu() {
     override lateinit var menu: GuiModule.Menu
 
     override fun populate() {
         val cosmetics = parent.getModule<CosmeticsModule>()
-        val category = cosmetics.getCategory(categoryName)!!
+        val category = cosmetics.getCategory(categoryId)!!
         menu = parent.getModule<GuiModule>().createMenu(
-            Component.translatable("lobby.menu.cosmetics.category", Component.text(categoryName)),
+            Component.translatable("lobby.menu.cosmetics.category", category.name),
             InventoryType.CHEST_6_ROW,
             true,
             true
         ) {
             category.groups.forEachIndexed { i, group ->
                 slot(i, group.material, { player ->
-                    displayName(Component.translatable(group.name, BRAND_COLOR_PRIMARY_2).noItalic())
+                    displayName(group.name.colorIfAbsent(BRAND_COLOR_PRIMARY_2).noItalic())
                     lore(splitAndFormatLore(group.description, NamedTextColor.GRAY, player))
                 }) {
-                    parent.getMenu<CosmeticGroupMenu>(group.name)?.open(player)
+                    parent.getMenu<CosmeticGroupMenu>(group.id)?.open(player)
                 }
             }
 

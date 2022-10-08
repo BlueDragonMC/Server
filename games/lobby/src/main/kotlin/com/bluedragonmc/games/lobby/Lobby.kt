@@ -194,11 +194,11 @@ class Lobby : Game("Lobby", "lobbyv2.2") {
         }
 
         for (category in getModule<CosmeticsModule>().getCategories()) {
-            registerMenu(CosmeticCategoryMenu(this, category.name), category.name)
+            registerMenu(CosmeticCategoryMenu(this, category.id), category.id)
         }
 
         for (group in getModule<CosmeticsModule>().getGroups()) {
-            registerMenu(CosmeticGroupMenu(this, group.name), group.name)
+            registerMenu(CosmeticGroupMenu(this, group.id), group.id)
         }
 
         val tips = CircularList(config.node("tips").getList(Component::class.java)!!.shuffled())

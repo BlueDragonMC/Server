@@ -35,14 +35,16 @@ class CosmeticsModule : GameModule() {
 
     @ConfigSerializable
     data class Category(
-        val name: String = "",
+        val id: String = "",
+        val name: Component = Component.empty(),
         val material: Material = Material.AIR,
         val groups: List<Group> = emptyList()
     )
 
     @ConfigSerializable
     data class Group(
-        val name: String = "",
+        val id: String = "",
+        val name: Component = Component.empty(),
         val description: Component = Component.empty(),
         val material: Material = Material.AIR,
         val cosmetics: List<CosmeticEntry> = emptyList()
@@ -122,9 +124,9 @@ class CosmeticsModule : GameModule() {
         parent.callEvent(PlayerEquipCosmeticEvent(player, cosmetic, group!!))
     }
 
-    suspend fun unequipCosmeticsInGroup(player: Player, groupName: String) {
+    suspend fun unequipCosmeticsInGroup(player: Player, groupId: String) {
         player as CustomPlayer
-        val group = getGroup(groupName)!!
+        val group = getGroup(groupId)!!
         player.data.compute(PlayerDocument::cosmetics) { cosmetics ->
             cosmetics.forEach {
                 if (group.cosmetics.any { c -> c.id == it.id } && it.equipped) {
@@ -137,10 +139,10 @@ class CosmeticsModule : GameModule() {
     }
 
     fun getCategories() = categories
-    fun getCategory(name: String) = categories.find { it.name == name }
+    fun getCategory(id: String) = categories.find { it.id == id }
 
     fun getGroups() = categories.flatMap { it.groups }
-    fun getGroup(name: String) = getGroups().find { it.name == name }
+    fun getGroup(id: String) = getGroups().find { it.id == id }
 
     fun getCosmetics() = cosmetics
     fun getCosmetic(id: String) = cosmeticsById[id]

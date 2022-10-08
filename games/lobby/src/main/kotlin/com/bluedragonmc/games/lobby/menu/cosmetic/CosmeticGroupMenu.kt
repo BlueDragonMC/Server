@@ -17,16 +17,16 @@ import net.minestom.server.item.Enchantment
 import net.minestom.server.item.Material
 import net.minestom.server.tag.Tag
 
-class CosmeticGroupMenu(private val parent: Lobby, private val groupName: String) : Lobby.LobbyMenu() {
+class CosmeticGroupMenu(private val parent: Lobby, private val groupId: String) : Lobby.LobbyMenu() {
     override lateinit var menu: GuiModule.Menu
 
     override fun populate() {
         val cosmetics = parent.getModule<CosmeticsModule>()
-        val group = cosmetics.getGroup(groupName)!!
-        val category = cosmetics.getCategories().find { it.groups.any { g -> g.name == groupName } }
+        val group = cosmetics.getGroup(groupId)!!
+        val category = cosmetics.getCategories().find { it.groups.any { g -> g.id == groupId } }
 
         menu = parent.getModule<GuiModule>().createMenu(
-            Component.translatable("lobby.menu.cosmetics.group", Component.text(groupName)),
+            Component.translatable("lobby.menu.cosmetics.group", group.name),
             InventoryType.CHEST_6_ROW,
             true,
             true
@@ -52,7 +52,6 @@ class CosmeticGroupMenu(private val parent: Lobby, private val groupName: String
                         Component.translatable("lobby.menu.cosmetics.cannot_afford.short", NamedTextColor.RED, Component.text(balance), Component.text(cosmetic.cost))
                     }
                     val description = splitAndFormatLore(cosmetic.description, NamedTextColor.GRAY, player) + status.noItalic()
-
                     if (equipped) { // Add an enchantment glint to equipped cosmetics
                         meta { builder ->
                             builder.enchantment(Enchantment.PROTECTION, 1)
@@ -90,8 +89,8 @@ class CosmeticGroupMenu(private val parent: Lobby, private val groupName: String
                 displayName(Component.translatable("lobby.menu.cosmetics.unequip", NamedTextColor.RED).noItalic())
             }) {
                 DatabaseModule.IO.launch {
-                    cosmetics.unequipCosmeticsInGroup(player, groupName)
-                    player.sendMessage(Component.translatable("lobby.menu.cosmetics.unequip.success", NamedTextColor.RED, Component.translatable(groupName)))
+                    cosmetics.unequipCosmeticsInGroup(player, groupId)
+                    player.sendMessage(Component.translatable("lobby.menu.cosmetics.unequip.success", NamedTextColor.RED, Component.translatable(groupId)))
                     menu.rerender(player)
                 }
             }
@@ -112,7 +111,7 @@ class CosmeticGroupMenu(private val parent: Lobby, private val groupName: String
                 displayName(Component.translatable("lobby.menu.back", NamedTextColor.RED).noItalic())
             }) {
                 if (category != null) {
-                    parent.getMenu<CosmeticCategoryMenu>(category.name)?.open(player)
+                    parent.getMenu<CosmeticCategoryMenu>(category.id)?.open(player)
                 } else {
                     parent.getMenu<CosmeticsMenu>()?.open(player)
                 }

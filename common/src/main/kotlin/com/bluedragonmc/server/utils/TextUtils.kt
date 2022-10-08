@@ -132,7 +132,13 @@ fun splitAndFormatLore(description: Component, color: TextColor, player: Player)
     }
 }
 
+fun hasNewline(component: Component): Boolean =
+    component.toPlainText().contains("\n") || component.children().any { hasNewline(it) }
+
 fun splitComponentByNewline(component: Component, locale: Locale? = null, list: MutableList<Component> = mutableListOf()): List<Component> {
+    if (!hasNewline(component)) {
+        return listOf(component) // Components with no newline do not have be rendered and split.
+    }
     val rendered = if (locale == null) component else GlobalTranslator.render(component, locale)
     ComponentFlattener.textOnly().flatten(rendered) { str ->
         str.split("\n").forEach { c ->

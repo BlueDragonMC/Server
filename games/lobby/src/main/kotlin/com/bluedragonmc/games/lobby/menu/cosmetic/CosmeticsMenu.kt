@@ -21,9 +21,9 @@ class CosmeticsMenu(private val parent: Lobby) : Lobby.LobbyMenu() {
         menu = parent.getModule<GuiModule>().createMenu(Component.translatable("lobby.menu.cosmetics"), InventoryType.CHEST_6_ROW, true, true) {
             cosmetics.getCategories().forEachIndexed { i, category ->
                 slot(i, category.material, {
-                    displayName(Component.translatable(category.name, BRAND_COLOR_PRIMARY_1).noItalic())
+                    displayName(category.name.colorIfAbsent(BRAND_COLOR_PRIMARY_1).noItalic())
                 }) {
-                    parent.getMenu<CosmeticCategoryMenu>(category.name)?.open(player)
+                    parent.getMenu<CosmeticCategoryMenu>(category.id)?.open(player)
                 }
             }
 

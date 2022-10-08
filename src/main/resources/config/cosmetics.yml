@@ -1,229 +1,202 @@
 categories:
-  - name: FastFall
+  - id: fastfall
+    name: FastFall
     material: minecraft:iron_boots
     groups:
-      - name: Boots (Decorative)
+      - id: boots
+        name: <lang:cosmetic.fastfall.boots>
         material: minecraft:leather_boots
-        description: |
-          Boots for your feet! They
-          must be uncomfortable after
-          falling so many times...
-          
-          * All FastFall cosmetics
-          are decorative and have 
-          no impact on gameplay.
+        description: <lang:cosmetic.fastfall.boots.desc>
         cosmetics:
           - id: fastfall_boots_standard
-            name: Standard
+            name: <lang:cosmetic.fastfall.boots.leather>
             material: minecraft:leather_boots
-            description: "Can't get more simple than this."
+            description: <lang:cosmetic.fastfall.boots.leather.desc>
             cost: 250
           - id: fastfall_boots_netherite
-            name: Netherite
+            name: <lang:cosmetic.fastfall.boots.netherite>
             material: minecraft:netherite_boots
-            description: "You know they don't protect against fall damage, right?"
+            description: <lang:cosmetic.fastfall.boots.netherite.desc>
             cost: 1000
           - id: fastfall_boots_gold
-            name: Midas
+            name: <lang:cosmetic.fastfall.boots.gold>
             material: minecraft:golden_boots
-            description: "\"Everything I touch turns to gold...\""
+            description: <lang:cosmetic.fastfall.boots.gold.desc>
             cost: 15000
           - id: fastfall_boots_tnt
-            name: TNT
+            name: <lang:cosmetic.fastfall.boots.tnt>
             item:
               material: minecraft:leather_boots
               dye: 255, 0, 0
-            description: "Explode the competition when you die! (Decorative)"
+            description: <lang:cosmetic.fastfall.boots.tnt.desc>
             cost: 15000
-  - name: WackyMaze
+  - id: wackymaze
+    name: WackyMaze
     material: minecraft:stick
     groups:
-      - name: Knockback Stick
+      - name: <lang:cosmetic.wackymaze.kbstick>
         material: minecraft:stick
-        description: |
-          Fancy upgrades for the standard
-          knockback stick.
+        description: <lang:cosmetic.wackymaze.kbstick.desc>
         cosmetics:
           - id: wackymaze_stick_fish
-            name: Fish
+            name: <lang:cosmetic.wackymaze.kbstick.fish>
             material: minecraft:cod
-            description: "A fish? Really?"
+            description: <lang:cosmetic.wackymaze.kbstick.fish.desc>
             cost: 5000
           - id: wackymaze_stick_door
-            name: Oak Door
+            name: <lang:cosmetic.wackymaze.kbstick.door>
             material: minecraft:oak_door
-            description: "Doesn't seem very aerodynamic..."
+            description: <lang:cosmetic.wackymaze.kbstick.door.desc>
             cost: 5000
           - id: wackymaze_stick_bamboo
-            name: Bamboo
+            name: <lang:cosmetic.wackymaze.kbstick.bamboo>
             material: minecraft:bamboo
-            description: "Environmentally friendly!"
+            description: <lang:cosmetic.wackymaze.kbstick.bamboo.desc>
             cost: 5000
           - id: wackymaze_stick_hoe
-            name: Netherite Hoe
+            name: <lang:cosmetic.wackymaze.kbstick.hoe>
             material: minecraft:netherite_hoe
-            description: "Overkill."
+            description: <lang:cosmetic.wackymaze.kbstick.hoe.desc>
             cost: 5000
           - id: wackymaze_stick_deadbush
-            name: Dead Bush
+            name: <lang:cosmetic.wackymaze.kbstick.deadbush>
             material: minecraft:dead_bush
-            description: "Hopefully not as dead as you are."
+            description: <lang:cosmetic.wackymaze.kbstick.deadbush.desc>
             cost: 5000
-  - name: Global
+  - id: global
+    name: Global
     material: minecraft:diamond_block
     groups:
-      - name: Firework Color
+      - id: firework_color
+        name: <lang:cosmetic.global.fw_color>
         material: minecraft:firework_rocket
-        description: |
-          The color of fireworks set off
-          when you win a game on BlueDragon.
+        description: <lang:cosmetic.global.fw_color.desc>
         cosmetics:
           - id: global_firework_red
-            name: Red
+            name: <lang:color.minecraft.red>
             material: minecraft:red_wool
-            description: "Red fireworks as a win effect."
+            description: <lang:cosmetic.global.fw_color.all.desc:'<lang:color.minecraft.red>'>
             cost: 500
           - id: global_firework_orange
-            name: Orange
+            name: <lang:color.minecraft.orange>
             material: minecraft:orange_wool
-            description: "Orange fireworks as a win effect."
+            description: <lang:cosmetic.global.fw_color.all.desc:'<lang:color.minecraft.orange>'>
             cost: 500
           - id: global_firework_yellow
-            name: Yellow
+            name: <lang:color.minecraft.yellow>
             material: minecraft:yellow_wool
-            description: "Yellow fireworks as a win effect."
+            description: <lang:cosmetic.global.fw_color.all.desc:'<lang:color.minecraft.yellow>'>
             cost: 500
           - id: global_firework_green
-            name: Green
+            name: <lang:color.minecraft.green>
             material: minecraft:green_wool
-            description: "Green fireworks as a win effect."
+            description: <lang:cosmetic.global.fw_color.all.desc:'<lang:color.minecraft.green>'>
             cost: 500
           - id: global_firework_blue
-            name: Blue
+            name: <lang:color.minecraft.blue>
             material: minecraft:blue_wool
-            description: "Blue fireworks as a win effect."
+            description: <lang:cosmetic.global.fw_color.all.desc:'<lang:color.minecraft.blue>'>
             cost: 500
           - id: global_firework_purple
-            name: Purple
+            name: <lang:color.minecraft.purple>
             material: minecraft:purple_wool
-            description: "Purple fireworks as a win effect."
+            description: <lang:cosmetic.global.fw_color.all.desc:'<lang:color.minecraft.purple>'>
             cost: 500
           - id: global_firework_rainbow
-            name: Rainbow
+            name: <lang:cosmetic.global.fw_color.rainbow>
             material: minecraft:emerald_block
-            description: "Rainbow fireworks as a win effect."
+            description: <lang:cosmetic.global.fw_color.all.desc:'<lang:cosmetic.global.fw_color.rainbow>'>
             cost: 2000
   - name: Lobby
     material: minecraft:dragon_head
     groups:
-      - name: Double Jump Effect
+      - id: double_jump_effect
+        name: <lang:cosmetic.lobby.doublejump>
         material: minecraft:iron_boots
-        description: |
-          Sweet particles and other effects
-          that show up when you double jump
-          in the Lobby.
+        description: <lang:cosmetic.lobby.doublejump.desc>
         cosmetics:
           - id: lobby_double_jump_note
-            name: Note
+            name: <lang:block.minecraft.note_block>
             material: minecraft:note_block
-            description: |
-              A musical effect which appears 
-              all around you when you double jump.
+            description: <lang:cosmetic.lobby.doublejump.note.desc>
             cost: 1500
           - id: lobby_double_jump_cloud
             name: Cloud
             material: minecraft:white_wool
-            description: |
-              A cloud effect which appears 
-              all around you when you double jump.
+            description: <lang:cosmetic.lobby.doublejump.cloud.desc>
             cost: 1500
-      - name: Hat
+      - id: hat
+        name: <lang:cosmetic.lobby.hat>
         material: minecraft:player_head
-        description: |
-          Protect your head and look
-          stylish at the same time.
+        description: <lang:cosmetic.lobby.hat.desc>
         cosmetics:
           - id: lobby_hat_glass
-            name: Space Helmet
+            name: <lang:cosmetic.lobby.hat.glass>
             material: minecraft:glass
-            description: |
-              Liftoff!
+            description: <lang:cosmetic.lobby.hat.glass.desc>
             cost: 500
           - id: lobby_hat_ice
-            name: Ice
+            name: <lang:block.minecraft.ice>
             material: minecraft:ice
-            description: |
-              This doesn't look very comfortable.
+            description: <lang:cosmetic.lobby.hat.ice.desc>
             cost: 500
           - id: lobby_hat_slime
-            name: Slime
+            name: <lang:entity.minecraft.slime>
             material: minecraft:slime_block
-            description: |
-              Someone get this off me!
+            description: <lang:cosmetic.lobby.hat.slime.desc>
             cost: 500
           - id: lobby_hat_honey
-            name: Honey
+            name: <lang:cosmetic.lobby.hat.honey>
             material: minecraft:honey_block
-            description: |
-              Sweet and tasty.
+            description: <lang:cosmetic.lobby.hat.honey.desc>
             cost: 500
           - id: lobby_hat_jack_o_lantern
-            name: Jack-o-Lantern
+            name: <lang:block.minecraft.jack_o_lantern>
             material: minecraft:jack_o_lantern
-            description: |
-              Spooky!
+            description: <lang:cosmetic.lobby.hat.jack_o_lantern.desc>
             cost: 500
           - id: lobby_hat_compass
-            name: Compass
+            name: <lang:item.minecraft.compass>
             material: minecraft:compass
-            description: |
-              Always know where you're going.
+            description: <lang:cosmetic.lobby.hat.compass.desc>
             cost: 500
           - id: lobby_hat_clock
-            name: Clock
+            name: <lang:item.minecraft.clock>
             material: minecraft:clock
-            description: |
-              Always know what time it is.
+            description: <lang:cosmetic.lobby.hat.clock.desc>
             cost: 500
           - id: lobby_hat_netherite_helmet
-            name: Helmet
+            name: <lang:cosmetic.lobby.hat.netherite>
             material: minecraft:netherite_helmet
-            description: |
-              The ultimate protection.
+            description: <lang:cosmetic.lobby.hat.netherite.desc>
             cost: 500
           - id: lobby_hat_creeper_head
-            name: Creeper Head
+            name: <lang:block.minecraft.creeper_head>
             material: minecraft:creeper_head
-            description: |
-              Shh.
+            description: <lang:cosmetic.lobby.hat.creeper.desc>
             cost: 500
           - id: lobby_hat_zombie_head
-            name: Zombie Head
+            name: <lang:block.minecraft.zombie_head>
             material: minecraft:zombie_head
-            description: |
-              Braaains.
+            description: <lang:cosmetic.lobby.hat.zombie.desc>
             cost: 500
           - id: lobby_hat_steve_head
-            name: Steve Head
+            name: <lang:cosmetic.lobby.hat.steve>
             material: minecraft:player_head
-            description: |
-              A fresh new look.
+            description: <lang:cosmetic.lobby.hat.steve.desc>
             cost: 500
           - id: lobby_hat_skeleton_skull
-            name: Skeleton Skull
+            name: <lang:block.minecraft.skeleton_skull>
             material: minecraft:skeleton_skull
-            description: |
-              Bow not included.
+            description: <lang:cosmetic.lobby.hat.skeleton.desc>
             cost: 500
           - id: lobby_hat_wither_skeleton_skull
-            name: Wither Skeleton Skull
+            name: <lang:block.minecraft.wither_skeleton_skull>
             material: minecraft:wither_skeleton_skull
-            description: |
-              Defender of the fortress.
+            description: <lang:cosmetic.lobby.hat.wither_skeleton.desc>
             cost: 500
           - id: lobby_hat_dragon_head
-            name: Dragon Head
+            name: <lang:block.minecraft.dragon_head>
             material: minecraft:dragon_head
-            description: |
-              Terrify the other players in the lobby.
+            description: <lang:cosmetic.lobby.hat.dragon.desc>
             cost: 5000
