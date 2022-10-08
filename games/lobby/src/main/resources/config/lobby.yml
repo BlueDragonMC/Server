@@ -93,7 +93,7 @@ npcs:
 tips:
   - "<p2><click:open_url:'https://bluedragonmc.com'><lang:lobby.tips.forum></click>"
   - "<p2><click:open_url:'https://discord.gg/3gvSPdW'><lang:lobby.tips.discord></click>"
-  - "<p2><lang:lobby.tips.newest_game:'<p1>Infinijump'>"
+  - "<p2><lang:lobby.tips.newest_game:'<p1>Skyfall'>"
   - "<p2><lang:lobby.tips.extra.1>"
   - "<p2><lang:lobby.tips.extra.2>"
   - "<p2><lang:lobby.tips.extra.3>"

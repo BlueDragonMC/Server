@@ -200,3 +200,8 @@ categories:
             material: minecraft:dragon_head
             description: <lang:cosmetic.lobby.hat.dragon.desc>
             cost: 5000
+          - id: lobby_hat_rainbow
+            name: <lang:cosmetic.lobby.hat.rainbow>
+            material: minecraft:blue_stained_glass
+            description: <lang:cosmetic.lobby.hat.rainbow.desc>
+            cost: 7500

@@ -7,10 +7,12 @@ import com.bluedragonmc.server.module.database.CosmeticsModule
 import com.bluedragonmc.server.module.gameplay.DoubleJumpModule
 import com.bluedragonmc.server.module.gameplay.MapZonesModule
 import com.bluedragonmc.server.utils.packet.PacketUtils
+import net.minestom.server.MinecraftServer
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
+import net.minestom.server.event.player.PlayerDeathEvent
 import net.minestom.server.event.player.PlayerSpawnEvent
 import net.minestom.server.event.player.PlayerTickEvent
 import net.minestom.server.event.trait.PlayerEvent
@@ -27,9 +29,18 @@ class LobbyCosmeticsModule : GameModule() {
 
     companion object {
         private val COSMETIC_TAG = Tag.Boolean("is_cosmetic")
-        private val stainedGlassBlocks = Material.values().filter {
-            it.name().endsWith("stained_glass")
-        }.map {
+        private val stainedGlassBlocks = listOf(
+            Material.BLUE_STAINED_GLASS,
+            Material.CYAN_STAINED_GLASS,
+            Material.LIGHT_BLUE_STAINED_GLASS,
+            Material.PURPLE_STAINED_GLASS,
+            Material.MAGENTA_STAINED_GLASS,
+            Material.RED_STAINED_GLASS,
+            Material.ORANGE_STAINED_GLASS,
+            Material.YELLOW_STAINED_GLASS,
+            Material.GREEN_STAINED_GLASS,
+            Material.LIME_STAINED_GLASS
+        ).map {
             ItemStack.of(it).cosmetic()
         }
 
@@ -50,14 +61,20 @@ class LobbyCosmeticsModule : GameModule() {
 
         cosmetics.handleEvent<DoubleJumpModule.PlayerDoubleJumpEvent>(DoubleJumpEffect.CLOUD) { event ->
             playCircularEffect(event.player) { pos ->
-                PacketUtils.createParticlePacket(pos, Particle.CLOUD, 5)
+                PacketUtils.createParticlePacket(pos, Particle.CLOUD, 3)
             }
         }
 
         cosmetics.handleEvent<PlayerTickEvent>(LobbyHat.RAINBOW) { event ->
             if (event.player.aliveTicks % 4 == 0L && isCosmeticItem(event.player.helmet)) {
                 event.player.helmet =
-                    stainedGlassBlocks[(event.player.aliveTicks % 4).toInt() % stainedGlassBlocks.size]
+                    stainedGlassBlocks[((event.player.aliveTicks).toInt() / 4) % stainedGlassBlocks.size]
+            }
+        }
+
+        eventNode.addListener(PlayerDeathEvent::class.java) { event ->
+            MinecraftServer.getSchedulerManager().scheduleNextTick {
+                updateHat(event)
             }
         }
 
@@ -95,7 +112,7 @@ class LobbyCosmeticsModule : GameModule() {
         playCircularEffect(player, player.position, generator)
 
     private fun playCircularEffect(player: Player, pos: Pos, generator: (Pos) -> ServerPacket) {
-        (0 until 360 step 36).forEach { degrees ->
+        (0 until 360 step 18).forEach { degrees ->
             val radians = Math.toRadians(degrees.toDouble())
             val packet = generator(pos.add(cos(radians) * 2.5, 0.0, sin(radians) * 2.5))
             player.sendPacketToViewersAndSelf(packet)
