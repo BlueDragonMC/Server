@@ -85,7 +85,7 @@ class ItemGeneratorsModule : GameModule() {
             }
         }
 
-        internal fun removeHolograms() {
+        fun removeHolograms() {
             if (hasHologram) {
                 staticHologram.remove()
                 hologram.remove()

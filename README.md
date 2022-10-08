@@ -20,13 +20,9 @@ Requires Java 17 or higher.
 ## Development
 This can be built as a docker container with the following command:
 ```shell
-$ DOCKER_BUILDKIT=1 docker build -t bluedragonmc/server:testing \
- --label com.bluedragonmc.server.version=testing \
- --label bluedragonmc.server.version=testing \
- .
+$ DOCKER_BUILDKIT=1 docker build -t bluedragonmc/server:testing .
 ```
-This uses the `Dockerfile` in the current directory to make an image with the version string `"testing"`.
+This uses the `Dockerfile` in the current directory to build an image with the version string `"testing"`.
 
 Environment variables:
 * `PUFFIN_VELOCITY_SECRET` - Your Velocity proxy forwarding secret (optional). If not specified, Mojang authentication will be enabled.
-* `PUFFIN_CONTAINER_ID` - The ID that the container uses to communicate with the Service.

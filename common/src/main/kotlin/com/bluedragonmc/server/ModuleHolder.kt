@@ -1,11 +1,14 @@
 package com.bluedragonmc.server
 
-import com.bluedragonmc.server.module.DependsOn
+import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.utils.*
+import net.minestom.server.event.Event
+import net.minestom.server.event.EventListener
+import net.minestom.server.event.EventNode
 import org.slf4j.LoggerFactory
+import java.util.function.Consumer
 import kotlin.reflect.KClass
-import kotlin.reflect.full.findAnnotation
 
 abstract class ModuleHolder {
 
@@ -33,6 +36,61 @@ abstract class ModuleHolder {
             if (module is T) return module
         }
         return null
+    }
+
+    protected fun dependingOn(vararg deps: KClass<out GameModule>, block: GameModuleBuilder.() -> Unit) {
+        val modules = GameModuleBuilder(deps).apply(block).build()
+        modules.forEach { use(it) }
+    }
+
+    protected class GameModuleBuilder(val deps: Array<out KClass<out GameModule>>) {
+
+        val modules = mutableListOf<GameModule>()
+
+        inline fun <reified T : Event> handleEvent(
+            handler: Consumer<T>
+        ) {
+            modules.add(InlineModule(T::class, handler, deps))
+        }
+
+        fun build() = modules
+    }
+
+    protected fun onGameStart(vararg deps: KClass<out GameModule>, handler: Consumer<GameStartEvent>) =
+        handleEvent(GameStartEvent::class, handler, *deps)
+
+    protected fun handleEvent(
+        handler: EventListener<out Event>,
+        vararg deps: KClass<out GameModule>,
+    ) = use(InlineModule(handler, deps)) as GameModule
+
+    protected inline fun <reified T : Event> handleEvent(
+        vararg deps: KClass<out GameModule>,
+        handler: Consumer<T>
+    ) = handleEvent(T::class, handler, *deps)
+
+    protected fun <T : Event> handleEvent(
+        eventType: KClass<T>,
+        handler: Consumer<T>,
+        vararg deps: KClass<out GameModule>
+    ) = use(InlineModule(eventType, handler, deps)) as GameModule
+
+    protected class InlineModule<T : Event>(
+        private val eventListener: EventListener<T>,
+        private val deps: Array<out KClass<out GameModule>>
+    ) : GameModule() {
+
+        constructor(
+            eventType: KClass<T>,
+            handler: Consumer<T>,
+            deps: Array<out KClass<out GameModule>>
+        ) : this(EventListener.of(eventType.java, handler), deps)
+
+        override fun initialize(parent: Game, eventNode: EventNode<Event>) {
+            eventNode.addListener(eventListener)
+        }
+
+        override fun getDependencies() = deps
     }
 
     /**
@@ -73,10 +131,10 @@ abstract class ModuleHolder {
 
         logger.debug("Attempting to register module $module")
         // Ensure this module has not been registered already
-        if (hasModule(module::class))
+        if (modules.contains(module))
             throw IllegalStateException("Tried to register module that is already registered: $module")
         // Ensure this module does not depend on itself
-        if (getDependencies(module).any { it.isInstance(module) })
+        if (module.getDependencies().any { it.isInstance(module) })
             throw IllegalStateException("Tried to register module which depends on itself: $module")
 
         // Create a node in the dependency tree for this module if it doesn't already exist
@@ -124,7 +182,7 @@ abstract class ModuleHolder {
     private fun addNode(module: GameModule) {
         val moduleDependencyNode = Node<ModuleDependency<*>>(FilledModuleDependency(module::class, module))
         // Add this module's dependencies as children in its branch of the tree
-        moduleDependencyNode.addChildren(getDependencies(module).map { EmptyModuleDependency(it) })
+        moduleDependencyNode.addChildren(module.getDependencies().map { EmptyModuleDependency(it) })
         // Fill all dependencies which have already been registered.
         fillDependencies(moduleDependencyNode)
         // Add the node to the tree
@@ -145,13 +203,11 @@ abstract class ModuleHolder {
      * dependencies must be loaded first.
      * @return true if the module can be immediately loaded
      */
-    private fun canAddModule(module: GameModule): Boolean = getDependencies(module).all { type ->
+    private fun canAddModule(module: GameModule): Boolean = module.getDependencies().all { type ->
         // Look for filled module dependencies at the root of the tree
         modules.any { module ->
             // If the node is a filled dependency, check if its type corresponds with the given parameter's type
             type.isInstance(module)
         }
     }
-
-    private fun getDependencies(module: GameModule) = module::class.findAnnotation<DependsOn>()?.dependencies ?: emptyArray()
 }

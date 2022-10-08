@@ -4,7 +4,6 @@ import com.bluedragonmc.server.ALT_COLOR_1
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.KitSelectedEvent
 import com.bluedragonmc.server.event.PlayerLeaveGameEvent
-import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.GuiModule
 import com.bluedragonmc.server.module.combat.CustomDeathMessageModule
 import com.bluedragonmc.server.module.combat.OldCombatModule
@@ -21,8 +20,6 @@ import net.kyori.adventure.text.format.TextDecoration
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.EntityType
 import net.minestom.server.entity.GameMode
-import net.minestom.server.event.Event
-import net.minestom.server.event.EventNode
 import net.minestom.server.event.player.PlayerRespawnEvent
 import net.minestom.server.event.player.PlayerSpawnEvent
 import net.minestom.server.potion.Potion
@@ -72,32 +69,40 @@ class ArenaPvpGame(mapName: String) : Game("ArenaPvP", mapName) {
         use(AnvilFileMapProviderModule(Paths.get("worlds/$name/$mapName")))
 
         // CUSTOM
-        use(object : GameModule() {
-            override fun initialize(parent: Game, eventNode: EventNode<Event>) {
-                eventNode.addListener(PlayerRespawnEvent::class.java) { event ->
-                    getModule<KitsModule>().selectKit(event.player)
-                }
-                eventNode.addListener(OldCombatModule.PlayerAttackEvent::class.java) { event ->
-                    event.isCancelled = event.target.position.y > 111
-                }
-                eventNode.addListener(PlayerSpawnEvent::class.java) { event ->
-                    getModule<KitsModule>().giveKit(event.player)
-                }
-                eventNode.addListener(DoubleJumpModule.PlayerDoubleJumpEvent::class.java) { event ->
-                    event.isCancelled =
-                        event.player.position.y <= 111 && !getModule<KitsModule>().getSelectedKit(event.player).hasAbility("double_jump")
-                }
-                eventNode.addListener(KitSelectedEvent::class.java) { event ->
-                    event.player.clearEffects()
-                    if (event.kit.hasAbility("jump_boost")) {
-                        event.player.addEffect(jumpBoost)
-                    }
-                }
-                eventNode.addListener(PlayerLeaveGameEvent::class.java) { event ->
-                    event.player.clearEffects()
+        dependingOn(KitsModule::class) {
+            handleEvent<PlayerRespawnEvent> { event ->
+                getModule<KitsModule>().selectKit(event.player)
+            }
+
+            handleEvent<PlayerSpawnEvent> { event ->
+                getModule<KitsModule>().giveKit(event.player)
+                event.player.isAllowFlying = true
+            }
+
+            handleEvent<KitSelectedEvent> { event ->
+                event.player.clearEffects()
+                if (event.kit.hasAbility("jump_boost")) {
+                    event.player.addEffect(jumpBoost)
                 }
             }
-        })
+        }
+
+        handleEvent<OldCombatModule.PlayerAttackEvent> { event ->
+            event.isCancelled = event.target.position.y > 111
+        }
+
+        handleEvent<DoubleJumpModule.PlayerDoubleJumpEvent> { event ->
+            if (event.player.position.y <= 111) {
+                if (!getModule<KitsModule>().getSelectedKit(event.player).hasAbility("double_jump")) {
+                    event.isCancelled = true
+                    event.player.isAllowFlying = false
+                }
+            }
+        }
+
+        handleEvent<PlayerLeaveGameEvent> { event ->
+            event.player.clearEffects()
+        }
 
         getModule<NPCModule>().addNPC(
             position = Pos(-31.5, 127.0, 284.5, -135.0f, 0.0f),

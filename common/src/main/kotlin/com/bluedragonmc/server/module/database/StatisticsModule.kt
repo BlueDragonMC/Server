@@ -112,6 +112,40 @@ class StatisticsModule(private val recordWins: Boolean = true) : GameModule() {
         }
     }
 
+    /**
+     * Increments the statistic for the [player] using the [key]
+     * by +1.0. If the statistic does not currently exist for the
+     * player, it is recorded as 1.0.
+     */
+    fun incrementStatistic(
+        player: Player,
+        key: String
+    ) = recordStatistic(player, key) { current -> current?.plus(1.0) ?: 1.0 }
+
+    /**
+     * Records the statistic for the [player] using the [key] if
+     * the provided [newValue] is LESS THAN the current stored value.
+     * If the statistic is recorded, the [successCallback] is run.
+     */
+    fun recordStatisticIfLower(player: Player, key: String, newValue: Double, successCallback: Runnable? = null) =
+        recordStatistic(player, key, newValue) { old ->
+            val record = old == null || old > newValue
+            if (record) successCallback?.run()
+            record
+        }
+
+    /**
+     * Records the statistic for the [player] using the [key] if
+     * the provided [newValue] is GREATER THAN the current stored value.
+     * If the statistic is recorded, the [successCallback] is run.
+     */
+    fun recordStatisticIfGreater(player: Player, key: String, newValue: Double, successCallback: Runnable? = null) =
+        recordStatistic(player, key, newValue) { old ->
+            val record = old == null || old > newValue
+            if (record) successCallback?.run()
+            record
+        }
+
     suspend fun rankPlayersByStatistic(
         key: String,
         sortOrderBy: OrderBy = OrderBy.DESC,

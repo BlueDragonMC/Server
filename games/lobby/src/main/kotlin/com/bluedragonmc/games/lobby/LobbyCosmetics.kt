@@ -7,61 +7,74 @@ import com.bluedragonmc.server.module.database.CosmeticsModule
 import com.bluedragonmc.server.module.gameplay.DoubleJumpModule
 import com.bluedragonmc.server.module.gameplay.MapZonesModule
 import com.bluedragonmc.server.utils.packet.PacketUtils
+import net.minestom.server.coordinate.Pos
+import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.player.PlayerSpawnEvent
+import net.minestom.server.event.player.PlayerTickEvent
+import net.minestom.server.event.trait.PlayerEvent
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
+import net.minestom.server.network.packet.server.ServerPacket
 import net.minestom.server.particle.Particle
+import net.minestom.server.tag.Tag
 import kotlin.math.cos
 import kotlin.math.sin
 
 @DependsOn(CosmeticsModule::class)
 class LobbyCosmeticsModule : GameModule() {
 
-    override fun initialize(parent: Game, eventNode: EventNode<Event>) {
-        val cosmetics = parent.getModule<CosmeticsModule>()
+    companion object {
+        private val COSMETIC_TAG = Tag.Boolean("is_cosmetic")
+        private val stainedGlassBlocks = Material.values().filter {
+            it.name().endsWith("stained_glass")
+        }.map {
+            ItemStack.of(it).cosmetic()
+        }
 
-        eventNode.addListener(DoubleJumpModule.PlayerDoubleJumpEvent::class.java) { event ->
-            when (cosmetics.getCosmeticInGroup<DoubleJumpEffect>(event.player)) {
-                DoubleJumpEffect.DOUBLE_JUMP_NOTE -> {
-                    (0 until 360 step 36).forEach { degrees ->
-                        val radians = Math.toRadians(degrees.toDouble())
-                        val packet = PacketUtils.createParticlePacket(
-                            event.player.position.add(
-                                cos(radians) * 2.5, 0.0, sin(radians) * 2.5
-                            ), Particle.NOTE, 2
-                        )
-                        event.player.sendPacketToViewersAndSelf(packet)
-                    }
-                }
-                null -> {}
+        private fun isCosmeticItem(itemStack: ItemStack) = itemStack.hasTag(COSMETIC_TAG)
+        private fun ItemStack.cosmetic() = withTag(COSMETIC_TAG, true)
+    }
+
+    private lateinit var cosmetics: CosmeticsModule
+
+    override fun initialize(parent: Game, eventNode: EventNode<Event>) {
+        cosmetics = parent.getModule<CosmeticsModule>()
+
+        cosmetics.handleEvent<DoubleJumpModule.PlayerDoubleJumpEvent>(DoubleJumpEffect.NOTE) { event ->
+            playCircularEffect(event.player) { pos ->
+                PacketUtils.createParticlePacket(pos, Particle.NOTE, 2)
             }
         }
 
-        eventNode.addListener(PlayerSpawnEvent::class.java) { event ->
-            event.player.helmet = cosmetics.getCosmeticInGroup<LobbyHat>(event.player)?.itemStack ?: ItemStack.of(Material.AIR)
+        cosmetics.handleEvent<DoubleJumpModule.PlayerDoubleJumpEvent>(DoubleJumpEffect.CLOUD) { event ->
+            playCircularEffect(event.player) { pos ->
+                PacketUtils.createParticlePacket(pos, Particle.CLOUD, 5)
+            }
         }
 
-        eventNode.addListener(CosmeticsModule.PlayerEquipCosmeticEvent::class.java) { event ->
-            event.player.helmet = cosmetics.getCosmeticInGroup<LobbyHat>(event.player)?.itemStack ?: ItemStack.of(Material.AIR)
+        cosmetics.handleEvent<PlayerTickEvent>(LobbyHat.RAINBOW) { event ->
+            if (event.player.aliveTicks % 4 == 0L && isCosmeticItem(event.player.helmet)) {
+                event.player.helmet =
+                    stainedGlassBlocks[(event.player.aliveTicks % 4).toInt() % stainedGlassBlocks.size]
+            }
         }
 
-        eventNode.addListener(CosmeticsModule.PlayerUnequipCosmeticEvent::class.java) { event ->
-            event.player.helmet = cosmetics.getCosmeticInGroup<LobbyHat>(event.player)?.itemStack ?: ItemStack.of(Material.AIR)
-        }
-
-        eventNode.addListener(MapZonesModule.PlayerPostLeaveZoneEvent::class.java) { event ->
-            event.player.helmet = cosmetics.getCosmeticInGroup<LobbyHat>(event.player)?.itemStack ?: ItemStack.of(Material.AIR)
-        }
+        eventNode.addListener(PlayerSpawnEvent::class.java, ::updateHat)
+        eventNode.addListener(CosmeticsModule.PlayerEquipCosmeticEvent::class.java, ::updateHat)
+        eventNode.addListener(CosmeticsModule.PlayerUnequipCosmeticEvent::class.java, ::updateHat)
+        eventNode.addListener(MapZonesModule.PlayerPostLeaveZoneEvent::class.java, ::updateHat)
     }
 
     enum class DoubleJumpEffect(override val id: String) : CosmeticsModule.Cosmetic {
-        DOUBLE_JUMP_NOTE("lobby_double_jump_note")
+        NOTE("lobby_double_jump_note"),
+        CLOUD("lobby_double_jump_cloud"),
     }
 
     enum class LobbyHat(override val id: String, val itemStack: ItemStack) : CosmeticsModule.Cosmetic {
         GLASS("lobby_hat_glass", ItemStack.of(Material.GLASS)),
+        RAINBOW("lobby_hat_rainbow", ItemStack.of(Material.BLUE_STAINED_GLASS)),
         ICE("lobby_hat_ice", ItemStack.of(Material.ICE)),
         SLIME("lobby_hat_slime", ItemStack.of(Material.SLIME_BLOCK)),
         HONEY("lobby_hat_honey", ItemStack.of(Material.HONEY_BLOCK)),
@@ -77,4 +90,22 @@ class LobbyCosmeticsModule : GameModule() {
         DRAGON_HEAD("lobby_hat_dragon_head", ItemStack.of(Material.DRAGON_HEAD)),
 
     }
+
+    private fun playCircularEffect(player: Player, generator: (Pos) -> ServerPacket) =
+        playCircularEffect(player, player.position, generator)
+
+    private fun playCircularEffect(player: Player, pos: Pos, generator: (Pos) -> ServerPacket) {
+        (0 until 360 step 36).forEach { degrees ->
+            val radians = Math.toRadians(degrees.toDouble())
+            val packet = generator(pos.add(cos(radians) * 2.5, 0.0, sin(radians) * 2.5))
+            player.sendPacketToViewersAndSelf(packet)
+        }
+    }
+
+    private fun updateHat(event: PlayerEvent) {
+        event.player.helmet = getHat(event.player)
+    }
+
+    private fun getHat(player: Player) = cosmetics.getCosmeticInGroup<LobbyHat>(player)?.itemStack?.cosmetic()
+        ?: ItemStack.of(Material.AIR)
 }

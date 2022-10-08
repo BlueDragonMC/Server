@@ -4,8 +4,6 @@ import com.bluedragonmc.games.skyfall.module.SkyfallChickensModule
 import com.bluedragonmc.server.ALT_COLOR_1
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.PlayerKillPlayerEvent
-import com.bluedragonmc.server.module.DependsOn
-import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.GuiModule
 import com.bluedragonmc.server.module.combat.CustomDeathMessageModule
 import com.bluedragonmc.server.module.combat.OldCombatModule
@@ -26,8 +24,6 @@ import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.coordinate.Point
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.GameMode
-import net.minestom.server.event.Event
-import net.minestom.server.event.EventNode
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import net.minestom.server.utils.inventory.PlayerInventoryUtils
@@ -98,16 +94,10 @@ class SkyfallGame(mapName: String) : Game("Skyfall", mapName) {
 
         // Game-specific
         use(SkyfallChickensModule(mapData?.additionalLocations?.getOrNull(0) ?: listOf()))
-        use(@DependsOn(StatisticsModule::class) object : GameModule() {
-            override fun initialize(parent: Game, eventNode: EventNode<Event>) {
-                eventNode.addListener(PlayerKillPlayerEvent::class.java) { event ->
-                    getModule<StatisticsModule>().recordStatistic(
-                        event.attacker,
-                        "game_skyfall_kills"
-                    ) { value -> value?.plus(1.0) ?: 1.0 }
-                }
-            }
-        })
+
+        handleEvent<PlayerKillPlayerEvent>(StatisticsModule::class) { event ->
+            getModule<StatisticsModule>().incrementStatistic(event.attacker, "game_skyfall_kills")
+        }
 
         ready()
     }

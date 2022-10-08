@@ -8,12 +8,15 @@ import com.bluedragonmc.server.module.config.ConfigModule
 import net.kyori.adventure.text.Component
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
+import net.minestom.server.event.EventFilter
 import net.minestom.server.event.EventNode
-import net.minestom.server.item.ItemStack
 import net.minestom.server.event.trait.PlayerEvent
+import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import org.spongepowered.configurate.ConfigurationNode
 import org.spongepowered.configurate.objectmapping.ConfigSerializable
+import java.util.function.Consumer
+import kotlin.reflect.KClass
 
 @DependsOn(DatabaseModule::class, ConfigModule::class)
 class CosmeticsModule : GameModule() {
@@ -28,21 +31,6 @@ class CosmeticsModule : GameModule() {
         private lateinit var cosmeticsById: Map<String, CosmeticEntry>
 
         private fun isConfigLoaded() = ::config.isInitialized
-
-        // Extension functions to statically use [CosmeticModule] methods.
-        // These methods still require a player to be in a game with a CosmeticModule.
-
-        fun Player.isEquipped(cosmetic: Cosmetic): Boolean {
-            return Game.findGame(this)?.getModuleOrNull<CosmeticsModule>()?.isCosmeticEquipped(this, cosmetic) ?: false
-        }
-
-        fun Player.hasCosmetic(cosmetic: Cosmetic): Boolean {
-            return Game.findGame(this)?.getModuleOrNull<CosmeticsModule>()?.hasCosmetic(this, cosmetic) ?: false
-        }
-
-        inline fun <reified T : Cosmetic> Player.getCosmeticInGroup(): Cosmetic? {
-            return Game.findGame(this)?.getModuleOrNull<CosmeticsModule>()?.getCosmeticInGroup<T>(this)
-        }
     }
 
     @ConfigSerializable
@@ -157,7 +145,30 @@ class CosmeticsModule : GameModule() {
     fun getCosmetics() = cosmetics
     fun getCosmetic(id: String) = cosmeticsById[id]
 
-    fun getGroupOfCosmetic(cosmetic: Cosmetic) = getGroups().find { it.cosmetics.any { c -> c.id == cosmetic.id } }
+    fun getGroupOfCosmetic(cosmetic: Cosmetic) = getGroups().find {
+        it.cosmetics.any { c -> c.id == cosmetic.id }
+    }
+
+    fun getEventNode(cosmetic: Cosmetic): EventNode<PlayerEvent> {
+        val id = "cosmetic-${cosmetic.id}-users"
+        val existing = this.eventNode!!.findChildren(id, PlayerEvent::class.java).firstOrNull()
+        if (existing != null) {
+            return existing
+        }
+        val eventNode = EventNode.type(id, EventFilter.PLAYER) { _, player ->
+            isCosmeticEquipped(player, cosmetic)
+        }
+        this.eventNode!!.addChild(eventNode)
+        return eventNode
+    }
+
+    inline fun <reified T : PlayerEvent> handleEvent(cosmetic: Cosmetic, handler: Consumer<T>) =
+        handleEvent(cosmetic, T::class, handler)
+
+    fun <T : PlayerEvent> handleEvent(cosmetic: Cosmetic, eventType: KClass<T>, handler: Consumer<T>) {
+        val eventNode = getEventNode(cosmetic)
+        eventNode.addListener(eventType.java, handler)
+    }
 
     interface Cosmetic {
         val id: String

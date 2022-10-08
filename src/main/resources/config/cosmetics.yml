@@ -130,6 +130,13 @@ categories:
               A musical effect which appears 
               all around you when you double jump.
             cost: 1500
+          - id: lobby_double_jump_cloud
+            name: Cloud
+            material: minecraft:white_wool
+            description: |
+              A cloud effect which appears 
+              all around you when you double jump.
+            cost: 1500
       - name: Hat
         material: minecraft:player_head
         description: |

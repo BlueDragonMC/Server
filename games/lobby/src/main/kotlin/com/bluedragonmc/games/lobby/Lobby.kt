@@ -10,7 +10,6 @@ import com.bluedragonmc.games.lobby.module.ParkourModule
 import com.bluedragonmc.messages.GameType
 import com.bluedragonmc.server.*
 import com.bluedragonmc.server.block.JukeboxMenuBlockHandler
-import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.GuiModule
 import com.bluedragonmc.server.module.combat.CustomDeathMessageModule
 import com.bluedragonmc.server.module.combat.OldCombatModule
@@ -34,9 +33,7 @@ import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.EntityType
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
-import net.minestom.server.event.Event
 import net.minestom.server.event.EventListener
-import net.minestom.server.event.EventNode
 import net.minestom.server.event.inventory.InventoryPreClickEvent
 import net.minestom.server.event.player.PlayerDeathEvent
 import net.minestom.server.event.player.PlayerSpawnEvent
@@ -146,35 +143,36 @@ class Lobby : Game("Lobby", "lobbyv2.2") {
         use(StatisticsModule())
         use(CosmeticsModule())
         use(LobbyCosmeticsModule())
-        use(object : GameModule() {
-            override fun initialize(parent: Game, eventNode: EventNode<Event>) {
-                eventNode.addListener(PlayerSpawnEvent::class.java) { event ->
-                    loadXPBar(event.player)
-                    event.player.showTitle(Title.title(
-                        SERVER_NAME_GRADIENT,
-                        Component.translatable(splashes.random(), BRAND_COLOR_PRIMARY_2),
-                        Title.Times.times(Duration.ZERO, Duration.ofMillis(1500), Duration.ofMillis(100))
-                    ))
-                    event.player.inventory.setItemStack(0, gameSelectItem)
-                }
-                eventNode.addListener(PlayerUseItemEvent::class.java) { event ->
-                    if (event.itemStack.isSimilar(gameSelectItem)) {
-                        getMenu<GameSelector>()!!.open(event.player)
-                    }
-                }
-                eventNode.addListener(
-                    EventListener.builder(InventoryPreClickEvent::class.java).ignoreCancelled(false).handler { event ->
-                        if (event.clickedItem.isSimilar(gameSelectItem)) {
-                            getMenu<GameSelector>()!!.open(event.player)
-                        }
-                    }.build()
-                )
-                eventNode.addListener(PlayerDeathEvent::class.java) { event ->
-                    event.player.inventory.clear()
-                    event.player.inventory.setItemStack(0, gameSelectItem)
-                }
+
+        handleEvent<PlayerSpawnEvent> { event ->
+            loadXPBar(event.player)
+            event.player.showTitle(Title.title(
+                SERVER_NAME_GRADIENT,
+                Component.translatable(splashes.random(), BRAND_COLOR_PRIMARY_2),
+                Title.Times.times(Duration.ZERO, Duration.ofMillis(1500), Duration.ofMillis(100))
+            ))
+            event.player.inventory.setItemStack(0, gameSelectItem)
+        }
+
+        handleEvent<PlayerUseItemEvent> { event ->
+            if (event.itemStack.isSimilar(gameSelectItem)) {
+                getMenu<GameSelector>()!!.open(event.player)
             }
-        })
+        }
+
+        handleEvent<PlayerDeathEvent> { event ->
+            event.player.inventory.clear()
+            event.player.inventory.setItemStack(0, gameSelectItem)
+        }
+
+        handleEvent(
+            EventListener.builder(InventoryPreClickEvent::class.java).ignoreCancelled(false).handler { event ->
+                if (event.clickedItem.isSimilar(gameSelectItem)) {
+                    getMenu<GameSelector>()!!.open(event.player)
+                }
+            }.build()
+        )
+
         use(DoubleJumpModule())
         use(GuiModule())
         use(LeaderboardsModule(config))

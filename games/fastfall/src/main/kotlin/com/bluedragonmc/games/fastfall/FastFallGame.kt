@@ -2,14 +2,11 @@ package com.bluedragonmc.games.fastfall
 
 import com.bluedragonmc.server.*
 import com.bluedragonmc.server.event.GameStartEvent
-import com.bluedragonmc.server.module.DependsOn
-import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.GlobalCosmeticModule
 import com.bluedragonmc.server.module.combat.CustomDeathMessageModule
 import com.bluedragonmc.server.module.config.ConfigModule
 import com.bluedragonmc.server.module.database.AwardsModule
 import com.bluedragonmc.server.module.database.CosmeticsModule
-import com.bluedragonmc.server.module.database.CosmeticsModule.Companion.isEquipped
 import com.bluedragonmc.server.module.database.StatisticsModule
 import com.bluedragonmc.server.module.gameplay.*
 import com.bluedragonmc.server.module.instance.CustomGeneratorInstanceModule
@@ -27,8 +24,6 @@ import net.minestom.server.color.Color
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
-import net.minestom.server.event.Event
-import net.minestom.server.event.EventNode
 import net.minestom.server.event.instance.InstanceTickEvent
 import net.minestom.server.event.player.PlayerDeathEvent
 import net.minestom.server.event.player.PlayerMoveEvent
@@ -52,15 +47,7 @@ class FastFallGame(mapName: String?) : Game("FastFall", mapName ?: "Chaos") {
             Block.SLIME_BLOCK,
             Block.GLASS,
             Block.BEDROCK,
-            Block.EMERALD_BLOCK,
-            // The following are not full blocks, so they cause the player to get stuck
-            Block.SOUL_SAND,
-            Block.STONE_SLAB,
-            Block.OAK_PRESSURE_PLATE,
-            Block.IRON_TRAPDOOR,
-            Block.CHEST,
-            Block.NETHER_BRICK_FENCE,
-            Block.RED_BED
+            Block.EMERALD_BLOCK
         )
     }
 
@@ -109,132 +96,112 @@ class FastFallGame(mapName: String?) : Game("FastFall", mapName ?: "Chaos") {
         use(CustomDeathMessageModule())
         use(InventoryPermissionsModule(allowDropItem = false, allowMoveItem = false))
 
+        val cosmetics = use(CosmeticsModule())
+
         var lead: Player? = null
         var lastLeadChange = 0L
         var isSingleplayer by Delegates.notNull<Boolean>()
         var startTime: Long? = null
 
-        use(@DependsOn(CosmeticsModule::class) object : GameModule() {
+        handleEvent<PlayerSpawnEvent>(CosmeticsModule::class) { event ->
+            event.player.boots =
+                cosmetics.getCosmeticInGroup<FastFallBoots>(event.player)?.item ?: return@handleEvent
+        }
 
-            override fun initialize(parent: Game, eventNode: EventNode<Event>) {
-                eventNode.addListener(PlayerSpawnEvent::class.java) { event ->
-                    event.player.boots =
-                        parent.getModule<CosmeticsModule>().getCosmeticInGroup<FastFallBoots>(event.player)?.item
-                            ?: return@addListener
-                }
-                eventNode.addListener(GameStartEvent::class.java) {
-                    startTime = System.currentTimeMillis()
-                    isSingleplayer = parent.players.size <= 1
+        handleEvent<GameStartEvent>(CosmeticsModule::class) {
+            startTime = System.currentTimeMillis()
+            isSingleplayer = players.size <= 1
 
-                    if (isSingleplayer) parent.players.forEach {
-                        it.sendMessage(Component.translatable("game.fastfall.singleplayer_warning", ALT_COLOR_1))
-                    }
+            if (isSingleplayer) players.forEach {
+                it.sendMessage(Component.translatable("game.fastfall.singleplayer_warning", ALT_COLOR_1))
+            }
 
-                    players.forEach {
-                        val boots = parent.getModule<CosmeticsModule>().getCosmeticInGroup<FastFallBoots>(it)?.item
-                        if (boots != null) {
-                            it.boots = boots
-                        }
-                    }
-                }
-                eventNode.addListener(WinModule.WinnerDeclaredEvent::class.java) { event ->
-                    event.winningTeam.players.forEach {
-                        if (it.health == it.maxHealth) {
-                            val amount = if (isSingleplayer) 10 else 50
-                            parent.getModule<AwardsModule>().awardCoins(
-                                it, amount, Component.translatable("game.fastfall.award.no_damage_taken", ALT_COLOR_2)
-                            )
-                        }
-                    }
-                }
-                eventNode.addListener(PlayerDeathEvent::class.java) { event ->
-                    if (getModule<CosmeticsModule>().isCosmeticEquipped(event.player, FastFallBoots.TNT)) {
-                        val pos = event.player.position
-                        // Play explosion effect
-                        sendGroupedPacket(ExplosionPacket(
-                            pos.x.toFloat(), pos.y.toFloat(), pos.z.toFloat(),
-                            5.0f, ByteArray(0), 0.0f, 0.0f, 0.0f))
-                        // Play a sound
-                        SoundUtils.playSoundInWorld(
-                            Sound.sound(
-                                SoundEvent.ENTITY_GENERIC_EXPLODE, Sound.Source.BLOCK, 1.0f, 1.0f
-                            ), getInstance(), pos
-                        )
-                    }
-                }
-                eventNode.addListener(InstanceTickEvent::class.java) { event ->
-                    if (event.instance.worldAge % 5 != 0L) return@addListener // Only run every 5 ticks
-                    val ordered = players.sortedBy { it.position.y }
-                    if (ordered.isEmpty()) return@addListener
-                    val lowest = ordered.first()
-                    // Players' velocity has a Y component of -1.568 when standing still
-                    // Lead changes are limited to, at most, every 1.5 seconds
-                    if (lead != lowest && lowest.velocity.y >= -1.568 && event.instance.worldAge - lastLeadChange > 30) {
-                        if (lead != null) {
-                            val msg = Component.translatable("game.fastfall.lead_changed", BRAND_COLOR_PRIMARY_2, lowest.name)
-                            sendMessage(msg)
-                            showTitle(Title.title(Component.empty(), msg))
-                            playSound(Sound.sound(SoundEvent.BLOCK_NOTE_BLOCK_PLING, Sound.Source.PLAYER, 1.0f, 1.0f))
-                            lowest.isGlowing = true
-                            lead?.isGlowing = false
-                        }
-                        lead = lowest
-                        lastLeadChange = event.instance.worldAge
-                    }
-                    ordered.forEachIndexed { index, player ->
-                        val ahead = ordered.size - (ordered.size - index)
-
-                        val key = if (ahead == 1) "game.fastfall.actionbar.singular" else "game.fastfall.actionbar"
-                        val actionBarComponent = Component.translatable(key, BRAND_COLOR_PRIMARY_2,
-                            Component.text(ahead, BRAND_COLOR_PRIMARY_1),
-                            Component.text(String.format("%.1f%%", player.health / player.maxHealth * 100))
-                                .withTransition(
-                                    player.health / player.maxHealth,
-                                    NamedTextColor.RED,
-                                    NamedTextColor.YELLOW,
-                                    NamedTextColor.GREEN
-                                ),
-                            Component.text(
-                                player.position.y.toInt() - (257 - 2 * radius),
-                                BRAND_COLOR_PRIMARY_1
-                            )
-                        )
-
-                        player.sendActionBar(actionBarComponent)
-                    }
-                }
-                eventNode.addListener(PlayerMoveEvent::class.java) { event ->
-                    val posBelow = event.player.position.sub(0.0, 0.2, 0.0)
-                    val blockBelow = event.player.instance?.getBlock(posBelow)
-                        ?: return@addListener
-                    if (blockBelow == Block.EMERALD_BLOCK && event.player.isOnGround) {
-                        getModule<WinModule>().declareWinner(event.player)
-                    } else if (event.isOnGround && blockBelow !in indestructibleBlocks
-                        && blockBelow.isSolid && event.player.isEquipped(FastFallBoots.MIDAS)) {
-                            event.player.instance?.setBlock(posBelow, Block.GOLD_BLOCK)
-                    }
-                }
-                eventNode.addListener(WinModule.WinnerDeclaredEvent::class.java) { event ->
-                    if (event.winningTeam.players.isEmpty()) return@addListener // The game was ended before a winner was declared, or there was no winner
-                    val time = System.currentTimeMillis() - startTime!!
-                    val player = event.winningTeam.players.first()
-                    // Record the players' best times (only update the statistic if the new value is less than the old value)
-                    getModule<StatisticsModule>().recordStatistic(player, "game_fastfall_best_time", time.toDouble()) { prev ->
-                        if (prev == null || prev > time) { // This time is a new record
-                            val str = formatDuration(time)
-                            player.sendMessage(Component.translatable("game.fastfall.new_record", ALT_COLOR_2, setOf(TextDecoration.BOLD), Component.text(str, ALT_COLOR_1)))
-                            player.playSound(Sound.sound(SoundEvent.ENTITY_PLAYER_LEVELUP, Sound.Source.PLAYER, 1.0f, 1.0f))
-                            true // Yes, record the statistic
-                        } else false // No, don't record the statistic; it isn't the player's fastest time
-                    }
-                    if (!isSingleplayer) {
-                        // Only record wins in multiplayer
-                        getModule<StatisticsModule>().recordStatistic(player, "game_fastfall_wins")
-                        { prev -> prev?.plus(1.0) ?: 1.0 }
-                    }
+            players.forEach {
+                val boots = cosmetics.getCosmeticInGroup<FastFallBoots>(it)?.item
+                if (boots != null) {
+                    it.boots = boots
                 }
             }
-        })
+        }
+
+        handleEvent<WinModule.WinnerDeclaredEvent>(StatisticsModule::class, AwardsModule::class) { event ->
+
+            val time = System.currentTimeMillis() - startTime!!
+
+            event.winningTeam.players.forEach { player ->
+                if (player.health != player.maxHealth) return@handleEvent
+                val amount = if (isSingleplayer) 10 else 50
+                getModule<AwardsModule>().awardCoins(
+                    player, amount, Component.translatable("game.fastfall.award.no_damage_taken", ALT_COLOR_2)
+                )
+
+                // Record the player's best time, if they beat their personal best
+                getModule<StatisticsModule>().recordStatisticIfLower(player, "game_fastfall_best_time", time.toDouble()) {
+                    val str = formatDuration(time)
+                    player.sendMessage(Component.translatable(
+                        "game.fastfall.new_record", ALT_COLOR_2, setOf(TextDecoration.BOLD),
+                        Component.text(str, ALT_COLOR_1))
+                    )
+                    player.playSound(Sound.sound(
+                        SoundEvent.ENTITY_PLAYER_LEVELUP, Sound.Source.PLAYER, 1.0f, 1.0f
+                    ))
+                }
+                if (!isSingleplayer) {
+                    // Only record wins in multiplayer
+                    getModule<StatisticsModule>().incrementStatistic(player, "game_fastfall_wins")
+                }
+            }
+        }
+
+        handleEvent<InstanceTickEvent> { event ->
+            if (event.instance.worldAge % 5 != 0L) return@handleEvent // Only run every 5 ticks
+            val ordered = players.sortedBy { it.position.y }
+            if (ordered.isEmpty()) return@handleEvent
+            val lowest = ordered.first()
+            // Players' velocity has a Y component of -1.568 when standing still
+            // Lead changes are limited to, at most, every 1.5 seconds
+            if (lead != lowest && lowest.velocity.y >= -1.568 && event.instance.worldAge - lastLeadChange > 30) {
+                if (lead != null) {
+                    val msg = Component.translatable("game.fastfall.lead_changed", BRAND_COLOR_PRIMARY_2, lowest.name)
+                    sendMessage(msg)
+                    showTitle(Title.title(Component.empty(), msg))
+                    playSound(Sound.sound(SoundEvent.BLOCK_NOTE_BLOCK_PLING, Sound.Source.PLAYER, 1.0f, 1.0f))
+                    lowest.isGlowing = true
+                    lead?.isGlowing = false
+                }
+                lead = lowest
+                lastLeadChange = event.instance.worldAge
+            }
+            ordered.forEachIndexed { index, player ->
+                val ahead = ordered.size - (ordered.size - index)
+
+                val key = if (ahead == 1) "game.fastfall.actionbar.singular" else "game.fastfall.actionbar"
+                val actionBarComponent = Component.translatable(key, BRAND_COLOR_PRIMARY_2,
+                    Component.text(ahead, BRAND_COLOR_PRIMARY_1),
+                    Component.text(String.format("%.1f%%", player.health / player.maxHealth * 100))
+                        .withTransition(
+                            player.health / player.maxHealth,
+                            NamedTextColor.RED,
+                            NamedTextColor.YELLOW,
+                            NamedTextColor.GREEN
+                        ),
+                    Component.text(
+                        player.position.y.toInt() - (257 - 2 * radius),
+                        BRAND_COLOR_PRIMARY_1
+                    )
+                )
+
+                player.sendActionBar(actionBarComponent)
+            }
+        }
+
+        handleEvent<PlayerMoveEvent> { event ->
+            if (event.player.isOnGround && event.player.instance?.getBlock(
+                    event.player.position.sub(0.0, 0.2, 0.0)
+                ) == Block.EMERALD_BLOCK) {
+                getModule<WinModule>().declareWinner(event.player)
+            }
+        }
 
         // MINIGAME MODULES
         use(CountdownModule(threshold = 1, allowMoveDuringCountdown = false))
@@ -262,8 +229,32 @@ class FastFallGame(mapName: String?) : Game("FastFall", mapName ?: "Chaos") {
         }.repeat(Duration.ofMillis(500)).schedule()
 
         use(StatisticsModule(recordWins = false))
-        use(CosmeticsModule())
         use(GlobalCosmeticModule())
+
+        cosmetics.handleEvent<PlayerMoveEvent>(FastFallBoots.MIDAS) { event ->
+            if (event.isOnGround) {
+                val posBelow = event.player.position.sub(0.0, 0.2, 0.0)
+                val blockBelow = event.player.instance?.getBlock(posBelow)
+                    ?: return@handleEvent
+                if (blockBelow.isFullCube() && !indestructibleBlocks.contains(blockBelow)) {
+                    event.player.instance?.setBlock(posBelow, Block.GOLD_BLOCK)
+                }
+            }
+        }
+
+        cosmetics.handleEvent<PlayerDeathEvent>(FastFallBoots.TNT) { event ->
+            val pos = event.player.position
+            // Play explosion effect
+            sendGroupedPacket(ExplosionPacket(
+                pos.x.toFloat(), pos.y.toFloat(), pos.z.toFloat(),
+                5.0f, ByteArray(0), 0.0f, 0.0f, 0.0f))
+            // Play a sound
+            SoundUtils.playSoundInWorld(
+                Sound.sound(
+                    SoundEvent.ENTITY_GENERIC_EXPLODE, Sound.Source.BLOCK, 1.0f, 1.0f
+                ), getInstance(), pos
+            )
+        }
 
         ready()
     }
