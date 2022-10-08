@@ -118,8 +118,7 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
         val teamModule = getModule<TeamModule>()
         lateinit var sidebarTeamsSection: SidebarModule.ScoreboardBinding
 
-        handleEvent<GameStartEvent>(SpectatorModule::class) {
-            val spectatorModule = getModule<SpectatorModule>()
+        handleEvent<GameStartEvent> {
             sidebarTeamsSection = sidebar.bind {
                 teamModule.teams.map { t ->
                     "team-status-${t.name.toPlainText()}" to (t.name + Component.text(
@@ -128,7 +127,7 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
                         "✔", NamedTextColor.GREEN
                     )
                     else Component.text(
-                        t.players.count { !spectatorModule.isSpectating(it) }, RED
+                        t.players.count { !getModule<SpectatorModule>().isSpectating(it) }, RED
                     )))
                 }
             }
