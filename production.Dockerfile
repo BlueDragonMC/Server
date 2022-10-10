@@ -2,7 +2,7 @@
 # This Dockerfile runs on the CI/CD pipeline when the Server is being deployed.
 
 # Build the project into an executable JAR
-FROM docker.io/library/gradle:7.4.2-jdk17-alpine as build
+FROM docker.io/library/gradle:7.4.2-jdk17 as build
 # Copy build files and source code
 COPY . /work
 WORKDIR /work
