@@ -12,6 +12,11 @@ repositories {
 }
 
 dependencies {
+
+    testImplementation(kotlin("test"))
+    testImplementation(libs.minestom.testing)
+    testImplementation(libs.mockk)
+
     implementation(libs.minestom)
     implementation(libs.kmongo)
     implementation(libs.caffeine)

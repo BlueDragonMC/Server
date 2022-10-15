@@ -4,6 +4,7 @@ import com.bluedragonmc.messages.GameStateUpdateMessage
 import com.bluedragonmc.messages.GameType
 import com.bluedragonmc.server.event.DataLoadedEvent
 import com.bluedragonmc.server.event.GameEvent
+import com.bluedragonmc.server.event.GameStateChangedEvent
 import com.bluedragonmc.server.event.PlayerLeaveGameEvent
 import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
@@ -12,6 +13,7 @@ import com.bluedragonmc.server.module.database.MapData
 import com.bluedragonmc.server.module.instance.InstanceModule
 import com.bluedragonmc.server.module.map.AnvilFileMapProviderModule
 import com.bluedragonmc.server.module.messaging.MessagingModule
+import com.bluedragonmc.server.module.messaging.MessagingModule.Companion.getGameStateUpdateMessage
 import com.bluedragonmc.server.module.minigame.SpawnpointModule
 import com.bluedragonmc.server.module.packet.PerInstanceChatModule
 import com.bluedragonmc.server.utils.GameState
@@ -60,8 +62,9 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
 
     var state: GameState = GameState.SERVER_STARTING
         set(value) {
-            field = value
-            MessagingModule.publish(getGameStateUpdateMessage())
+            callCancellable(GameStateChangedEvent(this, field, value)) {
+                field = value
+            }
         }
 
     private val recentSpawns: Cache<Player, Instance> = Caffeine.newBuilder()
@@ -103,7 +106,7 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
         module.initialize(this, eventNode)
     }
 
-    private fun useMandatoryModules() {
+    protected open fun useMandatoryModules() {
         use(DatabaseModule())
         use(PerInstanceChatModule)
         use(MessagingModule())
@@ -113,12 +116,12 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
                 eventNode.addListener(PlayerSpawnEvent::class.java) {
                     playerHasJoined = true
                     MinecraftServer.getSchedulerManager().scheduleNextTick {
-                        MessagingModule.publish(getGameStateUpdateMessage())
+                        getModuleOrNull<MessagingModule>()?.refreshState()
                     }
                 }
                 eventNode.addListener(PlayerDisconnectEvent::class.java) {
                     MinecraftServer.getSchedulerManager().scheduleNextTick {
-                        MessagingModule.publish(getGameStateUpdateMessage())
+                        getModuleOrNull<MessagingModule>()?.refreshState()
                     }
                 }
                 eventNode.addListener(RemoveEntityFromInstanceEvent::class.java) { event ->
@@ -153,7 +156,7 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
     private fun shouldRemoveInstance(instance: Instance) =
         autoRemoveInstance && instance.players.isEmpty() && (playerHasJoined || System.currentTimeMillis() - creationTime > 60_000L)
 
-    fun ready() {
+    open fun ready() {
         checkUnmetDependencies()
 
         logger.debug("Initializing game with modules: ${modules.map { it::class.simpleName ?: it::class.jvmName }}")
@@ -207,9 +210,6 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
     fun getInstanceOrNull() = getModuleOrNull<InstanceModule>()?.getInstance()
     fun getInstance() = getInstanceOrNull() ?: error("No InstanceModule found.")
 
-    fun getGameStateUpdateMessage() =
-        GameStateUpdateMessage(instanceId!!, if (isJoinable) maxPlayers - players.size else 0)
-
     private val isJoinable
         get() = state.canPlayersJoin
 
@@ -244,16 +244,22 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
         }
     }
 
+    /**
+     * Load map data from the database (or from cache)
+     */
+    protected open fun loadMapData() {
+        runBlocking {
+            mapData = getModule<DatabaseModule>().getMapOrNull(mapName)
+            if (mapData == null) logger.warn("No map data found for $mapName!")
+        }
+    }
+
     init {
 
         // Initialize mandatory modules for core functionality, like game state updates
         useMandatoryModules()
 
-        // Load map data from the database (or from cache)
-        runBlocking {
-            mapData = getModule<DatabaseModule>().getMapOrNull(mapName)
-            if (mapData == null) logger.warn("No map data found for $mapName!")
-        }
+        loadMapData()
 
         // Ensure the game was registered with `ready()` method
         MinecraftServer.getSchedulerManager().buildTask {

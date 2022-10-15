@@ -6,10 +6,12 @@ import com.bluedragonmc.messagingsystem.message.Message
 import com.bluedragonmc.messagingsystem.message.RPCErrorMessage
 import com.bluedragonmc.server.Environment
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.event.GameStateChangedEvent
 import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.database.DatabaseModule
 import com.bluedragonmc.server.module.instance.InstanceModule
+import com.bluedragonmc.server.utils.GameState
 import com.bluedragonmc.server.utils.miniMessage
 import kotlinx.coroutines.launch
 import net.kyori.adventure.key.Key
@@ -101,24 +103,37 @@ class MessagingModule : GameModule() {
                 publish(ServerSyncMessage(containerId, Game.games.mapNotNull {
                     RunningGameInfo(it.instanceId ?: return@mapNotNull null,
                         GameType(it.name, it.mode, it.mapName),
-                        it.getGameStateUpdateMessage())
+                        getGameStateUpdateMessage(it, it.state))
                 }))
             }
+        }
+
+        fun getGameStateUpdateMessage(game: Game, state: GameState) = game.run {
+            GameStateUpdateMessage(instanceId!!, if (state.canPlayersJoin) maxPlayers - players.size else 0)
         }
     }
 
     lateinit var instanceId: UUID
+    private lateinit var parent: Game
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
+        this.parent = parent
         instanceId = parent.getInstance().uniqueId
         getContainerId { containerId ->
             publish(
                 NotifyInstanceCreatedMessage(containerId, instanceId, GameType(parent.name, null, parent.mapName))
             )
         }
+        eventNode.addListener(GameStateChangedEvent::class.java) { event ->
+            publish(getGameStateUpdateMessage(parent, event.newState))
+        }
     }
 
     override fun deinitialize() {
         getContainerId { containerId -> publish(NotifyInstanceRemovedMessage(containerId, instanceId)) }
+    }
+
+    fun refreshState() {
+        publish(getGameStateUpdateMessage(parent, parent.state))
     }
 }

@@ -27,6 +27,7 @@ dependencies {
     testImplementation(kotlin("test"))
     testImplementation(libs.mockk)
     testImplementation(libs.junit.api)
+    testImplementation(libs.minestom.testing)
     testRuntimeOnly(libs.junit.engine)
 
     implementation(libs.minestom) // Minestom

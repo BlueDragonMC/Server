@@ -2,7 +2,7 @@ metadata.format.version = "1.1"
 
 [versions]
 kotlin = "1.7.10"
-minestom = "c4edd73dde"
+minestom = "67d951e08d"
 configurate = "4.1.2"
 minimessage = "4.11.0"
 kmongo = "4.6.1"
@@ -23,7 +23,8 @@ junit = "5.9.0"
 kotlin-jvm = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
 #minestom = { group = "com.github.Minestom", name = "Minestom", version.ref = "minestom" }
 #minestom = { group = "net.minestom.server", name = "Minestom", version = "1.0" } # Uncomment to use a version of Minestom from maven local
-minestom = { group = "com.github.BlueDragonMC", name = "Minestom", version = "c4edd73dde" }
+minestom = { group = "com.github.BlueDragonMC", name = "Minestom", version.ref = "minestom" }
+minestom-testing = { group = "com.github.BlueDragonMC.Minestom", name = "testing", version.ref = "minestom" }
 configurate = { group = "org.spongepowered", name = "configurate-yaml", version.ref = "configurate" }
 configurate-extra-kotlin = { group = "org.spongepowered", name = "configurate-extra-kotlin", version.ref = "configurate" }
 minimessage = { group = "net.kyori", name = "adventure-text-minimessage", version.ref = "minimessage" }

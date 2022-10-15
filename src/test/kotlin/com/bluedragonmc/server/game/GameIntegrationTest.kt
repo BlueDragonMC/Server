@@ -20,13 +20,14 @@ import com.bluedragonmc.server.module.database.MapData
 import com.bluedragonmc.server.module.minigame.CountdownModule
 import com.bluedragonmc.server.queue.LocalTestingEnvironment
 import com.bluedragonmc.server.utils.GameState
-import io.mockk.coEvery
-import io.mockk.mockkConstructor
-import io.mockk.mockkObject
-import io.mockk.unmockkAll
+import io.mockk.*
 import net.minestom.server.MinecraftServer
+import net.minestom.server.api.Env
+import net.minestom.server.api.EnvTest
+import net.minestom.server.exception.ExceptionManager
 import net.minestom.server.utils.NamespaceID
 import net.minestom.server.world.DimensionType
+import net.minestom.server.world.DimensionTypeManager
 import org.junit.jupiter.api.*
 import java.time.Duration
 import kotlin.test.assertEquals
@@ -34,93 +35,98 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-class GameTest {
+@EnvTest
+class GameIntegrationTest {
 
-    @BeforeEach
-    fun setup() {
-        Environment.current = LocalTestingEnvironment()
-        MinecraftServer.init().start("127.0.0.1", 0)
+    companion object {
+        @JvmStatic
+        @BeforeAll
+        fun beforeAll() {
+            Environment.current = LocalTestingEnvironment()
 
-        mockkObject(DatabaseModule)
-        mockkConstructor(DatabaseModule::class)
+            mockkObject(DatabaseModule)
+            mockkConstructor(DatabaseModule::class)
+            mockkConstructor(DimensionTypeManager::class)
+            mockkConstructor(ExceptionManager::class)
 
-        coEvery { anyConstructed<DatabaseModule>().getMapOrNull(any()) } answers {
-            MapData(
-                "Mock",
-                description = "Testing environment",
-                additionalLocations = List(100) { emptyList() }
-            )
+            every { anyConstructed<ExceptionManager>().handleException(any()) } answers {
+                fail(it.invocation.args.first() as Throwable)
+            }
+
+            every { anyConstructed<DimensionTypeManager>().getDimension(any()) } answers {
+                callOriginal() ?: DimensionType.builder(NamespaceID.from("$NAMESPACE:fullbright_dimension")).ambientLight(2f).build().also {
+                    MinecraftServer.getDimensionTypeManager().addDimension(it)
+                }
+            }
+
+            coEvery { anyConstructed<DatabaseModule>().getMapOrNull(any()) } answers {
+                MapData(
+                    "Mock",
+                    description = "Testing environment",
+                    additionalLocations = List(100) { emptyList() }
+                )
+            }
         }
 
-        // Register server-wide fullbright dimension necessary for some games
-        MinecraftServer.getDimensionTypeManager().addDimension(
-            DimensionType.builder(NamespaceID.from("$NAMESPACE:fullbright_dimension")).ambientLight(2f).build()
-        )
-
-        // Any exception should cause the current test to fail
-        MinecraftServer.getExceptionManager().setExceptionHandler {
-            fail(it)
+        @JvmStatic
+        @AfterAll
+        fun afterAll() {
+            unmockkAll()
         }
-    }
-
-    @AfterEach
-    fun cleanup() {
-        MinecraftServer.stopCleanly()
-        unmockkAll()
     }
 
     @Test
-    fun `ArenaPvP initialization`() {
+    fun `ArenaPvP initialization`(env: Env) {
         testInit(::ArenaPvpGame)
     }
 
     @Test
-    fun `BedWars initialization`() {
+    fun `BedWars initialization`(env: Env) {
         testInit(::BedWarsGame)
     }
 
     @Test
-    fun `FastFall initialization`() {
+    fun `FastFall initialization`(env: Env) {
         testInit(::FastFallGame)
     }
 
     @Test
-    fun `Infection initialization`() {
+    fun `Infection initialization`(env: Env) {
         testInit(::InfectionGame)
     }
 
     @Test
-    fun `Infinijump initialization`() {
+    fun `Infinijump initialization`(env: Env) {
         testInit(::InfinijumpGame)
     }
 
     @Test
-    fun `Lobby initialization`() {
+    fun `Lobby initialization`(env: Env) {
         testInit { Lobby() }
     }
 
     @Test
-    fun `PvPMaster initialization`() {
+    fun `PvPMaster initialization`(env: Env) {
         testInit(::PvpMasterGame)
     }
 
     @Test
-    fun `Skyfall initialization`() {
+    fun `Skyfall initialization`(env: Env) {
         testInit(::SkyfallGame)
     }
 
     @Test
-    fun `Skywars initialization`() {
+    fun `Skywars initialization`(env: Env) {
         testInit(::SkyWarsGame)
     }
 
     @Test
-    fun `TeamDeathmatch initialization`() {
+    fun `TeamDeathmatch initialization`(env: Env) {
         testInit(::TeamDeathmatchGame)
     }
 
     @Test
-    fun `WackyMaze initialization`() {
+    fun `WackyMaze initialization`(env: Env) {
         testInit(::WackyMazeGame)
     }
 
