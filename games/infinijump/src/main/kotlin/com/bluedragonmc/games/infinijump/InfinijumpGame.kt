@@ -4,18 +4,21 @@ import com.bluedragonmc.games.infinijump.block.IronBarParkourBlock
 import com.bluedragonmc.games.infinijump.block.LadderParkourBlock
 import com.bluedragonmc.games.infinijump.block.ParkourBlock
 import com.bluedragonmc.games.infinijump.block.PlatformParkourBlock
+import com.bluedragonmc.messages.GameType
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
+import com.bluedragonmc.server.Environment
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.module.combat.CustomDeathMessageModule
 import com.bluedragonmc.server.module.database.StatisticsModule
 import com.bluedragonmc.server.module.gameplay.InstantRespawnModule
+import com.bluedragonmc.server.module.gameplay.InventoryPermissionsModule
 import com.bluedragonmc.server.module.instance.CustomGeneratorInstanceModule
 import com.bluedragonmc.server.module.minigame.PlayerResetModule
 import com.bluedragonmc.server.module.minigame.SpawnpointModule
-import com.bluedragonmc.server.module.minigame.SpectatorModule
 import com.bluedragonmc.server.utils.GameState
+import com.bluedragonmc.server.utils.noItalic
 import com.bluedragonmc.server.utils.withColor
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
@@ -23,6 +26,7 @@ import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.title.Title
+import net.minestom.server.MinecraftServer
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.coordinate.Vec
 import net.minestom.server.entity.GameMode
@@ -31,7 +35,11 @@ import net.minestom.server.event.instance.InstanceTickEvent
 import net.minestom.server.event.player.PlayerDeathEvent
 import net.minestom.server.event.player.PlayerMoveEvent
 import net.minestom.server.event.player.PlayerSpawnEvent
+import net.minestom.server.event.player.PlayerUseItemEvent
+import net.minestom.server.item.ItemStack
+import net.minestom.server.item.Material
 import net.minestom.server.sound.SoundEvent
+import net.minestom.server.tag.Tag
 import java.time.Duration
 import kotlin.math.abs
 import kotlin.math.cos
@@ -42,6 +50,11 @@ import kotlin.random.Random
 internal const val blocksPerDifficulty = 50
 
 class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic") {
+
+    companion object {
+        private val PLAY_AGAIN_ITEM_TAG = Tag.Boolean("is_play_again_item")
+        private val LOBBY_ITEM_TAG = Tag.Boolean("is_lobby_item")
+    }
 
     internal val blockLiveTime = 120
         get() = field - difficulty * 15
@@ -100,8 +113,8 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
             CustomGeneratorInstanceModule.getFullbrightDimension()
         ) { /* void world - no generation to do */ })
         use(InstantRespawnModule())
-        use(SpectatorModule(spectateOnDeath = true))
         use(CustomDeathMessageModule())
+        use(InventoryPermissionsModule(false, false))
 
         blocks = mutableListOf(
             ParkourBlock(this, getInstance(), 0L, spawnPosition.sub(0.0, 1.0, 0.0)).apply { create() }
@@ -130,12 +143,63 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
                         Component.text(score))
                 )
             )
-            endGame(Duration.ofMillis(((3 + score / 50f) * 1000).toLong()))
+
+            event.player.isFlying = true
+            event.player.teleport(event.player.position.withY { y -> y.coerceAtLeast(80.0) })
+            event.player.setHeldItemSlot(4)
+
+            event.player.inventory.setItemStack(2, ItemStack.builder(Material.PAPER)
+                .displayName(Component.translatable("game.infinijump.play_again", BRAND_COLOR_PRIMARY_2).noItalic())
+                .apply { setTag(PLAY_AGAIN_ITEM_TAG, true) }
+                .build())
+
+            event.player.inventory.setItemStack(4, ItemStack.builder(Material.RED_CONCRETE)
+                .displayName(Component.translatable("game.infinijump.loss_score", NamedTextColor.RED, Component.text(score)).noItalic())
+                .build())
+
+            event.player.inventory.setItemStack(6, ItemStack.builder(Material.ARROW)
+                .displayName(Component.translatable("game.infinijump.quit", BRAND_COLOR_PRIMARY_2).noItalic())
+                .apply { setTag(LOBBY_ITEM_TAG, true) }
+                .build())
+
             getModule<StatisticsModule>().recordStatistic(event.player, "game_infinijump_highest_score", score.toDouble()) { prev ->
                 prev == null || prev < score
             }
 
             blocks.forEach { it.instance.setBlock(it.pos, it.placedBlockType) }
+            state = GameState.ENDING
+
+            // Automatically send the player to the lobby after 20 seconds
+            MinecraftServer.getSchedulerManager().buildTask {
+                if (getInstanceOrNull() != null) {
+                    ArrayList(players).forEach { p ->
+                        Environment.current.queue.queue(p, GameType("Lobby", null, null))
+                    }
+                }
+            }.delay(Duration.ofSeconds(20)).repeat(Duration.ofSeconds(10)).schedule()
+
+            var secondsLeft = 20
+            MinecraftServer.getSchedulerManager().buildTask {
+                players.forEach { p ->
+                    p.sendActionBar(
+                        Component.translatable("game.infinijump.returning_to_lobby", BRAND_COLOR_PRIMARY_2,
+                            Component.text(secondsLeft, NamedTextColor.WHITE))
+                    )
+                }
+                secondsLeft = (secondsLeft - 1).coerceAtLeast(0)
+            }.repeat(Duration.ofSeconds(1)).schedule()
+        }
+
+        handleEvent<PlayerUseItemEvent> { event ->
+            when {
+                event.itemStack.hasTag(PLAY_AGAIN_ITEM_TAG) -> {
+                    val game = InfinijumpGame(mapName)
+                    game.addPlayer(event.player)
+                }
+                event.itemStack.hasTag(LOBBY_ITEM_TAG) -> {
+                    Environment.current.queue.queue(event.player, GameType("Lobby", null, null))
+                }
+            }
         }
 
         handleEvent<InstanceTickEvent> { event ->
@@ -153,6 +217,7 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
                 }
                 return@handleEvent
             }
+            if (state != GameState.INGAME) return@handleEvent
             blocks.forEachIndexed { i, block ->
                 if (!block.isReached && !block.isRemoved && event.isOnGround && event.player.boundingBox.intersectEntity(
                         event.player.position.sub(0.0, 1.0, 0.0), block.entity

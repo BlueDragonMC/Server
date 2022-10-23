@@ -13,6 +13,7 @@ repositories {
 dependencies {
     implementation(project(":common"))
     implementation(libs.minestom)
+    implementation(libs.messages)
 }
 
 tasks.getByName<Test>("test") {

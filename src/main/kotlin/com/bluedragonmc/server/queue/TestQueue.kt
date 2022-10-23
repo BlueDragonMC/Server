@@ -3,6 +3,7 @@ package com.bluedragonmc.server.queue
 import com.bluedragonmc.messages.GameType
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.api.Queue
+import com.bluedragonmc.server.lobby
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import net.kyori.adventure.text.Component
@@ -33,6 +34,10 @@ class TestQueue : Queue() {
      * @param idealGame If no games already exist, start a new one of this type. If this is null, the queue will not start a new game.
      */
     override fun queue(player: Player, gameType: GameType) {
+        if (gameType.name == "Lobby" && gameType.mapName == null && gameType.mode == null) {
+            lobby.addPlayer(player)
+            return
+        }
         if (queuedPlayers.getIfPresent(player) != null) {
             player.sendMessage(Component.translatable("queue.removing", NamedTextColor.RED))
             queuedPlayers.invalidate(player)

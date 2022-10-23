@@ -1,6 +1,5 @@
 package com.bluedragonmc.server
 
-import com.bluedragonmc.messages.GameStateUpdateMessage
 import com.bluedragonmc.messages.GameType
 import com.bluedragonmc.server.event.DataLoadedEvent
 import com.bluedragonmc.server.event.GameEvent
@@ -13,7 +12,6 @@ import com.bluedragonmc.server.module.database.MapData
 import com.bluedragonmc.server.module.instance.InstanceModule
 import com.bluedragonmc.server.module.map.AnvilFileMapProviderModule
 import com.bluedragonmc.server.module.messaging.MessagingModule
-import com.bluedragonmc.server.module.messaging.MessagingModule.Companion.getGameStateUpdateMessage
 import com.bluedragonmc.server.module.minigame.SpawnpointModule
 import com.bluedragonmc.server.module.packet.PerInstanceChatModule
 import com.bluedragonmc.server.utils.GameState
@@ -182,7 +180,9 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
                 logger.info("Removing instance ${cachedInstance.uniqueId} due to inactivity.")
                 MinecraftServer.getInstanceManager().unregisterInstance(cachedInstance)
                 AnvilFileMapProviderModule.checkReleaseMap(cachedInstance)
-                endGameInstantly(queueAllPlayers = false)
+                if (getInstanceOrNull() == cachedInstance) {
+                    endGameInstantly(queueAllPlayers = false) // End the game if the game is using the instance which was unregistered
+                }
                 this.cancel()
             }
         }

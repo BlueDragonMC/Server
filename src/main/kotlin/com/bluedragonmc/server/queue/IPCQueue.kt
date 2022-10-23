@@ -3,6 +3,7 @@ package com.bluedragonmc.server.queue
 import com.bluedragonmc.messages.*
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.api.Queue
+import com.bluedragonmc.server.lobby
 import com.bluedragonmc.server.module.messaging.MessagingModule
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -18,6 +19,10 @@ object IPCQueue : Queue() {
     private val queuedPlayers = mutableListOf<Player>()
 
     override fun queue(player: Player, gameType: GameType) {
+        if (gameType.name == "Lobby" && gameType.mapName == null && gameType.mode == null) {
+            lobby.addPlayer(player)
+            return
+        }
         player.sendMessage(Component.translatable("queue.adding", NamedTextColor.DARK_GRAY))
         if (queuedPlayers.contains(player)) MessagingModule.publish(RequestRemoveFromQueueMessage(player.uuid))
         else MessagingModule.publish(RequestAddToQueueMessage(player.uuid, gameType))
