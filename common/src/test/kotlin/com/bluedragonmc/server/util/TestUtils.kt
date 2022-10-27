@@ -1,9 +1,11 @@
 package com.bluedragonmc.server.util
 
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.instance.InstanceModule
 import net.minestom.server.api.Env
+import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
@@ -18,6 +20,19 @@ object TestUtils {
         game.useModules(listOf(*modules))
         return game
     }
+
+    fun addPlayer(env: Env, game: Game): Player {
+        val player = env.createPlayer(game.getInstance(), Pos.ZERO)
+        addPlayer(env, game, player)
+        return player
+    }
+
+    fun addPlayer(env: Env, game: Game, player: Player) {
+        waitForSpawn(env, player)
+        game.addPlayer(player)
+    }
+
+    fun startGame(game: Game) = game.callEvent(GameStartEvent(game))
 
     fun waitForSpawn(env: Env, player: Player) {
         val spawned = env.tickWhile({ player.instance == null }, Duration.ofSeconds(2))

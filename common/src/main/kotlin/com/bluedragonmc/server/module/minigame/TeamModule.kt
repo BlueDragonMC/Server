@@ -33,7 +33,7 @@ class TeamModule(
         eventNode.addListener(GameStartEvent::class.java) {
             // Auto team system
             if (autoTeams) {
-                logger.info("Splitting ${parent.players.size} players into teams using strategy $autoTeamMode")
+                logger.debug("Splitting ${parent.players.size} players into teams using strategy $autoTeamMode")
                 when (autoTeamMode) {
                     AutoTeamMode.PLAYER_COUNT -> {
                         var teamNumber = 0
@@ -45,36 +45,48 @@ class TeamModule(
                     AutoTeamMode.TEAM_COUNT -> {
                         val teamCount = autoTeamCount
                         val playersPerTeam = (parent.players.size / teamCount).coerceAtLeast(1)
-                        var teamNumber = 0
-                        teams.addAll(parent.players.chunked(playersPerTeam) { players ->
-                            Team(teamNumToName(teamNumber++), players.toMutableList(), allowFriendlyFire)
-                        })
+                        // The players per team is rounded, so some teams might have to be larger than the optimal
+                        // amount of players per team. For example, if there are 10 players and 3 teams, there must
+                        // be one team with 4 players instead of 3 in order to keep the number of teams constant.
+                        var compensation = parent.players.size - playersPerTeam * teamCount
+                        var rollingIndex = 0
+                        for (i in 0 until teamCount) {
+                            val startIndex = rollingIndex // Start at the current index
+                            rollingIndex += playersPerTeam // End at the current index plus the amount of players per team
+                            if (compensation > 0) {
+                                rollingIndex++ // If we need to compensate, add another player to this team
+                                compensation-- // Decrement the number of players we have to compensate for
+                            }
+                            rollingIndex = rollingIndex.coerceAtMost(parent.players.size)
+                            val players = parent.players.subList(startIndex, rollingIndex)
+                            teams.add(Team(teamNumToName(i), players, allowFriendlyFire))
+                        }
                         logger.info("Created ${teams.size} teams with $playersPerTeam players per team.")
                     }
                 }
                 teamsAutoAssignedCallback()
-            } else logger.info("Automatic team creation is disabled.")
+            } else logger.debug("Automatic team creation is disabled.")
 
-            logger.info(teams.toString())
+            logger.debug(teams.toString())
 
             teams.forEach { team ->
                 team.players.forEach { it.sendMessage(Component.translatable("module.team.assignment", NamedTextColor.GREEN, team.name)) }
-                val scoreboardTeam = MinecraftServer.getTeamManager().createTeam(
-                    parent.getInstance().uniqueId.toString() + "-" + team.name.toPlainText(),
-                    team.name,
-                    Component.text( // Prefix
+                val builder = MinecraftServer.getTeamManager()
+                    .createBuilder(parent.getInstance().uniqueId.toString() + "-" + team.name.toPlainText())
+                    .teamDisplayName(team.name)
+                    .prefix(Component.text(
                         team.name.toPlainText().first() + " ", // The first letter of the team's name
                         team.name.color() ?: NamedTextColor.WHITE, // The team name's text color
                         TextDecoration.BOLD
-                    ),
-                    NamedTextColor.nearestTo(
+                    ))
+                    .teamColor(NamedTextColor.nearestTo(
                         team.name.color() ?: NamedTextColor.WHITE
-                    ), // Used for coloring player usernames
-                    Component.empty() // No suffix
-                )
-                scoreboardTeam.isAllowFriendlyFire = allowFriendlyFire
-                scoreboardTeam.sendUpdatePacket()
+                    )) // Used for coloring player usernames
+                // Allow friendly fire if necessary
+                if (allowFriendlyFire) builder.allowFriendlyFire()
+                val scoreboardTeam = builder.build() // Register the team
                 team.players.forEach { player ->
+                    // Add members to the team
                     scoreboardTeam.addMember(player.username)
                 }
                 team.scoreboardTeam = scoreboardTeam
@@ -111,54 +123,22 @@ class TeamModule(
      */
     fun teamNumToName(num: Int): Component {
         return when (num) {
-            0 -> {
-                Component.text("Red", NamedTextColor.RED)
-            }
-            1 -> {
-                Component.text("Blue", NamedTextColor.BLUE)
-            }
-            2 -> {
-                Component.text("Green", NamedTextColor.GREEN)
-            }
-            3 -> {
-                Component.text("Aqua", NamedTextColor.AQUA)
-            }
-            4 -> {
-                Component.text("Pink", NamedTextColor.LIGHT_PURPLE)
-            }
-            5 -> {
-                Component.text("White", NamedTextColor.WHITE)
-            }
-            6 -> {
-                Component.text("Gray", NamedTextColor.GRAY)
-            }
-            7 -> {
-                Component.text("Yellow", NamedTextColor.YELLOW)
-            }
-            8 -> {
-                Component.text("Gold", NamedTextColor.GOLD)
-            }
-            9 -> {
-                Component.text("Purple", NamedTextColor.DARK_PURPLE)
-            }
-            10 -> {
-                Component.text("Dark Green", NamedTextColor.DARK_GREEN)
-            }
-            11 -> {
-                Component.text("Dark Aqua", NamedTextColor.DARK_AQUA)
-            }
-            12 -> {
-                Component.text("Dark Red", NamedTextColor.DARK_RED)
-            }
-            13 -> {
-                Component.text("Dark Gray", NamedTextColor.DARK_GRAY)
-            }
-            14 -> {
-                Component.text("Dark Blue", NamedTextColor.DARK_BLUE)
-            }
-            else -> {
-                Component.text("Team $num", NamedTextColor.AQUA)
-            }
+            0 -> Component.text("Red", NamedTextColor.RED)
+            1 -> Component.text("Blue", NamedTextColor.BLUE)
+            2 -> Component.text("Green", NamedTextColor.GREEN)
+            3 -> Component.text("Aqua", NamedTextColor.AQUA)
+            4 -> Component.text("Pink", NamedTextColor.LIGHT_PURPLE)
+            5 -> Component.text("White", NamedTextColor.WHITE)
+            6 -> Component.text("Gray", NamedTextColor.GRAY)
+            7 -> Component.text("Yellow", NamedTextColor.YELLOW)
+            8 -> Component.text("Gold", NamedTextColor.GOLD)
+            9 -> Component.text("Purple", NamedTextColor.DARK_PURPLE)
+            10 -> Component.text("Dark Green", NamedTextColor.DARK_GREEN)
+            11 -> Component.text("Dark Aqua", NamedTextColor.DARK_AQUA)
+            12 -> Component.text("Dark Red", NamedTextColor.DARK_RED)
+            13 -> Component.text("Dark Gray", NamedTextColor.DARK_GRAY)
+            14 -> Component.text("Dark Blue", NamedTextColor.DARK_BLUE)
+            else -> Component.text("Team $num", NamedTextColor.AQUA)
         }
     }
 
@@ -193,7 +173,7 @@ class TeamModule(
 
         /**
          * Generate a specific number of teams with as many players as possible.
-         * Use a round robin approach to distribute players evenly.
+         * Use a round-robin approach to distribute players evenly.
          */
         TEAM_COUNT
     }
@@ -208,6 +188,11 @@ class TeamModule(
         fun hasScoreboardTeam() = ::scoreboardTeam.isInitialized
 
         override fun getPlayers(): MutableCollection<Player> = players
+
+        fun addPlayer(player: Player) {
+            players.add(player)
+            scoreboardTeam.addMember(player.username)
+        }
 
         override fun toString(): String =
             PlainTextComponentSerializer.plainText().serialize(name) + players.joinToString(

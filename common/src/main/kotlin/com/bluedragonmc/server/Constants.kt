@@ -59,4 +59,6 @@ val SERVER_NAME_GRADIENT = Component.text("BlueDragon").withGradient(BRAND_COLOR
 /**
  * A base64-encoded PNG image of the server's favicon shown on clients' server lists.
  */
-val FAVICON = "data:image/png;base64," + String(Base64.encodeBase64(File("favicon_64.png").readBytes()), Charset.forName("UTF-8"))
+val FAVICON = "data:image/png;base64," + runCatching {
+    String(Base64.encodeBase64(File("favicon_64.png").readBytes()), Charset.forName("UTF-8"))
+}.getOrElse { "" }
