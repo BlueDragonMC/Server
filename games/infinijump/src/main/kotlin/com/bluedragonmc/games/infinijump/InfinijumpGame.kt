@@ -1,9 +1,6 @@
 package com.bluedragonmc.games.infinijump
 
-import com.bluedragonmc.games.infinijump.block.IronBarParkourBlock
-import com.bluedragonmc.games.infinijump.block.LadderParkourBlock
-import com.bluedragonmc.games.infinijump.block.ParkourBlock
-import com.bluedragonmc.games.infinijump.block.PlatformParkourBlock
+import com.bluedragonmc.games.infinijump.block.*
 import com.bluedragonmc.messages.GameType
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
@@ -124,7 +121,8 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
             event.player.showTitle(
                 Title.title(
                     "Infinijump" withColor BRAND_COLOR_PRIMARY_1,
-                    "Move to start" withColor BRAND_COLOR_PRIMARY_2
+                    "Move to start" withColor BRAND_COLOR_PRIMARY_2,
+                    Title.Times.times(Duration.ofMillis(500), Duration.ofDays(3), Duration.ZERO)
                 )
             )
             playerSpawnTime = getInstance().worldAge
@@ -162,9 +160,8 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
                 .apply { setTag(LOBBY_ITEM_TAG, true) }
                 .build())
 
-            getModule<StatisticsModule>().recordStatistic(event.player, "game_infinijump_highest_score", score.toDouble()) { prev ->
-                prev == null || prev < score
-            }
+            getModule<StatisticsModule>()
+                .recordStatisticIfGreater(event.player, "game_infinijump_highest_score", score.toDouble())
 
             blocks.forEach { it.instance.setBlock(it.pos, it.placedBlockType) }
             state = GameState.ENDING
@@ -219,10 +216,10 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
             }
             if (state != GameState.INGAME) return@handleEvent
             blocks.forEachIndexed { i, block ->
-                if (!block.isReached && !block.isRemoved && event.isOnGround && event.player.boundingBox.intersectEntity(
-                        event.player.position.sub(0.0, 1.0, 0.0), block.entity
-                    )
-                ) {
+                if (!block.isReached && !block.isRemoved && event.isOnGround &&
+                    block.placedBlockType.registry().collisionShape().intersectBox(
+                        event.player.position.sub(block.pos).sub(0.0, 1.0, 0.0), event.player.boundingBox
+                    )) {
                     // Mark all blocks before this one as reached, just in case a block was skipped
                     blocks.forEachIndexed { j, previous ->
                         if (j < i) {
@@ -277,7 +274,7 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
             nextPos.y - lastPos.y <= -5 -> PlatformParkourBlock(this, instance, instance.worldAge, nextPos)
             nextPos.y - lastPos.y >= 2 -> LadderParkourBlock(this, instance, instance.worldAge, nextPos)
             Math.random() < 0.01 * difficulty -> IronBarParkourBlock(this, instance, instance.worldAge, nextPos)
-            else -> ParkourBlock(this, instance, instance.worldAge, nextPos)
+            else -> HighlightedParkourBlock(this, instance, instance.worldAge, nextPos)
         }
         blocks.add(block)
         block.create()

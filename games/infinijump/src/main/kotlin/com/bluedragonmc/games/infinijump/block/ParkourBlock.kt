@@ -2,7 +2,6 @@ package com.bluedragonmc.games.infinijump.block
 
 import com.bluedragonmc.games.infinijump.InfinijumpGame
 import com.bluedragonmc.games.infinijump.blocksPerDifficulty
-import com.bluedragonmc.server.utils.packet.GlowingEntityUtils
 import com.bluedragonmc.server.utils.packet.PacketUtils
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
@@ -10,10 +9,7 @@ import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.title.Title
 import net.minestom.server.MinecraftServer
 import net.minestom.server.coordinate.Pos
-import net.minestom.server.entity.Entity
-import net.minestom.server.entity.EntityType
 import net.minestom.server.entity.Player
-import net.minestom.server.entity.metadata.other.FallingBlockMeta
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
 import net.minestom.server.network.packet.server.play.BlockBreakAnimationPacket
@@ -30,21 +26,7 @@ open class ParkourBlock(val game: InfinijumpGame, val instance: Instance, var sp
      */
     internal open val placedBlockType: Block = Block.STONE_BRICKS
 
-    /**
-     *
-     * Setting the falling block type will determine the shape of the block's glow effect.
-     * Barriers and invisible falling blocks have no glowing effect.
-     */
-    protected open val fallingBlockType: Block? = Block.INFESTED_STONE_BRICKS
-
     val pos = Pos(posIn.blockX().toDouble(), posIn.blockY().toDouble(), posIn.blockZ().toDouble())
-
-    private val centerBottom = Pos(pos.blockX().toDouble() + 0.5,
-        pos.blockY().toDouble(),
-        pos.blockZ().toDouble() + 0.5) // In the center of the block on the X and Z axes
-    private val center = centerBottom.add(0.0, 0.5, 0.0) // In the center of the block on all axes
-
-    val entity = Entity(EntityType.FALLING_BLOCK)
 
     var isReached = false
     var isRemoved = false
@@ -78,27 +60,16 @@ open class ParkourBlock(val game: InfinijumpGame, val instance: Instance, var sp
     }
 
     open fun tick(aliveTicks: Int) {
-        val color = when {
-            isReached -> NamedTextColor.WHITE
-            aliveTicks < (game.blockLiveTime / 3) -> NamedTextColor.GREEN
-            aliveTicks < (2 * game.blockLiveTime / 3) -> NamedTextColor.YELLOW
-            else -> NamedTextColor.RED
-        }
         val p = Pos(pos.blockX().toDouble(), pos.blockY().toDouble(), pos.blockZ().toDouble())
         if (aliveTicks % 10 == 0) {
             sendBlockAnimation(p, (aliveTicks / (game.blockLiveTime / 10)).toByte())
         }
-        setOutlineColor(color)
 
         if (aliveTicks % 10 != 0) return
         val packet = PacketUtils.createParticleWithBlockState(pos.add(Math.random() - 0.5,
             Math.random() - 0.5,
             Math.random() - 0.5), Particle.FALLING_DUST, placedBlockType, 2)
         instance.sendGroupedPacket(packet)
-    }
-
-    private fun setOutlineColor(color: NamedTextColor) {
-        GlowingEntityUtils.glow(entity, color, entity.viewers)
     }
 
     protected fun sendBlockAnimation(pos: Pos, progress: Byte) {
@@ -126,18 +97,15 @@ open class ParkourBlock(val game: InfinijumpGame, val instance: Instance, var sp
 
     open fun create() {
         instance.setBlock(pos, placedBlockType)
-        if (fallingBlockType != null) (entity.entityMeta as FallingBlockMeta).apply {
-            isInvisible = false
-            isHasNoGravity = true
-            block = fallingBlockType!!
-        }
-        entity.setInstance(instance, centerBottom)
     }
 
     open fun destroy() {
         if (isRemoved) return
         isRemoved = true
         instance.setBlock(pos, Block.AIR)
-        entity.remove()
+    }
+
+    override fun toString(): String {
+        return "ParkourBlock(pos=$pos, isReached=$isReached, isRemoved=$isRemoved)"
     }
 }

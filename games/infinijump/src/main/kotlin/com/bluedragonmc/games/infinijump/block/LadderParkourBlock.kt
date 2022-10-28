@@ -6,7 +6,7 @@ import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
 
 class LadderParkourBlock(game: InfinijumpGame, instance: Instance, spawnTime: Long, posIn: Pos) :
-    ParkourBlock(game, instance, spawnTime, posIn) {
+    HighlightedParkourBlock(game, instance, spawnTime, posIn) {
 
     init {
         instance.setBlock(pos.sub(1.0, 0.0, 0.0), Block.LADDER.withProperty("facing", "west"))
@@ -17,7 +17,6 @@ class LadderParkourBlock(game: InfinijumpGame, instance: Instance, spawnTime: Lo
 
     override fun destroy() {
         super.destroy()
-
         setNeighboringBlocks(Block.AIR)
     }
 }

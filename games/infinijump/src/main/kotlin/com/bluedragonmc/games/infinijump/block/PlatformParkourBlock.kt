@@ -1,18 +1,30 @@
 package com.bluedragonmc.games.infinijump.block
 
 import com.bluedragonmc.games.infinijump.InfinijumpGame
+import com.bluedragonmc.server.utils.packet.GlowingEntityUtils
+import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.coordinate.Pos
+import net.minestom.server.entity.Entity
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
 
 class PlatformParkourBlock(game: InfinijumpGame, instance: Instance, spawnTime: Long, posIn: Pos) :
-    ParkourBlock(game, instance, spawnTime, posIn) {
+    HighlightedParkourBlock(game, instance, spawnTime, posIn) {
+
     override val placedBlockType: Block = Block.RED_CONCRETE
-    override val fallingBlockType: Block? = Block.BARRIER
+
+    private val extraEntities = mutableListOf<Entity>()
 
     override fun create() {
         super.create()
         setNeighboringBlocks(Block.RED_CONCRETE, corners = true)
+        forEachNeighboringBlock(corners = true) { neighborPos ->
+            val entity = Entity(this.entity.entityType)
+            entity.entityMeta.isInvisible = true
+            entity.entityMeta.isHasNoGravity = true
+            entity.setInstance(instance, neighborPos)
+            extraEntities.add(entity)
+        }
     }
 
     override fun tick(aliveTicks: Int) {
@@ -24,7 +36,15 @@ class PlatformParkourBlock(game: InfinijumpGame, instance: Instance, spawnTime: 
         }
     }
 
+    override fun setColor(color: NamedTextColor) {
+        super.setColor(color)
+        extraEntities.forEach { e ->
+            GlowingEntityUtils.glow(e, color, entity.viewers)
+        }
+    }
+
     override fun destroy() {
+        extraEntities.forEach(Entity::remove)
         super.destroy()
         setNeighboringBlocks(Block.AIR, corners = true)
     }

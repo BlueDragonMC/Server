@@ -8,5 +8,8 @@ import net.minestom.server.instance.block.Block
 class IronBarParkourBlock(game: InfinijumpGame, instance: Instance, spawnTime: Long, posIn: Pos) :
     ParkourBlock(game, instance, spawnTime, posIn) {
     override val placedBlockType: Block = Block.IRON_BARS
-    override val fallingBlockType: Block = Block.BARRIER
+
+    override fun create() {
+        instance.setBlock(pos, placedBlockType)
+    }
 }
