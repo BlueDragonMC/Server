@@ -20,11 +20,7 @@ import kotlin.random.Random
 
 open class ParkourBlock(val game: InfinijumpGame, val instance: Instance, var spawnTime: Long, posIn: Pos) {
 
-    /**
-     * Setting the placed block type will determine whether the breaking animation is visible.
-     * Placed barriers have no breaking animation.
-     */
-    internal open val placedBlockType: Block = Block.STONE_BRICKS
+    internal var placedBlockType: Block = Block.AIR
 
     val pos = Pos(posIn.blockX().toDouble(), posIn.blockY().toDouble(), posIn.blockZ().toDouble())
 
@@ -95,8 +91,9 @@ open class ParkourBlock(val game: InfinijumpGame, val instance: Instance, var sp
         }
     }
 
-    open fun create() {
-        instance.setBlock(pos, placedBlockType)
+    open fun create(block: Block) {
+        placedBlockType = block
+        instance.setBlock(pos, block)
     }
 
     open fun destroy() {

@@ -1,68 +1,4 @@
 categories:
-  - id: fastfall
-    name: FastFall
-    material: minecraft:iron_boots
-    groups:
-      - id: boots
-        name: <lang:cosmetic.fastfall.boots>
-        material: minecraft:leather_boots
-        description: <lang:cosmetic.fastfall.boots.desc>
-        cosmetics:
-          - id: fastfall_boots_standard
-            name: <lang:cosmetic.fastfall.boots.leather>
-            material: minecraft:leather_boots
-            description: <lang:cosmetic.fastfall.boots.leather.desc>
-            cost: 250
-          - id: fastfall_boots_netherite
-            name: <lang:cosmetic.fastfall.boots.netherite>
-            material: minecraft:netherite_boots
-            description: <lang:cosmetic.fastfall.boots.netherite.desc>
-            cost: 1000
-          - id: fastfall_boots_gold
-            name: <lang:cosmetic.fastfall.boots.gold>
-            material: minecraft:golden_boots
-            description: <lang:cosmetic.fastfall.boots.gold.desc>
-            cost: 15000
-          - id: fastfall_boots_tnt
-            name: <lang:cosmetic.fastfall.boots.tnt>
-            item:
-              material: minecraft:leather_boots
-              dye: 255, 0, 0
-            description: <lang:cosmetic.fastfall.boots.tnt.desc>
-            cost: 15000
-  - id: wackymaze
-    name: WackyMaze
-    material: minecraft:stick
-    groups:
-      - name: <lang:cosmetic.wackymaze.kbstick>
-        material: minecraft:stick
-        description: <lang:cosmetic.wackymaze.kbstick.desc>
-        cosmetics:
-          - id: wackymaze_stick_fish
-            name: <lang:cosmetic.wackymaze.kbstick.fish>
-            material: minecraft:cod
-            description: <lang:cosmetic.wackymaze.kbstick.fish.desc>
-            cost: 5000
-          - id: wackymaze_stick_door
-            name: <lang:cosmetic.wackymaze.kbstick.door>
-            material: minecraft:oak_door
-            description: <lang:cosmetic.wackymaze.kbstick.door.desc>
-            cost: 5000
-          - id: wackymaze_stick_bamboo
-            name: <lang:cosmetic.wackymaze.kbstick.bamboo>
-            material: minecraft:bamboo
-            description: <lang:cosmetic.wackymaze.kbstick.bamboo.desc>
-            cost: 5000
-          - id: wackymaze_stick_hoe
-            name: <lang:cosmetic.wackymaze.kbstick.hoe>
-            material: minecraft:netherite_hoe
-            description: <lang:cosmetic.wackymaze.kbstick.hoe.desc>
-            cost: 5000
-          - id: wackymaze_stick_deadbush
-            name: <lang:cosmetic.wackymaze.kbstick.deadbush>
-            material: minecraft:dead_bush
-            description: <lang:cosmetic.wackymaze.kbstick.deadbush.desc>
-            cost: 5000
   - id: global
     name: Global
     material: minecraft:diamond_block
@@ -205,3 +141,103 @@ categories:
             material: minecraft:blue_stained_glass
             description: <lang:cosmetic.lobby.hat.rainbow.desc>
             cost: 7500
+  - id: wackymaze
+    name: WackyMaze
+    material: minecraft:stick
+    groups:
+      - name: <lang:cosmetic.wackymaze.kbstick>
+        material: minecraft:stick
+        description: <lang:cosmetic.wackymaze.kbstick.desc>
+        cosmetics:
+          - id: wackymaze_stick_fish
+            name: <lang:cosmetic.wackymaze.kbstick.fish>
+            material: minecraft:cod
+            description: <lang:cosmetic.wackymaze.kbstick.fish.desc>
+            cost: 5000
+          - id: wackymaze_stick_door
+            name: <lang:cosmetic.wackymaze.kbstick.door>
+            material: minecraft:oak_door
+            description: <lang:cosmetic.wackymaze.kbstick.door.desc>
+            cost: 5000
+          - id: wackymaze_stick_bamboo
+            name: <lang:cosmetic.wackymaze.kbstick.bamboo>
+            material: minecraft:bamboo
+            description: <lang:cosmetic.wackymaze.kbstick.bamboo.desc>
+            cost: 5000
+          - id: wackymaze_stick_hoe
+            name: <lang:cosmetic.wackymaze.kbstick.hoe>
+            material: minecraft:netherite_hoe
+            description: <lang:cosmetic.wackymaze.kbstick.hoe.desc>
+            cost: 5000
+          - id: wackymaze_stick_deadbush
+            name: <lang:cosmetic.wackymaze.kbstick.deadbush>
+            material: minecraft:dead_bush
+            description: <lang:cosmetic.wackymaze.kbstick.deadbush.desc>
+            cost: 5000
+  - id: fastfall
+    name: FastFall
+    material: minecraft:iron_boots
+    groups:
+      - id: boots
+        name: <lang:cosmetic.fastfall.boots>
+        material: minecraft:leather_boots
+        description: <lang:cosmetic.fastfall.boots.desc>
+        cosmetics:
+          - id: fastfall_boots_standard
+            name: <lang:cosmetic.fastfall.boots.leather>
+            material: minecraft:leather_boots
+            description: <lang:cosmetic.fastfall.boots.leather.desc>
+            cost: 250
+          - id: fastfall_boots_netherite
+            name: <lang:cosmetic.fastfall.boots.netherite>
+            material: minecraft:netherite_boots
+            description: <lang:cosmetic.fastfall.boots.netherite.desc>
+            cost: 1000
+          - id: fastfall_boots_gold
+            name: <lang:cosmetic.fastfall.boots.gold>
+            material: minecraft:golden_boots
+            description: <lang:cosmetic.fastfall.boots.gold.desc>
+            cost: 15000
+          - id: fastfall_boots_tnt
+            name: <lang:cosmetic.fastfall.boots.tnt>
+            item:
+              material: minecraft:leather_boots
+              dye: 255, 0, 0
+            description: <lang:cosmetic.fastfall.boots.tnt.desc>
+            cost: 15000
+  - id: infinijump
+    name: Infinijump
+    material: minecraft:feather
+    groups:
+      - id: blocks
+        name: <lang:cosmetic.infinijump.block_sets>
+        material: minecraft:grass_block
+        description: <lang:cosmetic.infinijump.block_sets.desc>
+        cosmetics:
+          - id: infinijump_blocks_red
+            name: <lang:cosmetic.infinijump.blocks.red>
+            material: minecraft:red_concrete
+            cost: 250
+          - id: infinijump_blocks_green
+            name: <lang:cosmetic.infinijump.blocks.green>
+            material: minecraft:green_concrete
+            cost: 250
+          - id: infinijump_blocks_blue
+            name: <lang:cosmetic.infinijump.blocks.blue>
+            material: minecraft:blue_concrete
+            cost: 250
+          - id: infinijump_blocks_rainbow_concrete
+            name: <lang:cosmetic.infinijump.blocks.rainbow_concrete>
+            description: <lang:cosmetic.infinijump.blocks.rainbow_concrete.desc>
+            material: minecraft:cyan_concrete
+            cost: 2500
+          - id: infinijump_blocks_rainbow_wool
+            name: <lang:cosmetic.infinijump.blocks.rainbow_wool>
+            description: <lang:cosmetic.infinijump.blocks.rainbow_wool.desc>
+            material: minecraft:cyan_wool
+            cost: 2500
+          - id: infinijump_blocks_jungle
+            name: <lang:cosmetic.infinijump.blocks.jungle>
+            description: <lang:cosmetic.infinijump.blocks.jungle.desc>
+            material: minecraft:flowering_azalea_leaves
+            cost: 2500

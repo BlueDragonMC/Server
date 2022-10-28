@@ -11,13 +11,11 @@ import net.minestom.server.instance.block.Block
 class PlatformParkourBlock(game: InfinijumpGame, instance: Instance, spawnTime: Long, posIn: Pos) :
     HighlightedParkourBlock(game, instance, spawnTime, posIn) {
 
-    override val placedBlockType: Block = Block.RED_CONCRETE
-
     private val extraEntities = mutableListOf<Entity>()
 
-    override fun create() {
-        super.create()
-        setNeighboringBlocks(Block.RED_CONCRETE, corners = true)
+    override fun create(block: Block) {
+        super.create(block)
+        setNeighboringBlocks(block, corners = true)
         forEachNeighboringBlock(corners = true) { neighborPos ->
             val entity = Entity(this.entity.entityType)
             entity.entityMeta.isInvisible = true

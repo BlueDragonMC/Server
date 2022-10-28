@@ -8,6 +8,8 @@ import com.bluedragonmc.server.Environment
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.module.combat.CustomDeathMessageModule
+import com.bluedragonmc.server.module.config.ConfigModule
+import com.bluedragonmc.server.module.database.CosmeticsModule
 import com.bluedragonmc.server.module.database.StatisticsModule
 import com.bluedragonmc.server.module.gameplay.InstantRespawnModule
 import com.bluedragonmc.server.module.gameplay.InventoryPermissionsModule
@@ -33,6 +35,7 @@ import net.minestom.server.event.player.PlayerDeathEvent
 import net.minestom.server.event.player.PlayerMoveEvent
 import net.minestom.server.event.player.PlayerSpawnEvent
 import net.minestom.server.event.player.PlayerUseItemEvent
+import net.minestom.server.instance.block.Block
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import net.minestom.server.sound.SoundEvent
@@ -112,12 +115,14 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
         use(InstantRespawnModule())
         use(CustomDeathMessageModule())
         use(InventoryPermissionsModule(false, false))
+        use(ConfigModule())
+        use(CosmeticsModule())
 
         blocks = mutableListOf(
-            ParkourBlock(this, getInstance(), 0L, spawnPosition.sub(0.0, 1.0, 0.0)).apply { create() }
+            ParkourBlock(this, getInstance(), 0L, spawnPosition.sub(0.0, 1.0, 0.0)).apply { create(getNextBlockType()) }
         )
 
-        handleEvent<PlayerSpawnEvent> { event ->
+        handleEvent<PlayerSpawnEvent>(CosmeticsModule::class) { event ->
             event.player.showTitle(
                 Title.title(
                     "Infinijump" withColor BRAND_COLOR_PRIMARY_1,
@@ -201,7 +206,7 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
 
         handleEvent<InstanceTickEvent> { event ->
             if (state == GameState.INGAME) handleTick(event.instance.worldAge)
-            if (blocks.size <= 3) addNewBlock() // Add a new block every tick until there are 3 blocks
+            if (blocks.size <= 3 && players.isNotEmpty()) addNewBlock() // Add a new block every tick until there are 3 blocks
         }
 
         handleEvent<PlayerMoveEvent> { event ->
@@ -270,6 +275,7 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
         val instance = getInstance()
         val lastPos = blocks.last().pos
         val nextPos = getNextBlockPosition()
+        val blockType = getNextBlockType()
         val block = when {
             nextPos.y - lastPos.y <= -5 -> PlatformParkourBlock(this, instance, instance.worldAge, nextPos)
             nextPos.y - lastPos.y >= 2 -> LadderParkourBlock(this, instance, instance.worldAge, nextPos)
@@ -277,7 +283,7 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
             else -> HighlightedParkourBlock(this, instance, instance.worldAge, nextPos)
         }
         blocks.add(block)
-        block.create()
+        block.create(blockType)
     }
 
     private fun getNextBlockPosition(): Pos {
@@ -293,6 +299,13 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
         }
         if (vec.x < 1.0 && vec.z < 1.0) return getNextBlockPosition()
         return lastPos.add(vec)
+    }
+
+    private fun getNextBlockType(): Block {
+        if (players.isEmpty()) return Block.BEDROCK
+        val player = players.first()
+        val cosmetic = getModule<CosmeticsModule>().getCosmeticInGroup<InfinijumpCosmetic>(player)
+        return cosmetic?.blockType?.invoke() ?: Block.WHITE_CONCRETE
     }
 
     var angle = 180.0

@@ -7,14 +7,15 @@ import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.Entity
 import net.minestom.server.entity.EntityType
 import net.minestom.server.instance.Instance
+import net.minestom.server.instance.block.Block
 
 open class HighlightedParkourBlock(game: InfinijumpGame, instance: Instance, spawnTime: Long, posIn: Pos) :
     ParkourBlock(game, instance, spawnTime, posIn) {
 
     val entity = Entity(EntityType.SHULKER)
 
-    override fun create() {
-        super.create()
+    override fun create(block: Block) {
+        super.create(block)
         entity.entityMeta.apply {
             isInvisible = true
             isHasNoGravity = true
