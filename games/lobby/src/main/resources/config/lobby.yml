@@ -107,7 +107,7 @@ boss-bars:
   - "<bold><a1>LOBBY UPDATE"
   - "<bold><a1>LEADERBOARD UPDATE"
   - "<bold><a1>NEW GAME: INFINIJUMP"
-  - "<bold><a1>NEW GAME: ARENAPVP"
+  - "<bold><a1>NEW GAME: SKYFALL"
 games:
   - game: WackyMaze
     category: Combat
@@ -303,6 +303,7 @@ parkour:
       - minecraft:water
     reset-to: 6.5, 48.0, -27.5, -90.0, 20.0
 news:
+  - "Oct 28: New Infinijump Cosmetics!"
   - "Sep 30: New Cosmetics!"
   - "Sep 24: Lobby update!"
   - "Aug 31: Added leaderboards!"

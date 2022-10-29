@@ -9,6 +9,7 @@ import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.module.combat.CustomDeathMessageModule
 import com.bluedragonmc.server.module.config.ConfigModule
+import com.bluedragonmc.server.module.database.AwardsModule
 import com.bluedragonmc.server.module.database.CosmeticsModule
 import com.bluedragonmc.server.module.database.StatisticsModule
 import com.bluedragonmc.server.module.gameplay.InstantRespawnModule
@@ -117,6 +118,7 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
         use(InventoryPermissionsModule(false, false))
         use(ConfigModule())
         use(CosmeticsModule())
+        use(AwardsModule())
 
         blocks = mutableListOf(
             ParkourBlock(this, getInstance(), 0L, spawnPosition.sub(0.0, 1.0, 0.0)).apply { create(getNextBlockType()) }
@@ -167,6 +169,14 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
 
             getModule<StatisticsModule>()
                 .recordStatisticIfGreater(event.player, "game_infinijump_highest_score", score.toDouble())
+
+            // If the player scores more than 20 points, award them 1 coin for every 4 points scored.
+            if (score > 20) {
+                getModule<AwardsModule>().awardCoins(
+                    event.player, score / 4,
+                    Component.translatable("game.infinijump.award.score")
+                )
+            }
 
             blocks.forEach { it.instance.setBlock(it.pos, it.placedBlockType) }
             state = GameState.ENDING
@@ -305,7 +315,7 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
         if (players.isEmpty()) return Block.BEDROCK
         val player = players.first()
         val cosmetic = getModule<CosmeticsModule>().getCosmeticInGroup<InfinijumpCosmetic>(player)
-        return cosmetic?.blockType?.invoke() ?: Block.WHITE_CONCRETE
+        return cosmetic?.blockType?.invoke() ?: Block.STONE_BRICKS
     }
 
     var angle = 180.0
