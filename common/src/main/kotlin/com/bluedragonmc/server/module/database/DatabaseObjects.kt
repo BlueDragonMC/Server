@@ -1,6 +1,5 @@
 package com.bluedragonmc.server.module.database
 
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -56,12 +55,6 @@ data class PlayerDocument @OptIn(ExperimentalSerializationApi::class) constructo
         val newValue = block(field.get(this))
         DatabaseModule.getPlayersCollection().updateOneById(uuid.toString(), setValue(field, newValue))
         field.set(this, newValue)
-    }
-
-    init {
-        DatabaseModule.IO.launch {
-            highestGroup // Initialize the highest group async when the document is created
-        }
     }
 }
 
