@@ -141,7 +141,7 @@ class StatisticsModule(private val recordWins: Boolean = true) : GameModule() {
      */
     fun recordStatisticIfGreater(player: Player, key: String, newValue: Double, successCallback: Runnable? = null) =
         recordStatistic(player, key, newValue) { old ->
-            val record = old == null || old > newValue
+            val record = old == null || newValue > old
             if (record) successCallback?.run()
             record
         }

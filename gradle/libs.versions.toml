@@ -16,6 +16,7 @@ grpc-protobuf = "1.48.0"
 grpc-netty = "1.37.0"
 grpc-kotlin-stub = "1.3.0"
 protobuf-kotlin = "3.21.3"
+# Testing dependencies
 mockk = "1.13.2"
 junit = "5.9.0"
 
