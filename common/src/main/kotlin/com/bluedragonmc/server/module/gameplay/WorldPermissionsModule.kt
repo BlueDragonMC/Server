@@ -1,7 +1,9 @@
 package com.bluedragonmc.server.module.gameplay
 
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.event.ProjectileBreakBlockEvent
 import com.bluedragonmc.server.module.GameModule
+import com.bluedragonmc.server.utils.toVec
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.coordinate.Point
@@ -36,12 +38,40 @@ class WorldPermissionsModule(
                 if (playerPlacedBlocks.contains(event.blockPosition)) {
                     playerPlacedBlocks.remove(event.blockPosition)
                 } else {
-                    parent.callCancellable(PreventPlayerBreakMapEvent(event.player, event.block, event.resultBlock, event.blockPosition)) {
+                    parent.callCancellable(
+                        PreventPlayerBreakMapEvent(
+                            event.player,
+                            event.block,
+                            event.resultBlock,
+                            event.blockPosition
+                        )
+                    ) {
                         event.player.sendMessage(
                             Component.translatable("module.world_permissions.break_world", NamedTextColor.RED)
                         )
                         event.isCancelled = true
                     }
+                }
+            }
+        }
+        eventNode.addListener(ProjectileBreakBlockEvent::class.java) { event ->
+            if (exceptions.contains(event.block)) return@addListener
+            event.isCancelled = !allowBlockBreak
+
+            if (allowBlockBreak && !allowBreakMap) {
+                // This position must be converted to a Vec to compare to other elements in the list
+                val vec = event.blockPosition.toVec()
+                if (playerPlacedBlocks.contains(vec)) {
+                    playerPlacedBlocks.remove(vec)
+                } else parent.callCancellable(
+                    PreventPlayerBreakMapEvent(
+                        event.player,
+                        event.block,
+                        event.block,
+                        event.blockPosition
+                    )
+                ) {
+                    event.isCancelled = true
                 }
             }
         }
@@ -63,5 +93,6 @@ class WorldPermissionsModule(
      * Called when a player breaks a non-player-placed block when they are not supposed to be allowed to.
      * If this event is cancelled, the player will be allowed to break the block.
      */
-    class PreventPlayerBreakMapEvent(player: Player, block: Block, resultBlock: Block, blockPosition: Point) : PlayerBlockBreakEvent(player, block, resultBlock, blockPosition)
+    class PreventPlayerBreakMapEvent(player: Player, block: Block, resultBlock: Block, blockPosition: Point) :
+        PlayerBlockBreakEvent(player, block, resultBlock, blockPosition)
 }

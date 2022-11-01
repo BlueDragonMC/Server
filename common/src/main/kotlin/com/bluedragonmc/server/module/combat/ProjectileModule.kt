@@ -1,15 +1,17 @@
 package com.bluedragonmc.server.module.combat
 
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.event.ProjectileBreakBlockEvent
 import com.bluedragonmc.server.module.GameModule
+import com.bluedragonmc.server.module.vanilla.ItemDropModule
 import com.bluedragonmc.server.utils.CoordinateUtils
-import com.bluedragonmc.server.utils.SoundUtils
 import net.kyori.adventure.sound.Sound
 import net.minestom.server.MinecraftServer
 import net.minestom.server.attribute.Attribute
 import net.minestom.server.coordinate.Point
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.*
+import net.minestom.server.entity.Player.Hand
 import net.minestom.server.entity.damage.DamageType
 import net.minestom.server.entity.metadata.arrow.ArrowMeta
 import net.minestom.server.event.Event
@@ -19,11 +21,13 @@ import net.minestom.server.event.entity.projectile.ProjectileCollideWithEntityEv
 import net.minestom.server.event.item.ItemUpdateStateEvent
 import net.minestom.server.event.player.PlayerItemAnimationEvent
 import net.minestom.server.event.player.PlayerUseItemEvent
+import net.minestom.server.event.player.PlayerUseItemOnBlockEvent
 import net.minestom.server.instance.EntityTracker
 import net.minestom.server.instance.Explosion
 import net.minestom.server.instance.Instance
 import net.minestom.server.inventory.TransactionOption
 import net.minestom.server.item.Enchantment
+import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import net.minestom.server.network.packet.server.play.ChangeGameStatePacket
 import net.minestom.server.sound.SoundEvent
@@ -33,6 +37,8 @@ import kotlin.math.ceil
 import kotlin.random.Random
 
 class ProjectileModule : GameModule() {
+
+    private lateinit var parent: Game
 
     companion object {
         private val CHARGE_START_TAG = Tag.Long("bow_charge_start").defaultValue(Long.MAX_VALUE)
@@ -46,6 +52,8 @@ class ProjectileModule : GameModule() {
     }
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
+        this.parent = parent;
+
         hookBowEvents(eventNode)
         hookSnowballEvents(eventNode)
         hookEggEvents(eventNode)
@@ -83,7 +91,14 @@ class ProjectileModule : GameModule() {
 
                 projectile.setInstance(event.player.instance!!, eyePos)
                 projectile.shoot(getLaunchPos(event.player), power * 3.0, 1.0)
-                event.player.instance?.playSound(Sound.sound(SoundEvent.ENTITY_ARROW_SHOOT, Sound.Source.MASTER, 1.0f, 1.0f), event.player.position)
+                event.player.instance?.playSound(
+                    Sound.sound(
+                        SoundEvent.ENTITY_ARROW_SHOOT,
+                        Sound.Source.MASTER,
+                        1.0f,
+                        1.0f
+                    ), event.player.position
+                )
                 projectile.setTag(PUNCH_TAG, event.itemStack.meta().enchantmentMap[Enchantment.PUNCH] ?: 0)
                 projectile.setTag(ARROW_DAMAGE_TAG, event.itemStack.meta().enchantmentMap[Enchantment.POWER] ?: 0)
             }
@@ -103,10 +118,12 @@ class ProjectileModule : GameModule() {
                 if (target.isInvincible()) return@addListener
             }
 
-            OldCombatModule.takeKnockback(-projectile.velocity.x,
+            OldCombatModule.takeKnockback(
+                -projectile.velocity.x,
                 -projectile.velocity.z,
                 target,
-                projectile.getTag(PUNCH_TAG).toDouble())
+                projectile.getTag(PUNCH_TAG).toDouble()
+            )
 
             val damageModifier =
                 (projectile.shooter as? LivingEntity)?.getAttribute(Attribute.ATTACK_DAMAGE)?.value ?: 1.0f
@@ -151,7 +168,14 @@ class ProjectileModule : GameModule() {
                 val snowball = EntityProjectile(event.player, EntityType.SNOWBALL)
                 snowball.setInstance(event.instance, getEyePos(event.player))
                 snowball.shoot(getLaunchPos(event.player), 3.0, 1.0)
-                event.player.instance?.playSound(Sound.sound(SoundEvent.ENTITY_SNOWBALL_THROW, Sound.Source.MASTER, 1.0f, 0.5f), event.player.position)
+                event.player.instance?.playSound(
+                    Sound.sound(
+                        SoundEvent.ENTITY_SNOWBALL_THROW,
+                        Sound.Source.MASTER,
+                        1.0f,
+                        0.5f
+                    ), event.player.position
+                )
                 snowball.scheduleRemove(Duration.ofSeconds(30))
             }
         }
@@ -177,20 +201,10 @@ class ProjectileModule : GameModule() {
 
     private fun hookFireballEvents(eventNode: EventNode<Event>) {
         eventNode.addListener(PlayerUseItemEvent::class.java) { event ->
-            val itemStack = event.player.getItemInHand(event.hand)
-            if (itemStack.material() == Material.FIRE_CHARGE) {
-
-                if (event.player.gameMode != GameMode.CREATIVE) {
-                    event.player.inventory.setItemInHand(event.hand, itemStack.withAmount(itemStack.amount() - 1))
-                }
-
-                // Shoot a snowball from the player's position
-                val snowball = EntityProjectile(event.player, EntityType.FIREBALL)
-                snowball.setInstance(event.instance, getEyePos(event.player))
-                snowball.shoot(getLaunchPos(event.player), 3.0, 1.0)
-                event.player.instance?.playSound(Sound.sound(SoundEvent.ITEM_FIRECHARGE_USE, Sound.Source.MASTER, 1.0f, 1.0f), event.player.position)
-                snowball.scheduleRemove(Duration.ofSeconds(30))
-            }
+            shootFireball(event.player, event.hand, event.instance)
+        }
+        eventNode.addListener(PlayerUseItemOnBlockEvent::class.java) { event ->
+            shootFireball(event.player, event.hand, event.instance)
         }
         eventNode.addListener(ProjectileCollideWithEntityEvent::class.java) { event ->
             if (event.entity.entityType == EntityType.FIREBALL) {
@@ -204,61 +218,93 @@ class ProjectileModule : GameModule() {
         }
     }
 
+    private fun shootFireball(player: Player, hand: Hand, instance: Instance) {
+        val itemStack = player.getItemInHand(hand)
+        if (itemStack.material() == Material.FIRE_CHARGE) {
+
+            if (player.gameMode != GameMode.CREATIVE) {
+                player.inventory.setItemInHand(hand, itemStack.withAmount(itemStack.amount() - 1))
+            }
+
+            // Shoot a snowball from the player's position
+            val snowball = EntityProjectile(player, EntityType.FIREBALL)
+            snowball.setInstance(instance, getEyePos(player))
+            snowball.shoot(getLaunchPos(player), 3.0, 1.0)
+            player.instance?.playSound(
+                Sound.sound(SoundEvent.ITEM_FIRECHARGE_USE, Sound.Source.MASTER, 1.0f, 1.0f),
+                player.position
+            )
+            snowball.scheduleRemove(Duration.ofSeconds(30))
+        }
+    }
+
     private fun explodeFireball(projectile: Entity) {
         projectile as EntityProjectile
         projectile.remove()
         val pos = projectile.position
 
-        if (projectile.instance?.explosionSupplier == null) {
-            projectile.instance?.setExplosionSupplier { centerX, centerY, centerZ, strength, _ ->
-                object : Explosion(centerX, centerY, centerZ, strength) {
-
-                    override fun prepare(instance: Instance?): List<Point> = CoordinateUtils.getAllInBox(
-                        Pos(centerX.toDouble() - strength, centerY.toDouble() - strength, centerZ.toDouble() - strength),
-                        Pos(centerX.toDouble() + strength, centerY.toDouble() + strength, centerZ.toDouble() + strength)
-                    ).filter { pos ->
-                        val distance = pos.distanceSquared(centerX.toDouble(), centerY.toDouble(), centerZ.toDouble())
-                        val resistance = instance!!.getBlock(pos).registry().explosionResistance()
-                        val maxStrength = strength * 1.5 - resistance / 2.0
-                        if (maxStrength <= 0) false
-                        else Random.nextDouble(0.0, maxStrength) > distance
-                    }
-                }
-            }
-        }
-
         val radius = 8.0f
-        projectile.instance?.explode(pos.x.toFloat(), pos.y.toFloat(), pos.z.toFloat(), radius)
+        val explosion = createExplosion(pos.x.toFloat(), pos.y.toFloat(), pos.z.toFloat(), radius, projectile)
+        explosion.apply(projectile.instance!!)
 
         val center = Pos(pos.x, pos.y, pos.z)
         projectile.instance!!.entityTracker.nearbyEntities(
-            center, 5.0, EntityTracker.Target.ENTITIES
+            center, radius.toDouble(), EntityTracker.Target.ENTITIES
         ) { entity ->
-            val distanceSq = entity.position.distanceSquared(center)
-            val multiplier = (1.0f / radius) * distanceSq
-            OldCombatModule.takeKnockback(-projectile.velocity.x, -projectile.velocity.z, entity, multiplier)
+            val mult = radius - entity.position.distance(center)
+            OldCombatModule.takeKnockback(projectile.velocity.x, projectile.velocity.z, entity, mult)
             if (entity is LivingEntity) {
-                entity.damage(DamageType.fromProjectile(projectile.shooter, projectile), multiplier.toFloat() * 8.0f)
+                entity.damage(DamageType.fromProjectile(projectile.shooter, projectile), mult.toFloat())
             }
+        }
+    }
+
+    private fun createExplosion(
+        centerX: Float,
+        centerY: Float,
+        centerZ: Float,
+        strength: Float,
+        projectile: EntityProjectile
+    ) = object : Explosion(centerX, centerY, centerZ, strength) {
+
+        override fun prepare(instance: Instance): List<Point> {
+            val dropItems = parent.getModuleOrNull<ItemDropModule>()?.dropBlocksOnBreak == true
+            val positions = CoordinateUtils.getAllInBox(
+                Pos(centerX.toDouble() - strength, centerY.toDouble() - strength, centerZ.toDouble() - strength),
+                Pos(centerX.toDouble() + strength, centerY.toDouble() + strength, centerZ.toDouble() + strength)
+            ).filter { pos ->
+                // Check if the block should be destroyed based on the radius
+                val distance = pos.distanceSquared(centerX.toDouble(), centerY.toDouble(), centerZ.toDouble())
+                val resistance = instance.getBlock(pos).registry().explosionResistance()
+                val maxStrength = strength * 1.5 - resistance / 2.0
+                if (maxStrength <= 0 || Random.nextDouble(0.0, maxStrength) < distance)
+                    return@filter false
+
+                // Check if the shooter is allowed to break the block
+                // (seeing if a PlayerBlockBreakEvent would be cancelled)
+                val player = projectile.shooter as? Player ?: return@filter false
+                val block = instance.getBlock(pos)
+                val event = ProjectileBreakBlockEvent(parent, player, projectile, block, pos)
+                parent.callEvent(event)
+
+                if (dropItems && !event.isCancelled) {
+                    val material = block.registry().material()
+                    if (material != null)
+                        parent.getModule<ItemDropModule>().dropItem(ItemStack.of(material), instance, pos)
+                }
+                return@filter !event.isCancelled
+            }
+
+            return positions
         }
     }
 
     private fun hookEggEvents(eventNode: EventNode<Event>) {
         eventNode.addListener(PlayerUseItemEvent::class.java) { event ->
-            val itemStack = event.player.getItemInHand(event.hand)
-            if (itemStack.material() == Material.EGG) {
-
-                if (event.player.gameMode != GameMode.CREATIVE) {
-                    event.player.inventory.setItemInHand(event.hand, itemStack.withAmount(itemStack.amount() - 1))
-                }
-
-                // Shoot a snowball from the player's position
-                val snowball = EntityProjectile(event.player, EntityType.EGG)
-                snowball.setInstance(event.instance, getEyePos(event.player))
-                snowball.shoot(getLaunchPos(event.player), 3.0, 1.0)
-                event.player.instance?.playSound(Sound.sound(SoundEvent.ENTITY_EGG_THROW, Sound.Source.MASTER, 1.0f, 0.5f), event.player.position)
-                snowball.scheduleRemove(Duration.ofSeconds(30))
-            }
+            throwEgg(event.player, event.hand, event.instance)
+        }
+        eventNode.addListener(PlayerUseItemOnBlockEvent::class.java) { event ->
+            throwEgg(event.player, event.hand, event.instance)
         }
         eventNode.addListener(ProjectileCollideWithEntityEvent::class.java) { event ->
             val target = event.target as? LivingEntity ?: return@addListener
@@ -280,7 +326,34 @@ class ProjectileModule : GameModule() {
         }
     }
 
+    private fun throwEgg(player: Player, hand: Hand, instance: Instance) {
+        val itemStack = player.getItemInHand(hand)
+        if (itemStack.material() == Material.EGG) {
+
+            if (player.gameMode != GameMode.CREATIVE) {
+                player.inventory.setItemInHand(hand, itemStack.withAmount(itemStack.amount() - 1))
+            }
+
+            // Shoot a snowball from the player's position
+            val egg = EntityProjectile(player, EntityType.EGG)
+            egg.setInstance(instance, getEyePos(player))
+            egg.shoot(getLaunchPos(player), 3.0, 1.0)
+            instance.playSound(
+                Sound.sound(SoundEvent.ENTITY_EGG_THROW, Sound.Source.MASTER, 1.0f, 0.5f),
+                player.position
+            )
+            egg.scheduleRemove(Duration.ofSeconds(30))
+        }
+    }
+
     private fun hookEnderPearlEvents(eventNode: EventNode<Event>) {
+        eventNode.addListener(PlayerUseItemOnBlockEvent::class.java) { event ->
+            if (event.player.getItemInHand(event.hand).material() == Material.ENDER_PEARL) {
+                // Don't throw ender pearls if the player right-clicked a block with them
+                event.player.inventory.update()
+            }
+        }
+
         eventNode.addListener(PlayerUseItemEvent::class.java) { event ->
             val itemStack = event.player.getItemInHand(event.hand)
             if (itemStack.material() == Material.ENDER_PEARL) {
@@ -288,7 +361,14 @@ class ProjectileModule : GameModule() {
                 pearl.setTag(PEARL_OWNER_TAG, event.player.uuid)
                 pearl.setInstance(event.instance, getEyePos(event.player))
                 pearl.shoot(getLaunchPos(event.player), 2.5, 1.0)
-                event.player.instance?.playSound(Sound.sound(SoundEvent.ENTITY_ENDER_PEARL_THROW, Sound.Source.MASTER, 1.0f, 0.5f), event.player.position)
+                event.player.instance?.playSound(
+                    Sound.sound(
+                        SoundEvent.ENTITY_ENDER_PEARL_THROW,
+                        Sound.Source.MASTER,
+                        1.0f,
+                        0.5f
+                    ), event.player.position
+                )
                 pearl.scheduleRemove(Duration.ofSeconds(30))
             }
         }
@@ -298,7 +378,14 @@ class ProjectileModule : GameModule() {
                 event.entity.instance?.players?.firstOrNull { it.uuid == event.entity.getTag(PEARL_OWNER_TAG) }?.apply {
                     teleport(event.entity.position.add(0.0, 1.0, 0.0))
                     damage(DamageType.GRAVITY, 5.0f)
-                    event.entity.instance?.playSound(Sound.sound(SoundEvent.ENTITY_ENDERMAN_TELEPORT, Sound.Source.MASTER, 1.0f, 1.0f), event.entity.position)
+                    event.entity.instance?.playSound(
+                        Sound.sound(
+                            SoundEvent.ENTITY_ENDERMAN_TELEPORT,
+                            Sound.Source.MASTER,
+                            1.0f,
+                            1.0f
+                        ), event.entity.position
+                    )
                 }
                 event.entity.remove()
             }

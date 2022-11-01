@@ -60,7 +60,7 @@ class ItemDropModule(var dropBlocksOnBreak: Boolean = true, var dropAllOnDeath: 
         }
     }
 
-    private fun dropItem(item: ItemStack, instance: Instance, position: Pos) {
+    fun dropItem(item: ItemStack, instance: Instance, position: Pos) {
         val itemEntity = ItemEntity(item)
         itemEntity.setPickupDelay(300, ChronoUnit.MILLIS)
 

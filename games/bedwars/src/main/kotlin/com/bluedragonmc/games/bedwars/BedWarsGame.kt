@@ -7,6 +7,7 @@ import com.bluedragonmc.games.bedwars.upgrades.TeamUpgrade
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.GameStartEvent
+import com.bluedragonmc.server.event.ProjectileBreakBlockEvent
 import com.bluedragonmc.server.event.TeamAssignedEvent
 import com.bluedragonmc.server.module.combat.CustomDeathMessageModule
 import com.bluedragonmc.server.module.combat.OldCombatModule
@@ -196,6 +197,11 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
         }
 
         handleEvent<WorldPermissionsModule.PreventPlayerBreakMapEvent> { event ->
+            event.isCancelled = bedBlockToTeam.containsKey(event.block.registry().material())
+        }
+
+        handleEvent<ProjectileBreakBlockEvent> { event ->
+            // Projectiles (fireballs) should never be able to break beds
             event.isCancelled = bedBlockToTeam.containsKey(event.block.registry().material())
         }
 

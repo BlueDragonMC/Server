@@ -37,6 +37,7 @@ import java.time.Duration
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.CoroutineContext
+import kotlin.system.exitProcess
 
 class DatabaseModule : GameModule() {
 
@@ -48,7 +49,7 @@ class DatabaseModule : GameModule() {
         }
 
         private val client: CoroutineClient by lazy {
-            KMongo.createClient(MongoClientSettings.builder()
+            val client = KMongo.createClient(MongoClientSettings.builder()
                 .applyConnectionString(ConnectionString("mongodb://${Environment.current.mongoHostname}"))
                 .applyToSocketSettings { block ->
                     block.connectTimeout(5, TimeUnit.SECONDS)
@@ -56,8 +57,17 @@ class DatabaseModule : GameModule() {
                 .applyToClusterSettings { block ->
                     block.serverSelectionTimeout(5, TimeUnit.SECONDS)
                 }
-                .build()
-            ).coroutine
+            .build()).coroutine
+
+            // Test the client's connection
+            try {
+                runBlocking { client.listDatabaseNames() }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                exitProcess(1)
+            }
+
+            return@lazy client
         }
 
         private val database: CoroutineDatabase by lazy {

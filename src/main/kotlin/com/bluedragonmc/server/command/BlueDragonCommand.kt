@@ -127,6 +127,10 @@ open class BlueDragonCommand(
     }
 
     fun usage(block: CommandCtx.() -> Unit) = setDefaultExecutor { sender, context ->
+        if (sender is ConsoleSender) {
+            block(CommandCtx(sender, context))
+            return@setDefaultExecutor
+        }
         sender as CustomPlayer
         if (permission == null || Permissions.hasPermission(sender.data, permission))
             block(CommandCtx(sender, context))
