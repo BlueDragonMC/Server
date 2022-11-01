@@ -34,8 +34,12 @@ class ArmorLevelsModule(private val levels: List<KitsModule.Kit>) : GameModule()
 
         val binding = parent.getModule<SidebarModule>().bind {
             parent.players.map { player ->
-                "armor-level-${player.username}" to
-                        (player.name + Component.text(": ", BRAND_COLOR_PRIMARY_2) + player.getArmorLevel().name.decorate(TextDecoration.BOLD))
+                SidebarModule.SidebarLine(
+                    player.username,
+                    player.name +
+                            Component.text(": ", BRAND_COLOR_PRIMARY_2) +
+                            player.getArmorLevel().name.decorate(TextDecoration.BOLD)
+                )
             }
         }
 

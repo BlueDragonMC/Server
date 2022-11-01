@@ -19,6 +19,8 @@ import com.bluedragonmc.server.utils.noItalic
 import com.bluedragonmc.server.utils.withColor
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.NamedTextColor.GREEN
+import net.kyori.adventure.text.format.NamedTextColor.RED
 import net.minestom.server.entity.GameMode
 import net.minestom.server.item.Enchantment
 import net.minestom.server.item.ItemMeta
@@ -70,10 +72,9 @@ class InfectionGame(mapName: String) : Game("Infection", mapName) {
         val sidebarModule = SidebarModule(name)
         val bind = sidebarModule.bind {
             players.map {
-                "player-status-${it.uuid}" to it.name.withColor(
-                    if (hasModule<InfectionModule>() && getModule<InfectionModule>().isInfected(it))
-                        NamedTextColor.RED else NamedTextColor.GREEN
-                )
+                val color = if (getModuleOrNull<InfectionModule>()?.isInfected(it) == true) RED else GREEN
+                val component = (it.name withColor color)
+                SidebarModule.SidebarLine(it.uuid.toString(), component)
             }
         }
         use(SpawnpointModule(SpawnpointModule.DatabaseSpawnpointProvider(allowRandomOrder = true)))

@@ -35,13 +35,9 @@ class SidebarModule(title: String) : GameModule() {
         }
     }
 
-    fun bind(block: () -> Collection<Pair<String, Component>>) = ScoreboardBinding(block, this)
+    fun bind(block: () -> Collection<SidebarLine>) = ScoreboardBinding(block, this)
 
-    fun addLines(lines: Collection<Pair<String, Component>>) {
-        addLines(lines.reversed().mapIndexed { i, it -> ScoreboardLine(it.first, it.second, sidebar.lines.size + i) })
-    }
-
-    fun addLines(lines: List<ScoreboardLine>) {
+    fun addLines(lines: Collection<ScoreboardLine>) {
         lines.forEach {
             if (sidebar.getLine(it.id) == null) sidebar.createLine(it)
             else {
@@ -52,11 +48,24 @@ class SidebarModule(title: String) : GameModule() {
         }
     }
 
+    data class SidebarLine(
+        val identifier: String,
+        val text: Component
+    )
+
     data class ScoreboardBinding(
-        private val updateFunction: () -> Collection<Pair<String, Component>>,
+        private val updateFunction: () -> Collection<SidebarLine>,
         private val module: SidebarModule
     ) {
-        fun update() = module.addLines(updateFunction())
+
+        fun update() {
+            val lines = updateFunction()
+            module.addLines(
+                lines.reversed().mapIndexed { i, it ->
+                    ScoreboardLine(it.identifier, it.text, module.sidebar.lines.size + i)
+                }
+            )
+        }
 
         init {
             update()

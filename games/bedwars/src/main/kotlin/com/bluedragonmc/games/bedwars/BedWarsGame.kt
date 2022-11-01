@@ -27,12 +27,10 @@ import com.bluedragonmc.server.module.vanilla.ItemPickupModule
 import com.bluedragonmc.server.module.vanilla.NaturalRegenerationModule
 import com.bluedragonmc.server.utils.plus
 import com.bluedragonmc.server.utils.surroundWithSeparators
-import com.bluedragonmc.server.utils.toPlainText
+import com.bluedragonmc.server.utils.withColor
 import net.kyori.adventure.sound.Sound
-import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.Component.translatable
-import net.kyori.adventure.text.format.NamedTextColor
-import net.kyori.adventure.text.format.NamedTextColor.RED
+import net.kyori.adventure.text.format.NamedTextColor.*
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.title.Title
 import net.minestom.server.coordinate.Pos
@@ -112,21 +110,20 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
             )
         )
 
-        val sidebar = getModule<SidebarModule>()
-        val teamModule = getModule<TeamModule>()
         lateinit var sidebarTeamsSection: SidebarModule.ScoreboardBinding
 
         handleEvent<GameStartEvent> {
-            sidebarTeamsSection = sidebar.bind {
-                teamModule.teams.map { t ->
-                    "team-status-${t.name.toPlainText()}" to (t.name + Component.text(
-                        ": ", NamedTextColor.GRAY
-                    ) + (if (bedWarsTeamInfo[t]?.bedIntact != false) Component.text(
-                        "✔", NamedTextColor.GREEN
-                    )
-                    else Component.text(
-                        t.players.count { !getModule<SpectatorModule>().isSpectating(it) }, RED
-                    )))
+            sidebarTeamsSection = getModule<SidebarModule>().bind {
+                getModule<TeamModule>().teams.map { t ->
+                    val bedStatus = if (bedWarsTeamInfo[t]?.bedIntact != false) {
+                        "✔" withColor GREEN // Intact beds have a check mark
+                    } else {
+                        t.players.count {
+                            !getModule<SpectatorModule>().isSpectating(it)
+                        }.toString() withColor RED
+                    }
+                    val component = t.name + (": " withColor GRAY) + bedStatus
+                    SidebarModule.SidebarLine(t.uuid.toString(), component)
                 }
             }
             for (team in getModule<TeamModule>().teams) {
@@ -216,7 +213,7 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
                 positions = mainShopkeepers,
                 customName = translatable(
                     "game.bedwars.npc.shop",
-                    NamedTextColor.YELLOW,
+                    YELLOW,
                     TextDecoration.BOLD
                 ),
                 skin = NPCModule.NPCSkins.WEIRD_FARMER.skin,
@@ -229,7 +226,7 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
                 positions = teamUpgradeShopkeepers,
                 customName = translatable(
                     "game.bedwars.npc.upgrades",
-                    NamedTextColor.YELLOW,
+                    YELLOW,
                     TextDecoration.BOLD
                 ),
                 skin = NPCModule.NPCSkins.WEIRD_FARMER.skin,

@@ -214,14 +214,15 @@ class FastFallGame(mapName: String?) : Game("FastFall", mapName ?: "Chaos") {
         // SIDEBAR DISPLAY
         val binding = getModule<SidebarModule>().bind {
             val duration = Duration.ofMillis(System.currentTimeMillis() - (startTime ?: return@bind emptySet()))
-            val elapsed = "_time-elapsed" to Component.translatable(
+            val elapsed = SidebarModule.SidebarLine("_time-elapsed", Component.translatable(
                 "game.fastfall.sidebar.elapsed", BRAND_COLOR_PRIMARY_2,
                 Component.text(String.format("%02d:%02d", duration.toMinutesPart(), duration.toSecondsPart()))
-            )
+            ))
             setOf(elapsed) + players.map {
-                "player-y-${it.username}" to it.name + Component.text(
-                    ": ", BRAND_COLOR_PRIMARY_2
-                ) + Component.text("${it.position.y.toInt() - (257 - 2 * radius)}", BRAND_COLOR_PRIMARY_1)
+                SidebarModule.SidebarLine(it.username, it.name +
+                        (": " withColor BRAND_COLOR_PRIMARY_2) +
+                        ("${it.position.y.toInt() - (257 - 2 * radius)}" withColor BRAND_COLOR_PRIMARY_1)
+                )
             }
         }
         MinecraftServer.getSchedulerManager().buildTask {
