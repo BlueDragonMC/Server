@@ -5,9 +5,9 @@ import com.bluedragonmc.games.bedwars.upgrades.FastFeetTeamUpgrade
 import com.bluedragonmc.games.bedwars.upgrades.MiningMalarkeyTeamUpgrade
 import com.bluedragonmc.games.bedwars.upgrades.TeamUpgrade
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
-import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.GameStartEvent
+import com.bluedragonmc.server.event.TeamAssignedEvent
 import com.bluedragonmc.server.module.combat.CustomDeathMessageModule
 import com.bluedragonmc.server.module.combat.OldCombatModule
 import com.bluedragonmc.server.module.combat.ProjectileModule
@@ -78,13 +78,7 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
         use(WinModule(WinModule.WinCondition.LAST_TEAM_ALIVE) { player, winningTeam ->
             if (player in winningTeam.players) 500 else 50
         })
-        use(TeamModule(true, TeamModule.AutoTeamMode.PLAYER_COUNT, 1, teamsAutoAssignedCallback = {
-            val spawnpointProvider = getModule<SpawnpointModule>().spawnpointProvider
-            players.forEach {
-                it.respawnPoint = spawnpointProvider.getSpawnpoint(it)
-                it.teleport(it.respawnPoint)
-            }
-        }))
+        use(TeamModule(true, TeamModule.AutoTeamMode.PLAYER_COUNT, 1))
         use(SpawnpointModule(SpawnpointModule.TeamDatabaseSpawnpointProvider()))
         use(MOTDModule(translatable("game.bedwars.motd")))
         use(PlayerResetModule(defaultGameMode = GameMode.SURVIVAL))
@@ -112,6 +106,12 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
 
         lateinit var sidebarTeamsSection: SidebarModule.ScoreboardBinding
 
+        handleEvent<TeamAssignedEvent>(TeamModule::class, SpawnpointModule::class) { event ->
+            val spawnpointProvider = getModule<SpawnpointModule>().spawnpointProvider
+            event.player.respawnPoint = spawnpointProvider.getSpawnpoint(event.player)
+            event.player.teleport(event.player.respawnPoint)
+        }
+
         handleEvent<GameStartEvent> {
             sidebarTeamsSection = getModule<SidebarModule>().bind {
                 getModule<TeamModule>().teams.map { t ->
@@ -132,61 +132,59 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
             sidebarTeamsSection.update()
         }
 
-        dependingOn(TeamModule::class) {
-            handleEvent<PlayerBlockBreakEvent> { event ->
-                val team = bedBlockToTeam(event.block) ?: return@handleEvent
-                if (team == getModule<TeamModule>().getTeam(event.player)) {
-                    event.player.sendMessage(
-                        translatable("game.bedwars.error.break_own_bed", RED)
-                    )
-                    event.isCancelled = true
-                    return@handleEvent
-                }
-                if (!bedWarsTeamInfo.containsKey(team)) bedWarsTeamInfo[team] = BedWarsTeamInfo(false)
-                else bedWarsTeamInfo[team]!!.bedIntact = false
-                sidebarTeamsSection.update()
-                for (player in players) {
-                    player.sendMessage(
-                        translatable(
-                            "game.bedwars.bed_broken",
-                            BRAND_COLOR_PRIMARY_2,
-                            team.name,
-                            event.player.name
-                        ).surroundWithSeparators()
-                    )
-                    if (!team.players.contains(player)) {
-                        player.playSound(otherTeamBedDestroyedSound)
-                    } else {
-                        player.showTitle(
-                            Title.title(
-                                translatable("game.bedwars.title.bed_broken", RED, TextDecoration.BOLD),
-                                translatable("game.bedwars.subtitle.bed_broken", RED)
-                            )
+        handleEvent<PlayerBlockBreakEvent> { event ->
+            val team = bedBlockToTeam(event.block) ?: return@handleEvent
+            if (team == getModule<TeamModule>().getTeam(event.player)) {
+                event.player.sendMessage(
+                    translatable("game.bedwars.error.break_own_bed", RED)
+                )
+                event.isCancelled = true
+                return@handleEvent
+            }
+            if (!bedWarsTeamInfo.containsKey(team)) bedWarsTeamInfo[team] = BedWarsTeamInfo(false)
+            else bedWarsTeamInfo[team]!!.bedIntact = false
+            sidebarTeamsSection.update()
+            for (player in players) {
+                player.sendMessage(
+                    translatable(
+                        "game.bedwars.bed_broken",
+                        BRAND_COLOR_PRIMARY_2,
+                        team.name,
+                        event.player.name
+                    ).surroundWithSeparators()
+                )
+                if (!team.players.contains(player)) {
+                    player.playSound(otherTeamBedDestroyedSound)
+                } else {
+                    player.showTitle(
+                        Title.title(
+                            translatable("game.bedwars.title.bed_broken", RED, TextDecoration.BOLD),
+                            translatable("game.bedwars.subtitle.bed_broken", RED)
                         )
-                        player.playSound(bedDestroyedSound)
-                    }
+                    )
+                    player.playSound(bedDestroyedSound)
                 }
-
-                // Break both parts of the bed
-                var facing = BlockFace.valueOf(event.block.getProperty("facing").uppercase(Locale.getDefault()))
-                if (event.block.getProperty("part") == "head") facing = facing.oppositeFace
-                event.instance.setBlock(event.blockPosition.relative(facing), Block.AIR)
             }
 
-            handleEvent<PlayerBlockPlaceEvent> { event ->
-                val team = getModule<TeamModule>().getTeam(event.player) ?: return@handleEvent
-                if (event.block.registry().material() == Material.WHITE_WOOL) event.block =
-                    teamToWoolBlock[team.name.color()] ?: Block.WHITE_WOOL
-            }
+            // Break both parts of the bed
+            var facing = BlockFace.valueOf(event.block.getProperty("facing").uppercase(Locale.getDefault()))
+            if (event.block.getProperty("part") == "head") facing = facing.oppositeFace
+            event.instance.setBlock(event.blockPosition.relative(facing), Block.AIR)
+        }
 
-            handleEvent<PlayerDeathEvent> { event ->
-                val team = getModule<TeamModule>().getTeam(event.player)
-                if (bedWarsTeamInfo[team]?.bedIntact == false && !getModule<SpectatorModule>()
-                        .isSpectating(event.player)
-                ) {
-                    getModule<SpectatorModule>().addSpectator(event.player)
-                    sidebarTeamsSection.update()
-                }
+        handleEvent<PlayerBlockPlaceEvent> { event ->
+            val team = getModule<TeamModule>().getTeam(event.player) ?: return@handleEvent
+            if (event.block.registry().material() == Material.WHITE_WOOL) event.block =
+                teamToWoolBlock[team.name.color()] ?: Block.WHITE_WOOL
+        }
+
+        handleEvent<PlayerDeathEvent> { event ->
+            val team = getModule<TeamModule>().getTeam(event.player)
+            if (bedWarsTeamInfo[team]?.bedIntact == false && !getModule<SpectatorModule>()
+                    .isSpectating(event.player)
+            ) {
+                getModule<SpectatorModule>().addSpectator(event.player)
+                sidebarTeamsSection.update()
             }
         }
 

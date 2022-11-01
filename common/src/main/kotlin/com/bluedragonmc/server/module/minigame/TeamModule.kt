@@ -3,6 +3,7 @@ package com.bluedragonmc.server.module.minigame
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.event.PlayerLeaveGameEvent
+import com.bluedragonmc.server.event.TeamAssignedEvent
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.combat.OldCombatModule
 import com.bluedragonmc.server.utils.toPlainText
@@ -16,6 +17,7 @@ import net.minestom.server.adventure.audience.PacketGroupingAudience
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
+import java.util.*
 
 /**
  * A module that provides team support.
@@ -25,8 +27,7 @@ class TeamModule(
     private val autoTeams: Boolean = false,
     private val autoTeamMode: AutoTeamMode = AutoTeamMode.PLAYER_COUNT,
     private val autoTeamCount: Int = 2,
-    private val allowFriendlyFire: Boolean = false,
-    private val teamsAutoAssignedCallback: () -> Unit = {}
+    private val allowFriendlyFire: Boolean = false
 ) : GameModule() {
     val teams = mutableListOf<Team>()
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
@@ -40,6 +41,7 @@ class TeamModule(
                         teams.addAll(parent.players.chunked(autoTeamCount) { players ->
                             Team(teamNumToName(teamNumber++), players.toMutableList(), allowFriendlyFire)
                         })
+                        parent.players.forEach { player -> parent.callEvent(TeamAssignedEvent(parent, player)) }
                         logger.info("Created ${teams.size} teams with $autoTeamCount players per team.")
                     }
                     AutoTeamMode.TEAM_COUNT -> {
@@ -60,36 +62,18 @@ class TeamModule(
                             rollingIndex = rollingIndex.coerceAtMost(parent.players.size)
                             val players = parent.players.subList(startIndex, rollingIndex)
                             teams.add(Team(teamNumToName(i), players, allowFriendlyFire))
+                            players.forEach { player -> parent.callEvent(TeamAssignedEvent(parent, player)) }
                         }
                         logger.info("Created ${teams.size} teams with $playersPerTeam players per team.")
                     }
                 }
-                teamsAutoAssignedCallback()
             } else logger.debug("Automatic team creation is disabled.")
 
             logger.debug(teams.toString())
 
             teams.forEach { team ->
                 team.players.forEach { it.sendMessage(Component.translatable("module.team.assignment", NamedTextColor.GREEN, team.name)) }
-                val builder = MinecraftServer.getTeamManager()
-                    .createBuilder(parent.getInstance().uniqueId.toString() + "-" + team.name.toPlainText())
-                    .teamDisplayName(team.name)
-                    .prefix(Component.text(
-                        team.name.toPlainText().first() + " ", // The first letter of the team's name
-                        team.name.color() ?: NamedTextColor.WHITE, // The team name's text color
-                        TextDecoration.BOLD
-                    ))
-                    .teamColor(NamedTextColor.nearestTo(
-                        team.name.color() ?: NamedTextColor.WHITE
-                    )) // Used for coloring player usernames
-                // Allow friendly fire if necessary
-                if (allowFriendlyFire) builder.allowFriendlyFire()
-                val scoreboardTeam = builder.build() // Register the team
-                team.players.forEach { player ->
-                    // Add members to the team
-                    scoreboardTeam.addMember(player.username)
-                }
-                team.scoreboardTeam = scoreboardTeam
+                team.register()
             }
         }
         eventNode.addListener(OldCombatModule.PlayerAttackEvent::class.java) { event ->
@@ -104,24 +88,20 @@ class TeamModule(
         }
         eventNode.addListener(PlayerLeaveGameEvent::class.java) { event ->
             // Remove the player from their scoreboard team when they leave
-            event.player.team?.removeMember(event.player.username)
+            getTeam(event.player)?.removePlayer(event.player)
         }
     }
 
     override fun deinitialize() {
         // Remove all scoreboard teams when the game ends
-        teams.forEach { team ->
-            if (team.hasScoreboardTeam()) {
-                MinecraftServer.getTeamManager().deleteTeam(team.scoreboardTeam)
-            }
-        }
+        teams.forEach(Team::unregister)
     }
 
     /**
      * Converts a team number into a color.
      * An easy way to name a team.
      */
-    fun teamNumToName(num: Int): Component {
+    private fun teamNumToName(num: Int): Component {
         return when (num) {
             0 -> Component.text("Red", NamedTextColor.RED)
             1 -> Component.text("Blue", NamedTextColor.BLUE)
@@ -183,20 +163,60 @@ class TeamModule(
         val players: MutableList<Player> = mutableListOf(),
         val allowFriendlyFire: Boolean = false
     ) : PacketGroupingAudience {
-        lateinit var scoreboardTeam: net.minestom.server.scoreboard.Team
+        val uuid = UUID.randomUUID()
 
-        fun hasScoreboardTeam() = ::scoreboardTeam.isInitialized
+        private lateinit var scoreboardTeam: net.minestom.server.scoreboard.Team
 
         override fun getPlayers(): MutableCollection<Player> = players
 
         fun addPlayer(player: Player) {
             players.add(player)
-            scoreboardTeam.addMember(player.username)
+            if (::scoreboardTeam.isInitialized)
+                scoreboardTeam.addMember(player.username)
+        }
+
+        fun removePlayer(player: Player) {
+            players.remove(player)
+            if (::scoreboardTeam.isInitialized)
+                scoreboardTeam.removeMember(player.username)
         }
 
         override fun toString(): String =
             PlainTextComponentSerializer.plainText().serialize(name) + players.joinToString(
                 prefix = "[", postfix = "]"
             ) { it.username }
+
+        /**
+         * Create a scoreboard team and register it with the Minestom server.
+         */
+        fun register() {
+            val builder = MinecraftServer.getTeamManager()
+                .createBuilder(uuid.toString())
+                .teamDisplayName(name)
+                .prefix(Component.text(
+                    name.toPlainText().first() + " ", // The first letter of the team's name
+                    name.color() ?: NamedTextColor.WHITE, // The team name's text color
+                    TextDecoration.BOLD
+                ))
+                .teamColor(NamedTextColor.nearestTo(
+                    name.color() ?: NamedTextColor.WHITE
+                )) // Used for coloring player usernames
+            // Allow friendly fire if necessary
+            if (allowFriendlyFire) builder.allowFriendlyFire()
+            scoreboardTeam = builder.build() // Register the team
+            players.forEach { player ->
+                // Add members to the team
+                scoreboardTeam.addMember(player.username)
+            }
+        }
+
+        /**
+         * Removes the scoreboard team from the Minestom server, if it was previously initialized.
+         */
+        fun unregister() {
+            if (::scoreboardTeam.isInitialized) {
+                MinecraftServer.getTeamManager().deleteTeam(scoreboardTeam)
+            }
+        }
     }
 }

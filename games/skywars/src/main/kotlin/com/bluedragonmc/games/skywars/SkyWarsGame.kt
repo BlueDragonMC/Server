@@ -1,6 +1,7 @@
 package com.bluedragonmc.games.skywars
 
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.event.TeamAssignedEvent
 import com.bluedragonmc.server.module.GuiModule
 import com.bluedragonmc.server.module.combat.CustomDeathMessageModule
 import com.bluedragonmc.server.module.combat.OldCombatModule
@@ -59,14 +60,7 @@ class SkyWarsGame(mapName: String) : Game("SkyWars", mapName) {
         use(PlayerResetModule(defaultGameMode = GameMode.SURVIVAL))
         use(TeamModule(autoTeams = true,
             autoTeamMode = TeamModule.AutoTeamMode.PLAYER_COUNT,
-            autoTeamCount = 1,
-            teamsAutoAssignedCallback = {
-                val spawnpointProvider = getModule<SpawnpointModule>().spawnpointProvider
-                players.forEach {
-                    it.respawnPoint = spawnpointProvider.getSpawnpoint(it)
-                    it.teleport(it.respawnPoint)
-                }
-            }))
+            autoTeamCount = 1))
         use(SpawnpointModule(SpawnpointModule.TeamDatabaseSpawnpointProvider(allowRandomOrder = true)))
         use(FallDamageModule)
         use(InventoryPermissionsModule(allowDropItem = true, allowMoveItem = true))
@@ -75,6 +69,12 @@ class SkyWarsGame(mapName: String) : Game("SkyWars", mapName) {
         use(GuiModule())
 
         use(StatisticsModule())
+        
+        handleEvent<TeamAssignedEvent> { event ->
+            val spawnpointProvider = getModule<SpawnpointModule>().spawnpointProvider
+            event.player.respawnPoint = spawnpointProvider.getSpawnpoint(event.player)
+            event.player.teleport(event.player.respawnPoint)
+        }
 
         ready()
     }
