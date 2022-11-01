@@ -212,3 +212,14 @@ shop:
     amount: 1
     price: 10
     currency: minecraft:gold_ingot
+upgrades:
+  - row: 1
+    column: 1
+    price: 7
+    currency: minecraft:diamond
+    upgrade: com.bluedragonmc.games.bedwars.upgrades.FastFeetTeamUpgrade
+  - row: 1
+    column: 2
+    price: 5
+    currency: minecraft:diamond
+    upgrade: com.bluedragonmc.games.bedwars.upgrades.MiningMalarkeyTeamUpgrade

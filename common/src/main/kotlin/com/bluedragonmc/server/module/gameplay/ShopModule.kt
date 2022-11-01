@@ -4,15 +4,12 @@ import com.bluedragonmc.server.ALT_COLOR_1
 import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.GuiModule
-import com.bluedragonmc.server.module.minigame.TeamModule
-import com.bluedragonmc.server.utils.displayName
-import com.bluedragonmc.server.utils.noItalic
-import com.bluedragonmc.server.utils.plus
-import com.bluedragonmc.server.utils.splitAndFormatLore
+import com.bluedragonmc.server.utils.*
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
+import net.minestom.server.event.EventFilter
 import net.minestom.server.event.EventNode
 import net.minestom.server.inventory.InventoryType
 import net.minestom.server.inventory.TransactionOption
@@ -20,12 +17,18 @@ import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 
 class ShopModule : GuiModule() {
-    override fun initialize(parent: Game, eventNode: EventNode<Event>) {}
+
+    private lateinit var parent: Game
+
+    override fun initialize(parent: Game, eventNode: EventNode<Event>) {
+        this.parent = parent
+    }
 
     fun createShop(title: Component, shopItemsBuilder: ShopItemsBuilder.() -> Unit): Shop {
         val menu = createMenu(title, InventoryType.CHEST_6_ROW, true) {
-            shopItemsBuilder(ShopItemsBuilder(this))
+            shopItemsBuilder(ShopItemsBuilder(this@ShopModule, this@createMenu))
         }
+        menu.onOpened { player -> menu.rerender(player) }
         return Shop(menu)
     }
 
@@ -34,9 +37,9 @@ class ShopModule : GuiModule() {
         fun close(player: Player) = menu.close(player)
     }
 
-    class ShopItemsBuilder(private val itemsBuilder: ItemsBuilder) {
+    class ShopItemsBuilder(private val module: ShopModule, private val itemsBuilder: ItemsBuilder) {
 
-        fun teamUpgrade(row: Int, column: Int, price: Int, currency: Material, virtualItem: TeamUpgrade) =
+        fun teamUpgrade(row: Int, column: Int, price: Int, currency: Material, virtualItem: VirtualItem) =
             item(row, column, ItemStack.of(virtualItem.displayItem), price, currency, virtualItem)
 
         fun item(row: Int, column: Int, material: Material, price: Int, currency: Material) =
@@ -75,12 +78,20 @@ class ShopModule : GuiModule() {
                             ItemStack.of(currency, price), TransactionOption.DRY_RUN
                         )
                     ) Component.translatable("module.shop.click_to_purchase", NamedTextColor.GREEN).noItalic()
-                    else Component.translatable("module.shop.not_enough_currency", NamedTextColor.RED, currency.displayName()).noItalic()
+                    else Component.translatable(
+                        "module.shop.not_enough_currency",
+                        NamedTextColor.RED,
+                        currency.displayName()
+                    ).noItalic()
                 )
 
-                if (virtualItem != null && virtualItem is TeamUpgrade) {
+                if (virtualItem != null) {
                     // Display team upgrade descriptions if applicable
                     lore(splitAndFormatLore(virtualItem.description, ALT_COLOR_1, player) + info)
+
+                    if (virtualItem.eventNode.parent == null) {
+                        module.eventNode.addChild(virtualItem.eventNode)
+                    }
                 } else lore(info)
 
                 meta { metaBuilder ->
@@ -126,25 +137,31 @@ class ShopModule : GuiModule() {
         }
     }
 
-    open class VirtualItem(val name: Component, val obtainedCallback: (Player, VirtualItem) -> Unit) {
+    /**
+     * Represents a non-tangible item that players can own which has
+     * some metadata, like a name and description. Each VirtualItem
+     * has its own filtered event node, which means VirtualItem
+     * instances SHOULD NOT BE CACHED between Game instances.
+     * This would cause unexpected behavior. It is intended to use the same
+     * VirtualItem for multiple players across the same game, though.
+     */
+    open class VirtualItem(
+        val name: Component,
+        val description: Component = Component.empty(),
+        val displayItem: Material = Material.AIR,
+        val obtainedCallback: (Player, VirtualItem) -> Unit,
+    ) {
         open fun isOwnedBy(player: Player) = (player as CustomPlayer).virtualItems.contains(this)
-    }
 
-    class TeamUpgrade(
-        name: Component,
-        val description: Component,
-        val displayItem: Material,
-        val baseObtainedCallback: (Player, VirtualItem) -> Unit,
-    ) : VirtualItem(name, { player, item ->
-        val team = Game.findGame(player)?.getModule<TeamModule>()?.getTeam(player)
-        team?.players?.forEach {
-            baseObtainedCallback(it, item)
-            (it as CustomPlayer).virtualItems.add(item)
-        }
-        team?.sendMessage(
-            Component.translatable("module.shop.team_upgrade.purchased", NamedTextColor.GREEN,
-                player.name, name
-            )
-        )
-    })
+        /**
+         * An event node that filters for players which own the item.
+         * If this VirtualItem is part of a shop managed by the [ShopModule],
+         * this node will automatically be registered when the item is added
+         * to any shop.
+         */
+        val eventNode =
+            EventNode.event("virtualitem-${name.toPlainText()}-owners", EventFilter.PLAYER) {
+                    event -> isOwnedBy(event.player)
+            }
+    }
 }

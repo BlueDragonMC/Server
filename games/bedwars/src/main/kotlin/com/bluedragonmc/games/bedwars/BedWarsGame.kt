@@ -1,6 +1,9 @@
 package com.bluedragonmc.games.bedwars
 
 import com.bluedragonmc.games.bedwars.module.ItemGeneratorsModule
+import com.bluedragonmc.games.bedwars.upgrades.FastFeetTeamUpgrade
+import com.bluedragonmc.games.bedwars.upgrades.MiningMalarkeyTeamUpgrade
+import com.bluedragonmc.games.bedwars.upgrades.TeamUpgrade
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.Game
@@ -32,9 +35,6 @@ import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.NamedTextColor.RED
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.title.Title
-import net.minestom.server.attribute.Attribute
-import net.minestom.server.attribute.AttributeModifier
-import net.minestom.server.attribute.AttributeOperation
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.EntityType
 import net.minestom.server.entity.GameMode
@@ -46,8 +46,6 @@ import net.minestom.server.instance.block.Block
 import net.minestom.server.instance.block.BlockFace
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
-import net.minestom.server.potion.Potion
-import net.minestom.server.potion.PotionEffect
 import net.minestom.server.sound.SoundEvent
 import org.spongepowered.configurate.ConfigurationNode
 import org.spongepowered.configurate.kotlin.extensions.get
@@ -200,13 +198,6 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
             event.player.inventory.chestplate = ItemStack.of(Material.LEATHER_CHESTPLATE)
             event.player.inventory.leggings = ItemStack.of(Material.LEATHER_LEGGINGS)
             event.player.inventory.setItemStack(0, ItemStack.of(Material.WOODEN_SWORD))
-
-            // Re-add team upgrades every time the player respawns
-            // because status effects and other modifications are cleared on death
-            (event.player as CustomPlayer).virtualItems.filterIsInstance<ShopModule.TeamUpgrade>()
-                .forEach { upgrade ->
-                    upgrade.baseObtainedCallback(event.player, upgrade)
-                }
         }
 
         handleEvent<WorldPermissionsModule.PreventPlayerBreakMapEvent> { event ->
@@ -279,45 +270,33 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
         }
     }
 
-    private val teamToWoolBlock = mapOf(
-        RED to Block.RED_WOOL,
-        NamedTextColor.BLUE to Block.BLUE_WOOL,
-        NamedTextColor.GREEN to Block.GREEN_WOOL,
-        NamedTextColor.AQUA to Block.CYAN_WOOL,
-        NamedTextColor.LIGHT_PURPLE to Block.PINK_WOOL,
-        NamedTextColor.WHITE to Block.WHITE_WOOL,
-        NamedTextColor.GRAY to Block.GRAY_WOOL,
-        NamedTextColor.YELLOW to Block.YELLOW_WOOL,
-        NamedTextColor.GOLD to Block.ORANGE_WOOL,
-        NamedTextColor.DARK_PURPLE to Block.PURPLE_WOOL
-    )
-
-    // There's no way we're keeping these names
-    private val speedModifier = AttributeModifier("bluedragon:fastfeet", 0.4f, AttributeOperation.MULTIPLY_BASE)
-    private val fastFeet = ShopModule.TeamUpgrade(
-        translatable("game.bedwars.upgrade.fast_feet.name"),
-        translatable("game.bedwars.upgrade.fast_feet.desc"),
-        Material.IRON_BOOTS
-    ) { player, _ ->
-        player.getAttribute(Attribute.MOVEMENT_SPEED)
-            .addModifier(speedModifier)
-    }
-
-    private val miningMalarkey = ShopModule.TeamUpgrade(
-        translatable("game.bedwars.upgrade.mining_malarkey.name"),
-        translatable("game.bedwars.upgrade.mining_malarkey.desc"),
-        Material.IRON_PICKAXE
-    ) { player, _ -> player.addEffect(Potion(PotionEffect.HASTE, 1, Integer.MAX_VALUE, Potion.ICON_FLAG)) }
-
-    private val upgrades by lazy {
-        getModule<ShopModule>().createShop(translatable("game.bedwars.menu.upgrades.title")) {
-            teamUpgrade(1, 1, 7, Material.DIAMOND, fastFeet)
-            teamUpgrade(1, 2, 5, Material.DIAMOND, miningMalarkey)
-        }
-    }
-
     private fun openShop(player: Player) {
         if (player.gameMode != GameMode.SPECTATOR) shop.open(player)
+    }
+
+    private val teamUpgrades = mutableMapOf<String, ShopModule.VirtualItem>()
+
+    private fun registerUpgrades() {
+        registerTeamUpgrade(FastFeetTeamUpgrade())
+        registerTeamUpgrade(MiningMalarkeyTeamUpgrade())
+    }
+
+    private fun registerTeamUpgrade(upgrade: TeamUpgrade) {
+        teamUpgrades[upgrade::class.qualifiedName!!] = upgrade.virtualItem
+    }
+
+    private val upgrades by lazy {
+        registerUpgrades()
+        getModule<ShopModule>().createShop(translatable("game.bedwars.menu.upgrades.title")) {
+            val config = getModule<ConfigModule>().getConfig()
+            for (upgrade in config.node("upgrades").childrenList()) {
+                val row = upgrade.node("row").int
+                val col = upgrade.node("column").int
+                val price = upgrade.node("price").int
+                val currency = upgrade.node("currency").get<Material>()!!
+                teamUpgrade(row, col, price, currency, teamUpgrades[upgrade.node("upgrade").string]!!)
+            }
+        }
     }
 
     private fun openUpgradesMenu(player: Player) {
@@ -326,15 +305,28 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
 
     private val bedBlockToTeam = mapOf(
         Material.RED_BED to RED,
-        Material.BLUE_BED to NamedTextColor.BLUE,
-        Material.GREEN_BED to NamedTextColor.GREEN,
-        Material.CYAN_BED to NamedTextColor.AQUA,
-        Material.PINK_BED to NamedTextColor.LIGHT_PURPLE,
-        Material.WHITE_BED to NamedTextColor.WHITE,
-        Material.GRAY_BED to NamedTextColor.GRAY,
-        Material.YELLOW_BED to NamedTextColor.YELLOW,
-        Material.ORANGE_BED to NamedTextColor.GOLD,
-        Material.PURPLE_BED to NamedTextColor.DARK_PURPLE,
+        Material.BLUE_BED to BLUE,
+        Material.GREEN_BED to GREEN,
+        Material.CYAN_BED to AQUA,
+        Material.PINK_BED to LIGHT_PURPLE,
+        Material.WHITE_BED to WHITE,
+        Material.GRAY_BED to GRAY,
+        Material.YELLOW_BED to YELLOW,
+        Material.ORANGE_BED to GOLD,
+        Material.PURPLE_BED to DARK_PURPLE,
+    )
+
+    private val teamToWoolBlock = mapOf(
+        RED to Block.RED_WOOL,
+        BLUE to Block.BLUE_WOOL,
+        GREEN to Block.GREEN_WOOL,
+        AQUA to Block.CYAN_WOOL,
+        LIGHT_PURPLE to Block.PINK_WOOL,
+        WHITE to Block.WHITE_WOOL,
+        GRAY to Block.GRAY_WOOL,
+        YELLOW to Block.YELLOW_WOOL,
+        GOLD to Block.ORANGE_WOOL,
+        DARK_PURPLE to Block.PURPLE_WOOL
     )
 
     private fun bedBlockToTeam(bed: Block): TeamModule.Team? {

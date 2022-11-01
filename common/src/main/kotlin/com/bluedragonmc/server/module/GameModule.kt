@@ -11,7 +11,7 @@ abstract class GameModule {
 
     open val eventPriority = 0
 
-    var eventNode: EventNode<Event>? = null
+    lateinit var eventNode: EventNode<Event>
 
     abstract fun initialize(parent: Game, eventNode: EventNode<Event>)
     open fun deinitialize() {}
