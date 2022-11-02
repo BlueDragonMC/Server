@@ -1,7 +1,7 @@
-package com.bluedragonmc.server.module
+package com.bluedragonmc.testing.module
 
 import com.bluedragonmc.server.module.minigame.TeamModule
-import com.bluedragonmc.server.util.TestUtils
+import com.bluedragonmc.testing.utils.TestUtils
 import net.kyori.adventure.text.TranslatableComponent
 import net.minestom.server.api.Env
 import net.minestom.server.api.EnvTest

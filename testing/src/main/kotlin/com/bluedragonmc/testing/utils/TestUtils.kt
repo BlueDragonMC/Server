@@ -1,4 +1,4 @@
-package com.bluedragonmc.server.util
+package com.bluedragonmc.testing.utils
 
 import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.Game

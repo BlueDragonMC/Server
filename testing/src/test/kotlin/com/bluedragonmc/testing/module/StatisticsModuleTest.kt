@@ -1,9 +1,9 @@
-package com.bluedragonmc.server.module
+package com.bluedragonmc.testing.module
 
 import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.module.database.DatabaseModule
 import com.bluedragonmc.server.module.database.StatisticsModule
-import com.bluedragonmc.server.util.TestUtils
+import com.bluedragonmc.testing.utils.TestUtils
 import io.mockk.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi

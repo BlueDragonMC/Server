@@ -1,7 +1,7 @@
-package com.bluedragonmc.server.module
+package com.bluedragonmc.testing.module
 
 import com.bluedragonmc.server.module.minigame.VoidDeathModule
-import com.bluedragonmc.server.util.TestUtils
+import com.bluedragonmc.testing.utils.TestUtils
 import io.mockk.spyk
 import io.mockk.unmockkAll
 import io.mockk.verify
