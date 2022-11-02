@@ -142,10 +142,8 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
         logger.debug("Unregistering module $module")
         module.deinitialize()
         modules.remove(module)
-        if (module.eventNode != null) {
-            val node = module.eventNode!!
-            node.parent?.removeChild(node)
-        }
+        val node = module.eventNode
+        node.parent?.removeChild(node)
     }
 
     private var playerHasJoined = false

@@ -4,6 +4,7 @@ plugins {
     id("server.common-conventions")
     id("com.github.johnrengelman.shadow") version "7.1.0"
     kotlin("plugin.serialization") version "1.6.21"
+    id("net.kyori.blossom") version "1.3.1"
 }
 
 group = "com.bluedragonmc"
@@ -50,6 +51,29 @@ dependencies {
     implementation(project(":games:skywars"))
     implementation(project(":games:teamdeathmatch"))
     implementation(project(":games:wackymaze"))
+}
+
+blossom {
+    val gitCommit = getOutputOf("git rev-parse --verify --short HEAD")
+    val gitBranch = getOutputOf("git rev-parse --abbrev-ref HEAD")
+    val gitCommitDate = getOutputOf("git log -1 --format=%ct")
+
+    replaceToken("\"%%GIT_COMMIT%%\"", if (gitCommit == null) "null" else "\"${gitCommit}\"")
+    replaceToken("\"%%GIT_BRANCH%%\"", if (gitBranch == null) "null" else "\"${gitBranch}\"")
+    replaceToken("\"%%GIT_COMMIT_DATE%%\"", if (gitCommitDate == null) "null" else "\"${gitCommitDate}\"")
+}
+
+fun getOutputOf(command: String): String? {
+    try {
+        val stream = org.apache.commons.io.output.ByteArrayOutputStream()
+        project.exec {
+            commandLine = command.split(" ")
+            standardOutput = stream
+        }
+        return String(stream.toByteArray()).trim()
+    } catch (e: Throwable) {
+        return null
+    }
 }
 
 tasks.test {

@@ -14,6 +14,7 @@ import net.minestom.server.MinecraftServer
 import net.minestom.server.utils.NamespaceID
 import net.minestom.server.world.DimensionType
 import org.slf4j.LoggerFactory
+import java.text.DateFormat
 import kotlin.system.measureTimeMillis
 
 lateinit var lobby: Game
@@ -21,6 +22,14 @@ fun isLobbyInitialized() = ::lobby.isInitialized
 private val logger = LoggerFactory.getLogger("ServerKt")
 
 fun main() {
+    val commitDate = GitVersionInfo.commitDate
+    if (commitDate != null) {
+        val str = DateFormat.getDateInstance().format(commitDate)
+        logger.info("Starting server version ${GitVersionInfo.BRANCH}/${GitVersionInfo.COMMIT} ($str)")
+    } else {
+        logger.info("Starting server version ${GitVersionInfo.BRANCH}/${GitVersionInfo.COMMIT}")
+    }
+
     val time = measureTimeMillis(::start)
     logger.info("Game server started in ${time}ms.")
 }

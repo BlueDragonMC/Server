@@ -10,6 +10,7 @@ import com.bluedragonmc.games.skyfall.SkyfallGame
 import com.bluedragonmc.games.skywars.SkyWarsGame
 import com.bluedragonmc.games.wackymaze.WackyMazeGame
 import com.bluedragonmc.server.Environment
+import com.bluedragonmc.server.GitVersionInfo
 import com.bluedragonmc.server.api.Queue
 import com.bluedragonmc.server.bootstrap.prod.AgonesIntegration
 import java.io.File
@@ -36,6 +37,7 @@ class DevelopmentEnvironment : Environment() {
     override val messagingDisabled: Boolean = true
     override val mongoHostname: String = "localhost"
     override val gameClasses = games.keys
+    override val versionInfo = GitVersionInfo
     override suspend fun getContainerId(): UUID = UUID.randomUUID()
 }
 
@@ -44,6 +46,7 @@ class ProductionEnvironment : Environment() {
     override val messagingDisabled: Boolean = false
     override val mongoHostname: String = "mongo"
     override val gameClasses = games.keys
+    override val versionInfo = GitVersionInfo
     override suspend fun getContainerId(): UUID {
         return UUID.fromString(System.getenv("PUFFIN_CONTAINER_ID")
             ?: AgonesIntegration.sdk.getGameServer().objectMeta.uid)
@@ -56,6 +59,7 @@ class LocalTestingEnvironment : Environment() {
     override val messagingDisabled: Boolean = true
     override val mongoHostname: String = "localhost"
     override val gameClasses = games.keys
+    override val versionInfo = GitVersionInfo
     override val dbName: String = "TESTENV"
 
     override suspend fun getContainerId() = UUID(0L, 0L)
