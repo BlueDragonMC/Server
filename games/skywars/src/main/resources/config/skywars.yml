@@ -50,6 +50,7 @@ loot:
     quantity: 1
   - material: minecraft:bow
     chance: 0.2
+    quantity: 1
   - material: minecraft:arrow
     chance: 0.2
     quantity: 15
@@ -107,9 +108,10 @@ loot:
     quantity: 1
   - item:
       material: minecraft:bow
-      chance: 0.1
       enchants:
         - minecraft:power: 1
+    chance: 0.1
+    quantity: 1
   - material: minecraft:arrow
     chance: 0.2
     quantity: 32

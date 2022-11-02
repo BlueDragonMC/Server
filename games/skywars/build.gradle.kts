@@ -11,6 +11,7 @@ repositories {
 }
 
 dependencies {
+    testImplementation(project(":testing"))
     implementation(project(":common"))
     implementation(libs.minestom)
     implementation(libs.bundles.configurate)
