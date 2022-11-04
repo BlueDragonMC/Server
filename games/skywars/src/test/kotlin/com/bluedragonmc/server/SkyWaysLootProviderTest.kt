@@ -8,7 +8,6 @@ import com.bluedragonmc.server.module.vanilla.ChestModule
 import com.bluedragonmc.testing.utils.TestUtils
 import net.minestom.server.api.Env
 import net.minestom.server.api.EnvTest
-import net.minestom.server.event.EventNode
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 
@@ -17,18 +16,12 @@ class SkyWaysLootProviderTest {
 
     @Test
     fun skyWarsLootProvider(env: Env) {
-        val game = TestUtils.emptyGame(env)
+        val configModule = ConfigModule("skywars.yml")
+        val game = TestUtils.emptyGame(env, configModule, GuiModule(), ChestModule())
 
-        val config = ConfigModule("skywars.yml").apply {
-            initialize(game, EventNode.all("stub"))
-        }.getConfig()
-        val provider = SkyWarsGame.NormalSkyWarsLootProvider(config, game)
+        val provider = SkyWarsGame.NormalSkyWarsLootProvider(configModule.getConfig(), game)
 
-        game.useModules(listOf(
-            GuiModule(),
-            ChestModule(),
-            ChestLootModule(provider)
-        ))
+        game.use(ChestLootModule(provider))
 
         assertDoesNotThrow("Error gathering spawn loot") {
             provider.getSpawnLoot()
