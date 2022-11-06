@@ -36,20 +36,22 @@ class DevelopmentEnvironment : Environment() {
     override val queue: Queue = TestQueue()
     override val messagingDisabled: Boolean = true
     override val mongoHostname: String = "localhost"
+    override val puffinHostname: String = "localhost"
     override val gameClasses = games.keys
     override val versionInfo = GitVersionInfo
-    override suspend fun getContainerId(): UUID = UUID.randomUUID()
+    override suspend fun getServerName(): String = "Dev-" + UUID.randomUUID().toString().take(5)
 }
 
 class ProductionEnvironment : Environment() {
     override val queue: Queue = IPCQueue
     override val messagingDisabled: Boolean = false
     override val mongoHostname: String = "mongo"
+    override val puffinHostname: String = "puffin.default.svc"
     override val gameClasses = games.keys
     override val versionInfo = GitVersionInfo
-    override suspend fun getContainerId(): UUID {
-        return UUID.fromString(System.getenv("PUFFIN_CONTAINER_ID")
-            ?: AgonesIntegration.sdk.getGameServer().objectMeta.uid)
+    override suspend fun getServerName(): String {
+        return System.getenv("PUFFIN_CONTAINER_ID")
+            ?: AgonesIntegration.sdk.getGameServer().objectMeta.uid
     }
 }
 
@@ -58,10 +60,11 @@ class LocalTestingEnvironment : Environment() {
         get() = error("Testing environment has no default Queue.")
     override val messagingDisabled: Boolean = true
     override val mongoHostname: String = "localhost"
+    override val puffinHostname: String = "localhost"
     override val gameClasses = games.keys
     override val versionInfo = GitVersionInfo
     override val dbName: String = "TESTENV"
 
-    override suspend fun getContainerId() = UUID(0L, 0L)
+    override suspend fun getServerName() = UUID(0L, 0L).toString()
 
 }

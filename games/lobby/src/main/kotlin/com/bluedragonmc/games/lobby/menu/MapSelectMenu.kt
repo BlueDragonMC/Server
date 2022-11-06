@@ -1,7 +1,8 @@
 package com.bluedragonmc.games.lobby.menu
 
+import com.bluedragonmc.api.grpc.CommonTypes.GameType.GameTypeFieldSelector
+import com.bluedragonmc.api.grpc.gameType
 import com.bluedragonmc.games.lobby.Lobby
-import com.bluedragonmc.messages.GameType
 import com.bluedragonmc.server.ALT_COLOR_1
 import com.bluedragonmc.server.Environment
 import com.bluedragonmc.server.module.GuiModule
@@ -23,7 +24,12 @@ class MapSelectMenu(private val gameName: String, private val parent: Lobby) : L
                 slot(index, Material.FILLED_MAP, {
                     displayName(Component.text(mapName, ALT_COLOR_1).noItalic())
                 }) {
-                    Environment.current.queue.queue(player, GameType(gameName, null, mapName))
+                    Environment.current.queue.queue(player, gameType {
+                        name = gameName
+                        this.mapName = mapName
+                        selectors += GameTypeFieldSelector.GAME_NAME
+                        selectors += GameTypeFieldSelector.MAP_NAME
+                    })
                     menu.close(player)
                 }
             }

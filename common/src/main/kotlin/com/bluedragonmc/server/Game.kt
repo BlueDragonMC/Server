@@ -1,6 +1,9 @@
 package com.bluedragonmc.server
 
-import com.bluedragonmc.messages.GameType
+import com.bluedragonmc.api.grpc.CommonTypes
+import com.bluedragonmc.api.grpc.CommonTypes.GameType.GameTypeFieldSelector
+import com.bluedragonmc.api.grpc.gameState
+import com.bluedragonmc.api.grpc.gameType
 import com.bluedragonmc.server.event.DataLoadedEvent
 import com.bluedragonmc.server.event.GameEvent
 import com.bluedragonmc.server.event.GameStateChangedEvent
@@ -42,6 +45,22 @@ import kotlin.concurrent.timer
 import kotlin.reflect.jvm.jvmName
 
 open class Game(val name: String, val mapName: String, val mode: String? = null) : ModuleHolder(), PacketGroupingAudience {
+
+    val gameType: CommonTypes.GameType
+        get() = gameType {
+            name = this@Game.name
+            mapName = this@Game.mapName
+            if (this@Game.mode != null) {
+                mode = this@Game.mode
+            }
+        }
+
+    val rpcGameState: CommonTypes.GameState
+        get() = gameState {
+            gameState = state.mapToRpcState()
+            openSlots = maxPlayers - players.size
+            joinable = state.canPlayersJoin
+        }
 
     internal val players = mutableListOf<Player>()
 
@@ -237,7 +256,10 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
         if (queueAllPlayers) {
             players.forEach {
                 it.sendMessage(Component.translatable("game.status.ending", NamedTextColor.GREEN))
-                Environment.current.queue.queue(it, GameType(name, null, null))
+                Environment.current.queue.queue(it, gameType {
+                    name = this@Game.name
+                    selectors += GameTypeFieldSelector.GAME_NAME
+                })
             }
         }
     }

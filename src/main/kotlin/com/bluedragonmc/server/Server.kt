@@ -6,7 +6,6 @@ import com.bluedragonmc.server.bootstrap.dev.DevInstanceRouter
 import com.bluedragonmc.server.bootstrap.dev.MojangAuthentication
 import com.bluedragonmc.server.bootstrap.dev.OpenToLAN
 import com.bluedragonmc.server.bootstrap.prod.AgonesIntegration
-import com.bluedragonmc.server.bootstrap.prod.CustomExceptionHandler
 import com.bluedragonmc.server.bootstrap.prod.InitialInstanceRouter
 import com.bluedragonmc.server.bootstrap.prod.VelocityForwarding
 import com.bluedragonmc.server.queue.createEnvironment
@@ -44,7 +43,6 @@ fun start() {
 
     val services = listOf(
         Commands,
-        CustomExceptionHandler,
         CustomPlayerProvider,
         DevInstanceRouter,
         GlobalBlockHandlers,

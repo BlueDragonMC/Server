@@ -1,8 +1,9 @@
 package com.bluedragonmc.games.lobby.menu
 
+import com.bluedragonmc.api.grpc.CommonTypes.GameType.GameTypeFieldSelector
+import com.bluedragonmc.api.grpc.gameType
 import com.bluedragonmc.games.lobby.GameEntry
 import com.bluedragonmc.games.lobby.Lobby
-import com.bluedragonmc.messages.GameType
 import com.bluedragonmc.server.ALT_COLOR_1
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.CustomPlayer
@@ -33,7 +34,10 @@ class GameMenu(private val config: GameEntry, private val parent: Lobby) : Lobby
             slot(pos(3, 4), Material.MAP, {
                 displayName(Component.translatable("lobby.menu.game.quick_join", BRAND_COLOR_PRIMARY_2).noItalic())
             }) {
-                Environment.current.queue.queue(player, GameType(config.game, null, null))
+                Environment.current.queue.queue(player, gameType {
+                    name = config.game
+                    selectors += GameTypeFieldSelector.GAME_NAME
+                })
                 menu.close(player)
             }
 

@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.queue
 
-import com.bluedragonmc.messages.GameType
+import com.bluedragonmc.api.grpc.CommonTypes
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.api.Queue
 import com.bluedragonmc.server.lobby
@@ -18,10 +18,10 @@ import kotlin.random.Random
 
 /**
  * A temporary queue system that exists only on the current Minestom server.
- * This is not a fully fledged queue system, but it will work fine for now.
+ * This is useful for development environments without an external queue service.
  */
 class TestQueue : Queue() {
-    private val queuedPlayers: Cache<Player, GameType> = Caffeine.newBuilder()
+    private val queuedPlayers: Cache<Player, CommonTypes.GameType> = Caffeine.newBuilder()
         .expireAfterWrite(Duration.ofSeconds(30))
         .build()
 
@@ -33,7 +33,7 @@ class TestQueue : Queue() {
      * @param gameFilter Used to find existing games to add the player to.
      * @param idealGame If no games already exist, start a new one of this type. If this is null, the queue will not start a new game.
      */
-    override fun queue(player: Player, gameType: GameType) {
+    override fun queue(player: Player, gameType: CommonTypes.GameType) {
         if (gameType.name == "Lobby" && gameType.mapName == null && gameType.mode == null) {
             lobby.addPlayer(player)
             return
