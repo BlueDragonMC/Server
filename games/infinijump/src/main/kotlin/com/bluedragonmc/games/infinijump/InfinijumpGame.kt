@@ -1,7 +1,8 @@
 package com.bluedragonmc.games.infinijump
 
+import com.bluedragonmc.api.grpc.CommonTypes.GameType.GameTypeFieldSelector
+import com.bluedragonmc.api.grpc.gameType
 import com.bluedragonmc.games.infinijump.block.*
-import com.bluedragonmc.messages.GameType
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.Environment
@@ -185,7 +186,10 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
             MinecraftServer.getSchedulerManager().buildTask {
                 if (getInstanceOrNull() != null) {
                     ArrayList(players).forEach { p ->
-                        Environment.current.queue.queue(p, GameType("Lobby", null, null))
+                        Environment.current.queue.queue(p, gameType {
+                            name = "Lobby"
+                            selectors += GameTypeFieldSelector.GAME_NAME
+                        })
                     }
                 }
             }.delay(Duration.ofSeconds(20)).repeat(Duration.ofSeconds(10)).schedule()
@@ -209,7 +213,10 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
                     game.addPlayer(event.player)
                 }
                 event.itemStack.hasTag(LOBBY_ITEM_TAG) -> {
-                    Environment.current.queue.queue(event.player, GameType("Lobby", null, null))
+                    Environment.current.queue.queue(event.player, gameType {
+                        name = "Lobby"
+                        selectors += GameTypeFieldSelector.GAME_NAME
+                    })
                 }
             }
         }

@@ -1,8 +1,7 @@
 package com.bluedragonmc.server.command
 
-import com.bluedragonmc.messages.ChatType
-import com.bluedragonmc.messages.QueryPlayerMessage
-import com.bluedragonmc.messages.SendChatMessage
+import com.bluedragonmc.api.grpc.GsClient
+import com.bluedragonmc.api.grpc.playerQueryRequest
 import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.module.database.DatabaseModule
 import com.bluedragonmc.server.module.messaging.MessagingModule
@@ -12,6 +11,7 @@ import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.MinecraftServer
 import net.minestom.server.entity.Player
+import java.util.*
 
 class MessageCommand(name: String, vararg aliases: String) : BlueDragonCommand(name, aliases, block = {
 
@@ -32,19 +32,21 @@ class MessageCommand(name: String, vararg aliases: String) : BlueDragonCommand(n
             player.sendMessage(receiverMessage)
         } else {
             runBlocking {
-                val response = MessagingModule.send(QueryPlayerMessage(playerName, null))
-                        as QueryPlayerMessage.Response
-                if (!response.found) {
+                val response = MessagingModule.Stubs.playerTrackerStub.queryPlayer(playerQueryRequest {
+                    username = playerName
+                })
+                if (!response.isOnline) {
                     sender.sendMessage(formatMessageTranslated("command.msg.fail", playerName))
                     return@runBlocking
                 }
-                val color = DatabaseModule.getNameColor(response.uuid!!) ?: NamedTextColor.GRAY
+                val color = DatabaseModule.getNameColor(UUID.fromString(response.uuid!!)) ?: NamedTextColor.GRAY
                 val senderMessage = formatMessageTranslated("command.msg.sent", Component.text(playerName, color), message)
                 val receiverMessage = formatMessageTranslated("command.msg.received", senderName, message)
                 sender.sendMessage(senderMessage)
-                MessagingModule.publish(SendChatMessage(
-                    response.uuid!!, miniMessage.serialize(receiverMessage), ChatType.CHAT
-                ))
+//                MessagingModule.publish(SendChatMessage(
+//                    response.uuid!!, miniMessage.serialize(receiverMessage), GsClient.SendChatRequest.ChatType.CHAT
+//                ))
+                // TODO
             }
         }
     }

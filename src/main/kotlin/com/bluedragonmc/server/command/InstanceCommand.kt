@@ -1,12 +1,14 @@
 package com.bluedragonmc.server.command
 
-import com.bluedragonmc.messages.NotifyInstanceRemovedMessage
+import com.bluedragonmc.api.grpc.instanceRemovedRequest
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.module.database.DatabaseModule
 import com.bluedragonmc.server.module.messaging.MessagingModule
 import com.bluedragonmc.server.utils.buildComponent
 import com.bluedragonmc.server.utils.clickEvent
 import com.bluedragonmc.server.utils.hoverEventTranslatable
 import com.bluedragonmc.server.utils.surroundWithSeparators
+import kotlinx.coroutines.launch
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.event.ClickEvent
 import net.kyori.adventure.text.format.NamedTextColor
@@ -91,7 +93,12 @@ class InstanceCommand(name: String, usageString: String, vararg aliases: String?
                 return@syntax
             }
             MinecraftServer.getInstanceManager().unregisterInstance(instance)
-            MessagingModule.publish(NotifyInstanceRemovedMessage(MessagingModule.containerId, instance.uniqueId))
+            DatabaseModule.IO.launch {
+                MessagingModule.Stubs.instanceSvcStub.removeInstance(instanceRemovedRequest {
+                    serverName = MessagingModule.serverName
+                    instanceUuid = instance.uniqueId.toString()
+                })
+            }
             player.sendMessage(formatMessageTranslated("command.instance.remove.success", instance.uniqueId))
         }
     }

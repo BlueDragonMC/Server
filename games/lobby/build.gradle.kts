@@ -13,7 +13,7 @@ repositories {
 dependencies {
     implementation(project(":common"))
     implementation(libs.minestom)
-    implementation(libs.messages)
+    implementation(libs.bundles.messaging)
     implementation(libs.minimessage)
     implementation(libs.bundles.configurate)
     implementation(libs.kmongo)

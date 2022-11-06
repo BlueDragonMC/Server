@@ -7,9 +7,8 @@ configurate = "4.1.2"
 minimessage = "4.11.0"
 kmongo = "4.6.1"
 caffeine = "3.1.1"
-# Messaging system and custom message classes
-messaging-system = "3abc4b8a49"
-messages = "23a6e3bfc8"
+# Auto-generated GRPC/Protobuf messaging code
+rpc = "1.0"
 # Agones SDK and its necessary runtime dependencies
 agones-kt = "0.1.2"
 grpc-protobuf = "1.48.0"
@@ -31,8 +30,7 @@ configurate-extra-kotlin = { group = "org.spongepowered", name = "configurate-ex
 minimessage = { group = "net.kyori", name = "adventure-text-minimessage", version.ref = "minimessage" }
 kmongo = { group = "org.litote.kmongo", name = "kmongo-coroutine-serialization", version.ref = "kmongo" }
 caffeine = { group = "com.github.ben-manes.caffeine", name = "caffeine", version.ref = "caffeine" }
-messaging-system = { group = "com.github.bluedragonmc", name = "messagingsystem", version.ref = "messaging-system" }
-messages = { group = "com.github.bluedragonmc", name = "messages", version.ref = "messages" }
+rpc = { group = "com.bluedragonmc", name = "rpc", version.ref = "rpc" }
 agones-kt = { group = "com.github.Cubxity", name = "AgonesKt", version.ref = "agones-kt" }
 grpc-protobuf = { group = "io.grpc", name = "grpc-protobuf", version.ref = "grpc-protobuf" }
 grpc-netty = { group = "io.grpc", name = "grpc-netty", version.ref = "grpc-netty" }
@@ -44,5 +42,5 @@ junit-engine = { group = "org.junit.jupiter", name ="junit-jupiter-engine", vers
 
 [bundles]
 configurate = ["configurate", "configurate-extra-kotlin"]
-agones = ["agones-kt", "grpc-protobuf", "grpc-protobuf", "grpc-netty", "grpc-kotlin-stub", "protobuf-kotlin"]
-messaging = ["messaging-system", "messages"]
+agones = ["agones-kt", "grpc-protobuf", "grpc-netty", "grpc-kotlin-stub", "protobuf-kotlin"]
+messaging = ["rpc", "grpc-protobuf", "grpc-netty", "grpc-kotlin-stub", "protobuf-kotlin"]

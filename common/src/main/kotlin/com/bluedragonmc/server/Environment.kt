@@ -1,7 +1,5 @@
 package com.bluedragonmc.server
 
-import java.util.*
-
 abstract class Environment {
 
     companion object {
@@ -18,8 +16,9 @@ abstract class Environment {
     abstract val queue: com.bluedragonmc.server.api.Queue
     abstract val messagingDisabled: Boolean
     abstract val mongoHostname: String
+    abstract val puffinHostname: String
     abstract val gameClasses: Collection<String>
     abstract val versionInfo: VersionInfo
     open val dbName: String = "bluedragon"
-    abstract suspend fun getContainerId(): UUID
+    abstract suspend fun getServerName(): String
 }

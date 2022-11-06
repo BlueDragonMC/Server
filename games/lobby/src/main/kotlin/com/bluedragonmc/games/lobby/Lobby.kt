@@ -1,5 +1,8 @@
 package com.bluedragonmc.games.lobby
 
+import com.bluedragonmc.api.grpc.CommonTypes
+import com.bluedragonmc.api.grpc.CommonTypes.GameType.GameTypeFieldSelector
+import com.bluedragonmc.api.grpc.gameType
 import com.bluedragonmc.games.lobby.menu.*
 import com.bluedragonmc.games.lobby.menu.cosmetic.CosmeticCategoryMenu
 import com.bluedragonmc.games.lobby.menu.cosmetic.CosmeticGroupMenu
@@ -7,7 +10,6 @@ import com.bluedragonmc.games.lobby.menu.cosmetic.CosmeticsMenu
 import com.bluedragonmc.games.lobby.module.BossBarDisplayModule
 import com.bluedragonmc.games.lobby.module.LeaderboardsModule
 import com.bluedragonmc.games.lobby.module.ParkourModule
-import com.bluedragonmc.messages.GameType
 import com.bluedragonmc.server.*
 import com.bluedragonmc.server.block.JukeboxMenuBlockHandler
 import com.bluedragonmc.server.module.GuiModule
@@ -108,30 +110,45 @@ class Lobby : Game("Lobby", "lobbyv2.2") {
             val npcs = config.node("npcs").getList(ConfigurableNPC::class.java)!!
             val gameNames = mutableSetOf<String>()
 
-            npcs.forEach {
-                it.game?.let { n -> gameNames.add(n) }
+            npcs.forEach { g ->
+                g.game?.let { n -> gameNames.add(n) }
                 addNPC(
                     instance = this@Lobby.getInstance(),
-                    position = it.pos,
-                    customName = it.name,
-                    skin = it.skin,
+                    position = g.pos,
+                    customName = g.name,
+                    skin = g.skin,
                     lookAtPlayer = false,
                     interaction = { (player, _) ->
-                        if (it.game != null) {
-                            if (it.game == "random") {
-                                Environment.current.queue.queue(player, GameType(gameNames.random(), null, null))
+                        if (g.game != null) {
+                            if (g.game == "random") {
+                                Environment.current.queue.queue(player, gameType {
+                                    name = gameNames.random()
+                                    selectors += CommonTypes.GameType.GameTypeFieldSelector.GAME_NAME
+                                })
                             } else {
-                                Environment.current.queue.queue(player, GameType(it.game, it.mode, it.map))
+                                Environment.current.queue.queue(player, gameType {
+                                    // it.game, it.mode, it.map
+                                    name = g.game
+                                    selectors += GameTypeFieldSelector.GAME_NAME
+                                    g.mode?.let {
+                                        mode = it
+                                        selectors += GameTypeFieldSelector.GAME_MODE
+                                    }
+                                    g.map?.let {
+                                        mapName = it
+                                        selectors += GameTypeFieldSelector.MAP_NAME
+                                    }
+                                })
                             }
                         }
-                        if (it.menu != null) {
-                            val menu = getRegisteredMenu(it.menu)
+                        if (g.menu != null) {
+                            val menu = getRegisteredMenu(g.menu)
                             menu?.open(player)
                         }
                     },
-                    entityType = it.entityType ?: EntityType.PLAYER
+                    entityType = g.entityType ?: EntityType.PLAYER
                 ).run {
-                    if (it.lookAt != null) lookAt(it.lookAt)
+                    if (g.lookAt != null) lookAt(g.lookAt)
                 }
             }
         }
