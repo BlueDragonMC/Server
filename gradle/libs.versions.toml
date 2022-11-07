@@ -8,7 +8,7 @@ minimessage = "4.11.0"
 kmongo = "4.6.1"
 caffeine = "3.1.1"
 # Auto-generated GRPC/Protobuf messaging code
-rpc = "1.0"
+rpc = "605f302179"
 # Agones SDK and its necessary runtime dependencies
 agones-kt = "0.1.2"
 grpc = "1.50.2"
@@ -20,8 +20,6 @@ junit = "5.9.0"
 
 [libraries]
 kotlin-jvm = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
-#minestom = { group = "com.github.Minestom", name = "Minestom", version.ref = "minestom" }
-#minestom = { group = "net.minestom.server", name = "Minestom", version = "1.0" } # Uncomment to use a version of Minestom from maven local
 minestom = { group = "com.github.BlueDragonMC", name = "Minestom", version.ref = "minestom" }
 minestom-testing = { group = "com.github.BlueDragonMC.Minestom", name = "testing", version.ref = "minestom" }
 configurate = { group = "org.spongepowered", name = "configurate-yaml", version.ref = "configurate" }
@@ -29,7 +27,7 @@ configurate-extra-kotlin = { group = "org.spongepowered", name = "configurate-ex
 minimessage = { group = "net.kyori", name = "adventure-text-minimessage", version.ref = "minimessage" }
 kmongo = { group = "org.litote.kmongo", name = "kmongo-coroutine-serialization", version.ref = "kmongo" }
 caffeine = { group = "com.github.ben-manes.caffeine", name = "caffeine", version.ref = "caffeine" }
-rpc = { group = "com.bluedragonmc", name = "rpc", version.ref = "rpc" }
+rpc = { group = "com.github.bluedragonmc", name = "rpc", version.ref = "rpc" }
 grpc-protobuf = { group = "io.grpc", name = "grpc-protobuf", version.ref = "grpc" }
 grpc-netty = { group = "io.grpc", name = "grpc-netty", version.ref = "grpc" }
 grpc-kotlin-stub = { group = "io.grpc", name = "grpc-kotlin-stub", version.ref = "grpc-kotlin-stub" }
