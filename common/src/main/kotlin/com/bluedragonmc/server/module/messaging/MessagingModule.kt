@@ -15,13 +15,19 @@ import com.bluedragonmc.server.module.messaging.MessagingModule.Stubs.serverTrac
 import com.bluedragonmc.server.utils.miniMessage
 import com.google.protobuf.Empty
 import io.grpc.ManagedChannelBuilder
+import io.grpc.Server
+import io.grpc.ServerBuilder
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import net.minestom.server.MinecraftServer
+import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
+import net.minestom.server.event.instance.AddEntityToInstanceEvent
 import org.slf4j.LoggerFactory
+import java.net.InetAddress
 import java.util.*
+import java.util.concurrent.TimeUnit
 import java.util.function.Consumer
 import kotlin.concurrent.timer
 import kotlin.system.exitProcess
@@ -31,9 +37,11 @@ class MessagingModule : GameModule() {
 
     object Stubs {
         private val channel by lazy {
+            logger.info("Attempting to connect to Puffin at address '${Environment.current.puffinHostname}'" +
+                    " (${InetAddress.getByName(Environment.current.puffinHostname).hostAddress})")
             ManagedChannelBuilder.forAddress(
                 Environment.current.puffinHostname, 50051
-            ).usePlaintext().build()
+            ).defaultLoadBalancingPolicy("round_robin").usePlaintext().build()
         }
 
         val serverTrackingStub by lazy {
@@ -66,6 +74,7 @@ class MessagingModule : GameModule() {
         private val logger = LoggerFactory.getLogger(Companion::class.java)
 
         lateinit var serverName: String
+        private val grpcServer: Server
 
         fun findPlayer(uuid: UUID) = MinecraftServer.getConnectionManager().getPlayer(uuid)
 
@@ -79,12 +88,13 @@ class MessagingModule : GameModule() {
         }
 
         init {
+            // Get server name and publish ping
             DatabaseModule.IO.launch {
                 try {
                     serverName = Environment.current.getServerName()
                 } catch (e: Throwable) {
                     e.printStackTrace()
-                    logger.error("Severe error: failed to gather contaier ID from Environment.")
+                    logger.error("Severe error: failed to gather container ID from Environment.")
                     exitProcess(1)
                 }
                 serverTrackingStub.initGameServer(initGameServerRequest {
@@ -94,12 +104,13 @@ class MessagingModule : GameModule() {
                 serverNameWaitingActions.forEach { it.accept(serverName) }
                 serverNameWaitingActions.clear()
             }
+            // Start server sync process every 30 seconds
             timer("server-sync", daemon = true, initialDelay = 30_000, period = 30_000) {
                 // Every 30 seconds, send a synchronization message
                 DatabaseModule.IO.launch {
                     serverTrackingStub.serverSync(serverSyncRequest {
                         serverName = this@Companion.serverName
-                        instances += Game.games.mapNotNull {
+                        instances += Game.games.map {
                             runningInstance {
                                 instanceUuid = it.instanceId.toString()
                                 gameType = it.gameType
@@ -108,6 +119,18 @@ class MessagingModule : GameModule() {
                         }
                     })
                 }
+            }
+            // Start a gRPC server for other services to call
+            val port = 50051
+            grpcServer = ServerBuilder.forPort(port)
+                .addService(GameClientService())
+                .build()
+            grpcServer.start()
+            logger.info("gRPC server started on port $port.")
+
+            MinecraftServer.getSchedulerManager().buildShutdownTask {
+                grpcServer.shutdown()
+                grpcServer.awaitTermination(30, TimeUnit.SECONDS)
             }
         }
     }
@@ -137,6 +160,16 @@ class MessagingModule : GameModule() {
                 })
             }
         }
+        eventNode.addListener(AddEntityToInstanceEvent::class.java) { event ->
+            val player = event.entity as? Player ?: return@addListener
+            DatabaseModule.IO.launch {
+                Stubs.playerTrackerStub.playerInstanceChange(playerInstanceChangeRequest {
+                    uuid = player.uuid.toString()
+                    this.serverName = serverName
+                    instanceId = event.instance.uniqueId.toString()
+                })
+            }
+        }
     }
 
     override fun deinitialize() {
@@ -160,7 +193,7 @@ class MessagingModule : GameModule() {
         }
     }
 
-    inner class GameClientService : GsClientServiceGrpcKt.GsClientServiceCoroutineImplBase() {
+    class GameClientService : GsClientServiceGrpcKt.GsClientServiceCoroutineImplBase() {
         override suspend fun createInstance(request: GsClient.CreateInstanceRequest): CommonTypes.GameState {
             val game = Environment.current.queue.createInstance(request)
             return game?.rpcGameState ?: gameState {

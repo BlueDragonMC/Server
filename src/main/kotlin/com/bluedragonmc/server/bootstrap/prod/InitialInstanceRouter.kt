@@ -1,9 +1,11 @@
 package com.bluedragonmc.server.bootstrap.prod
 
+import com.bluedragonmc.api.grpc.playerTransferRequest
 import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.bootstrap.Bootstrap
 import com.bluedragonmc.server.module.database.DatabaseModule
+import com.bluedragonmc.server.module.messaging.MessagingModule
 import com.bluedragonmc.server.queue.ProductionEnvironment
 import kotlinx.coroutines.launch
 import net.kyori.adventure.text.Component
@@ -42,6 +44,8 @@ object InitialInstanceRouter : Bootstrap(ProductionEnvironment::class) {
         Component.text("Couldn't find which world to put you in! (Invalid world name)", NamedTextColor.RED)
     private val HANDSHAKE_FAILED =
         Component.text("Couldn't find which world to put you in! (Handshake failed)", NamedTextColor.RED)
+    private val INVALID_PACKET_RECEIVED =
+        Component.text("Invalid packet received during login process! (Proxy server error)", NamedTextColor.RED)
 
     private val players = mutableMapOf<String, PartialPlayer>()
 
@@ -74,6 +78,14 @@ object InitialInstanceRouter : Bootstrap(ProductionEnvironment::class) {
             MinecraftServer.getSchedulerManager().scheduleNextTick {
                 logger.debug("Starting PLAY state for Player '${player!!.username}'")
                 MinecraftServer.getConnectionManager().startPlayState(player!!, true)
+            }
+            DatabaseModule.IO.launch {
+                MessagingModule.Stubs.playerTrackerStub.playerTransfer(playerTransferRequest {
+                    username = player!!.username
+                    uuid = player!!.uuid.toString()
+                    newServerName = MessagingModule.serverName
+                    startingInstance?.uniqueId?.toString()?.let { newInstance = it }
+                })
             }
         }
     }
@@ -137,6 +149,10 @@ object InitialInstanceRouter : Bootstrap(ProductionEnvironment::class) {
     private fun handleVelocityForwarding(packet: LoginPluginResponsePacket, connection: PlayerSocketConnection) {
         // Manually handle Velocity forwarding because we don't want to immediately go from the LOGIN to the PLAY state.
         // We want to wait for Velocity's plugin message as well as our instance routing message.
+        if (packet.data == null) {
+            connection.sendPacket(LoginDisconnectPacket(INVALID_PACKET_RECEIVED))
+            return
+        }
         val reader = BinaryReader(packet.data)
         val success = VelocityProxy.checkIntegrity(reader)
 

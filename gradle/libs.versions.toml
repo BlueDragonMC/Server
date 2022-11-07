@@ -11,8 +11,7 @@ caffeine = "3.1.1"
 rpc = "1.0"
 # Agones SDK and its necessary runtime dependencies
 agones-kt = "0.1.2"
-grpc-protobuf = "1.48.0"
-grpc-netty = "1.37.0"
+grpc = "1.50.2"
 grpc-kotlin-stub = "1.3.0"
 protobuf-kotlin = "3.21.3"
 # Testing dependencies
@@ -31,10 +30,10 @@ minimessage = { group = "net.kyori", name = "adventure-text-minimessage", versio
 kmongo = { group = "org.litote.kmongo", name = "kmongo-coroutine-serialization", version.ref = "kmongo" }
 caffeine = { group = "com.github.ben-manes.caffeine", name = "caffeine", version.ref = "caffeine" }
 rpc = { group = "com.bluedragonmc", name = "rpc", version.ref = "rpc" }
-agones-kt = { group = "com.github.Cubxity", name = "AgonesKt", version.ref = "agones-kt" }
-grpc-protobuf = { group = "io.grpc", name = "grpc-protobuf", version.ref = "grpc-protobuf" }
-grpc-netty = { group = "io.grpc", name = "grpc-netty", version.ref = "grpc-netty" }
+grpc-protobuf = { group = "io.grpc", name = "grpc-protobuf", version.ref = "grpc" }
+grpc-netty = { group = "io.grpc", name = "grpc-netty", version.ref = "grpc" }
 grpc-kotlin-stub = { group = "io.grpc", name = "grpc-kotlin-stub", version.ref = "grpc-kotlin-stub" }
+#grpc-services = { group = "io.grpc", name = "grpc-services", version.ref = "grpc" }
 protobuf-kotlin = { group = "com.google.protobuf", name = "protobuf-kotlin", version.ref = "protobuf-kotlin" }
 mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 junit-api = { group = "org.junit.jupiter", name ="junit-jupiter-api", version.ref = "junit" }
@@ -42,5 +41,4 @@ junit-engine = { group = "org.junit.jupiter", name ="junit-jupiter-engine", vers
 
 [bundles]
 configurate = ["configurate", "configurate-extra-kotlin"]
-agones = ["agones-kt", "grpc-protobuf", "grpc-netty", "grpc-kotlin-stub", "protobuf-kotlin"]
 messaging = ["rpc", "grpc-protobuf", "grpc-netty", "grpc-kotlin-stub", "protobuf-kotlin"]
