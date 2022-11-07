@@ -46,12 +46,12 @@ class ProductionEnvironment : Environment() {
     override val queue: Queue = IPCQueue
     override val messagingDisabled: Boolean = false
     override val mongoHostname: String = "mongo"
-    override val puffinHostname: String = "puffin.default.svc"
+    override val puffinHostname: String = "puffin"
     override val gameClasses = games.keys
     override val versionInfo = GitVersionInfo
     override suspend fun getServerName(): String {
         return System.getenv("PUFFIN_CONTAINER_ID")
-            ?: AgonesIntegration.sdk.getGameServer().objectMeta.uid
+            ?: AgonesIntegration.stub.getGameServer(AgonesIntegration.empty).objectMeta.name
     }
 }
 

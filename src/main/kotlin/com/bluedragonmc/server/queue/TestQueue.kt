@@ -34,7 +34,7 @@ class TestQueue : Queue() {
      * @param idealGame If no games already exist, start a new one of this type. If this is null, the queue will not start a new game.
      */
     override fun queue(player: Player, gameType: CommonTypes.GameType) {
-        if (gameType.name == "Lobby" && gameType.mapName == null && gameType.mode == null) {
+        if (gameType.name == "Lobby" && gameType.mapName.isEmpty() && gameType.mode.isEmpty()) {
             lobby.addPlayer(player)
             return
         }
@@ -43,7 +43,7 @@ class TestQueue : Queue() {
             queuedPlayers.invalidate(player)
             return
         }
-        if (gameType.mapName != null) {
+        if (gameType.mapName.isNotEmpty()) {
             val mapExists = getMapNames(gameType.name).contains(gameType.mapName)
             if (!mapExists) {
                 player.sendMessage(Component.translatable("queue.error.no_map_found", NamedTextColor.RED))
@@ -79,7 +79,9 @@ class TestQueue : Queue() {
                         return@forEach
                     }
                     for (game in Game.games) {
-                        if (game.name == gameType.name && (gameType.mapName == null || gameType.mapName == game.mapName)) {
+                        if (game.name == gameType.name &&
+                            (!gameType.selectorsList.contains(CommonTypes.GameType.GameTypeFieldSelector.MAP_NAME) || gameType.mapName == game.mapName)
+                        ) {
                             logger.info("Found a good game for ${player.username} to join")
                             queuedPlayers.invalidate(player)
                             join(player, game)
@@ -89,7 +91,8 @@ class TestQueue : Queue() {
                     if (instanceStarting) return@forEach
                     logger.info("Starting a new instance for ${player.username}")
                     player.sendMessage(Component.translatable("queue.creating_instance", NamedTextColor.GREEN))
-                    val map = gameType.mapName ?: randomMap(gameType.name)
+                    val map = if (gameType.mapName.isNullOrEmpty()) randomMap(gameType.name)
+                    else gameType.mapName
                     logger.info("Map chosen: $map")
                     try {
                         games[gameType.name]!!.call(map)

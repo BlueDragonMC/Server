@@ -35,7 +35,6 @@ dependencies {
     implementation(libs.minimessage) // MiniMessage
     implementation(libs.kmongo) // Database support
     implementation(libs.caffeine) // Caching library for database responses
-    implementation(libs.bundles.agones) // Agones SDK integration
     implementation(libs.bundles.configurate) // Configurate for game configuration
     implementation(libs.bundles.messaging) // Messaging
 
@@ -82,6 +81,10 @@ tasks.test {
 
 tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "17"
+}
+
+tasks.shadowJar {
+    mergeServiceFiles()
 }
 
 tasks.jar {

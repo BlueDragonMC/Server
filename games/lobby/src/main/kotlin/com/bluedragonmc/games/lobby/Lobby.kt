@@ -123,7 +123,7 @@ class Lobby : Game("Lobby", "lobbyv2.2") {
                             if (g.game == "random") {
                                 Environment.current.queue.queue(player, gameType {
                                     name = gameNames.random()
-                                    selectors += CommonTypes.GameType.GameTypeFieldSelector.GAME_NAME
+                                    selectors += GameTypeFieldSelector.GAME_NAME
                                 })
                             } else {
                                 Environment.current.queue.queue(player, gameType {

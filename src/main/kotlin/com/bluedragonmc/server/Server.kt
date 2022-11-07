@@ -42,6 +42,7 @@ fun start() {
     val eventNode = MinecraftServer.getGlobalEventHandler()
 
     val services = listOf(
+        AgonesIntegration,
         Commands,
         CustomPlayerProvider,
         DevInstanceRouter,
@@ -80,6 +81,4 @@ fun start() {
 
     // Create a Lobby instance
     lobby = Lobby()
-
-    if (AgonesIntegration.canHook()) AgonesIntegration.hook(eventNode)
 }
