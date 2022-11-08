@@ -58,6 +58,15 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
     private val bedDestroyedSound =
         Sound.sound(SoundEvent.ENTITY_WITHER_DEATH, Sound.Source.HOSTILE, 1.0f, 1.0f)
 
+    /*
+    Team info includes:
+    - List of team upgrades
+    - Bed status
+     */
+    private val bedWarsTeamInfo = hashMapOf<TeamModule.Team, BedWarsTeamInfo>()
+
+    class BedWarsTeamInfo(var bedIntact: Boolean = true)
+
     init {
 
         val config = use(ConfigModule("bedwars.yml")).getConfig()
@@ -333,14 +342,5 @@ class BedWarsGame(mapName: String) : Game("BedWars", mapName) {
     private fun bedBlockToTeam(bed: Block): TeamModule.Team? {
         return getModule<TeamModule>().getTeam(bedBlockToTeam[bed.registry().material()] ?: return null)
     }
-
-    /*
-    Team info includes:
-    - List of team upgrades
-    - Bed status
-     */
-    private val bedWarsTeamInfo = hashMapOf<TeamModule.Team, BedWarsTeamInfo>()
-
-    class BedWarsTeamInfo(var bedIntact: Boolean = true)
 
 }

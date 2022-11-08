@@ -2,6 +2,7 @@ package com.bluedragonmc.server.module.messaging
 
 import com.bluedragonmc.api.grpc.*
 import com.bluedragonmc.api.grpc.GsClient.CreateInstanceResponse
+import com.bluedragonmc.api.grpc.PlayerHolderOuterClass.SendPlayerResponse.SuccessFlags
 import com.bluedragonmc.api.grpc.ServerSyncRequestKt.runningInstance
 import com.bluedragonmc.server.Environment
 import com.bluedragonmc.server.Game
@@ -129,6 +130,7 @@ class MessagingModule : GameModule() {
             val port = 50051
             grpcServer = ServerBuilder.forPort(port)
                 .addService(GameClientService())
+                .addService(PlayerHolderService())
                 .build()
             grpcServer.start()
             logger.info("gRPC server started on port $port.")
@@ -170,7 +172,7 @@ class MessagingModule : GameModule() {
             DatabaseModule.IO.launch {
                 Stubs.playerTrackerStub.playerInstanceChange(playerInstanceChangeRequest {
                     uuid = player.uuid.toString()
-                    this.serverName = serverName
+                    serverName = MessagingModule.serverName
                     instanceId = event.instance.uniqueId.toString()
                 })
             }
@@ -226,6 +228,15 @@ class MessagingModule : GameModule() {
                 else -> {}
             }
             return Empty.getDefaultInstance()
+        }
+    }
+
+    class PlayerHolderService : PlayerHolderGrpcKt.PlayerHolderCoroutineImplBase() {
+        override suspend fun sendPlayer(request: PlayerHolderOuterClass.SendPlayerRequest): PlayerHolderOuterClass.SendPlayerResponse {
+            Environment.current.queue.sendPlayer(request)
+            return sendPlayerResponse {
+                successes += SuccessFlags.SET_INSTANCE
+            }
         }
     }
 }
