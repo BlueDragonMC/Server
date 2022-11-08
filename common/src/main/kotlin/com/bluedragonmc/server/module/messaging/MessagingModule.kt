@@ -16,9 +16,7 @@ import com.bluedragonmc.server.module.messaging.MessagingModule.Stubs.instanceSv
 import com.bluedragonmc.server.module.messaging.MessagingModule.Stubs.serverTrackingStub
 import com.bluedragonmc.server.utils.miniMessage
 import com.google.protobuf.Empty
-import io.grpc.ManagedChannelBuilder
-import io.grpc.Server
-import io.grpc.ServerBuilder
+import io.grpc.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import net.minestom.server.MinecraftServer
@@ -41,9 +39,11 @@ class MessagingModule : GameModule() {
         private val channel by lazy {
             logger.info("Attempting to connect to Puffin at address '${Environment.current.puffinHostname}'" +
                     " (${InetAddress.getByName(Environment.current.puffinHostname).hostAddress})")
-            ManagedChannelBuilder.forAddress(
-                Environment.current.puffinHostname, 50051
-            ).defaultLoadBalancingPolicy("round_robin").usePlaintext().build()
+            ManagedChannelBuilder.forAddress(Environment.current.puffinHostname, 50051)
+                .defaultLoadBalancingPolicy("round_robin")
+                .usePlaintext()
+                .enableRetry()
+                .build()
         }
 
         val serverTrackingStub by lazy {
@@ -91,6 +91,10 @@ class MessagingModule : GameModule() {
         fun getServerName(consumer: Consumer<String>) {
             if (Companion::serverName.isInitialized) consumer.accept(serverName)
             else serverNameWaitingActions.add(consumer)
+        }
+
+        fun isServerRunning(): Boolean {
+            return !grpcServer.isShutdown && !grpcServer.isTerminated
         }
 
         init {
