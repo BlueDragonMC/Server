@@ -1,7 +1,7 @@
 package com.bluedragonmc.server.command
 
-import com.bluedragonmc.api.grpc.GsClient
 import com.bluedragonmc.api.grpc.playerQueryRequest
+import com.bluedragonmc.api.grpc.privateMessageRequest
 import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.module.database.DatabaseModule
 import com.bluedragonmc.server.module.messaging.MessagingModule
@@ -41,12 +41,13 @@ class MessageCommand(name: String, vararg aliases: String) : BlueDragonCommand(n
                 }
                 val color = DatabaseModule.getNameColor(UUID.fromString(response.uuid!!)) ?: NamedTextColor.GRAY
                 val senderMessage = formatMessageTranslated("command.msg.sent", Component.text(playerName, color), message)
-                val receiverMessage = formatMessageTranslated("command.msg.received", senderName, message)
+                MessagingModule.Stubs.privateMessageStub.sendMessage(privateMessageRequest {
+                    this.message = miniMessage.serialize(message)
+                    this.recipientUuid = response.uuid
+                    (sender as? Player)?.username?.let { this.senderUsername = it }
+                    this.senderUuid = (sender as? Player)?.uuid?.toString() ?: UUID(0L, 0L).toString()
+                })
                 sender.sendMessage(senderMessage)
-//                MessagingModule.publish(SendChatMessage(
-//                    response.uuid!!, miniMessage.serialize(receiverMessage), GsClient.SendChatRequest.ChatType.CHAT
-//                ))
-                // TODO
             }
         }
     }
