@@ -3,8 +3,10 @@ package com.bluedragonmc.server.bootstrap.prod
 import agones.dev.sdk.SDKGrpcKt
 import agones.dev.sdk.duration
 import agones.dev.sdk.empty
+import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.bootstrap.Bootstrap
 import com.bluedragonmc.server.module.database.DatabaseModule
+import com.bluedragonmc.server.module.messaging.MessagingModule
 import com.bluedragonmc.server.queue.ProductionEnvironment
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
@@ -43,7 +45,9 @@ object AgonesIntegration : Bootstrap(ProductionEnvironment::class) {
         val healthFlow = flow {
             while(true) {
                 // Send a health message every second
-                emit(empty)
+                if (isHealthy()) {
+                    emit(empty)
+                }
                 delay(HEALTH_CHECK_INTERVAL)
                 if (MinecraftServer.getConnectionManager().onlinePlayers.isNotEmpty()) {
                     stub.reserve(duration {
@@ -62,5 +66,14 @@ object AgonesIntegration : Bootstrap(ProductionEnvironment::class) {
             stub.ready(empty)
             logger.info("Agones - Ready")
         }
+    }
+
+    private fun isHealthy(): Boolean {
+        // Verify that at least one game is running (Lobby)
+        if (Game.games.isEmpty()) return false
+        // Verify that the local gRPC server is running
+        if (!MessagingModule.isServerRunning()) return false
+
+        return true
     }
 }

@@ -14,6 +14,7 @@ import net.minestom.server.utils.NamespaceID
 import net.minestom.server.world.DimensionType
 import org.slf4j.LoggerFactory
 import java.text.DateFormat
+import kotlin.system.exitProcess
 import kotlin.system.measureTimeMillis
 
 lateinit var lobby: Game
@@ -80,5 +81,10 @@ fun start() {
     minecraftServer.start("0.0.0.0", 25565)
 
     // Create a Lobby instance
-    lobby = Lobby()
+    lobby = try {
+        Lobby()
+    } catch (e: Throwable) {
+        logger.error("There was an error initializing the Lobby. Shutting down...")
+        exitProcess(1)
+    }
 }
