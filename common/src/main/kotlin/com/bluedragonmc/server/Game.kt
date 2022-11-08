@@ -206,11 +206,9 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
 
         if (preloadSpawnChunks && !shouldRemoveInstance(cachedInstance)) {
             if (hasModule<SpawnpointModule>()) {
-                // If the spawnpoint module is present, preload the chunks around each spawnpoint.
+                // If the spawnpoint module is present, preload one chunk at each spawnpoint.
                 getModule<SpawnpointModule>().spawnpointProvider.getAllSpawnpoints().forEach { spawnpoint ->
-                    ChunkUtils.forChunksInRange(spawnpoint, MinecraftServer.getChunkViewDistance()) { chunkX, chunkZ ->
-                        cachedInstance.loadOptionalChunk(chunkX, chunkZ)
-                    }
+                    cachedInstance.loadOptionalChunk(spawnpoint)
                 }
             } else {
                 // If not, we can make an educated guess and load the chunks around (0, 0)
