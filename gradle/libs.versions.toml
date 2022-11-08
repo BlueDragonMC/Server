@@ -8,7 +8,7 @@ minimessage = "4.11.0"
 kmongo = "4.6.1"
 caffeine = "3.1.1"
 # Auto-generated GRPC/Protobuf messaging code
-rpc = "1ee8f0b14f"
+rpc = "4420a7d1bc"
 # Agones SDK and its necessary runtime dependencies
 agones-kt = "0.1.2"
 grpc = "1.50.2"

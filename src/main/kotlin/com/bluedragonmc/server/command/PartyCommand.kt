@@ -61,8 +61,8 @@ class PartyCommand(name: String, usageString: String, vararg aliases: String) : 
         val playerArgument by PlayerArgument
         suspendSyntax(playerArgument) {
             MessagingModule.Stubs.partyStub.acceptInvitation(partyAcceptInviteRequest {
-                partyOwnerUuid = player.uuid.toString()
-                playerUuid = getFirstPlayer(playerArgument).uuid.toString()
+                playerUuid = player.uuid.toString()
+                partyOwnerUuid = getFirstPlayer(playerArgument).uuid.toString()
             })
         }
     }
@@ -93,10 +93,16 @@ class PartyCommand(name: String, usageString: String, vararg aliases: String) : 
                 playerUuid = player.uuid.toString()
             })
             val leader = response.playersList.find { it.role == "Leader" }
-            val leaderText = Component.translatable("puffin.party.list.leader", Component.text())
-            val members = response.playersList.filter { it != leader}
-            val membersText = formatMessageTranslated("puffin.party.list.members", members.size, *members.map { it.username }.toTypedArray())
-            sender.sendMessage(leaderText + Component.newline() + membersText)
+            val members = response.playersList.filter { it != leader }
+            if (leader != null && response.playersCount > 0) {
+                val leaderText = Component.translatable("puffin.party.list.leader", Component.text())
+                val membersText = formatMessageTranslated(
+                    "puffin.party.list.members",
+                    members.size,
+                    *members.map { it.username }.toTypedArray()
+                )
+                sender.sendMessage(leaderText + Component.newline() + membersText)
+            }
         }
     }
 
