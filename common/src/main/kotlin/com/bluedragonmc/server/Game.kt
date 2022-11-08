@@ -36,6 +36,7 @@ import net.minestom.server.event.player.PlayerSpawnEvent
 import net.minestom.server.event.trait.InstanceEvent
 import net.minestom.server.event.trait.PlayerEvent
 import net.minestom.server.instance.Instance
+import net.minestom.server.timer.Task
 import net.minestom.server.utils.chunk.ChunkUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -250,6 +251,7 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
         state = GameState.ENDING
         games.remove(this)
         // the NotifyInstanceRemovedMessage is published when the MessagingModule is unregistered
+        val instanceRef = getInstanceOrNull()
         while (modules.isNotEmpty()) unregister(modules.first())
         if (queueAllPlayers) {
             players.forEach {
@@ -259,6 +261,21 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
                     selectors += GameTypeFieldSelector.GAME_NAME
                 })
             }
+            var task: Task? = null
+            var repetitions = 0
+            task = MinecraftServer.getSchedulerManager().buildTask {
+                repetitions++
+                if (instanceRef?.isRegistered == false || instanceRef == null) task!!.cancel()
+                getInstanceOrNull()?.players?.forEach { player ->
+                    Environment.current.queue.queue(player, gameType {
+                        name = if (repetitions >= 3) "Lobby" else this@Game.name
+                        selectors += GameTypeFieldSelector.GAME_NAME
+                    })
+                    if (repetitions >= 5) {
+                        player.kick(Component.text("There was an error adding you to the queue.", NamedTextColor.RED))
+                    }
+                }
+            }.delay(Duration.ofSeconds(10)).repeat(Duration.ofSeconds(10)).schedule()
         }
     }
 
@@ -282,11 +299,11 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
         // Ensure the game was registered with `ready()` method
         MinecraftServer.getSchedulerManager().buildTask {
             if (!games.contains(this) && !playerHasJoined) {
-                logger.error("Game was not registered after 15 seconds!")
+                logger.error("Game was not registered after 10 seconds!")
                 endGameInstantly(false)
                 games.remove(this)
             }
-        }.delay(Duration.ofSeconds(15)).schedule()
+        }.delay(Duration.ofSeconds(10)).schedule()
 
         // Allow the game to start receiving events
         MinecraftServer.getGlobalEventHandler().addChild(eventNode)
