@@ -59,17 +59,18 @@ object IPCQueue : Queue() {
     override fun randomMap(gameType: String): String? = getMaps(gameType)?.randomOrNull()?.name
 
     override fun createInstance(request: GsClient.CreateInstanceRequest): Game? {
-        logger.info("Received request to create instance with type ${request.gameType}.")
+        logger.info("Received request to create instance with type ${request.gameType.name}.")
         val start = System.nanoTime()
         val constructor = games[request.gameType.name] ?: return null
-        val map = request.gameType.mapName ?: randomMap(request.gameType.name) ?: run {
+        val map = if (request.gameType.hasMapName()) request.gameType.mapName else randomMap(request.gameType.name)
+        if (map == null) {
             logger.error("No map name was specified and a random map was not found. A new instance cannot be created.")
             return null
         }
         logger.info("Using map: '$map'")
         val game = constructor.invoke(map)
         val instance = game.getInstance()
-        logger.info("Created instance ${instance.uniqueId} from type ${request.gameType}. (${(System.nanoTime() - start) / 1_000_000}ms)")
+        logger.info("Created ${request.gameType.name} instance ${instance.uniqueId} on map $map. (${(System.nanoTime() - start) / 1_000_000}ms)")
         // The service will soon be notified of this instance's creation
         // once the mandatory MessagingModule is initialized
         return game

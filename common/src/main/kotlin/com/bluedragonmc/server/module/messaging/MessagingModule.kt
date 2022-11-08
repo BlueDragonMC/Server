@@ -1,6 +1,7 @@
 package com.bluedragonmc.server.module.messaging
 
 import com.bluedragonmc.api.grpc.*
+import com.bluedragonmc.api.grpc.GsClient.CreateInstanceResponse
 import com.bluedragonmc.api.grpc.ServerSyncRequestKt.runningInstance
 import com.bluedragonmc.server.Environment
 import com.bluedragonmc.server.Game
@@ -54,6 +55,10 @@ class MessagingModule : GameModule() {
 
         val gameStateSvcStub by lazy {
             GameStateServiceGrpcKt.GameStateServiceCoroutineStub(channel)
+        }
+
+        val privateMessageStub by lazy {
+            VelocityMessageServiceGrpcKt.VelocityMessageServiceCoroutineStub(channel)
         }
 
         val playerTrackerStub by lazy {
@@ -194,12 +199,17 @@ class MessagingModule : GameModule() {
     }
 
     class GameClientService : GsClientServiceGrpcKt.GsClientServiceCoroutineImplBase() {
-        override suspend fun createInstance(request: GsClient.CreateInstanceRequest): CommonTypes.GameState {
+        override suspend fun createInstance(request: GsClient.CreateInstanceRequest): CreateInstanceResponse {
             val game = Environment.current.queue.createInstance(request)
-            return game?.rpcGameState ?: gameState {
+            val state = game?.rpcGameState ?: gameState {
                 gameState = CommonTypes.EnumGameState.ERROR
                 joinable = false
                 openSlots = 0
+            }
+            return createInstanceResponse {
+                this.gameState = state
+                this.success = game != null
+                game?.instanceId?.toString()?.let { this.instanceUuid = it }
             }
         }
 
