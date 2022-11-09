@@ -36,6 +36,8 @@ class MessagingModule : GameModule() {
 
     object Stubs {
         private val channel by lazy {
+            if (Environment.current.messagingDisabled)
+                error("Tried to connect to messaging while the Environment states that messaging is disabled.")
             logger.info("Attempting to connect to Puffin at address '${Environment.current.puffinHostname}'" +
                     " (${InetAddress.getByName(Environment.current.puffinHostname).hostAddress})")
             ManagedChannelBuilder.forAddress(Environment.current.puffinHostname, 50051)
@@ -75,7 +77,7 @@ class MessagingModule : GameModule() {
         private val logger = LoggerFactory.getLogger(Companion::class.java)
 
         lateinit var serverName: String
-        private val grpcServer: Server
+        private lateinit var grpcServer: Server
 
         fun findPlayer(uuid: UUID) = MinecraftServer.getConnectionManager().getPlayer(uuid)
 
@@ -93,34 +95,36 @@ class MessagingModule : GameModule() {
         }
 
         init {
-            // Get server name and publish ping
-            DatabaseModule.IO.launch {
-                try {
-                    serverName = Environment.current.getServerName()
-                } catch (e: Throwable) {
-                    e.printStackTrace()
-                    logger.error("Severe error: failed to gather container ID from Environment.")
-                    exitProcess(1)
+            if (!Environment.current.messagingDisabled) {
+                // Get server name and publish ping
+                DatabaseModule.IO.launch {
+                    try {
+                        serverName = Environment.current.getServerName()
+                    } catch (e: Throwable) {
+                        e.printStackTrace()
+                        logger.error("Severe error: failed to gather container ID from Environment.")
+                        exitProcess(1)
+                    }
+                    instanceSvcStub.initGameServer(initGameServerRequest {
+                        serverName = this@Companion.serverName
+                    })
+                    logger.info("Published ping message.")
+                    serverNameWaitingActions.forEach { it.accept(serverName) }
+                    serverNameWaitingActions.clear()
                 }
-                instanceSvcStub.initGameServer(initGameServerRequest {
-                    serverName = this@Companion.serverName
-                })
-                logger.info("Published ping message.")
-                serverNameWaitingActions.forEach { it.accept(serverName) }
-                serverNameWaitingActions.clear()
-            }
-            // Start a gRPC server for other services to call
-            val port = 50051
-            grpcServer = ServerBuilder.forPort(port)
-                .addService(GameClientService())
-                .addService(PlayerHolderService())
-                .build()
-            grpcServer.start()
-            logger.info("gRPC server started on port $port.")
+                // Start a gRPC server for other services to call
+                val port = 50051
+                grpcServer = ServerBuilder.forPort(port)
+                    .addService(GameClientService())
+                    .addService(PlayerHolderService())
+                    .build()
+                grpcServer.start()
+                logger.info("gRPC server started on port $port.")
 
-            MinecraftServer.getSchedulerManager().buildShutdownTask {
-                grpcServer.shutdown()
-                grpcServer.awaitTermination(30, TimeUnit.SECONDS)
+                MinecraftServer.getSchedulerManager().buildShutdownTask {
+                    grpcServer.shutdown()
+                    grpcServer.awaitTermination(30, TimeUnit.SECONDS)
+                }
             }
         }
     }

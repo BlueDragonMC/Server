@@ -64,47 +64,6 @@ fun Component.clickEvent(action: ClickEvent.Action, value: String): Component {
     return clickEvent(ClickEvent.clickEvent(action, value))
 }
 
-// https://www.spigotmc.org/threads/free-code-sending-perfectly-centered-chat-message.95872/
-/**
- * Centers the component.
- * If it isn't working properly, you may need to prefix the component with `Component.empty()`, for some reason.
- * @param centerPx The number of pixels from the left that the center is located at.
- */
-fun Component.center(centerPx: Int = 154): Component {
-    var componentSizePx = 0
-    for (i in (Component.empty() + this).iterateChildren()) {
-        val isBold = i.style().hasDecoration(TextDecoration.BOLD)
-        for (c in i.toPlainText()) {
-            componentSizePx +=
-                if (isBold) DefaultFontInfo.getBoldLength(c)
-                else DefaultFontInfo.getLength(c)
-        }
-    }
-    val halvedSize = componentSizePx / 2
-    val toCompensate = centerPx - halvedSize
-    val spaceLength = DefaultFontInfo.getLength(' ') + 1
-    var compensated = 0
-    val sb = StringBuilder()
-    while (compensated < toCompensate) {
-        sb.append(" ")
-        compensated += spaceLength
-    }
-    return Component.text(sb.toString()) + this
-
-}
-
-/**
- * Returns a list of all bottom-level children of this component.
- */
-fun Component.iterateChildren(): List<Component> {
-    val list = mutableListOf<Component>()
-    for (i in this.children()) {
-        if (i.children().isEmpty()) list.add(i)
-        else list.addAll(i.iterateChildren())
-    }
-    return list
-}
-
 fun Material.displayName() = Component.translatable(registry().translationKey())
 fun Material.displayName(color: TextColor) = Component.translatable(registry().translationKey(), color)
 
