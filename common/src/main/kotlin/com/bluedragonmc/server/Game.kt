@@ -299,11 +299,11 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
         // Ensure the game was registered with `ready()` method
         MinecraftServer.getSchedulerManager().buildTask {
             if (!games.contains(this) && !playerHasJoined) {
-                logger.error("Game was not registered after 10 seconds!")
+                logger.error("Game was not registered after 25 seconds!")
                 endGameInstantly(false)
                 games.remove(this)
             }
-        }.delay(Duration.ofSeconds(10)).schedule()
+        }.delay(Duration.ofSeconds(25)).schedule()
 
         // Allow the game to start receiving events
         MinecraftServer.getGlobalEventHandler().addChild(eventNode)

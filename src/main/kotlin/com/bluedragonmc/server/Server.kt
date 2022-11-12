@@ -84,6 +84,8 @@ fun start() {
         Lobby()
     } catch (e: Throwable) {
         logger.error("There was an error initializing the Lobby. Shutting down...")
+        e.printStackTrace()
+        MinecraftServer.stopCleanly()
         exitProcess(1)
     }
 }
