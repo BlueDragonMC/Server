@@ -24,9 +24,6 @@ class AwardsModule : GameModule() {
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {}
 
-    fun awardCoins(player: Player, amount: Int, reason: String) =
-        awardCoins(player, amount, Component.text(reason, ALT_COLOR_2))
-
     fun awardCoins(player: Player, amount: Int, reason: Component) {
         player as CustomPlayer
         require(player.isDataInitialized()) { "Player's data has not loaded!" }

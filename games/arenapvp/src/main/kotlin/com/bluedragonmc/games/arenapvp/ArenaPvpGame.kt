@@ -69,21 +69,19 @@ class ArenaPvpGame(mapName: String) : Game("ArenaPvP", mapName) {
         use(AnvilFileMapProviderModule(Paths.get("worlds/$name/$mapName")))
 
         // CUSTOM
-        dependingOn(KitsModule::class) {
-            handleEvent<PlayerRespawnEvent> { event ->
-                getModule<KitsModule>().selectKit(event.player)
-            }
+        handleEvent<PlayerRespawnEvent> { event ->
+            getModule<KitsModule>().selectKit(event.player)
+        }
 
-            handleEvent<PlayerSpawnEvent> { event ->
-                getModule<KitsModule>().giveKit(event.player)
-                event.player.isAllowFlying = true
-            }
+        handleEvent<PlayerSpawnEvent> { event ->
+            getModule<KitsModule>().giveKit(event.player)
+            event.player.isAllowFlying = true
+        }
 
-            handleEvent<KitSelectedEvent> { event ->
-                event.player.clearEffects()
-                if (event.kit.hasAbility("jump_boost")) {
-                    event.player.addEffect(jumpBoost)
-                }
+        handleEvent<KitSelectedEvent> { event ->
+            event.player.clearEffects()
+            if (event.kit.hasAbility("jump_boost")) {
+                event.player.addEffect(jumpBoost)
             }
         }
 
@@ -93,7 +91,7 @@ class ArenaPvpGame(mapName: String) : Game("ArenaPvP", mapName) {
 
         handleEvent<DoubleJumpModule.PlayerDoubleJumpEvent> { event ->
             if (event.player.position.y <= 111) {
-                if (!getModule<KitsModule>().getSelectedKit(event.player).hasAbility("double_jump")) {
+                if (!getModule<KitsModule>().hasAbility(event.player, "double_jump")) {
                     event.isCancelled = true
                     event.player.isAllowFlying = false
                 }

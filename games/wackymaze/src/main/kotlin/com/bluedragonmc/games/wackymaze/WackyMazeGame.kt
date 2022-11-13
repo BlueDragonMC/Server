@@ -64,6 +64,7 @@ class WackyMazeGame(mapName: String) : Game("WackyMaze", mapName) {
         ready()
     }
 
+    @Suppress("unused")
     enum class StickItem(override val id: String, val material: Material) : CosmeticsModule.Cosmetic {
         FISH("wackymaze_stick_fish", Material.COD),
         DOOR("wackymaze_stick_door", Material.OAK_DOOR),

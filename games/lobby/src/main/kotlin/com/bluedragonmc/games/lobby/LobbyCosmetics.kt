@@ -89,6 +89,7 @@ class LobbyCosmeticsModule : GameModule() {
         CLOUD("lobby_double_jump_cloud"),
     }
 
+    @Suppress("unused")
     enum class LobbyHat(override val id: String, val itemStack: ItemStack) : CosmeticsModule.Cosmetic {
         GLASS("lobby_hat_glass", ItemStack.of(Material.GLASS)),
         RAINBOW("lobby_hat_rainbow", ItemStack.of(Material.BLUE_STAINED_GLASS)),

@@ -16,7 +16,6 @@ import kotlinx.serialization.encoding.Encoder
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextColor
 import net.minestom.server.coordinate.Pos
-import net.minestom.server.permission.Permission
 import org.bson.BsonType
 import java.util.*
 
@@ -35,7 +34,6 @@ open class ToStringSerializer<T>(
 }
 
 object UUIDSerializer : ToStringSerializer<UUID>("UUID", UUID::toString, UUID::fromString)
-object PermissionSerializer : ToStringSerializer<Permission>("Permission", Permission::getPermissionName, ::Permission)
 
 object DateSerializer : KSerializer<Date> {
     override val descriptor = PrimitiveSerialDescriptor("Date", PrimitiveKind.LONG)

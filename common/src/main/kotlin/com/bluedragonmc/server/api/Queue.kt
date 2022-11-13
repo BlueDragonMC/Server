@@ -14,8 +14,9 @@ abstract class Queue {
 
     abstract fun getMaps(gameType: String): Array<File>?
     abstract fun randomMap(gameType: String): String?
+
     open fun createInstance(request: GsClient.CreateInstanceRequest): Game? {
-        return null
+        throw NotImplementedError("Creating instances not implemented")
     }
 
     open fun sendPlayer(request: SendPlayerRequest) {}

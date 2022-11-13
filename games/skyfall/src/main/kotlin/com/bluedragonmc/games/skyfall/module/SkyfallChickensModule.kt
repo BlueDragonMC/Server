@@ -20,7 +20,7 @@ import net.minestom.server.event.EventNode
  */
 class SkyfallChickensModule(private val chickenLocations: List<Point> = listOf()) : GameModule() {
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
-        eventNode.addListener(GameStartEvent::class.java) { event ->
+        eventNode.addListener(GameStartEvent::class.java) {
             chickenLocations.forEach { location ->
                 Entity(EntityType.CHICKEN).apply {
                     setInstance(parent.getInstance(), location)

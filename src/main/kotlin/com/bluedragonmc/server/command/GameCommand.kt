@@ -1,10 +1,10 @@
 package com.bluedragonmc.server.command
 
-import com.bluedragonmc.server.utils.GameState
+import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
 import com.bluedragonmc.server.event.GameStartEvent
-import com.bluedragonmc.server.module.instance.InstanceModule
 import com.bluedragonmc.server.module.minigame.TeamModule
 import com.bluedragonmc.server.module.minigame.WinModule
+import com.bluedragonmc.server.utils.GameState
 import com.bluedragonmc.server.utils.withColor
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.event.HoverEvent
@@ -47,9 +47,12 @@ class GameCommand(name: String, usageString: String, vararg aliases: String?) : 
     subcommand("module") {
         subcommand("list") {
             syntax {
-                sender.sendMessage(formatMessage("All modules ({}):", game.modules.size))
+                sender.sendMessage(formatMessageTranslated("command.game.module.list", game.modules.size))
                 for (module in game.modules) {
-                    sender.sendMessage(formatMessage("- {}", module.javaClass.simpleName).hoverEvent(HoverEvent.showText(module.toString() withColor NamedTextColor.GRAY)))
+                    sender.sendMessage(
+                        Component.text(module.javaClass.simpleName, BRAND_COLOR_PRIMARY_1)
+                            .hoverEvent(HoverEvent.showText(module.toString() withColor NamedTextColor.GRAY))
+                    )
                 }
             }.requireInGame()
         }
@@ -57,19 +60,14 @@ class GameCommand(name: String, usageString: String, vararg aliases: String?) : 
             val moduleArgument by WordArgument
             syntax(moduleArgument) {
                 val modToRemove = get(moduleArgument)
-                val unremovableModules = listOf("DatabaseModule", "MessagingModule")
                 for (module in game.modules) {
                     if (module.javaClass.simpleName == modToRemove) {
-                        if (unremovableModules.contains(modToRemove) || module is InstanceModule) {
-                            sender.sendMessage(formatErrorMessage("This module cannot be unloaded."))
-                            return@syntax
-                        }
                         game.unregister(module)
-                        sender.sendMessage(formatMessage("{} was successfully unloaded.", module.javaClass.simpleName))
+                        sender.sendMessage(formatMessageTranslated("command.game.module.unloaded", module.javaClass.simpleName))
                         return@syntax
                     }
                 }
-                sender.sendMessage(formatErrorMessage("Module not found."))
+                sender.sendMessage(formatErrorTranslated("command.game.module.not_found"))
             }
         }
     }

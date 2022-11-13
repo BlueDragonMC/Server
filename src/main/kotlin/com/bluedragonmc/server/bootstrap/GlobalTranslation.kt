@@ -44,5 +44,3 @@ object GlobalTranslation : Bootstrap() {
         GlobalTranslator.translator().addSource(registry)
     }
 }
-
-fun GlobalTranslator.render(component: Component, player: Player) = renderer().render(component, player.locale ?: Locale.ENGLISH)

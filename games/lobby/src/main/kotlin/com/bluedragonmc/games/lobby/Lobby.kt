@@ -234,7 +234,7 @@ class Lobby : Game("Lobby", "lobbyv2.2") {
         ItemStack.of(Material.COMPASS)
             .withDisplayName((Component.translatable("lobby.game_menu", ALT_COLOR_1)).noItalic())
 
-    fun loadXPBar(player: Player) {
+    private fun loadXPBar(player: Player) {
         lateinit var loadXPTask: Task
         loadXPTask = MinecraftServer.getSchedulerManager().buildTask {
             player as CustomPlayer

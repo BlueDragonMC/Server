@@ -24,11 +24,11 @@ class ViewPunishmentCommand(name: String, usageString: String, vararg aliases: S
                 val doc = DatabaseModule.getPlayersCollection()
                     .findOne(PlayerDocument::punishments elemMatch Filters.regex(Punishment::id.path(), "^$id"))
                 if (doc == null) {
-                    sender.sendMessage(formatMessage("No punishments found with ID {}.", id))
+                    sender.sendMessage(formatMessageTranslated("command.view_punishment.not_found", id))
                     return@launch
                 }
                 val punishment = doc.punishments.first { it.id.toString().startsWith(id) }
-                sender.sendMessage(formatMessage("Punishment ID: {}\nPlayer: {}\nReason: {}\nModerator: {}\nTime left: {}\nRevoked: {}",
+                sender.sendMessage(formatMessageTranslated("command.view_punishment.response",
                     punishment.id.toString().substringBefore('-'),
                     doc.username,
                     punishment.reason,

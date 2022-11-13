@@ -33,7 +33,6 @@ class LeaderboardsModule(config: ConfigurationNode) : GameModule() {
     private val baseFont = Font.createFont(Font.TRUETYPE_FONT, this::class.java.getResourceAsStream("/font/Minecraft.otf"))
     private val font28 = baseFont.deriveFont(Font.PLAIN, 28f)
     private val font36 = baseFont.deriveFont(Font.PLAIN, 36f)
-    private val font72 = baseFont.deriveFont(Font.PLAIN, 72f)
 
     // Create a list of font sizes to use for dynamic text scaling
     private val fontSizes = (12 .. 72 step 2).map { baseFont.deriveFont(Font.PLAIN, it.toFloat()) }
@@ -110,9 +109,6 @@ class LeaderboardsModule(config: ConfigurationNode) : GameModule() {
             it.size <= maxSize && stringWidth(graphics, it, text) < boxWidth
         }
     }
-
-    private fun stringWidth(graphics: Graphics2D, string: String) =
-        graphics.font.getStringBounds(string, FontRenderContext(graphics.transform, false, false)).width.toFloat()
 
     private fun stringWidth(graphics: Graphics2D, font: Font, string: String) =
         font.getStringBounds(string, FontRenderContext(graphics.transform, false, false)).width.toFloat()

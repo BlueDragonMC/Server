@@ -141,10 +141,6 @@ class WinModule(
         }
     }
 
-    fun declareWinner(winner: Component) {
-        declareWinner(TeamModule.Team(winner, mutableListOf()))
-    }
-
     fun declareWinner(winner: Player) {
         declareWinner(TeamModule.Team(winner.name, mutableListOf(winner)))
     }

@@ -151,16 +151,16 @@ class CosmeticsModule : GameModule() {
         it.cosmetics.any { c -> c.id == cosmetic.id }
     }
 
-    fun getEventNode(cosmetic: Cosmetic): EventNode<PlayerEvent> {
+    private fun getEventNode(cosmetic: Cosmetic): EventNode<PlayerEvent> {
         val id = "cosmetic-${cosmetic.id}-users"
-        val existing = this.eventNode!!.findChildren(id, PlayerEvent::class.java).firstOrNull()
+        val existing = this.eventNode.findChildren(id, PlayerEvent::class.java).firstOrNull()
         if (existing != null) {
             return existing
         }
         val eventNode = EventNode.type(id, EventFilter.PLAYER) { _, player ->
             isCosmeticEquipped(player, cosmetic)
         }
-        this.eventNode!!.addChild(eventNode)
+        this.eventNode.addChild(eventNode)
         return eventNode
     }
 

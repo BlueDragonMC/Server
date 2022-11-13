@@ -45,7 +45,7 @@ class KitsModule(
                 selectKit(event.player)
             }
         }
-        eventNode.addListener(GameStartEvent::class.java) { event ->
+        eventNode.addListener(GameStartEvent::class.java) {
             if (giveKitsOnStart) for (player in parent.players) giveKit(player)
         }
     }
@@ -92,7 +92,7 @@ class KitsModule(
 
     fun getSelectedKit(player: Player): Kit = selectedKits.getOrDefault(player, selectableKits[0])
 
-    fun hasAbility(player: Player, ability: String): Boolean = getSelectedKit(player).abilities.contains(ability)
+    fun hasAbility(player: Player, ability: String): Boolean = getSelectedKit(player).hasAbility(ability)
 
     data class Kit(
         val name: Component,

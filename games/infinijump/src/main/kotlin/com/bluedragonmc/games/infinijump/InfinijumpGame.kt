@@ -325,5 +325,5 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
         return cosmetic?.blockType?.invoke() ?: Block.STONE_BRICKS
     }
 
-    var angle = 180.0
+    private var angle = 180.0
 }

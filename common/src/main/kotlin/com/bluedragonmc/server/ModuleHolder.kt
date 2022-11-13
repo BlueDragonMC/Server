@@ -38,24 +38,6 @@ abstract class ModuleHolder {
         return null
     }
 
-    protected fun dependingOn(vararg deps: KClass<out GameModule>, block: GameModuleBuilder.() -> Unit) {
-        val modules = GameModuleBuilder(deps).apply(block).build()
-        modules.forEach { use(it) }
-    }
-
-    protected class GameModuleBuilder(val deps: Array<out KClass<out GameModule>>) {
-
-        val modules = mutableListOf<GameModule>()
-
-        inline fun <reified T : Event> handleEvent(
-            handler: Consumer<T>
-        ) {
-            modules.add(InlineModule(T::class, handler, deps))
-        }
-
-        fun build() = modules
-    }
-
     protected fun onGameStart(vararg deps: KClass<out GameModule>, handler: Consumer<GameStartEvent>) =
         handleEvent(GameStartEvent::class, handler, *deps)
 

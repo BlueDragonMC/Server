@@ -1,5 +1,7 @@
 package com.bluedragonmc.server
 
+import com.bluedragonmc.server.api.Queue
+
 abstract class Environment {
 
     companion object {
@@ -13,7 +15,7 @@ abstract class Environment {
         }
     }
 
-    abstract val queue: com.bluedragonmc.server.api.Queue
+    abstract val queue: Queue
     abstract val messagingDisabled: Boolean
     abstract val mongoHostname: String
     abstract val puffinHostname: String

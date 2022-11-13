@@ -52,7 +52,7 @@ class ProjectileModule : GameModule() {
     }
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
-        this.parent = parent;
+        this.parent = parent
 
         hookBowEvents(eventNode)
         hookSnowballEvents(eventNode)
@@ -76,7 +76,7 @@ class ProjectileModule : GameModule() {
             if (event.itemStack.material() != Material.BOW) return@addListener
 
             if (event.player.gameMode != GameMode.CREATIVE) {
-                if (!takeOne(event.player, Material.ARROW)) return@addListener
+                if (!takeArrow(event.player)) return@addListener
             }
 
             val secondsCharged =
@@ -284,7 +284,7 @@ class ProjectileModule : GameModule() {
                 // (seeing if a PlayerBlockBreakEvent would be cancelled)
                 val player = projectile.shooter as? Player ?: return@filter false
                 val block = instance.getBlock(pos)
-                val event = ProjectileBreakBlockEvent(parent, player, projectile, block, pos)
+                val event = ProjectileBreakBlockEvent(parent, player, block, pos)
                 parent.callEvent(event)
 
                 if (dropItems && !event.isCancelled) {
@@ -406,14 +406,15 @@ class ProjectileModule : GameModule() {
             .sub(0.0, 0.2, 0.0)
     }
 
-    private fun takeOne(player: Player, material: Material): Boolean {
-        val stack = player.inventory.itemStacks.firstOrNull { it.material() == material }?.withAmount(1)
-        if (stack != null) {
-            player.inventory.takeItemStack(stack, TransactionOption.ALL)
-            return true
-        } else {
+    private fun takeArrow(player: Player): Boolean {
+        val stack = player.inventory.itemStacks.firstOrNull { it.material() == Material.ARROW }?.withAmount(1)
+
+        if (stack == null) {
             player.inventory.update()
             return false
         }
+
+        player.inventory.takeItemStack(stack, TransactionOption.ALL)
+        return true
     }
 }

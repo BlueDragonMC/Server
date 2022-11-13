@@ -163,7 +163,7 @@ class TeamModule(
         val players: MutableList<Player> = mutableListOf(),
         val allowFriendlyFire: Boolean = false
     ) : PacketGroupingAudience {
-        val uuid = UUID.randomUUID()
+        val uuid: UUID = UUID.randomUUID()
 
         private lateinit var scoreboardTeam: net.minestom.server.scoreboard.Team
 

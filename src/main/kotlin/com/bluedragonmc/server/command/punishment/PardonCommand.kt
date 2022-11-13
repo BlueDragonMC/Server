@@ -24,15 +24,16 @@ class PardonCommand(name: String, usageString: String, vararg aliases: String) :
             document.compute(PlayerDocument::punishments) { punishments ->
                 punishments.forEach {
                     if (it.isInEffect()) {
-                        sender.sendMessage(formatMessage("Successfully revoked {} with ID {}.",
-                            it.type.toString().lowercase(),
-                            it.id.toString().substringBefore('-')))
+                        sender.sendMessage(formatMessageTranslated(
+                            "command.pardon.success.${it.type.toString().lowercase()}",
+                                it.id.toString().substringBefore('-'))
+                        )
                         it.active = false
                     }
                 }
                 punishments
             }
-            sender.sendMessage(formatMessage("Complete."))
+            sender.sendMessage(formatMessageTranslated("command.pardon.completed"))
         }
     }
 })

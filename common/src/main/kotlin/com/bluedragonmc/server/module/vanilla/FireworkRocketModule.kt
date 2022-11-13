@@ -23,7 +23,7 @@ import java.time.Duration
  * If [boostElytra] is enabled, using a firework rocket will
  * increase the velocity of a player flying with elytra.
  */
-class FireworkRocketModule(val boostElytra: Boolean = true) : GameModule() {
+class FireworkRocketModule(private val boostElytra: Boolean = true) : GameModule() {
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         eventNode.addListener(PlayerUseItemEvent::class.java) { event ->
             // Firework particles

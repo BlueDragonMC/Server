@@ -13,7 +13,7 @@ import net.minestom.server.event.player.PlayerSpawnEvent
  * This sets the base value of the attribute, it does not add a modifier.
  * The module automatically resets their max health to 20 when they leave the instance.
  */
-class MaxHealthModule(val maxHealth: Float) : GameModule() {
+class MaxHealthModule(private val maxHealth: Float) : GameModule() {
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         eventNode.addListener(PlayerSpawnEvent::class.java) { event ->

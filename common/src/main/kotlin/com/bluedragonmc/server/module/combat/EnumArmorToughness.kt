@@ -39,7 +39,7 @@ enum class EnumArmorToughness(val armorToughness: Int, val defensePoints: Int, v
 
     object ArmorToughness {
 
-        val armorDataMap = values().associate {
+        private val armorDataMap = values().associate {
             it.material to (it.armorToughness to it.defensePoints)
         }
 

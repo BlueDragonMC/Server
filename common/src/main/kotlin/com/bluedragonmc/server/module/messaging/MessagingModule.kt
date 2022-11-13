@@ -129,7 +129,7 @@ class MessagingModule : GameModule() {
         }
     }
 
-    lateinit var instanceId: UUID
+    private lateinit var instanceId: UUID
     private lateinit var parent: Game
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {

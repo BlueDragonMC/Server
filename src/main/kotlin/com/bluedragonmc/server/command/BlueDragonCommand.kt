@@ -107,7 +107,7 @@ open class BlueDragonCommand(
         val split = string.split("{}")
 
         if (split.size == 1) return string withColor messageColor
-        return Companion.buildMessage {
+        return buildMessage {
             for ((index, part) in split.withIndex()) {
                 message(part)
                 if (index < fields.size) {
@@ -144,7 +144,7 @@ open class BlueDragonCommand(
     fun subcommand(name: String, block: BlueDragonCommand.() -> Unit) =
         addSubcommand(constructSubcommand(name, block))
 
-    fun constructSubcommand(name: String, block: BlueDragonCommand.() -> Unit) =
+    private fun constructSubcommand(name: String, block: BlueDragonCommand.() -> Unit) =
         BlueDragonCommand(name, emptyArray(), permission, block)
 
     fun syntax(vararg args: Argument<*>, block: CommandCtx.() -> Unit) = Syntax(this, args.toList(), block)
@@ -164,7 +164,6 @@ open class BlueDragonCommand(
     open class CommandCtx(val sender: CommandSender, val ctx: CommandContext) {
         val player by lazy { sender as Player }
         val game by lazy { Game.findGame(player)!! }
-        val playerName by lazy { (sender as? Player)?.name ?: Component.translatable("command.console_sender_name") }
 
         fun <T> get(argument: Argument<T>): T = ctx.get(argument)
         fun getPlayer(argument: Argument<PlayerDocument>): Player? =
@@ -179,7 +178,7 @@ open class BlueDragonCommand(
 
     data class ConditionCtx(val sender: CommandSender, val ctx: CommandContext)
 
-    open class Syntax(val parent: Command, val args: List<Argument<*>>, val handler: CommandCtx.() -> Unit) :
+    open class Syntax(parent: Command, args: List<Argument<*>>, val handler: CommandCtx.() -> Unit) :
         ConditionHolder {
         override val conditions: MutableList<ConditionCtx.() -> Boolean> = mutableListOf()
 

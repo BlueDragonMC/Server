@@ -19,6 +19,7 @@ class GlobalCosmeticModule : GameModule() {
 
     fun getFireworkColor(player: Player) = cosmetics.getCosmeticInGroup<WinFireworks>(player)?.fireworkColors ?: emptyArray()
 
+    @Suppress("unused")
     enum class WinFireworks(override val id: String, vararg val fireworkColors: TextColor) : CosmeticsModule.Cosmetic {
         RED("global_firework_red", NamedTextColor.RED),
         ORANGE("global_firework_orange", TextColor.color(239, 147, 43)),

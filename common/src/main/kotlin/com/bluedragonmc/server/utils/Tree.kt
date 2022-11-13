@@ -43,16 +43,6 @@ open class Node<T>(var value: T?) {
         }
     }
 
-    fun removeChild(element: T) {
-        children.removeIf { it.value == element }
-    }
-
-    private fun removeChild(element: Node<T>) {
-        children.remove(element)
-    }
-
-    fun removeFromParent() = parent.removeChild(this)
-
     private val symbols = listOf("", "-", ">")
 
     override fun toString(): String {

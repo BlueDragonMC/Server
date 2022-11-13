@@ -15,6 +15,5 @@ enum class GameState(val canPlayersJoin: Boolean) {
         STARTING -> EnumGameState.STARTING
         INGAME -> EnumGameState.INGAME
         ENDING -> EnumGameState.ENDING
-        else -> EnumGameState.UNKNOWN
     }
 }

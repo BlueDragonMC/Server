@@ -37,9 +37,9 @@ import java.nio.file.Paths
 - additionalLocations[3]: Mid Chests
  */
 class SkyfallGame(mapName: String) : Game("Skyfall", mapName) {
-    val config = use(ConfigModule("skyfall.yml")).getConfig()
 
     init {
+        use(ConfigModule("skyfall.yml"))
         use(GuiModule())
         // Combat
         use(CustomDeathMessageModule())
@@ -105,15 +105,15 @@ class SkyfallGame(mapName: String) : Game("Skyfall", mapName) {
     class SkyfallLootProvider(private val game: Game) : ChestLootModule.ChestLootProvider {
         override fun getLoot(chestLocation: Point): Collection<ItemStack> {
 
-            val chestLocation = Pos.fromPoint(chestLocation)
+            val pos = Pos.fromPoint(chestLocation)
             val parentNode =
-                if (game.mapData!!.additionalLocations[1].contains(chestLocation)) {
+                if (game.mapData!!.additionalLocations[1].contains(pos)) {
                     // Spawn chest
                     game.getModule<ConfigModule>().getConfig().node("loot", "spawn")
-                } else if (game.mapData!!.additionalLocations[2].contains(chestLocation)) {
+                } else if (game.mapData!!.additionalLocations[2].contains(pos)) {
                     // Supply chest
                     game.getModule<ConfigModule>().getConfig().node("loot", "supply")
-                } else if (game.mapData!!.additionalLocations[3].contains(chestLocation)) {
+                } else if (game.mapData!!.additionalLocations[3].contains(pos)) {
                     // Mid chest
                     game.getModule<ConfigModule>().getConfig().node("loot", "middle")
                 } else {

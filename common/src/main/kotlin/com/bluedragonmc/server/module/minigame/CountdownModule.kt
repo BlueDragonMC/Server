@@ -40,7 +40,7 @@ class CountdownModule(
     private var countdownEnded: Boolean = false
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
-        eventNode.addListener(PlayerSpawnEvent::class.java) { event ->
+        eventNode.addListener(PlayerSpawnEvent::class.java) {
             if (countdownEnded) return@addListener
             if (threshold > 0 && parent.players.size >= threshold && countdown == null) {
                 countdown = createCountdownTask(parent)
@@ -95,7 +95,7 @@ class CountdownModule(
             }
         }
 
-        eventNode.addListener(GameStartEvent::class.java) { event ->
+        eventNode.addListener(GameStartEvent::class.java) {
             cancelCountdown()
             parent.useModules(useOnStart.asIterable())
             parent.state = GameState.INGAME

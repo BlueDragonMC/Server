@@ -62,7 +62,7 @@ data class PlayerDocument @OptIn(ExperimentalSerializationApi::class) constructo
 data class CosmeticEntry(val id: String, var equipped: Boolean = false)
 
 enum class PunishmentType {
-    BAN, MUTE, WARNING, COMPETITIVE_BAN
+    BAN, MUTE
 }
 
 @Serializable

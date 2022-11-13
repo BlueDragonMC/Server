@@ -81,7 +81,7 @@ class CombatZonesModule(
             if (parent.hasModule<DoubleJumpModule>())
                 DoubleJumpModule.unblockDoubleJump(event.player, "combat")
         }
-        eventNode!!.addListener(PlayerRespawnEvent::class.java) { event ->
+        eventNode.addListener(PlayerRespawnEvent::class.java) { event ->
             if (!checkInZone(event.respawnPosition) && parent.hasModule<DoubleJumpModule>()) {
                 DoubleJumpModule.unblockDoubleJump(event.player, "combat")
             }

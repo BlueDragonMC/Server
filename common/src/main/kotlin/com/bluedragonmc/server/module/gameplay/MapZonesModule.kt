@@ -15,7 +15,7 @@ import net.minestom.server.event.trait.PlayerEvent
  * Ties specific areas of the map to specific gameplay events.
  */
 class MapZonesModule : GameModule() {
-    val zones = mutableListOf<MapZone>()
+    private val zones = mutableListOf<MapZone>()
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         eventNode.addListener(PlayerMoveEvent::class.java) { event ->
             zones.forEach { zone ->
@@ -53,7 +53,7 @@ class MapZonesModule : GameModule() {
     fun createZone(startPos: Point, endPos: Point, vararg labels: String) =
         MapZone(startPos, endPos, *labels, mapZonesModule = this).also { zones.add(it) }
 
-    class MapZone(val startPos: Point, val endPos: Point, vararg val labels: String, mapZonesModule: MapZonesModule) {
+    class MapZone(private val startPos: Point, private val endPos: Point, vararg val labels: String, mapZonesModule: MapZonesModule) {
         private val xRange = if (startPos.x() < endPos.x()) startPos.x()..endPos.x() else endPos.x()..startPos.x()
         private val yRange = if (startPos.y() < endPos.y()) startPos.y()..endPos.y() else endPos.y()..startPos.y()
         private val zRange = if (startPos.z() < endPos.z()) startPos.z()..endPos.z() else endPos.z()..startPos.z()
@@ -75,11 +75,11 @@ class MapZonesModule : GameModule() {
         }
 
         init {
-            mapZonesModule.eventNode!!.addChild(eventNode)
+            mapZonesModule.eventNode.addChild(eventNode)
         }
 
         /**
-         * Checks if the specified [position] is in this [CombatZone].
+         * Checks if the specified [position] is in this [MapZone].
          */
         fun checkInZone(position: Point): Boolean {
             return position.x() in xRange && position.y() in yRange && position.z() in zRange

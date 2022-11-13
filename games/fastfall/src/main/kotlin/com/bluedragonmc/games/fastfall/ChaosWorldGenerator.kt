@@ -5,6 +5,7 @@ import net.minestom.server.coordinate.Vec
 import net.minestom.server.instance.block.Block
 import net.minestom.server.instance.generator.GenerationUnit
 import net.minestom.server.instance.generator.Generator
+import kotlin.math.hypot
 import kotlin.math.pow
 import kotlin.math.sqrt
 
@@ -51,8 +52,7 @@ class ChaosWorldGenerator(private val radius: Int, private val blockSet: List<Bl
      * Checks if the point (pointX, pointY) is inside the circle with center (centerX, centerY).
      */
     private fun pointInCircle(pointX: Double, pointY: Double, centerX: Int, centerY: Int, radius: Int): Boolean {
-        val distance = sqrt((pointX - centerX).pow(2) + (pointY - centerY).pow(2))
-        return distance <= radius
+        return hypot(pointX - centerX, pointY - centerY) <= radius
     }
 
 }

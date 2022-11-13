@@ -17,7 +17,6 @@ object ItemUtils {
             .meta { metaBuilder: ItemMeta.Builder ->
                 metaBuilder.enchantment(Enchantment.KNOCKBACK, kbLevel)
             }.build()
-    fun ItemStack.withEnchant(enchantment: Enchantment, level: Short): ItemStack = withMeta { metaBuilder: ItemMeta.Builder -> metaBuilder.enchantment(enchantment, level) }
 
     fun ItemStack.withArmorColor(color: Color): ItemStack {
         return withMeta(LeatherArmorMeta::class.java) { builder -> builder.color(color) }

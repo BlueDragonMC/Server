@@ -30,8 +30,7 @@ class TestQueue : Queue() {
     /**
      * Adds the player to the queue.
      * @param player The player to add to the queue.
-     * @param gameFilter Used to find existing games to add the player to.
-     * @param idealGame If no games already exist, start a new one of this type. If this is null, the queue will not start a new game.
+     * @param gameType The game type which the player wants to join.
      */
     override fun queue(player: Player, gameType: CommonTypes.GameType) {
         if (gameType.name == "Lobby" && gameType.mapName.isEmpty() && gameType.mode.isEmpty()) {
@@ -65,7 +64,7 @@ class TestQueue : Queue() {
         game.addPlayer(player)
     }
 
-    var instanceStarting = false // only one instance is allowed to start per queue cycle
+    private var instanceStarting = false // only one instance is allowed to start per queue cycle
     override fun start() {
         MinecraftServer.getSchedulerManager().buildTask {
             try {
@@ -129,12 +128,6 @@ class TestQueue : Queue() {
         val allMaps = getMaps(gameType)
         if (allMaps != null) return allMaps[Random.nextInt(allMaps.size)].name
         return null
-    }
-
-    fun randomMapOrDefault(gameType: String, defaultMap: String): String {
-        val map = randomMap(gameType)
-        if (map == null) return defaultMap
-        else return map
     }
 
 }
