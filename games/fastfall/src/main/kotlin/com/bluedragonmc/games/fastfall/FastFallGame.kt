@@ -14,6 +14,7 @@ import com.bluedragonmc.server.module.minigame.*
 import com.bluedragonmc.server.module.vanilla.FallDamageModule
 import com.bluedragonmc.server.utils.*
 import com.bluedragonmc.server.utils.ItemUtils.withArmorColor
+import kotlinx.coroutines.runBlocking
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -136,19 +137,24 @@ class FastFallGame(mapName: String?) : Game("FastFall", mapName ?: "Chaos") {
                 )
 
                 // Record the player's best time, if they beat their personal best
-                getModule<StatisticsModule>().recordStatisticIfLower(player, "game_fastfall_best_time", time.toDouble()) {
-                    val str = formatDuration(time)
-                    player.sendMessage(Component.translatable(
-                        "game.fastfall.new_record", ALT_COLOR_2, setOf(TextDecoration.BOLD),
-                        Component.text(str, ALT_COLOR_1))
-                    )
-                    player.playSound(Sound.sound(
-                        SoundEvent.ENTITY_PLAYER_LEVELUP, Sound.Source.PLAYER, 1.0f, 1.0f
-                    ))
+                runBlocking {
+                    getModule<StatisticsModule>().recordStatisticIfLower(player, "game_fastfall_best_time", time.toDouble()) {
+                        val str = formatDuration(time)
+                        player.sendMessage(Component.translatable(
+                            "game.fastfall.new_record", ALT_COLOR_2, setOf(TextDecoration.BOLD),
+                            Component.text(str, ALT_COLOR_1))
+                        )
+                        player.playSound(Sound.sound(
+                            SoundEvent.ENTITY_PLAYER_LEVELUP, Sound.Source.PLAYER, 1.0f, 1.0f
+                        ))
+                    }
                 }
+
                 if (!isSingleplayer) {
                     // Only record wins in multiplayer
-                    getModule<StatisticsModule>().incrementStatistic(player, "game_fastfall_wins")
+                    runBlocking {
+                        getModule<StatisticsModule>().incrementStatistic(player, "game_fastfall_wins")
+                    }
                 }
             }
         }

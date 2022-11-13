@@ -14,6 +14,7 @@ dependencies {
     implementation(project(":common"))
     implementation(libs.minestom)
     implementation(libs.bundles.messaging)
+    implementation(libs.kmongo)
 }
 
 tasks.getByName<Test>("test") {

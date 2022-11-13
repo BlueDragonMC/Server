@@ -26,6 +26,7 @@ subprojects {
 
 dependencies {
     testImplementation(kotlin("test"))
+    testImplementation(project(":testing"))
     testImplementation(libs.mockk)
     testImplementation(libs.junit.api)
     testImplementation(libs.minestom.testing)

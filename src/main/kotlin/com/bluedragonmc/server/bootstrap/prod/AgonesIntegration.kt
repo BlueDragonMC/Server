@@ -5,7 +5,7 @@ import agones.dev.sdk.duration
 import agones.dev.sdk.empty
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.bootstrap.Bootstrap
-import com.bluedragonmc.server.module.database.DatabaseModule
+import com.bluedragonmc.server.Database
 import com.bluedragonmc.server.module.messaging.MessagingModule
 import com.bluedragonmc.server.queue.ProductionEnvironment
 import io.grpc.ManagedChannel
@@ -57,7 +57,7 @@ object AgonesIntegration : Bootstrap(ProductionEnvironment::class) {
             }
         }
 
-        DatabaseModule.IO.launch {
+        Database.IO.launch {
             logger.info("Agones - Starting health check pings")
             stub.health(healthFlow)
         }

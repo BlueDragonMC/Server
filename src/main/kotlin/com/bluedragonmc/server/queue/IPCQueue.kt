@@ -8,7 +8,7 @@ import com.bluedragonmc.api.grpc.removeFromQueueRequest
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.api.Queue
 import com.bluedragonmc.server.lobby
-import com.bluedragonmc.server.module.database.DatabaseModule
+import com.bluedragonmc.server.Database
 import com.bluedragonmc.server.module.messaging.MessagingModule
 import kotlinx.coroutines.launch
 import net.kyori.adventure.text.Component
@@ -31,7 +31,7 @@ object IPCQueue : Queue() {
             return
         }
         player.sendMessage(Component.translatable("queue.adding", NamedTextColor.DARK_GRAY))
-        DatabaseModule.IO.launch {
+        Database.IO.launch {
             if (queuedPlayers.contains(player)) {
                 MessagingModule.Stubs.queueStub.removeFromQueue(removeFromQueueRequest {
                     playerUuid = player.uuid.toString()

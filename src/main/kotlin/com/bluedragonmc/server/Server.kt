@@ -46,6 +46,7 @@ fun start() {
         AgonesIntegration,
         Commands,
         CustomPlayerProvider,
+        DatabaseInit,
         DevInstanceRouter,
         GlobalBlockHandlers,
         GlobalChatFormat,

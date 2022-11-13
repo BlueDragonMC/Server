@@ -4,7 +4,7 @@ import com.bluedragonmc.api.grpc.playerTransferRequest
 import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.bootstrap.Bootstrap
-import com.bluedragonmc.server.module.database.DatabaseModule
+import com.bluedragonmc.server.Database
 import com.bluedragonmc.server.module.messaging.MessagingModule
 import com.bluedragonmc.server.queue.ProductionEnvironment
 import kotlinx.coroutines.launch
@@ -55,8 +55,8 @@ object InitialInstanceRouter : Bootstrap(ProductionEnvironment::class) {
             set(value) {
                 field = value
                 // Fetch the player's data document
-                if (value != null) DatabaseModule.IO.launch {
-                    DatabaseModule.loadDataDocument(value as CustomPlayer)
+                if (value != null) Database.IO.launch {
+                    Database.connection.loadDataDocument(value as CustomPlayer)
                     tryStartPlayState()
                 }
             }
@@ -79,7 +79,7 @@ object InitialInstanceRouter : Bootstrap(ProductionEnvironment::class) {
                 logger.debug("Starting PLAY state for Player '${player!!.username}'")
                 MinecraftServer.getConnectionManager().startPlayState(player!!, true)
             }
-            DatabaseModule.IO.launch {
+            Database.IO.launch {
                 MessagingModule.Stubs.playerTrackerStub.playerTransfer(playerTransferRequest {
                     username = player!!.username
                     uuid = player!!.uuid.toString()

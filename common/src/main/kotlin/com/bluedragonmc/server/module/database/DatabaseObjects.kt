@@ -1,5 +1,6 @@
 package com.bluedragonmc.server.module.database
 
+import com.bluedragonmc.server.Database
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -9,7 +10,6 @@ import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextColor
 import net.minestom.server.coordinate.Pos
-import org.litote.kmongo.setValue
 import java.time.Duration
 import java.time.Instant
 import java.util.*
@@ -39,7 +39,7 @@ data class PlayerDocument @OptIn(ExperimentalSerializationApi::class) constructo
 
     suspend fun getGroups(): List<PermissionGroup> {
         return groups.mapNotNull { name ->
-            DatabaseModule.getGroupByName(name)
+            Database.connection.getGroupByName(name)
         }.toList()
     }
 
@@ -47,13 +47,13 @@ data class PlayerDocument @OptIn(ExperimentalSerializationApi::class) constructo
         permissions + getGroups().flatMap { it.permissions }.distinct()
 
     suspend fun <T> update(field: KMutableProperty<T>, value: T) {
-        DatabaseModule.getPlayersCollection().updateOneById(uuid.toString(), setValue(field, value))
+        Database.connection.updatePlayer(uuid.toString(), field, value)
         field.setter.call(this, value)
     }
 
     suspend fun <T> compute(field: KMutableProperty1<PlayerDocument, T>, block: (T) -> T) {
         val newValue = block(field.get(this))
-        DatabaseModule.getPlayersCollection().updateOneById(uuid.toString(), setValue(field, newValue))
+        Database.connection.updatePlayer(uuid.toString(), field, newValue)
         field.set(this, newValue)
     }
 }
@@ -107,7 +107,7 @@ data class PermissionGroup(
 ) {
     suspend fun getChildGroups(): List<PermissionGroup?> {
         return inheritsFrom.map { name ->
-            DatabaseModule.getGroupByName(name)
+            Database.connection.getGroupByName(name)
         }
     }
 
@@ -118,7 +118,7 @@ data class PermissionGroup(
     }
 
     suspend fun <T> update(field: KMutableProperty<T>, value: T) {
-        DatabaseModule.getGroupsCollection().updateOneById(name, setValue(field, value))
+        Database.connection.updateGroup(name, field, value)
         field.setter.call(this, value)
     }
 }

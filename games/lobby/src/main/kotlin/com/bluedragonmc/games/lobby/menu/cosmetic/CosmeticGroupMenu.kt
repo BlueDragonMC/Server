@@ -4,7 +4,7 @@ import com.bluedragonmc.games.lobby.Lobby
 import com.bluedragonmc.server.*
 import com.bluedragonmc.server.module.GuiModule
 import com.bluedragonmc.server.module.database.CosmeticsModule
-import com.bluedragonmc.server.module.database.DatabaseModule
+import com.bluedragonmc.server.Database
 import com.bluedragonmc.server.utils.noItalic
 import com.bluedragonmc.server.utils.splitAndFormatLore
 import com.bluedragonmc.server.utils.withColor
@@ -64,7 +64,7 @@ class CosmeticGroupMenu(private val parent: Lobby, private val groupId: String) 
                     val owned = cosmetics.hasCosmetic(player, c)
                     val equipped = owned && cosmetics.isCosmeticEquipped(player, c)
 
-                    DatabaseModule.IO.launch {
+                    Database.IO.launch {
                         if (owned && !equipped) {
                             cosmetics.equipCosmetic(player, c)
                             player.sendMessage(Component.translatable("lobby.menu.cosmetics.equip.success", BRAND_COLOR_PRIMARY_2, cosmetic.name))
@@ -88,7 +88,7 @@ class CosmeticGroupMenu(private val parent: Lobby, private val groupId: String) 
             slot(53, Material.REDSTONE_BLOCK, {
                 displayName(Component.translatable("lobby.menu.cosmetics.unequip", NamedTextColor.RED).noItalic())
             }) {
-                DatabaseModule.IO.launch {
+                Database.IO.launch {
                     cosmetics.unequipCosmeticsInGroup(player, groupId)
                     player.sendMessage(Component.translatable("lobby.menu.cosmetics.unequip.success", NamedTextColor.RED, Component.translatable(groupId)))
                     menu.rerender(player)

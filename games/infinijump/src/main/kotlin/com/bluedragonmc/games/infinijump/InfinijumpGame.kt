@@ -21,6 +21,7 @@ import com.bluedragonmc.server.module.minigame.SpawnpointModule
 import com.bluedragonmc.server.utils.GameState
 import com.bluedragonmc.server.utils.noItalic
 import com.bluedragonmc.server.utils.withColor
+import kotlinx.coroutines.runBlocking
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -168,8 +169,10 @@ class InfinijumpGame(mapName: String?) : Game("Infinijump", mapName ?: "Classic"
                 .apply { setTag(LOBBY_ITEM_TAG, true) }
                 .build())
 
-            getModule<StatisticsModule>()
-                .recordStatisticIfGreater(event.player, "game_infinijump_highest_score", score.toDouble())
+            runBlocking {
+                getModule<StatisticsModule>()
+                    .recordStatisticIfGreater(event.player, "game_infinijump_highest_score", score.toDouble())
+            }
 
             // If the player scores more than 20 points, award them 1 coin for every 4 points scored.
             if (score > 20) {

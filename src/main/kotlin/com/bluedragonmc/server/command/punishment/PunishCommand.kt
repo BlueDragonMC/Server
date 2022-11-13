@@ -1,15 +1,13 @@
 package com.bluedragonmc.server.command.punishment
 
+import com.bluedragonmc.server.Database
 import com.bluedragonmc.server.bootstrap.GlobalPunishments
 import com.bluedragonmc.server.command.BlueDragonCommand
 import com.bluedragonmc.server.command.OfflinePlayerArgument
 import com.bluedragonmc.server.command.StringArrayArgument
 import com.bluedragonmc.server.command.WordArgument
 import com.bluedragonmc.server.event.DataLoadedEvent
-import com.bluedragonmc.server.module.database.DatabaseModule
-import com.bluedragonmc.server.module.database.PlayerDocument
-import com.bluedragonmc.server.module.database.Punishment
-import com.bluedragonmc.server.module.database.PunishmentType
+import com.bluedragonmc.server.module.database.*
 import kotlinx.coroutines.launch
 import net.minestom.server.MinecraftServer
 import net.minestom.server.command.builder.exception.ArgumentSyntaxException
@@ -36,7 +34,7 @@ class PunishCommand(name: String, usageString: String, vararg aliases: String) :
             reason.joinToString(" "),
             active = true)
 
-        DatabaseModule.IO.launch {
+        Database.IO.launch {
             document.compute(PlayerDocument::punishments) { punishments ->
                 punishments.add(punishment)
                 punishments

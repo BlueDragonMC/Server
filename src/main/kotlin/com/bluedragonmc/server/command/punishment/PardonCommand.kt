@@ -2,7 +2,7 @@ package com.bluedragonmc.server.command.punishment
 
 import com.bluedragonmc.server.command.BlueDragonCommand
 import com.bluedragonmc.server.command.OfflinePlayerArgument
-import com.bluedragonmc.server.module.database.DatabaseModule
+import com.bluedragonmc.server.Database
 import com.bluedragonmc.server.module.database.PlayerDocument
 import kotlinx.coroutines.launch
 
@@ -20,7 +20,7 @@ class PardonCommand(name: String, usageString: String, vararg aliases: String) :
     syntax(playerArgument) {
         val document = get(playerArgument)
 
-        DatabaseModule.IO.launch {
+        Database.IO.launch {
             document.compute(PlayerDocument::punishments) { punishments ->
                 punishments.forEach {
                     if (it.isInEffect()) {

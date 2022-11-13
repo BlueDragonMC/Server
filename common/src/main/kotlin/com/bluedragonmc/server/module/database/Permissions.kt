@@ -1,5 +1,6 @@
 package com.bluedragonmc.server.module.database
 
+import com.bluedragonmc.server.Database
 import kotlinx.coroutines.runBlocking
 import java.util.*
 
@@ -40,14 +41,14 @@ object Permissions {
         doc.update(PlayerDocument::groups, (doc.groups - groupName).toMutableList())
     }
 
-    suspend fun getGroupByName(name: String) = DatabaseModule.getGroupsCollection().findOneById(name)
+    suspend fun getGroupByName(name: String) = Database.connection.getGroupByName(name)
 
     suspend fun createGroup(group: PermissionGroup) {
-        DatabaseModule.getGroupsCollection().insertOne(group)
+        Database.connection.insertGroup(group)
     }
 
     suspend fun removeGroup(group: PermissionGroup) {
-        DatabaseModule.getGroupsCollection().deleteOneById(group.name)
+        Database.connection.removeGroup(group)
     }
 
     suspend fun setPermission(group: PermissionGroup, node: String, value: Boolean) {

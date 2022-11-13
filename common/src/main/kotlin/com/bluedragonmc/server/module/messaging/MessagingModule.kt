@@ -10,7 +10,7 @@ import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.GameStateChangedEvent
 import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
-import com.bluedragonmc.server.module.database.DatabaseModule
+import com.bluedragonmc.server.Database
 import com.bluedragonmc.server.module.instance.InstanceModule
 import com.bluedragonmc.server.module.messaging.MessagingModule.Stubs.gameStateSvcStub
 import com.bluedragonmc.server.module.messaging.MessagingModule.Stubs.instanceSvcStub
@@ -97,7 +97,7 @@ class MessagingModule : GameModule() {
         init {
             if (!Environment.current.messagingDisabled) {
                 // Get server name and publish ping
-                DatabaseModule.IO.launch {
+                Database.IO.launch {
                     try {
                         serverName = Environment.current.getServerName()
                     } catch (e: Throwable) {
@@ -146,7 +146,7 @@ class MessagingModule : GameModule() {
             }
         }
         eventNode.addListener(GameStateChangedEvent::class.java) { event ->
-            DatabaseModule.IO.launch {
+            Database.IO.launch {
                 gameStateSvcStub.updateGameState(gameStateUpdateRequest {
                     serverName = MessagingModule.serverName
                     instanceUuid = event.game.instanceId.toString()
@@ -156,7 +156,7 @@ class MessagingModule : GameModule() {
         }
         eventNode.addListener(AddEntityToInstanceEvent::class.java) { event ->
             val player = event.entity as? Player ?: return@addListener
-            DatabaseModule.IO.launch {
+            Database.IO.launch {
                 Stubs.playerTrackerStub.playerInstanceChange(playerInstanceChangeRequest {
                     uuid = player.uuid.toString()
                     serverName = MessagingModule.serverName
@@ -178,7 +178,7 @@ class MessagingModule : GameModule() {
     }
 
     fun refreshState() {
-        DatabaseModule.IO.launch {
+        Database.IO.launch {
             gameStateSvcStub.updateGameState(gameStateUpdateRequest {
                 serverName = MessagingModule.serverName
                 instanceUuid = instanceId.toString()

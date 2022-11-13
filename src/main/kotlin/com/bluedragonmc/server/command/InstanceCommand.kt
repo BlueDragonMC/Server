@@ -2,7 +2,7 @@ package com.bluedragonmc.server.command
 
 import com.bluedragonmc.api.grpc.instanceRemovedRequest
 import com.bluedragonmc.server.Game
-import com.bluedragonmc.server.module.database.DatabaseModule
+import com.bluedragonmc.server.Database
 import com.bluedragonmc.server.module.messaging.MessagingModule
 import com.bluedragonmc.server.utils.buildComponent
 import com.bluedragonmc.server.utils.clickEvent
@@ -93,7 +93,7 @@ class InstanceCommand(name: String, usageString: String, vararg aliases: String?
                 return@syntax
             }
             MinecraftServer.getInstanceManager().unregisterInstance(instance)
-            DatabaseModule.IO.launch {
+            Database.IO.launch {
                 MessagingModule.Stubs.instanceSvcStub.removeInstance(instanceRemovedRequest {
                     serverName = MessagingModule.serverName
                     instanceUuid = instance.uniqueId.toString()

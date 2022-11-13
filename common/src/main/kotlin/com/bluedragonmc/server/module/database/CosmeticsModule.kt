@@ -18,7 +18,7 @@ import org.spongepowered.configurate.objectmapping.ConfigSerializable
 import java.util.function.Consumer
 import kotlin.reflect.KClass
 
-@DependsOn(DatabaseModule::class, ConfigModule::class)
+@DependsOn(ConfigModule::class)
 class CosmeticsModule : GameModule() {
 
     private lateinit var parent: Game

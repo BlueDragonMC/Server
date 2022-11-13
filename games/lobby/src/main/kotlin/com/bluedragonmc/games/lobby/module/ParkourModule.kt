@@ -10,6 +10,7 @@ import com.bluedragonmc.server.module.instance.InstanceModule
 import com.bluedragonmc.server.utils.formatDuration
 import com.bluedragonmc.server.utils.noItalic
 import com.bluedragonmc.server.utils.round
+import kotlinx.coroutines.launch
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -102,12 +103,14 @@ class ParkourModule(private val config: ConfigurationNode) : GameModule() {
                         Component.text(formatDuration(time))))
                     player.playSound(Sound.sound(SoundEvent.BLOCK_BEACON_DEACTIVATE, Sound.Source.BLOCK, 1.0f, 1.0f))
                     parent.getModuleOrNull<StatisticsModule>()?.apply {
-                        recordStatistic(player, "lobby_parkour_${course.id}_best_time", time.toDouble()) { old ->
-                            if (old == null || old > time) {
-                                player.sendMessage(Component.translatable("lobby.parkour.new_best", ALT_COLOR_1,
-                                    setOf(TextDecoration.BOLD), Component.text(formatDuration(time), ALT_COLOR_2)))
-                                true
-                            } else false
+                        Database.IO.launch {
+                            recordStatistic(player, "lobby_parkour_${course.id}_best_time", time.toDouble()) { old ->
+                                if (old == null || old > time) {
+                                    player.sendMessage(Component.translatable("lobby.parkour.new_best", ALT_COLOR_1,
+                                        setOf(TextDecoration.BOLD), Component.text(formatDuration(time), ALT_COLOR_2)))
+                                    true
+                                } else false
+                            }
                         }
                     }
                 }

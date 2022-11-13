@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.command
 
-import com.bluedragonmc.server.module.database.DatabaseModule
+import com.bluedragonmc.server.Database
 import com.bluedragonmc.server.module.database.Permissions
 import com.bluedragonmc.server.module.database.PlayerDocument
 import kotlinx.coroutines.runBlocking
@@ -10,12 +10,10 @@ import net.minestom.server.command.builder.arguments.minecraft.ArgumentBlockStat
 import net.minestom.server.command.builder.arguments.minecraft.ArgumentEntity
 import net.minestom.server.command.builder.arguments.minecraft.ArgumentItemStack
 import net.minestom.server.command.builder.arguments.minecraft.ArgumentUUID
-import net.minestom.server.command.builder.arguments.minecraft.registry.ArgumentEntityType
 import net.minestom.server.command.builder.arguments.number.ArgumentInteger
 import net.minestom.server.command.builder.arguments.relative.ArgumentRelativeBlockPosition
 import net.minestom.server.command.builder.exception.ArgumentSyntaxException
 import net.minestom.server.command.builder.suggestion.SuggestionEntry
-import net.minestom.server.entity.EntityType
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
 import net.minestom.server.item.ItemStack
@@ -80,7 +78,7 @@ class ArgumentOfflinePlayer(id: String) : Argument<PlayerDocument>(id) {
     override fun parse(input: String): PlayerDocument {
         val doc: PlayerDocument?
         runBlocking {
-            doc = DatabaseModule.getPlayerDocument(input)
+            doc = Database.connection.getPlayerDocument(input)
         }
         if (doc == null) throw ArgumentSyntaxException("Offline player not found", input, -1)
         return doc
@@ -156,7 +154,7 @@ class ArgumentPermission(id: String) : Argument<String>(id) {
     companion object {
         val allPermissions by lazy {
             runBlocking {
-                DatabaseModule.getAllGroups().flatMap { it.permissions }.distinct()
+                Database.connection.getAllGroups().flatMap { it.permissions }.distinct()
             }
         }
     }
@@ -194,7 +192,7 @@ class ArgumentPermissionGroup(id: String) : Argument<String>(id) {
     companion object {
         val allGroups by lazy {
             runBlocking {
-                DatabaseModule.getAllGroups().map { it.name }
+                Database.connection.getAllGroups().map { it.name }
             }
         }
     }

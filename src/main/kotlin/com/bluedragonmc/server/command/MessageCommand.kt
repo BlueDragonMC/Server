@@ -3,7 +3,7 @@ package com.bluedragonmc.server.command
 import com.bluedragonmc.api.grpc.playerQueryRequest
 import com.bluedragonmc.api.grpc.privateMessageRequest
 import com.bluedragonmc.server.CustomPlayer
-import com.bluedragonmc.server.module.database.DatabaseModule
+import com.bluedragonmc.server.Database
 import com.bluedragonmc.server.module.messaging.MessagingModule
 import com.bluedragonmc.server.utils.miniMessage
 import kotlinx.coroutines.runBlocking
@@ -39,7 +39,7 @@ class MessageCommand(name: String, vararg aliases: String) : BlueDragonCommand(n
                     sender.sendMessage(formatMessageTranslated("command.msg.fail", playerName))
                     return@runBlocking
                 }
-                val color = DatabaseModule.getNameColor(UUID.fromString(response.uuid!!)) ?: NamedTextColor.GRAY
+                val color = Database.connection.getNameColor(UUID.fromString(response.uuid!!)) ?: NamedTextColor.GRAY
                 val senderMessage = formatMessageTranslated("command.msg.sent", Component.text(playerName, color), message)
                 MessagingModule.Stubs.privateMessageStub.sendMessage(privateMessageRequest {
                     this.message = miniMessage.serialize(message)

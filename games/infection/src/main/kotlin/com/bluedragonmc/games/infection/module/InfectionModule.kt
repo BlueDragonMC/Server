@@ -9,7 +9,6 @@ import com.bluedragonmc.server.event.PlayerLeaveGameEvent
 import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.combat.OldCombatModule
-import com.bluedragonmc.server.module.database.DatabaseModule
 import com.bluedragonmc.server.module.gameplay.NPCModule
 import com.bluedragonmc.server.module.gameplay.SidebarModule
 import com.bluedragonmc.server.module.minigame.SpawnpointModule
@@ -31,10 +30,9 @@ import java.time.Duration
  * When Survivors die, they become Infected. Infected players look like zombies.
  * Specifically designed for [InfectionGame], but may be used for other games too.
  * Uses `additionalLocations[0][0]` in the map database for the single infected spawnpoint.
- * Requires on start: [DatabaseModule], [SpawnpointModule], [TeamModule], [TimedRespawnModule], [WinModule]
+ * Requires on start: [SpawnpointModule], [TeamModule], [TimedRespawnModule], [WinModule]
  */
 @DependsOn(
-    DatabaseModule::class,
     SpawnpointModule::class,
     TeamModule::class,
     TimedRespawnModule::class,

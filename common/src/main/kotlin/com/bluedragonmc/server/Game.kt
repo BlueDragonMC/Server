@@ -10,7 +10,6 @@ import com.bluedragonmc.server.event.GameStateChangedEvent
 import com.bluedragonmc.server.event.PlayerLeaveGameEvent
 import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
-import com.bluedragonmc.server.module.database.DatabaseModule
 import com.bluedragonmc.server.module.database.MapData
 import com.bluedragonmc.server.module.instance.InstanceModule
 import com.bluedragonmc.server.module.map.AnvilFileMapProviderModule
@@ -125,7 +124,6 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
     }
 
     protected open fun useMandatoryModules() {
-        use(DatabaseModule())
         use(PerInstanceChatModule)
         use(MessagingModule())
         use(@DependsOn(MessagingModule::class) object : GameModule() {
@@ -284,7 +282,7 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
      */
     protected open fun loadMapData() {
         runBlocking {
-            mapData = getModule<DatabaseModule>().getMapOrNull(mapName)
+            mapData = Database.connection.getMapOrNull(mapName)
             if (mapData == null) logger.warn("No map data found for $mapName!")
         }
     }

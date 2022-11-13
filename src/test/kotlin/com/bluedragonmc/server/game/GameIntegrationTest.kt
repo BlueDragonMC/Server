@@ -11,15 +11,16 @@ import com.bluedragonmc.games.skyfall.SkyfallGame
 import com.bluedragonmc.games.skywars.SkyWarsGame
 import com.bluedragonmc.games.teamdeathmatch.TeamDeathmatchGame
 import com.bluedragonmc.games.wackymaze.WackyMazeGame
+import com.bluedragonmc.server.Database
 import com.bluedragonmc.server.Environment
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.NAMESPACE
 import com.bluedragonmc.server.event.GameStartEvent
-import com.bluedragonmc.server.module.database.DatabaseModule
 import com.bluedragonmc.server.module.database.MapData
 import com.bluedragonmc.server.module.minigame.CountdownModule
 import com.bluedragonmc.server.queue.LocalTestingEnvironment
 import com.bluedragonmc.server.utils.GameState
+import com.bluedragonmc.testing.utils.DatabaseConnectionStub
 import io.mockk.*
 import net.minestom.server.MinecraftServer
 import net.minestom.server.api.Env
@@ -44,8 +45,8 @@ class GameIntegrationTest {
         fun beforeAll() {
             Environment.current = LocalTestingEnvironment()
 
-            mockkObject(DatabaseModule)
-            mockkConstructor(DatabaseModule::class)
+            val dbStub = mockk<DatabaseConnectionStub>()
+            Database.initialize(dbStub)
             mockkConstructor(DimensionTypeManager::class)
             mockkConstructor(ExceptionManager::class)
 
@@ -59,7 +60,7 @@ class GameIntegrationTest {
                 }
             }
 
-            coEvery { anyConstructed<DatabaseModule>().getMapOrNull(any()) } answers {
+            coEvery { dbStub.getMapOrNull(any()) } answers {
                 MapData(
                     "Mock",
                     description = "Testing environment",

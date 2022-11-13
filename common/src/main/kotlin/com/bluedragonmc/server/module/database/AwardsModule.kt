@@ -1,10 +1,6 @@
 package com.bluedragonmc.server.module.database
 
-import com.bluedragonmc.server.ALT_COLOR_1
-import com.bluedragonmc.server.ALT_COLOR_2
-import com.bluedragonmc.server.CustomPlayer
-import com.bluedragonmc.server.Game
-import com.bluedragonmc.server.module.DependsOn
+import com.bluedragonmc.server.*
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.utils.*
 import kotlinx.coroutines.launch
@@ -19,7 +15,6 @@ import net.minestom.server.event.EventNode
 import net.minestom.server.sound.SoundEvent
 import java.time.Duration
 
-@DependsOn(DatabaseModule::class)
 class AwardsModule : GameModule() {
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {}
@@ -28,7 +23,7 @@ class AwardsModule : GameModule() {
         player as CustomPlayer
         require(player.isDataInitialized()) { "Player's data has not loaded!" }
         val oldLevel = CustomPlayer.getXpLevel(player.data.experience).toInt()
-        DatabaseModule.IO.launch {
+        Database.IO.launch {
             player.data.compute(PlayerDocument::coins) { it + amount }
             player.data.compute(PlayerDocument::experience) { it + amount }
             val newLevel = CustomPlayer.getXpLevel(player.data.experience).toInt()
