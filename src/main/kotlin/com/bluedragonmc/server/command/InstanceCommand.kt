@@ -93,7 +93,7 @@ class InstanceCommand(name: String, usageString: String, vararg aliases: String?
             }
             MinecraftServer.getInstanceManager().unregisterInstance(instance)
             Database.IO.launch {
-                Messaging.outgoing.notifyInstanceRemoved(instance)
+                Messaging.outgoing.notifyInstanceRemoved(instance.uniqueId)
             }
             player.sendMessage(formatMessageTranslated("command.instance.remove.success", instance.uniqueId))
         }
