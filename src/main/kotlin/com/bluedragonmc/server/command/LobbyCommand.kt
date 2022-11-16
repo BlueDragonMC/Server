@@ -1,8 +1,7 @@
 package com.bluedragonmc.server.command
 
-import com.bluedragonmc.api.grpc.removeFromQueueRequest
+import com.bluedragonmc.server.service.Messaging
 import com.bluedragonmc.server.lobby
-import com.bluedragonmc.server.module.messaging.MessagingModule
 import com.bluedragonmc.server.module.minigame.SpawnpointModule
 
 class LobbyCommand(name: String, vararg aliases: String?) : BlueDragonCommand(name, aliases, null, block = {
@@ -21,8 +20,6 @@ class LobbyCommand(name: String, vararg aliases: String?) : BlueDragonCommand(na
             lobby.getInstance(), lobby.getModule<SpawnpointModule>().spawnpointProvider.getSpawnpoint(player)
         )
         // Remove the player from the queue when they go to the lobby
-        MessagingModule.Stubs.queueStub.removeFromQueue(removeFromQueueRequest {
-            playerUuid = player.uuid.toString()
-        })
+        Messaging.outgoing.removeFromQueue(player)
     }
 })

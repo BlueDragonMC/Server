@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.command
 
-import com.bluedragonmc.server.Database
+import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.module.database.Permissions
 import com.bluedragonmc.server.module.database.PlayerDocument
 import kotlinx.coroutines.runBlocking

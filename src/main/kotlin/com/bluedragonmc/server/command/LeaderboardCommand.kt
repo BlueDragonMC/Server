@@ -4,7 +4,7 @@ import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.lobby
-import com.bluedragonmc.server.Database
+import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.module.database.StatisticsModule
 import com.bluedragonmc.server.utils.plus
 import com.mongodb.internal.operation.OrderBy

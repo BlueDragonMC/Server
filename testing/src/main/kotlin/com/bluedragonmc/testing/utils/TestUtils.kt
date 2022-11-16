@@ -2,10 +2,14 @@ package com.bluedragonmc.testing.utils
 
 import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.api.IncomingRPCHandlerStub
+import com.bluedragonmc.server.api.OutgoingRPCHandlerStub
 import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.database.PlayerDocument
 import com.bluedragonmc.server.module.instance.InstanceModule
+import com.bluedragonmc.server.service.Database
+import com.bluedragonmc.server.service.Messaging
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.spyk
@@ -26,6 +30,20 @@ import kotlin.coroutines.suspendCoroutine
 import kotlin.test.assertTrue
 
 object TestUtils {
+
+    fun useDatabaseStub(): DatabaseConnectionStub {
+        val conn = spyk<DatabaseConnectionStub>()
+        Database.initialize(conn)
+        return conn
+    }
+
+    fun useMessagingStubs(): Pair<IncomingRPCHandlerStub, OutgoingRPCHandlerStub> {
+        val incoming = spyk<IncomingRPCHandlerStub>()
+        val outgoing = spyk<OutgoingRPCHandlerStub>()
+        Messaging.initializeIncoming(incoming)
+        Messaging.initializeOutgoing(outgoing)
+        return incoming to outgoing
+    }
 
     fun emptyGame(env: Env, vararg modules: GameModule): Game {
         val game = EmptyGame(env)

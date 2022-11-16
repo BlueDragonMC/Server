@@ -16,8 +16,9 @@ abstract class GameModule {
     abstract fun initialize(parent: Game, eventNode: EventNode<Event>)
     open fun deinitialize() {}
 
-    val logger: Logger
-        get() = LoggerFactory.getLogger(javaClass)
+    val logger: Logger by lazy {
+        LoggerFactory.getLogger(javaClass)
+    }
 
     open fun getDependencies() = this::class.findAnnotation<DependsOn>()?.dependencies ?: emptyArray()
 

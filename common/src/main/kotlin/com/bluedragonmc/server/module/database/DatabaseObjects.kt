@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.module.database
 
-import com.bluedragonmc.server.Database
+import com.bluedragonmc.server.service.Database
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi

@@ -4,7 +4,7 @@ import com.bluedragonmc.api.grpc.CommonTypes.GameType.GameTypeFieldSelector
 import com.bluedragonmc.api.grpc.gameType
 import com.bluedragonmc.games.lobby.Lobby
 import com.bluedragonmc.server.ALT_COLOR_1
-import com.bluedragonmc.server.Environment
+import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.module.GuiModule
 import com.bluedragonmc.server.utils.noItalic
 import net.kyori.adventure.text.Component
@@ -17,14 +17,14 @@ class MapSelectMenu(private val gameName: String, private val parent: Lobby) : L
     override lateinit var menu: GuiModule.Menu
 
     override fun populate() {
-        val maps = Environment.current.queue.getMaps(gameName) ?: emptyArray()
+        val maps = Environment.queue.getMaps(gameName) ?: emptyArray()
         menu = parent.getModule<GuiModule>().createMenu(Component.translatable("lobby.menu.game.map_select"), InventoryType.CHEST_3_ROW, false, true) {
             maps.forEachIndexed { index, file ->
                 val mapName = file.name
                 slot(index, Material.FILLED_MAP, {
                     displayName(Component.text(mapName, ALT_COLOR_1).noItalic())
                 }) {
-                    Environment.current.queue.queue(player, gameType {
+                    Environment.queue.queue(player, gameType {
                         name = gameName
                         this.mapName = mapName
                         selectors += GameTypeFieldSelector.GAME_NAME

@@ -2,7 +2,7 @@ package com.bluedragonmc.server.command.punishment
 
 import com.bluedragonmc.server.command.BlueDragonCommand
 import com.bluedragonmc.server.command.OfflinePlayerArgument
-import com.bluedragonmc.server.Database
+import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.module.database.PlayerDocument
 import kotlinx.coroutines.launch
 

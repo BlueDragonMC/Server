@@ -1,6 +1,5 @@
 package com.bluedragonmc.games.lobby
 
-import com.bluedragonmc.api.grpc.CommonTypes
 import com.bluedragonmc.api.grpc.CommonTypes.GameType.GameTypeFieldSelector
 import com.bluedragonmc.api.grpc.gameType
 import com.bluedragonmc.games.lobby.menu.*
@@ -11,6 +10,7 @@ import com.bluedragonmc.games.lobby.module.BossBarDisplayModule
 import com.bluedragonmc.games.lobby.module.LeaderboardsModule
 import com.bluedragonmc.games.lobby.module.ParkourModule
 import com.bluedragonmc.server.*
+import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.block.JukeboxMenuBlockHandler
 import com.bluedragonmc.server.module.GuiModule
 import com.bluedragonmc.server.module.combat.CustomDeathMessageModule
@@ -121,12 +121,12 @@ class Lobby : Game("Lobby", "lobbyv2.2") {
                     interaction = { (player, _) ->
                         if (g.game != null) {
                             if (g.game == "random") {
-                                Environment.current.queue.queue(player, gameType {
+                                Environment.queue.queue(player, gameType {
                                     name = gameNames.random()
                                     selectors += GameTypeFieldSelector.GAME_NAME
                                 })
                             } else {
-                                Environment.current.queue.queue(player, gameType {
+                                Environment.queue.queue(player, gameType {
                                     // it.game, it.mode, it.map
                                     name = g.game
                                     selectors += GameTypeFieldSelector.GAME_NAME

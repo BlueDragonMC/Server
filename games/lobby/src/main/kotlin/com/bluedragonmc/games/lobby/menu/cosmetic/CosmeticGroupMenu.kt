@@ -4,7 +4,7 @@ import com.bluedragonmc.games.lobby.Lobby
 import com.bluedragonmc.server.*
 import com.bluedragonmc.server.module.GuiModule
 import com.bluedragonmc.server.module.database.CosmeticsModule
-import com.bluedragonmc.server.Database
+import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.utils.noItalic
 import com.bluedragonmc.server.utils.splitAndFormatLore
 import com.bluedragonmc.server.utils.withColor

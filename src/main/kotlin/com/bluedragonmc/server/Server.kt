@@ -1,6 +1,7 @@
 package com.bluedragonmc.server
 
 import com.bluedragonmc.games.lobby.Lobby
+import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.bootstrap.*
 import com.bluedragonmc.server.bootstrap.dev.DevInstanceRouter
 import com.bluedragonmc.server.bootstrap.dev.MojangAuthentication
@@ -54,6 +55,7 @@ fun start() {
         GlobalPunishments,
         GlobalTranslation,
         InitialInstanceRouter,
+        MessagingInit,
         MojangAuthentication,
         OpenToLAN,
         PerInstanceTabList,
@@ -75,7 +77,7 @@ fun start() {
             .build())
 
     // Start the queue, allowing players to queue for and join games
-    Environment.current.queue.start()
+    Environment.queue.start()
 
     // Start the server & bind to port 25565
     minecraftServer.start("0.0.0.0", 25565)

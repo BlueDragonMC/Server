@@ -1,7 +1,7 @@
 package com.bluedragonmc.server.bootstrap
 
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_3
-import com.bluedragonmc.server.Environment
+import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.FAVICON
 import com.bluedragonmc.server.SERVER_NAME_GRADIENT
 import com.bluedragonmc.server.utils.noBold
@@ -19,7 +19,7 @@ object ServerListPingHandler : Bootstrap() {
     override fun hook(eventNode: EventNode<Event>) {
 
         eventNode.addListener(ServerListPingEvent::class.java) { event ->
-            val versionString = Environment.current.versionInfo.run { "$BRANCH/$COMMIT" }
+            val versionString = Environment.versionInfo.run { "$BRANCH/$COMMIT" }
             val title = if (event.pingType != ServerListPingType.MODERN_FULL_RGB)
                 Component.text("BlueDragon").withColor(BRAND_COLOR_PRIMARY_3)
             else SERVER_NAME_GRADIENT

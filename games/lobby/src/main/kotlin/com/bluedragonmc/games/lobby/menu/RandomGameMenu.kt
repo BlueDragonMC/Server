@@ -5,7 +5,7 @@ import com.bluedragonmc.api.grpc.gameType
 import com.bluedragonmc.games.lobby.GameEntry
 import com.bluedragonmc.games.lobby.Lobby
 import com.bluedragonmc.server.ALT_COLOR_1
-import com.bluedragonmc.server.Environment
+import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.module.GuiModule
 import com.bluedragonmc.server.utils.CircularList
 import com.bluedragonmc.server.utils.noItalic
@@ -90,7 +90,7 @@ class RandomGameMenu(private val games: List<GameEntry>, private val parent: Lob
             return
         } else if (frame >= 20) {
             val game = circularList[15 + 3 + offset]
-            Environment.current.queue.queue(player, gameType {
+            Environment.queue.queue(player, gameType {
                 name = game.game
                 selectors += CommonTypes.GameType.GameTypeFieldSelector.GAME_NAME
             })

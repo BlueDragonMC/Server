@@ -1,12 +1,11 @@
 package com.bluedragonmc.server.bootstrap.prod
 
-import com.bluedragonmc.api.grpc.playerTransferRequest
 import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.bootstrap.Bootstrap
-import com.bluedragonmc.server.Database
-import com.bluedragonmc.server.module.messaging.MessagingModule
 import com.bluedragonmc.server.queue.ProductionEnvironment
+import com.bluedragonmc.server.service.Database
+import com.bluedragonmc.server.service.Messaging
 import kotlinx.coroutines.launch
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -79,13 +78,8 @@ object InitialInstanceRouter : Bootstrap(ProductionEnvironment::class) {
                 logger.debug("Starting PLAY state for Player '${player!!.username}'")
                 MinecraftServer.getConnectionManager().startPlayState(player!!, true)
             }
-            Database.IO.launch {
-                MessagingModule.Stubs.playerTrackerStub.playerTransfer(playerTransferRequest {
-                    username = player!!.username
-                    uuid = player!!.uuid.toString()
-                    newServerName = MessagingModule.serverName
-                    startingInstance?.uniqueId?.toString()?.let { newInstance = it }
-                })
+            Messaging.IO.launch {
+                Messaging.outgoing.playerTransfer(player!!, startingInstance)
             }
         }
     }

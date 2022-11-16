@@ -2,6 +2,7 @@ package com.bluedragonmc.games.lobby.module
 
 import com.bluedragonmc.server.*
 import com.bluedragonmc.server.event.PlayerLeaveGameEvent
+import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.database.StatisticsModule

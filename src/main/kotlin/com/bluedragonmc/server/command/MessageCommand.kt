@@ -1,11 +1,8 @@
 package com.bluedragonmc.server.command
 
-import com.bluedragonmc.api.grpc.playerQueryRequest
-import com.bluedragonmc.api.grpc.privateMessageRequest
 import com.bluedragonmc.server.CustomPlayer
-import com.bluedragonmc.server.Database
-import com.bluedragonmc.server.module.messaging.MessagingModule
-import com.bluedragonmc.server.utils.miniMessage
+import com.bluedragonmc.server.service.Database
+import com.bluedragonmc.server.service.Messaging
 import kotlinx.coroutines.runBlocking
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -32,21 +29,15 @@ class MessageCommand(name: String, vararg aliases: String) : BlueDragonCommand(n
             player.sendMessage(receiverMessage)
         } else {
             runBlocking {
-                val response = MessagingModule.Stubs.playerTrackerStub.queryPlayer(playerQueryRequest {
-                    username = playerName
-                })
-                if (!response.isOnline) {
+                val recipient = Messaging.outgoing.queryPlayer(username = playerName)
+                if (!recipient.isOnline) {
                     sender.sendMessage(formatMessageTranslated("command.msg.fail", playerName))
                     return@runBlocking
                 }
-                val color = Database.connection.getNameColor(UUID.fromString(response.uuid!!)) ?: NamedTextColor.GRAY
+                val recipientUuid = UUID.fromString(recipient.uuid!!)
+                val color = Database.connection.getNameColor(recipientUuid) ?: NamedTextColor.GRAY
                 val senderMessage = formatMessageTranslated("command.msg.sent", Component.text(playerName, color), message)
-                MessagingModule.Stubs.privateMessageStub.sendMessage(privateMessageRequest {
-                    this.message = miniMessage.serialize(message)
-                    this.recipientUuid = response.uuid
-                    (sender as? Player)?.username?.let { this.senderUsername = it }
-                    this.senderUuid = (sender as? Player)?.uuid?.toString() ?: UUID(0L, 0L).toString()
-                })
+                Messaging.outgoing.sendPrivateMessage(message, sender, recipientUuid)
                 sender.sendMessage(senderMessage)
             }
         }

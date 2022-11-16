@@ -2,23 +2,23 @@ package com.bluedragonmc.server.command
 
 import com.bluedragonmc.api.grpc.CommonTypes.GameType.GameTypeFieldSelector
 import com.bluedragonmc.api.grpc.gameType
-import com.bluedragonmc.server.Environment
+import com.bluedragonmc.server.api.Environment
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.command.builder.arguments.ArgumentWord
 
 class JoinCommand(name: String, private val usageString: String, vararg aliases: String) : BlueDragonCommand(name, aliases, null, block = {
-    val gameArgument = ArgumentWord("game").from(*Environment.current.gameClasses.toTypedArray())
+    val gameArgument = ArgumentWord("game").from(*Environment.gameClasses.toTypedArray())
     val mapArgument = ArgumentWord("map")
     usage(usageString)
     syntax(gameArgument) {
-        Environment.current.queue.queue(player, gameType {
+        Environment.queue.queue(player, gameType {
             this.name = get(gameArgument)
             selectors += GameTypeFieldSelector.GAME_NAME
         })
     }.requirePlayers()
     syntax(gameArgument, mapArgument) {
-        Environment.current.queue.queue(player, gameType {
+        Environment.queue.queue(player, gameType {
             this.name = get(gameArgument)
             this.mapName = get(mapArgument)
             selectors += GameTypeFieldSelector.GAME_NAME

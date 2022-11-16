@@ -1,7 +1,7 @@
 package com.bluedragonmc.server.impl
 
 import com.bluedragonmc.server.CustomPlayer
-import com.bluedragonmc.server.Environment
+import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.api.DatabaseConnection
 import com.bluedragonmc.server.event.DataLoadedEvent
 import com.bluedragonmc.server.module.database.MapData
@@ -63,7 +63,7 @@ internal class DatabaseConnectionImpl(connectionString: String) : DatabaseConnec
     }
 
     private val database: CoroutineDatabase by lazy {
-        client.getDatabase(Environment.current.dbName)
+        client.getDatabase(Environment.dbName)
     }
 
     private fun getPlayersCollection(): CoroutineCollection<PlayerDocument> = database.getCollection("players")

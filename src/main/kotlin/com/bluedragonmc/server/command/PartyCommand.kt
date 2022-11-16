@@ -1,9 +1,8 @@
 package com.bluedragonmc.server.command
 
-import com.bluedragonmc.api.grpc.*
 import com.bluedragonmc.server.CustomPlayer
+import com.bluedragonmc.server.service.Messaging
 import com.bluedragonmc.server.module.database.Permissions
-import com.bluedragonmc.server.module.messaging.MessagingModule
 import com.bluedragonmc.server.utils.miniMessage
 import com.bluedragonmc.server.utils.plus
 import net.kyori.adventure.text.Component
@@ -23,20 +22,14 @@ class PartyCommand(name: String, usageString: String, vararg aliases: String) : 
     subcommand("invite") {
         val playerArgument by PlayerArgument
         suspendSyntax(playerArgument) {
-            MessagingModule.Stubs.partyStub.inviteToParty(partyInviteRequest {
-                partyOwnerUuid = player.uuid.toString()
-                playerUuid = getFirstPlayer(playerArgument).uuid.toString()
-            })
+            Messaging.outgoing.inviteToParty(player.uuid, getFirstPlayer(playerArgument).uuid)
         }
     }
 
     subcommand("kick") {
         val playerArgument by PlayerArgument
         suspendSyntax(playerArgument) {
-            MessagingModule.Stubs.partyStub.removeFromParty(partyRemoveRequest {
-                partyOwnerUuid = player.uuid.toString()
-                playerUuid = getFirstPlayer(playerArgument).uuid.toString()
-            })
+            Messaging.outgoing.kickFromParty(player.uuid, getFirstPlayer(playerArgument).uuid)
         }
     }
 
@@ -50,48 +43,33 @@ class PartyCommand(name: String, usageString: String, vararg aliases: String) : 
                 // The player is allowed to use MiniMessage
                 get(messageArgument).joinToString(" ")
             }
-            MessagingModule.Stubs.partyStub.partyChat(partyChatRequest {
-                playerUuid = player.uuid.toString()
-                message = msg
-            })
+            Messaging.outgoing.partyChat(msg, player)
         }
     }
 
     subcommand("accept") {
         val playerArgument by PlayerArgument
         suspendSyntax(playerArgument) {
-            MessagingModule.Stubs.partyStub.acceptInvitation(partyAcceptInviteRequest {
-                playerUuid = player.uuid.toString()
-                partyOwnerUuid = getFirstPlayer(playerArgument).uuid.toString()
-            })
+            Messaging.outgoing.acceptPartyInvitation(getFirstPlayer(playerArgument).uuid, player.uuid)
         }
     }
 
     subcommand("warp") {
         suspendSyntax {
-            MessagingModule.Stubs.partyStub.warpParty(partyWarpRequest {
-                partyOwnerUuid = player.uuid.toString()
-                serverName = MessagingModule.serverName
-                instanceUuid = player.instance!!.uniqueId.toString()
-            })
+            Messaging.outgoing.warpParty(player, player.instance!!)
         }
     }
 
     subcommand("transfer") {
         val playerArgument by PlayerArgument
         suspendSyntax(playerArgument) {
-            MessagingModule.Stubs.partyStub.transferParty(partyTransferRequest {
-                newOwnerUuid = getFirstPlayer(playerArgument).uuid.toString()
-                playerUuid = player.uuid.toString()
-            })
+            Messaging.outgoing.transferParty(player, getFirstPlayer(playerArgument).uuid)
         }
     }
 
     subcommand("list") {
         suspendSyntax {
-            val response = MessagingModule.Stubs.partyStub.partyList(partyListRequest {
-                playerUuid = player.uuid.toString()
-            })
+            val response = Messaging.outgoing.listPartyMembers(player.uuid)
             val leader = response.playersList.find { it.role == "Leader" }
             val members = response.playersList.filter { it != leader }
             if (leader != null && response.playersCount > 0) {

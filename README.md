@@ -5,8 +5,7 @@ BlueDragon's [Minestom](https://minestom.net/) implementation. It currently incl
   - This allows for a very high degree of code reusability and simplicity, and makes rapid prototyping of games very quick and easy.
 - System for handling player punishments
 - Database support linked to every `Player` using a player provider
-- Synchronization with other servers using RabbitMQ messaging and a Mongo database
-- Beautiful response to server list pings
+- Synchronization with other servers using gRPC messaging and a Mongo database
 - Routing players to the correct instance when they join
 - Separated, per-instance chat and tablist functionality
 - Basic commands

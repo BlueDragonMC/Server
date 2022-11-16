@@ -4,18 +4,19 @@ import com.bluedragonmc.api.grpc.CommonTypes
 import com.bluedragonmc.api.grpc.CommonTypes.GameType.GameTypeFieldSelector
 import com.bluedragonmc.api.grpc.gameState
 import com.bluedragonmc.api.grpc.gameType
+import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.event.DataLoadedEvent
 import com.bluedragonmc.server.event.GameEvent
 import com.bluedragonmc.server.event.GameStateChangedEvent
 import com.bluedragonmc.server.event.PlayerLeaveGameEvent
-import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.database.MapData
 import com.bluedragonmc.server.module.instance.InstanceModule
 import com.bluedragonmc.server.module.map.AnvilFileMapProviderModule
-import com.bluedragonmc.server.module.messaging.MessagingModule
 import com.bluedragonmc.server.module.minigame.SpawnpointModule
 import com.bluedragonmc.server.module.packet.PerInstanceChatModule
+import com.bluedragonmc.server.service.Database
+import com.bluedragonmc.server.service.Messaging
 import com.bluedragonmc.server.utils.GameState
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
@@ -30,7 +31,6 @@ import net.minestom.server.event.Event
 import net.minestom.server.event.EventFilter
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.instance.RemoveEntityFromInstanceEvent
-import net.minestom.server.event.player.PlayerDisconnectEvent
 import net.minestom.server.event.player.PlayerSpawnEvent
 import net.minestom.server.event.trait.InstanceEvent
 import net.minestom.server.event.trait.PlayerEvent
@@ -125,28 +125,15 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
 
     protected open fun useMandatoryModules() {
         use(PerInstanceChatModule)
-        use(MessagingModule())
-        use(@DependsOn(MessagingModule::class) object : GameModule() {
-
-            override fun initialize(parent: Game, eventNode: EventNode<Event>) {
-                eventNode.addListener(PlayerSpawnEvent::class.java) {
-                    playerHasJoined = true
-                    MinecraftServer.getSchedulerManager().scheduleNextTick {
-                        getModuleOrNull<MessagingModule>()?.refreshState()
-                    }
-                }
-                eventNode.addListener(PlayerDisconnectEvent::class.java) {
-                    MinecraftServer.getSchedulerManager().scheduleNextTick {
-                        getModuleOrNull<MessagingModule>()?.refreshState()
-                    }
-                }
-                eventNode.addListener(RemoveEntityFromInstanceEvent::class.java) { event ->
-                    if (event.entity !is Player) return@addListener
-                    callEvent(PlayerLeaveGameEvent(parent, event.entity as Player))
-                    players.remove(event.entity)
-                }
-            }
-        })
+        Messaging.outgoing.onGameCreated(this)
+        handleEvent<PlayerSpawnEvent> {
+            playerHasJoined = true
+        }
+        handleEvent<RemoveEntityFromInstanceEvent> { event ->
+            if (event.entity !is Player) return@handleEvent
+            callEvent(PlayerLeaveGameEvent(this, event.entity as Player))
+            players.remove(event.entity)
+        }
     }
 
     private fun createEventNode(module: GameModule): EventNode<Event> {
@@ -254,7 +241,7 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
         if (queueAllPlayers) {
             players.forEach {
                 it.sendMessage(Component.translatable("game.status.ending", NamedTextColor.GREEN))
-                Environment.current.queue.queue(it, gameType {
+                Environment.queue.queue(it, gameType {
                     name = this@Game.name
                     selectors += GameTypeFieldSelector.GAME_NAME
                 })
@@ -265,7 +252,7 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
                 repetitions++
                 if (instanceRef?.isRegistered == false || instanceRef == null) task!!.cancel()
                 getInstanceOrNull()?.players?.forEach { player ->
-                    Environment.current.queue.queue(player, gameType {
+                    Environment.queue.queue(player, gameType {
                         name = if (repetitions >= 3) "Lobby" else this@Game.name
                         selectors += GameTypeFieldSelector.GAME_NAME
                     })

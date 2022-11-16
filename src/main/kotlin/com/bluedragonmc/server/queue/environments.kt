@@ -9,8 +9,8 @@ import com.bluedragonmc.games.pvpmaster.PvpMasterGame
 import com.bluedragonmc.games.skyfall.SkyfallGame
 import com.bluedragonmc.games.skywars.SkyWarsGame
 import com.bluedragonmc.games.wackymaze.WackyMazeGame
-import com.bluedragonmc.server.Environment
 import com.bluedragonmc.server.GitVersionInfo
+import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.api.Queue
 import com.bluedragonmc.server.bootstrap.prod.AgonesIntegration
 import java.io.File
@@ -34,31 +34,42 @@ private fun isDev() = !File("/server").exists()
 
 class DevelopmentEnvironment : Environment() {
     override val queue: Queue = TestQueue()
-    override val messagingDisabled: Boolean = true
     override val mongoHostname: String = "localhost"
     override val puffinHostname: String = "localhost"
     override val gameClasses = games.keys
     override val versionInfo = GitVersionInfo
-    override suspend fun getServerName(): String = "Dev-" + UUID.randomUUID().toString().take(5)
+
+    private lateinit var serverName: String
+
+    override suspend fun getServerName(): String {
+        if (!::serverName.isInitialized) {
+            serverName = "Dev-" + UUID.randomUUID().toString().take(5)
+        }
+        return serverName
+    }
 }
 
 class ProductionEnvironment : Environment() {
     override val queue: Queue = IPCQueue
-    override val messagingDisabled: Boolean = false
     override val mongoHostname: String = "mongo"
     override val puffinHostname: String = "puffin"
     override val gameClasses = games.keys
     override val versionInfo = GitVersionInfo
+
+    private lateinit var serverName: String
+
     override suspend fun getServerName(): String {
-        return System.getenv("PUFFIN_CONTAINER_ID")
-            ?: AgonesIntegration.stub.getGameServer(AgonesIntegration.empty).objectMeta.name
+        if (!::serverName.isInitialized) {
+            serverName = System.getenv("PUFFIN_CONTAINER_ID")
+                ?: AgonesIntegration.stub.getGameServer(AgonesIntegration.empty).objectMeta.name
+        }
+        return serverName
     }
 }
 
 class LocalTestingEnvironment : Environment() {
     override val queue: Queue
         get() = error("Testing environment has no default Queue.")
-    override val messagingDisabled: Boolean = true
     override val mongoHostname: String = "localhost"
     override val puffinHostname: String = "localhost"
     override val gameClasses = games.keys

@@ -1,9 +1,8 @@
 package com.bluedragonmc.server.command
 
-import com.bluedragonmc.api.grpc.instanceRemovedRequest
 import com.bluedragonmc.server.Game
-import com.bluedragonmc.server.Database
-import com.bluedragonmc.server.module.messaging.MessagingModule
+import com.bluedragonmc.server.service.Database
+import com.bluedragonmc.server.service.Messaging
 import com.bluedragonmc.server.utils.buildComponent
 import com.bluedragonmc.server.utils.clickEvent
 import com.bluedragonmc.server.utils.hoverEventTranslatable
@@ -35,7 +34,7 @@ class InstanceCommand(name: String, usageString: String, vararg aliases: String?
                     +Component.text(instance.uniqueId.toString(), NamedTextColor.DARK_GRAY)
                         .clickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, instance.uniqueId.toString())
                     +Component.text(" · ", NamedTextColor.GRAY)
-                    +Component.text(instance::class.simpleName ?: "null", NamedTextColor.AQUA)
+                    +Component.text(instance::class.simpleName.toString(), NamedTextColor.AQUA)
                     +Component.newline()
                     +Component.text(" → ", NamedTextColor.GRAY)
                     val game = Game.findGame(instance.uniqueId)
@@ -94,10 +93,7 @@ class InstanceCommand(name: String, usageString: String, vararg aliases: String?
             }
             MinecraftServer.getInstanceManager().unregisterInstance(instance)
             Database.IO.launch {
-                MessagingModule.Stubs.instanceSvcStub.removeInstance(instanceRemovedRequest {
-                    serverName = MessagingModule.serverName
-                    instanceUuid = instance.uniqueId.toString()
-                })
+                Messaging.outgoing.notifyInstanceRemoved(instance)
             }
             player.sendMessage(formatMessageTranslated("command.instance.remove.success", instance.uniqueId))
         }

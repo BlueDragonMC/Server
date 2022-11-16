@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.command
 
-import com.bluedragonmc.server.Environment
+import com.bluedragonmc.server.api.Environment
 import java.text.DateFormat
 import java.time.Duration
 
@@ -9,7 +9,7 @@ class VersionCommand(name: String, usageString: String, vararg aliases: String?)
         usage(usageString)
 
         syntax {
-            val commitDate = Environment.current.versionInfo.commitDate?.let {
+            val commitDate = Environment.versionInfo.commitDate?.let {
                 DateFormat.getDateInstance().format(it)
             } ?: "unknown commit date"
             val duration = Duration.ofMillis(System.currentTimeMillis() - startTime)
@@ -17,8 +17,8 @@ class VersionCommand(name: String, usageString: String, vararg aliases: String?)
                 formatMessageTranslated(
                     "command.version.output",
                     "BlueDragonMC/Server",
-                    Environment.current.versionInfo.BRANCH ?: "unknown branch",
-                    Environment.current.versionInfo.COMMIT ?: "unknown commit",
+                    Environment.versionInfo.BRANCH ?: "unknown branch",
+                    Environment.versionInfo.COMMIT ?: "unknown commit",
                     commitDate,
                     duration.toHoursPart(),
                     duration.toMinutesPart(),

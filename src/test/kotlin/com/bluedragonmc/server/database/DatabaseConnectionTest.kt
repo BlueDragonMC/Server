@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.database
 
-import com.bluedragonmc.server.Database
+import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.module.database.PermissionGroup
 import com.bluedragonmc.testing.utils.DatabaseConnectionStub
 import io.mockk.coEvery

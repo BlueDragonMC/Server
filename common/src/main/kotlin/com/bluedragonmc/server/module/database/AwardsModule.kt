@@ -1,6 +1,7 @@
 package com.bluedragonmc.server.module.database
 
 import com.bluedragonmc.server.*
+import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.utils.*
 import kotlinx.coroutines.launch

@@ -5,8 +5,8 @@ import agones.dev.sdk.duration
 import agones.dev.sdk.empty
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.bootstrap.Bootstrap
-import com.bluedragonmc.server.Database
-import com.bluedragonmc.server.module.messaging.MessagingModule
+import com.bluedragonmc.server.service.Database
+import com.bluedragonmc.server.service.Messaging
 import com.bluedragonmc.server.queue.ProductionEnvironment
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
@@ -72,7 +72,7 @@ object AgonesIntegration : Bootstrap(ProductionEnvironment::class) {
         // Verify that at least one game is running (Lobby)
         if (Game.games.isEmpty()) return false
         // Verify that the local gRPC server is running
-        if (!MessagingModule.isServerRunning()) return false
+        if (!Messaging.isConnected()) return false
 
         return true
     }

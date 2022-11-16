@@ -7,7 +7,7 @@ import com.bluedragonmc.games.lobby.Lobby
 import com.bluedragonmc.server.ALT_COLOR_1
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.CustomPlayer
-import com.bluedragonmc.server.Environment
+import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.module.GuiModule
 import com.bluedragonmc.server.module.database.Permissions
 import com.bluedragonmc.server.utils.miniMessage
@@ -34,7 +34,7 @@ class GameMenu(private val config: GameEntry, private val parent: Lobby) : Lobby
             slot(pos(3, 4), Material.MAP, {
                 displayName(Component.translatable("lobby.menu.game.quick_join", BRAND_COLOR_PRIMARY_2).noItalic())
             }) {
-                Environment.current.queue.queue(player, gameType {
+                Environment.queue.queue(player, gameType {
                     name = config.game
                     selectors += GameTypeFieldSelector.GAME_NAME
                 })

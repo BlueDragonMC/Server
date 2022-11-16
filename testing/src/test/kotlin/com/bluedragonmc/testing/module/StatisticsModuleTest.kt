@@ -1,7 +1,7 @@
 package com.bluedragonmc.testing.module
 
 import com.bluedragonmc.server.CustomPlayer
-import com.bluedragonmc.server.Database
+import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.module.database.StatisticsModule
 import com.bluedragonmc.testing.utils.DatabaseConnectionStub
 import com.bluedragonmc.testing.utils.TestUtils

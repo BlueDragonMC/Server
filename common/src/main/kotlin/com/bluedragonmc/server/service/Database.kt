@@ -1,7 +1,6 @@
-package com.bluedragonmc.server
+package com.bluedragonmc.server.service
 
 import com.bluedragonmc.server.api.DatabaseConnection
-import com.bluedragonmc.server.impl.DatabaseConnectionImpl
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -12,10 +11,6 @@ object Database {
 
     lateinit var connection: DatabaseConnection
         private set
-
-    fun initialize(connectionString: String) {
-        connection = DatabaseConnectionImpl(connectionString)
-    }
 
     fun initialize(connection: DatabaseConnection) {
         Database.connection = connection

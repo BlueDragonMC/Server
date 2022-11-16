@@ -2,7 +2,7 @@ package com.bluedragonmc.server.command.punishment
 
 import com.bluedragonmc.server.command.BlueDragonCommand
 import com.bluedragonmc.server.command.WordArgument
-import com.bluedragonmc.server.Database
+import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.utils.surroundWithSeparators
 import kotlinx.coroutines.launch
 

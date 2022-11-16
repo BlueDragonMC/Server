@@ -7,12 +7,14 @@ import com.bluedragonmc.server.utils.noItalic
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
 import net.minestom.server.MinecraftServer
+import net.minestom.server.coordinate.Vec
 import net.minestom.server.effects.Effects
 import net.minestom.server.event.player.PlayerSpawnEvent
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.BlockHandler
 import net.minestom.server.inventory.InventoryType
 import net.minestom.server.item.Material
+import net.minestom.server.network.packet.server.play.EffectPacket
 import net.minestom.server.network.packet.server.play.StopSoundPacket
 import net.minestom.server.utils.NamespaceID
 
@@ -42,13 +44,16 @@ class JukeboxMenuBlockHandler(val instance: Instance, val x: Int, val y: Int, va
         isPerPlayer = false,
         allowSpectatorClicks = false
     ) {
-        val materials = Material.values()
-        val discs = materials.filter { it.name().startsWith("minecraft:music_disc_") }.sortedBy { it.name() }
-        discs.forEachIndexed { i, disc ->
+        Material.values()
+            .filter { it.name().startsWith("minecraft:music_disc_") }
+            .sortedBy { it.name() }
+            .forEachIndexed { i, disc ->
             slot(i, disc, {
                 displayName(disc.displayName().noItalic())
             }) {
-                instance.players.forEach { it.playEffect(Effects.PLAY_RECORD, x, y, z, disc.id(), false) }
+                instance.sendGroupedPacket(
+                    EffectPacket(Effects.PLAY_RECORD.id, Vec(x.toDouble(), y.toDouble(), z.toDouble()), disc.id(), false)
+                )
                 mostRecentSong = discToSound(disc.name())
                 menu.close(player)
             }

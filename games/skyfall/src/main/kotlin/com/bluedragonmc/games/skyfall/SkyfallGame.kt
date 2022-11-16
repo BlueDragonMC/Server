@@ -2,7 +2,7 @@ package com.bluedragonmc.games.skyfall
 
 import com.bluedragonmc.games.skyfall.module.SkyfallChickensModule
 import com.bluedragonmc.server.ALT_COLOR_1
-import com.bluedragonmc.server.Database
+import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.PlayerKillPlayerEvent
 import com.bluedragonmc.server.module.GuiModule

@@ -3,13 +3,11 @@ package com.bluedragonmc.server.queue
 import com.bluedragonmc.api.grpc.CommonTypes
 import com.bluedragonmc.api.grpc.GsClient
 import com.bluedragonmc.api.grpc.PlayerHolderOuterClass.SendPlayerRequest
-import com.bluedragonmc.api.grpc.addToQueueRequest
-import com.bluedragonmc.api.grpc.removeFromQueueRequest
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.api.Queue
+import com.bluedragonmc.server.service.Database
+import com.bluedragonmc.server.service.Messaging
 import com.bluedragonmc.server.lobby
-import com.bluedragonmc.server.Database
-import com.bluedragonmc.server.module.messaging.MessagingModule
 import kotlinx.coroutines.launch
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -33,14 +31,9 @@ object IPCQueue : Queue() {
         player.sendMessage(Component.translatable("queue.adding", NamedTextColor.DARK_GRAY))
         Database.IO.launch {
             if (queuedPlayers.contains(player)) {
-                MessagingModule.Stubs.queueStub.removeFromQueue(removeFromQueueRequest {
-                    playerUuid = player.uuid.toString()
-                })
+                Messaging.outgoing.removeFromQueue(player)
             } else {
-                MessagingModule.Stubs.queueStub.addToQueue(addToQueueRequest {
-                    playerUuid = player.uuid.toString()
-                    this.gameType = gameType
-                })
+                Messaging.outgoing.addToQueue(player, gameType)
             }
         }
     }
@@ -79,7 +72,7 @@ object IPCQueue : Queue() {
     override fun sendPlayer(request: SendPlayerRequest) {
         val uuid = UUID.fromString(request.instanceId)
         val instance = MinecraftServer.getInstanceManager().getInstance(uuid) ?: return
-        val player = MessagingModule.findPlayer(UUID.fromString(request.playerUuid)) ?: return
+        val player = MinecraftServer.getConnectionManager().getPlayer(UUID.fromString(request.playerUuid)) ?: return
         // Only allow players that have fully logged in, preventing them from being sent to the game twice
         if (player.playerConnection.connectionState != ConnectionState.PLAY) return
         if (player.instance == instance || player.instance == null) return

@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.bootstrap
 
-import com.bluedragonmc.server.Environment
+import com.bluedragonmc.server.api.Environment
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import org.slf4j.Logger
