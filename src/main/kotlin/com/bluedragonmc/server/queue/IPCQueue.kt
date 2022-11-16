@@ -5,9 +5,9 @@ import com.bluedragonmc.api.grpc.GsClient
 import com.bluedragonmc.api.grpc.PlayerHolderOuterClass.SendPlayerRequest
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.api.Queue
+import com.bluedragonmc.server.lobby
 import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.service.Messaging
-import com.bluedragonmc.server.lobby
 import kotlinx.coroutines.launch
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor

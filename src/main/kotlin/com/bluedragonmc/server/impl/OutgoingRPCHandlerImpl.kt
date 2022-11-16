@@ -42,9 +42,11 @@ class OutgoingRPCHandlerImpl(serverAddress: String) : OutgoingRPCHandler {
     class MessagingModule : GameModule() {
 
         private lateinit var parent: Game
+        private lateinit var instanceId: UUID
 
         override fun initialize(parent: Game, eventNode: EventNode<Event>): Unit = runBlocking {
             this@MessagingModule.parent = parent
+            instanceId = parent.getInstance().uniqueId
             Messaging.outgoing.initInstance(parent.getInstance(), parent.gameType)
 
             eventNode.listenSuspend<GameStateChangedEvent> { event ->
@@ -76,7 +78,7 @@ class OutgoingRPCHandlerImpl(serverAddress: String) : OutgoingRPCHandler {
         }
 
         override fun deinitialize(): Unit = runBlocking {
-            Messaging.outgoing.notifyInstanceRemoved(parent.getInstance())
+            Messaging.outgoing.notifyInstanceRemoved(instanceId)
         }
     }
 
@@ -124,11 +126,11 @@ class OutgoingRPCHandlerImpl(serverAddress: String) : OutgoingRPCHandler {
         )
     }
 
-    override suspend fun notifyInstanceRemoved(instance: Instance) {
+    override suspend fun notifyInstanceRemoved(instanceId: UUID) {
         instanceSvcStub.removeInstance(
             ServerTracking.InstanceRemovedRequest.newBuilder()
                 .setServerName(serverName)
-                .setInstanceUuid(instance.uniqueId.toString())
+                .setInstanceUuid(instanceId.toString())
                 .build()
         )
     }

@@ -36,7 +36,7 @@ class OutgoingRPCHandlerStub : OutgoingRPCHandler {
 
     }
 
-    override suspend fun notifyInstanceRemoved(instance: Instance) {
+    override suspend fun notifyInstanceRemoved(instanceId: UUID) {
 
     }
 

@@ -131,6 +131,7 @@ object InitialInstanceRouter : Bootstrap(ProductionEnvironment::class) {
         if (instance == null) {
             logger.trace("Disconnecting player - desired instance ($instanceUid) is null")
             connection.sendPacket(LoginDisconnectPacket(INVALID_WORLD))
+            connection.disconnect()
             return
         }
         logger.debug("Trying to send player $username to instance $instance")
@@ -145,6 +146,7 @@ object InitialInstanceRouter : Bootstrap(ProductionEnvironment::class) {
         // We want to wait for Velocity's plugin message as well as our instance routing message.
         if (packet.data == null) {
             connection.sendPacket(LoginDisconnectPacket(INVALID_PACKET_RECEIVED))
+            connection.disconnect()
             return
         }
         val reader = BinaryReader(packet.data)
@@ -153,6 +155,7 @@ object InitialInstanceRouter : Bootstrap(ProductionEnvironment::class) {
         if (!success) {
             logger.warn("Velocity proxy validation failed for connection: ${connection.identifier}")
             connection.sendPacket(LoginDisconnectPacket(INVALID_PROXY_RESPONSE))
+            connection.disconnect()
             return
         }
 
@@ -177,8 +180,7 @@ object InitialInstanceRouter : Bootstrap(ProductionEnvironment::class) {
         // Check if the player's spawning instance was retrieved from Velocity
         if (!players.containsKey(event.player.username)) {
             // If there is no entry for the player, the handshake must have failed.
-            event.player.sendPacket(LoginDisconnectPacket(HANDSHAKE_FAILED))
-            event.player.playerConnection.disconnect()
+            event.player.kick(HANDSHAKE_FAILED)
             return
         }
         val instance = players[event.player.username]?.startingInstance
@@ -186,8 +188,7 @@ object InitialInstanceRouter : Bootstrap(ProductionEnvironment::class) {
         if (instance == null) {
             // If the instance was not set or doesn't exist, disconnect the player.
             logger.warn("No instance found for ${event.player.username} to join!")
-            event.player.sendPacket(LoginDisconnectPacket(NO_WORLD_FOUND))
-            event.player.playerConnection.disconnect()
+            event.player.kick(NO_WORLD_FOUND)
             return
         }
         // If the instance exists, set the player's spawning instance and allow them to connect.
