@@ -149,6 +149,7 @@ class OutgoingRPCHandlerImpl(serverAddress: String) : OutgoingRPCHandler {
         playerTrackerStub.playerTransfer(
             PlayerTrackerOuterClass.PlayerTransferRequest.newBuilder()
                 .setUuid(player.uuid.toString())
+                .setNewServerName(serverName)
                 .apply {
                     if (newInstance != null) {
                         setNewInstance(newInstance.uniqueId.toString())
