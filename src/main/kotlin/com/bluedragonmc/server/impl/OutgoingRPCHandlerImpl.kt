@@ -26,6 +26,7 @@ import net.minestom.server.event.player.PlayerDisconnectEvent
 import net.minestom.server.event.player.PlayerSpawnEvent
 import net.minestom.server.instance.Instance
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 class OutgoingRPCHandlerImpl(serverAddress: String) : OutgoingRPCHandler {
 
@@ -37,6 +38,13 @@ class OutgoingRPCHandlerImpl(serverAddress: String) : OutgoingRPCHandler {
             .usePlaintext()
             .enableRetry()
             .build()
+
+    init {
+        MinecraftServer.getSchedulerManager().buildShutdownTask {
+            channel.shutdown()
+            channel.awaitTermination(10, TimeUnit.SECONDS)
+        }
+    }
 
     @DependsOn(InstanceModule::class)
     class MessagingModule : GameModule() {

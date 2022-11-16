@@ -8,7 +8,4 @@ interface IncomingRPCHandler {
 
     fun isConnected(): Boolean
 
-    fun shutdown()
-
-
 }

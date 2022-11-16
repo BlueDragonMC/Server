@@ -28,9 +28,11 @@ class IncomingRPCHandlerImpl : IncomingRPCHandler {
 
     override fun isConnected() = !server.isShutdown && !server.isTerminated
 
-    override fun shutdown() {
-        server.shutdown()
-        server.awaitTermination(10, TimeUnit.SECONDS)
+    init {
+        MinecraftServer.getSchedulerManager().buildShutdownTask {
+            server.shutdown()
+            server.awaitTermination(10, TimeUnit.SECONDS)
+        }
     }
 
     class GameClientService : GsClientServiceGrpcKt.GsClientServiceCoroutineImplBase() {

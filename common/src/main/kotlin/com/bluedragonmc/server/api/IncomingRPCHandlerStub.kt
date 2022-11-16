@@ -10,8 +10,4 @@ class IncomingRPCHandlerStub : IncomingRPCHandler {
         return true
     }
 
-    override fun shutdown() {
-
-    }
-
 }

@@ -5,9 +5,9 @@ import agones.dev.sdk.duration
 import agones.dev.sdk.empty
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.bootstrap.Bootstrap
+import com.bluedragonmc.server.queue.ProductionEnvironment
 import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.service.Messaging
-import com.bluedragonmc.server.queue.ProductionEnvironment
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
 import kotlinx.coroutines.delay
@@ -17,6 +17,7 @@ import kotlinx.coroutines.runBlocking
 import net.minestom.server.MinecraftServer
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
+import java.util.concurrent.TimeUnit
 
 object AgonesIntegration : Bootstrap(ProductionEnvironment::class) {
 
@@ -65,6 +66,11 @@ object AgonesIntegration : Bootstrap(ProductionEnvironment::class) {
         runBlocking {
             stub.ready(empty)
             logger.info("Agones - Ready")
+        }
+
+        MinecraftServer.getSchedulerManager().buildShutdownTask {
+            channel.shutdown()
+            channel.awaitTermination(5, TimeUnit.SECONDS)
         }
     }
 

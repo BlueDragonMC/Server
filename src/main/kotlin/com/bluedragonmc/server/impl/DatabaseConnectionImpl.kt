@@ -1,8 +1,8 @@
 package com.bluedragonmc.server.impl
 
 import com.bluedragonmc.server.CustomPlayer
-import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.api.DatabaseConnection
+import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.event.DataLoadedEvent
 import com.bluedragonmc.server.module.database.MapData
 import com.bluedragonmc.server.module.database.PermissionGroup
@@ -60,6 +60,12 @@ internal class DatabaseConnectionImpl(connectionString: String) : DatabaseConnec
                 block.serverSelectionTimeout(5, TimeUnit.SECONDS)
             }
             .build()).coroutine
+    }
+
+    init {
+        MinecraftServer.getSchedulerManager().buildShutdownTask {
+            client.close()
+        }
     }
 
     private val database: CoroutineDatabase by lazy {
