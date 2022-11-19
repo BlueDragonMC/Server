@@ -25,3 +25,6 @@ This uses the `Dockerfile` in the current directory to build an image with the v
 
 Environment variables:
 * `PUFFIN_VELOCITY_SECRET` - Your Velocity proxy forwarding secret (optional). If not specified, Mojang authentication will be enabled.
+
+## Implementation
+To learn how to integrate other server software with BlueDragon's systems, see the [Integration Guide](./INTEGRATION.md)
