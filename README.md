@@ -22,9 +22,23 @@ This can be built as a docker container with the following command:
 $ DOCKER_BUILDKIT=1 docker build -t bluedragonmc/server:testing .
 ```
 This uses the `Dockerfile` in the current directory to build an image with the version string `"testing"`.
+*Note: A game named `Lobby` must be present for the server to run!*
 
 Environment variables:
 * `PUFFIN_VELOCITY_SECRET` - Your Velocity proxy forwarding secret (optional). If not specified, Mojang authentication will be enabled.
 
 ## Implementation
 To learn how to integrate other server software with BlueDragon's systems, see the [Integration Guide](./INTEGRATION.md)
+
+## Creating a Game
+To learn how to create a game using this library, see our [ExampleGame](https://github.com/BlueDragonMC/ExampleGame/blob/main/README.md) repository. It has guides and documentation for creating a simple game.
+
+## Project Structure
+The project contains a `common` subproject, which is used by all games as an API to compile against.
+This subproject also contains many useful game modules that most games use.
+
+The `testing` subproject contains testing fixtures and utilities for running automated tests.
+
+The main subproject (in `src/*`) contains all the code necessary to start the server, load plugins,
+and connect with external services like databases and IPC/messaging systems.
+It also contains all the global commands and translations.
