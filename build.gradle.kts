@@ -5,6 +5,7 @@ plugins {
     id("com.github.johnrengelman.shadow") version "7.1.0"
     kotlin("plugin.serialization") version "1.6.21"
     id("net.kyori.blossom") version "1.3.1"
+    `maven-publish`
 }
 
 group = "com.bluedragonmc"
@@ -40,17 +41,6 @@ dependencies {
     implementation(libs.bundles.messaging) // Messaging
 
     implementation(project(":common"))
-    implementation(project(":games:skyfall"))
-    implementation(project(":games:arenapvp"))
-    implementation(project(":games:bedwars"))
-    implementation(project(":games:fastfall"))
-    implementation(project(":games:infection"))
-    implementation(project(":games:infinijump"))
-    implementation(project(":games:lobby"))
-    implementation(project(":games:pvpmaster"))
-    implementation(project(":games:skywars"))
-    implementation(project(":games:teamdeathmatch"))
-    implementation(project(":games:wackymaze"))
 }
 
 blossom {
@@ -73,6 +63,18 @@ fun getOutputOf(command: String): String? {
         return String(stream.toByteArray()).trim()
     } catch (e: Throwable) {
         return null
+    }
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            groupId = "com.bluedragonmc"
+            artifactId = "Server"
+            version = "1.0"
+
+            from(components["java"])
+        }
     }
 }
 

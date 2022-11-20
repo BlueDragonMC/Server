@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory
 import java.io.File
 import java.time.Duration
 import kotlin.random.Random
+import kotlin.reflect.jvm.jvmName
 
 /**
  * A temporary queue system that exists only on the current Minestom server.
@@ -70,7 +71,7 @@ class TestQueue : Queue() {
             try {
                 instanceStarting = false
                 queuedPlayers.asMap().forEach { (player, gameType) ->
-                    if (!games.containsKey(gameType.name)) {
+                    if (!GameLoader.gameNames.contains(gameType.name)) {
                         player.sendMessage(
                             Component.translatable("queue.error.invalid_game_type", NamedTextColor.RED)
                         )
@@ -94,11 +95,11 @@ class TestQueue : Queue() {
                     else gameType.mapName
                     logger.info("Map chosen: $map")
                     try {
-                        games[gameType.name]!!.call(map)
+                        GameLoader.createNewGame(gameType.name, map ?: error("No map found for game"), null)
                         instanceStarting = true
                     } catch (e: Throwable) {
                         e.printStackTrace()
-                        player.sendMessage(Component.text(e.message.orEmpty(), NamedTextColor.RED))
+                        player.sendMessage(Component.text(e::class.jvmName + ": " + e.message.orEmpty(), NamedTextColor.RED))
                         queuedPlayers.invalidate(player)
                     }
                 }

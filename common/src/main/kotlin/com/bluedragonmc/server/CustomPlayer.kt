@@ -4,6 +4,9 @@ import com.bluedragonmc.server.module.database.PlayerDocument
 import com.bluedragonmc.server.module.database.PunishmentType
 import com.bluedragonmc.server.module.gameplay.ShopModule
 import com.bluedragonmc.server.module.minigame.SpawnpointModule
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
+import net.minestom.server.MinecraftServer
 import net.minestom.server.entity.Entity
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
@@ -82,16 +85,23 @@ class CustomPlayer(uuid: UUID, username: String, playerConnection: PlayerConnect
     }
 
     override fun setInstance(instance: Instance): CompletableFuture<Void> {
-        Game.findGame(this)?.apply {
-            val spawnpoint = getModuleOrNull<SpawnpointModule>()?.spawnpointProvider?.getSpawnpoint(this@CustomPlayer)
-            if (spawnpoint != null && instance != this@CustomPlayer.instance) {
-                return super.setInstance(instance, spawnpoint)
+        try {
+            Game.findGame(this)?.apply {
+                val spawnpoint =
+                    getModuleOrNull<SpawnpointModule>()?.spawnpointProvider?.getSpawnpoint(this@CustomPlayer)
+                if (spawnpoint != null && instance != this@CustomPlayer.instance) {
+                    return super.setInstance(instance, spawnpoint)
+                }
             }
-        }
-        return if (instance != this@CustomPlayer.instance) {
-            super.setInstance(instance, if (this.instance != null) getPosition() else respawnPoint)
-        } else {
-            AsyncUtils.VOID_FUTURE
+            return if (instance != this@CustomPlayer.instance) {
+                super.setInstance(instance, if (this.instance != null) getPosition() else respawnPoint)
+            } else {
+                AsyncUtils.VOID_FUTURE
+            }
+        } catch (e: Throwable) {
+            MinecraftServer.getExceptionManager().handleException(e)
+            kick(Component.text("Failed to change instances! (${e.message})", NamedTextColor.RED))
+            throw e
         }
     }
 

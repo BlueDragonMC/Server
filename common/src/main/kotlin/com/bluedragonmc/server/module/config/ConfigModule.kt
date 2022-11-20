@@ -24,12 +24,13 @@ import java.io.InputStreamReader
 class ConfigModule(private val configFileName: String? = null) : GameModule() {
 
     private lateinit var root: ConfigurationNode
+    private lateinit var parent: Game
     private val filePrefix = "config/"
 
     private fun loadFile(path: String): ConfigurationNode {
 
         val reader =
-            BufferedReader(InputStreamReader(javaClass.classLoader.getResourceAsStream(filePrefix + path)!!))
+            BufferedReader(InputStreamReader(parent::class.java.classLoader.getResourceAsStream(filePrefix + path)!!))
         val loader = YamlConfigurationLoader.builder()
             .source { reader }
             .build()
@@ -50,6 +51,7 @@ class ConfigModule(private val configFileName: String? = null) : GameModule() {
     }
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
+        this.parent = parent
         if (configFileName != null) {
             root = loadFile(configFileName)
         }

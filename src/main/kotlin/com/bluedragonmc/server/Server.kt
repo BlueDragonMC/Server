@@ -1,6 +1,5 @@
 package com.bluedragonmc.server
 
-import com.bluedragonmc.games.lobby.Lobby
 import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.bootstrap.*
 import com.bluedragonmc.server.bootstrap.dev.DevInstanceRouter
@@ -9,6 +8,7 @@ import com.bluedragonmc.server.bootstrap.dev.OpenToLAN
 import com.bluedragonmc.server.bootstrap.prod.AgonesIntegration
 import com.bluedragonmc.server.bootstrap.prod.InitialInstanceRouter
 import com.bluedragonmc.server.bootstrap.prod.VelocityForwarding
+import com.bluedragonmc.server.queue.GameLoader
 import com.bluedragonmc.server.queue.createEnvironment
 import net.minestom.server.MinecraftServer
 import net.minestom.server.utils.NamespaceID
@@ -64,6 +64,9 @@ fun start() {
         VelocityForwarding
     ).filter { it.canHook() }
 
+    // Load game plugins and preinitialize their main classes
+    GameLoader.loadGames()
+
     services.forEach {
         logger.debug("Initializing service ${it::class.simpleName ?: it::class.qualifiedName}")
         it.hook(eventNode)
@@ -84,7 +87,7 @@ fun start() {
 
     // Create a Lobby instance
     lobby = try {
-        Lobby()
+        GameLoader.createNewGame("Lobby", null, null)
     } catch (e: Throwable) {
         logger.error("There was an error initializing the Lobby. Shutting down...")
         e.printStackTrace()

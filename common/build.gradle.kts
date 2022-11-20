@@ -1,6 +1,7 @@
 plugins {
     id("server.common-conventions")
     kotlin("plugin.serialization") version "1.6.21"
+    `maven-publish`
 }
 
 group = "com.bluedragonmc.server"
@@ -18,6 +19,18 @@ dependencies {
     implementation(libs.minimessage)
     implementation(libs.bundles.configurate)
     implementation(libs.bundles.messaging)
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            groupId = "com.bluedragonmc.server"
+            artifactId = "common"
+            version = "1.0"
+
+            from(components["java"])
+        }
+    }
 }
 
 tasks.getByName<Test>("test") {
