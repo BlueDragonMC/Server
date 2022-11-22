@@ -60,7 +60,7 @@ object IPCQueue : Queue() {
             return null
         }
         logger.info("Using map: '$map'")
-        val game = GameLoader.createNewGame(request.gameType.name, request.gameType.mapName, request.gameType.mode)
+        val game = GameLoader.createNewGame(request.gameType.name, map, request.gameType.mode)
         val instance = game.getInstance()
         logger.info("Created ${request.gameType.name} instance ${instance.uniqueId} on map $map. (${(System.nanoTime() - start) / 1_000_000}ms)")
         // The service will soon be notified of this instance's creation

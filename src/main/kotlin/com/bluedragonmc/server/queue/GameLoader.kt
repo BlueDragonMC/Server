@@ -63,7 +63,7 @@ object GameLoader {
 
     fun createNewGame(name: String, mapName: String?, mode: String?): Game {
         val ctor = classes[name]?.kotlin?.primaryConstructor ?: error("Game class not found or improperly loaded")
-        if (ctor.parameters.isNotEmpty() && mapName == null) error("Map name is required by game, but not supplied")
+        if (ctor.parameters.isNotEmpty() && mapName.isNullOrBlank()) error("Map name is required by game, but not supplied")
         return when(ctor.parameters.size) {
             0 -> ctor.call()
             1 -> ctor.call(mapName)
