@@ -1,16 +1,17 @@
 package com.bluedragonmc.server.module.database
 
 import com.bluedragonmc.server.CustomPlayer
-import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.DataLoadedEvent
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.minigame.WinModule
+import com.bluedragonmc.server.service.Database
+import com.bluedragonmc.server.utils.listenAsync
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.mongodb.internal.operation.OrderBy
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import net.minestom.server.MinecraftServer
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
@@ -29,15 +30,18 @@ class StatisticsModule(private val recordWins: Boolean = true) : GameModule() {
         // Caches should be static to reduce the number of expensive DB queries
         private val statisticsCache: Cache<String, List<PlayerDocument>> =
             Caffeine.newBuilder().expireAfterWrite(Duration.ofMinutes(10)).build()
+
+        private lateinit var mostRecentInstance: StatisticsModule
+
+        init {
+            MinecraftServer.getGlobalEventHandler().listenAsync<DataLoadedEvent> { event ->
+                mostRecentInstance.incrementStatistic(event.player, "times_data_loaded")
+            }
+        }
     }
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
-        eventNode.addListener(DataLoadedEvent::class.java) { event ->
-            Database.IO.launch {
-                parent.getModuleOrNull<StatisticsModule>()
-                    ?.recordStatistic(event.player, "times_data_loaded") { i -> i?.plus(1.0) ?: 1.0 }
-            }
-        }
+        mostRecentInstance = this
         if (recordWins) {
             eventNode.addListener(WinModule.WinnerDeclaredEvent::class.java) { event ->
                 event.winningTeam.players.forEach { player ->

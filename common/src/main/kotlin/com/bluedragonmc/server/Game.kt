@@ -5,7 +5,6 @@ import com.bluedragonmc.api.grpc.CommonTypes.GameType.GameTypeFieldSelector
 import com.bluedragonmc.api.grpc.gameState
 import com.bluedragonmc.api.grpc.gameType
 import com.bluedragonmc.server.api.Environment
-import com.bluedragonmc.server.event.DataLoadedEvent
 import com.bluedragonmc.server.event.GameEvent
 import com.bluedragonmc.server.event.GameStateChangedEvent
 import com.bluedragonmc.server.event.PlayerLeaveGameEvent
@@ -92,7 +91,6 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
 
     private val eventNode = EventNode.event("$name-$mapName-$mode", EventFilter.ALL) { event ->
         when (event) {
-            is DataLoadedEvent -> true
             is InstanceEvent -> event.instance == getInstanceOrNull()
             is GameEvent -> event.game == this
             is PlayerSpawnEvent -> {

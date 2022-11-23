@@ -37,11 +37,18 @@ class IncomingRPCHandlerImpl : IncomingRPCHandler {
 
     class GameClientService : GsClientServiceGrpcKt.GsClientServiceCoroutineImplBase() {
 
+        private val logger = LoggerFactory.getLogger(this::class.java)
+
         private val ZERO_UUID = UUID(0L, 0L)
         private val ZERO_UUID_STRING = ZERO_UUID.toString()
 
         override suspend fun createInstance(request: GsClient.CreateInstanceRequest): GsClient.CreateInstanceResponse {
-            val game = Environment.queue.createInstance(request)
+            val game = runCatching {
+                Environment.queue.createInstance(request)
+            }.onFailure {
+                logger.error("Failed to create instance from request: $request")
+                it.printStackTrace()
+            }.getOrElse { null }
             val state = game?.rpcGameState ?: gameState {
                 gameState = CommonTypes.EnumGameState.ERROR
                 joinable = false
