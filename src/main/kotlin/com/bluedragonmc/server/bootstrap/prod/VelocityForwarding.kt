@@ -8,6 +8,6 @@ import net.minestom.server.extras.velocity.VelocityProxy
 
 object VelocityForwarding : Bootstrap(ProductionEnvironment::class) {
     override fun hook(eventNode: EventNode<Event>) {
-        VelocityProxy.enable(System.getenv("PUFFIN_VELOCITY_SECRET"))
+        VelocityProxy.enable(System.getenv("PUFFIN_VELOCITY_SECRET").trim())
     }
 }
