@@ -36,14 +36,20 @@ class ChestLootModule(private val lootProvider: ChestLootProvider) : GameModule(
         data class WeightedItemStack(val itemStack: ItemStack, val chance: Float)
 
         override fun getLoot(chestLocation: Point): Collection<ItemStack> {
-            val chest = mutableMapOf<Int, ItemStack>()
-            (0..26).forEach { slot -> chest[slot] = ItemStack.AIR }
+            val slots = MutableList(27) { ItemStack.AIR }
             potentialItems.filter { Random.nextFloat() <= it.chance }.forEach {
                 // Find a slot for this item that has not been taken yet
-                val slot = (0..26).random()
-                if (!chest.containsKey(slot)) chest[slot] = it.itemStack
+                var iters = 0
+                while (iters < 10) {
+                    val slot = Random.nextInt(slots.size)
+                    if (slots[slot] === ItemStack.AIR) {
+                        slots[slot] = it.itemStack
+                        break
+                    }
+                    iters ++
+                }
             }
-            return chest.values
+            return slots
         }
     }
 
