@@ -19,10 +19,6 @@ object GameLoader {
 
     private val logger = LoggerFactory.getLogger(this::class.java)
 
-    private val classLoader by lazy {
-        GameClassLoader(Paths.get("games"))
-    }
-
     private val gamesList by lazy {
         Paths.get("games").listDirectoryEntries().associateWith(::getPluginProperties)
     }
@@ -39,7 +35,9 @@ object GameLoader {
             val mainClass = props.getProperty("main-class")
             // Preload the game's main class
             val ms = measureTimeMillis {
-                val clazz = Class.forName(mainClass, true, classLoader)
+                val classLoader = GameClassLoader(arrayOf(path.toUri().toURL()))
+                GameClassLoader.loaders.add(classLoader)
+                val clazz = classLoader.loadClass(mainClass)
                 classes[name] = clazz as Class<out Game>
             }
             logger.info("Initialized plugin '${props.getProperty("name")}' (${path.name}) in ${ms}ms")
