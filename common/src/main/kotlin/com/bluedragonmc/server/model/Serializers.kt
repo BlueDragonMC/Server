@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalSerializationApi::class)
 
-package com.bluedragonmc.server.module.database
+package com.bluedragonmc.server.model
 
 import com.bluedragonmc.server.utils.miniMessage
 import com.github.jershell.kbson.FlexibleDecoder
@@ -79,7 +79,7 @@ object LenientDoubleSerializer : KSerializer<Double> {
 object PosSerializer : KSerializer<Pos> {
     private val delegateSerializer = LenientDoubleArraySerializer
 
-    override val descriptor: SerialDescriptor = delegateSerializer.descriptor
+    override val descriptor: SerialDescriptor = LenientDoubleArraySerializer.descriptor
     override fun deserialize(decoder: Decoder): Pos = decoder.decodeSerializableValue(delegateSerializer).let {
         Pos(it[0], it[1], it[2], it[3].toFloat(), it[4].toFloat())
     }

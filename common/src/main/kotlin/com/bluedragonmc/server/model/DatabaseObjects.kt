@@ -1,5 +1,8 @@
-package com.bluedragonmc.server.module.database
+@file:OptIn(ExperimentalSerializationApi::class)
 
+package com.bluedragonmc.server.model
+
+import com.bluedragonmc.server.model.*
 import com.bluedragonmc.server.service.Database
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.EncodeDefault
@@ -17,34 +20,17 @@ import kotlin.reflect.KMutableProperty
 import kotlin.reflect.KMutableProperty1
 
 @Serializable
-data class PlayerDocument @OptIn(ExperimentalSerializationApi::class) constructor(
+data class PlayerDocument constructor(
     @SerialName("_id") @Serializable(with = UUIDSerializer::class) val uuid: UUID,
     var username: String = "",
     @EncodeDefault var usernameLower: String = username.lowercase(),
     var coins: Int = 0,
     var experience: Int = 0,
-    var groups: MutableList<String> = mutableListOf("default"),
     var punishments: MutableList<Punishment> = mutableListOf(),
     var statistics: MutableMap<String, Double> = mutableMapOf(),
     var achievements: List<Achievement> = emptyList(),
     var cosmetics: List<CosmeticEntry> = emptyList(),
-    var permissions: MutableList<String> = mutableListOf(),
 ) {
-
-    val highestGroup by lazy {
-        runBlocking {
-            getGroups().maxByOrNull { it.priority }
-        }
-    }
-
-    suspend fun getGroups(): List<PermissionGroup> {
-        return groups.mapNotNull { name ->
-            Database.connection.getGroupByName(name)
-        }.toList()
-    }
-
-    suspend fun getAllPermissions(): List<String> =
-        permissions + getGroups().flatMap { it.permissions }.distinct()
 
     suspend fun <T> update(field: KMutableProperty<T>, value: T) {
         Database.connection.updatePlayer(uuid.toString(), field, value)
@@ -95,33 +81,6 @@ data class Achievement(
     val id: String,
     @Serializable(with = DateSerializer::class) val earnedAt: Date,
 )
-
-@Serializable
-data class PermissionGroup(
-    @SerialName("_id") val name: String,
-    @Serializable(with = TextColorSerializer::class) val color: TextColor = NamedTextColor.WHITE,
-    @Serializable(with = ComponentSerializer::class) val prefix: Component = Component.empty(),
-    val priority: Int = 0,
-    var permissions: MutableList<String> = mutableListOf(),
-    val inheritsFrom: List<String> = emptyList(),
-) {
-    suspend fun getChildGroups(): List<PermissionGroup?> {
-        return inheritsFrom.map { name ->
-            Database.connection.getGroupByName(name)
-        }
-    }
-
-    suspend fun getAllPermissions(): List<String> {
-        return permissions + getChildGroups().flatMap {
-            it?.getAllPermissions() ?: emptyList()
-        }
-    }
-
-    suspend fun <T> update(field: KMutableProperty<T>, value: T) {
-        Database.connection.updateGroup(name, field, value)
-        field.setter.call(this, value)
-    }
-}
 
 @Serializable
 data class MapData(

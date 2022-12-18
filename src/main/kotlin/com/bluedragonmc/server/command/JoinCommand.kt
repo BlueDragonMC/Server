@@ -7,7 +7,7 @@ import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.command.builder.arguments.ArgumentWord
 
-class JoinCommand(name: String, private val usageString: String, vararg aliases: String) : BlueDragonCommand(name, aliases, null, block = {
+class JoinCommand(name: String, private val usageString: String, vararg aliases: String) : BlueDragonCommand(name, aliases, block = {
     val gameArgument = ArgumentWord("game").from(*Environment.gameClasses.toTypedArray())
     val mapArgument = ArgumentWord("map")
     usage(usageString)

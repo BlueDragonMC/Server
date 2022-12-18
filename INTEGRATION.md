@@ -44,7 +44,6 @@ Each player has their own document in the `players` collection of the database w
 * `username`: The username of the player. Updated whenever the name changes.
 * `coins`: The number of coins the player has.
 * `experience`: The amount of experience the player has.
-* `groups`: A list of group names which the player belongs to. (Used for permissions)
 * `punishments`: A list of punishments that the player has. Punishments are not removed from the list when revoked or expired.
   * `type`: A string from the following list: `BAN`, `MUTE`.
   * `id`: A UUID (represented as a string) that uniquely identifies the punishment.
@@ -57,7 +56,6 @@ Each player has their own document in the `players` collection of the database w
 * `cosmetics`: A list of cosmetics which the player owns. Non-equipped cosmetics are included in the list.
   * `id`: A string identifier for the cosmetic
   * `equipped`: A boolean representing whether the player has the cosmetic equipped or not.
-* `permissions`: A list of permissions (string) that the player has. Assigning the player to a group is preferred.
 ### 3.3: Maps
 Each map has its own entry in the `maps` collection with the following fields:
 * `_id`: The friendly display name of the map (unlocalized).
@@ -67,20 +65,10 @@ Each map has its own entry in the `maps` collection with the following fields:
   * Each spawnpoint is an array of numbers with the format: [x, y, z, yaw, pitch]
   * The numbers may be integers or doubles. It is the responsibility of the client to convert the numbers to the correct format (usually Double).
 * `additionalLocations`: Each map or game may define additional locations. This field is a list of lists of coordinates. The coordinates are in the same format as above.
-### 3.4: Permissions
-Each permission group has its own entry in the `groups` collection with the following fields:
-* `_id`: A friendly display name of the group (unlocalized).
-* `color`: A hex color ("#xxxxxx") which is used to style the player names of group members.
-* `prefix`: A prefix that is shown before group members' names in chat messages.
-* `priority`: A number which represents the priority of the group. Higher priority means its prefixes and other metadata will take precedence over other groups.
-* `permissions`: A list of permissions (strings) that the group has.
-* `inheritsFrom`: A list of groups for which this group inherits all permissions and metadata (if not overridden).
 ### 3.5: Database Behavior
 * Every time a player log in to a game server, their player document should be fetched using their UUID.
   * If their username does not match the name in the document, it should be updated to reflect the username change.
 * Map data should be lazily fetched for a map when it is loaded.
-* When a player logs in, their permissions should be calculated and cached using their `permissions` and `groups` on their player document.
-  * Group data should be cached for at least a few minutes, as it is unlikely to rapidly change.
 * Player documents are fetched by other services (mainly Puffin) to look up players' metadata. This is typically just their usernames (UUID <=> username conversion) and name colors for display in chat.
 ## 4: Server Behavior
 ### 4.1: Proxy Connection

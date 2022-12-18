@@ -4,10 +4,9 @@ import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.api.DatabaseConnection
 import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.event.DataLoadedEvent
-import com.bluedragonmc.server.module.database.MapData
-import com.bluedragonmc.server.module.database.PermissionGroup
-import com.bluedragonmc.server.module.database.PlayerDocument
-import com.bluedragonmc.server.module.database.Punishment
+import com.bluedragonmc.server.model.MapData
+import com.bluedragonmc.server.model.PlayerDocument
+import com.bluedragonmc.server.model.Punishment
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.mongodb.ConnectionString
@@ -17,7 +16,6 @@ import com.mongodb.client.model.Sorts
 import kotlinx.coroutines.runBlocking
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
-import net.kyori.adventure.text.format.TextColor
 import net.minestom.server.MinecraftServer
 import net.minestom.server.entity.Player
 import net.minestom.server.network.packet.server.login.LoginDisconnectPacket
@@ -40,11 +38,6 @@ internal class DatabaseConnectionImpl(connectionString: String) : DatabaseConnec
 
     private val mapDataCache: Cache<String, MapData?> = Caffeine.newBuilder()
         .maximumSize(100)
-        .expireAfterWrite(Duration.ofMinutes(10))
-        .build()
-
-    private val groupCache: Cache<String, PermissionGroup> = Caffeine.newBuilder()
-        .maximumSize(1_000)
         .expireAfterWrite(Duration.ofMinutes(10))
         .build()
 
@@ -73,12 +66,7 @@ internal class DatabaseConnectionImpl(connectionString: String) : DatabaseConnec
     }
 
     private fun getPlayersCollection(): CoroutineCollection<PlayerDocument> = database.getCollection("players")
-    private fun getGroupsCollection(): CoroutineCollection<PermissionGroup> = database.getCollection("groups")
     private fun getMapsCollection(): CoroutineCollection<MapData> = database.getCollection("maps")
-
-    override suspend fun getGroupByName(name: String): PermissionGroup? =
-        groupCache.getIfPresent(name) ?: getGroupsCollection().findOneById(name)
-            .also { group -> if (group != null) groupCache.put(name, group) }
 
     override suspend fun getPlayerDocument(username: String): PlayerDocument? {
         MinecraftServer.getConnectionManager().findPlayer(username)?.let {
@@ -105,16 +93,6 @@ internal class DatabaseConnectionImpl(connectionString: String) : DatabaseConnec
         } else {
             foundDocument
         }
-    }
-
-    override suspend fun getNameColor(uuid: UUID): TextColor? = getPlayerDocument(uuid)?.highestGroup?.color
-
-    override suspend fun getAllGroups(): List<PermissionGroup> {
-        val result = mutableListOf<PermissionGroup>()
-        getGroupsCollection().find().consumeEach {
-            result.add(it)
-        }
-        return result
     }
 
     override fun loadDataDocument(player: CustomPlayer) {
@@ -178,17 +156,5 @@ internal class DatabaseConnectionImpl(connectionString: String) : DatabaseConnec
 
     override suspend fun <T> updatePlayer(playerUuid: String, field: KMutableProperty<T>, value: T) {
         getPlayersCollection().updateOneById(playerUuid, setValue(field, value))
-    }
-
-    override suspend fun <T> updateGroup(groupName: String, field: KMutableProperty<T>, value: T) {
-        getGroupsCollection().updateOneById(groupName, setValue(field, value))
-    }
-
-    override suspend fun insertGroup(group: PermissionGroup) {
-        getGroupsCollection().insertOne(group)
-    }
-
-    override suspend fun removeGroup(group: PermissionGroup) {
-        getGroupsCollection().deleteOneById(group.name)
     }
 }

@@ -4,8 +4,7 @@ import com.bluedragonmc.server.ALT_COLOR_1
 import com.bluedragonmc.server.ALT_COLOR_2
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
 import com.bluedragonmc.server.CustomPlayer
-import com.bluedragonmc.server.module.database.PermissionGroup
-import com.bluedragonmc.server.module.database.Permissions
+import com.bluedragonmc.server.service.Permissions
 import com.bluedragonmc.server.utils.buildComponent
 import com.bluedragonmc.server.utils.miniMessage
 import com.bluedragonmc.server.utils.surroundWithSeparators
@@ -29,7 +28,7 @@ object GlobalChatFormat : Bootstrap() {
             val level = CustomPlayer.getXpLevel(experience)
             val xpToNextLevel = CustomPlayer.getXpToNextLevel(level, experience)
 
-            val group = player.data.highestGroup ?: PermissionGroup("default", NamedTextColor.GRAY)
+            val prefix = Permissions.getMetadata(player.uuid).prefix
 
             event.isCancelled = true
             val component = buildComponent {
@@ -44,11 +43,10 @@ object GlobalChatFormat : Bootstrap() {
                     Component.text(xpToNextLevel, ALT_COLOR_1),
                     Component.text(level.toInt() + 1, ALT_COLOR_2))))
 
-                +group.prefix
-                +if (group.prefix != Component.empty()) Component.space() else Component.empty()
+                +prefix
                 +player.name
                 +Component.text(": ", NamedTextColor.DARK_GRAY)
-                if (Permissions.hasPermission(player.data, "chat.minimessage"))
+                if (Permissions.hasPermission(player.uuid, "chat.minimessage") == true)
                     +miniMessage.deserialize(event.message)
                 else +Component.text(event.message, NamedTextColor.WHITE)
             }

@@ -3,6 +3,7 @@ package com.bluedragonmc.server.module.database
 import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.DataLoadedEvent
+import com.bluedragonmc.server.model.PlayerDocument
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.minigame.WinModule
 import com.bluedragonmc.server.service.Database

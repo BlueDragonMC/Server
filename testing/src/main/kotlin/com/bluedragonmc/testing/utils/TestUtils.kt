@@ -5,13 +5,12 @@ import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.api.IncomingRPCHandlerStub
 import com.bluedragonmc.server.api.OutgoingRPCHandlerStub
 import com.bluedragonmc.server.event.GameStartEvent
+import com.bluedragonmc.server.model.PlayerDocument
 import com.bluedragonmc.server.module.GameModule
-import com.bluedragonmc.server.module.database.PlayerDocument
 import com.bluedragonmc.server.module.instance.InstanceModule
 import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.service.Messaging
 import io.mockk.coEvery
-import io.mockk.every
 import io.mockk.spyk
 import kotlinx.coroutines.runBlocking
 import net.minestom.server.api.Env
@@ -75,8 +74,6 @@ object TestUtils {
     private fun createCustomPlayer(): CustomPlayer {
         val player = CustomPlayer(UUID.randomUUID(), "RandName", StubPlayerConnection())
         player.data = spyk(PlayerDocument(player.uuid, player.username))
-        every { player.data.highestGroup } returns null
-        coEvery { player.data.getGroups() } returns emptyList()
         coEvery { player.data.compute<MutableMap<String, Double>>(allAny(), allAny()) } answers {
             println("Player document had mocked field computed & updated")
         }

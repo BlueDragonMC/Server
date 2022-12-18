@@ -4,7 +4,7 @@ import com.bluedragonmc.server.service.Messaging
 import com.bluedragonmc.server.lobby
 import com.bluedragonmc.server.module.minigame.SpawnpointModule
 
-class LobbyCommand(name: String, vararg aliases: String?) : BlueDragonCommand(name, aliases, null, block = {
+class LobbyCommand(name: String, vararg aliases: String?) : BlueDragonCommand(name, aliases, block = {
     requirePlayers()
     suspendSyntax {
         if (player.instance == lobby.getInstance()) {

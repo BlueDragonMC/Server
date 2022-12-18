@@ -7,6 +7,7 @@ configurate = "4.1.2"
 minimessage = "4.11.0"
 kmongo = "4.6.1"
 caffeine = "3.1.1"
+okhttp = "4.10.0"
 # Auto-generated GRPC/Protobuf messaging code
 rpc = "4420a7d1bc"
 # Agones SDK and its necessary runtime dependencies
@@ -27,6 +28,7 @@ configurate-extra-kotlin = { group = "org.spongepowered", name = "configurate-ex
 minimessage = { group = "net.kyori", name = "adventure-text-minimessage", version.ref = "minimessage" }
 kmongo = { group = "org.litote.kmongo", name = "kmongo-coroutine-serialization", version.ref = "kmongo" }
 caffeine = { group = "com.github.ben-manes.caffeine", name = "caffeine", version.ref = "caffeine" }
+okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
 rpc = { group = "com.github.bluedragonmc", name = "rpc", version.ref = "rpc" }
 grpc-protobuf = { group = "io.grpc", name = "grpc-protobuf", version.ref = "grpc" }
 grpc-netty = { group = "io.grpc", name = "grpc-netty", version.ref = "grpc" }
@@ -34,8 +36,8 @@ grpc-kotlin-stub = { group = "io.grpc", name = "grpc-kotlin-stub", version.ref =
 #grpc-services = { group = "io.grpc", name = "grpc-services", version.ref = "grpc" }
 protobuf-kotlin = { group = "com.google.protobuf", name = "protobuf-kotlin", version.ref = "protobuf-kotlin" }
 mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
-junit-api = { group = "org.junit.jupiter", name ="junit-jupiter-api", version.ref = "junit" }
-junit-engine = { group = "org.junit.jupiter", name ="junit-jupiter-engine", version.ref = "junit" }
+junit-api = { group = "org.junit.jupiter", name = "junit-jupiter-api", version.ref = "junit" }
+junit-engine = { group = "org.junit.jupiter", name = "junit-jupiter-engine", version.ref = "junit" }
 
 [bundles]
 configurate = ["configurate", "configurate-extra-kotlin"]

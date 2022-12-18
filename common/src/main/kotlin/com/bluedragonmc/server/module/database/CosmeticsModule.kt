@@ -2,6 +2,8 @@ package com.bluedragonmc.server.module.database
 
 import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.model.CosmeticEntry
+import com.bluedragonmc.server.model.PlayerDocument
 import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.config.ConfigModule

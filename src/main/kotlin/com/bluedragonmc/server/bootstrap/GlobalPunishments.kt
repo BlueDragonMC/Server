@@ -2,7 +2,7 @@ package com.bluedragonmc.server.bootstrap
 
 import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.event.DataLoadedEvent
-import com.bluedragonmc.server.module.database.Punishment
+import com.bluedragonmc.server.model.Punishment
 import com.bluedragonmc.server.utils.buildComponent
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor

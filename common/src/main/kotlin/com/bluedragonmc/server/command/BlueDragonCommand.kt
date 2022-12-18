@@ -5,8 +5,8 @@ import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.command.BlueDragonCommand.Companion.errorColor
-import com.bluedragonmc.server.module.database.Permissions
-import com.bluedragonmc.server.module.database.PlayerDocument
+import com.bluedragonmc.server.model.PlayerDocument
+import com.bluedragonmc.server.service.Permissions
 import com.bluedragonmc.server.utils.component1
 import com.bluedragonmc.server.utils.component2
 import com.bluedragonmc.server.utils.component3
@@ -25,6 +25,7 @@ import net.minestom.server.command.builder.arguments.Argument
 import net.minestom.server.coordinate.Point
 import net.minestom.server.entity.Player
 import net.minestom.server.utils.entity.EntityFinder
+import java.util.function.Predicate
 
 /**
  * A basic command class that is extended by BlueDragon commands.
@@ -41,10 +42,10 @@ open class BlueDragonCommand(
         val fieldColor = BRAND_COLOR_PRIMARY_1
         val errorColor: TextColor = NamedTextColor.RED
         val errorFieldColor: TextColor = NamedTextColor.DARK_RED
-        internal fun buildMessage(block: MessageBuilder.() -> Unit) = MessageBuilder().apply(block).get()
+        fun buildMessage(block: MessageBuilder.() -> Unit) = MessageBuilder().apply(block).get()
     }
 
-    internal class MessageBuilder {
+    class MessageBuilder {
         private val components = mutableListOf<Component>()
 
         fun message(string: String) {
@@ -84,10 +85,6 @@ open class BlueDragonCommand(
 
     fun formatErrorTranslated(key: String, vararg fields: Any): Component =
         formatTranslatedMessage(key, errorColor, errorFieldColor, *fields)
-
-    @Deprecated("Translatable messages are strongly prefered.")
-    fun formatErrorMessage(string: String, vararg fields: Any): Component =
-        formatMessage(string, errorColor, errorFieldColor, *fields)
 
     private fun formatTranslatedMessage(
         key: String,
@@ -132,7 +129,7 @@ open class BlueDragonCommand(
             return@setDefaultExecutor
         }
         sender as CustomPlayer
-        if (permission == null || Permissions.hasPermission(sender.data, permission))
+        if (permission == null || Permissions.hasPermission(sender.uuid, permission) == true)
             block(CommandCtx(sender, context))
         else sender.sendMessage(Component.translatable("commands.help.failed", errorColor))
     }
@@ -147,19 +144,24 @@ open class BlueDragonCommand(
     private fun constructSubcommand(name: String, block: BlueDragonCommand.() -> Unit) =
         BlueDragonCommand(name, emptyArray(), permission, block)
 
+    /**
+     * Only allow senders which pass the [scopePredicate]
+     * to execute the command. Primarily used to limit commands
+     * on a per-game basis.
+     */
+    fun scopeTo(scopePredicate: Predicate<CommandSender>) {
+        conditions.add {
+            if (!scopePredicate.test(sender)) {
+                sender.sendMessage(Component.text("You can't use that command here!", NamedTextColor.RED))
+                return@add false
+            }
+            return@add true
+        }
+    }
+
     fun syntax(vararg args: Argument<*>, block: CommandCtx.() -> Unit) = Syntax(this, args.toList(), block)
     fun suspendSyntax(vararg args: Argument<*>, block: suspend CommandCtx.() -> Unit) =
         BlockingSyntax(this, args.toList(), block)
-
-    fun userSuspendSyntax(vararg args: Argument<*>, block: suspend UserCommandCtx.() -> Unit) =
-        suspendSyntax(*args, block = {
-            block(UserCommandCtx(sender, ctx, args.first() as ArgumentOfflinePlayer))
-        })
-
-    class UserCommandCtx(sender: CommandSender, ctx: CommandContext, userArgument: Argument<PlayerDocument>) :
-        CommandCtx(sender, ctx) {
-        val doc = get(userArgument)
-    }
 
     open class CommandCtx(val sender: CommandSender, val ctx: CommandContext) {
         val player by lazy { sender as Player }
@@ -245,7 +247,7 @@ interface ConditionHolder {
         noPermissionMessage: Component = Component.translatable("commands.help.failed", errorColor),
     ) {
         conditions.add {
-            if (sender is CustomPlayer && !Permissions.hasPermission(sender.data, permission)) {
+            if (sender is CustomPlayer && Permissions.hasPermission(sender.uuid, permission) != true) {
                 sender.sendMessage(noPermissionMessage withColor errorColor)
                 false
             } else true // Console always has permission

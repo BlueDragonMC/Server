@@ -1,8 +1,7 @@
 package com.bluedragonmc.server.command
 
+import com.bluedragonmc.server.model.PlayerDocument
 import com.bluedragonmc.server.service.Database
-import com.bluedragonmc.server.module.database.Permissions
-import com.bluedragonmc.server.module.database.PlayerDocument
 import kotlinx.coroutines.runBlocking
 import net.minestom.server.MinecraftServer
 import net.minestom.server.command.builder.arguments.*
@@ -128,76 +127,6 @@ class ArgumentOptionalPlayer(id: String) : Argument<String>(id) {
     }
 }
 
-class ArgumentPermission(id: String) : Argument<String>(id) {
-    private val str = ArgumentString(id)
-
-    override fun parse(input: String): String {
-        return str.parse(input)
-    }
-
-    override fun parser(): String = str.parser()
-
-    init {
-        setSuggestionCallback { _, _, suggestion ->
-            suggestion.entries.addAll(allPermissions.filter {
-                suggestion.input.isEmpty() || it.startsWith(suggestion.input)
-            }.map { SuggestionEntry(it) })
-        }
-    }
-
-    override fun nodeProperties(): ByteArray {
-        return BinaryWriter.makeArray { packetWriter: BinaryWriter ->
-            packetWriter.writeVarInt(0) // Single word
-        }
-    }
-
-    companion object {
-        val allPermissions by lazy {
-            runBlocking {
-                Database.connection.getAllGroups().flatMap { it.permissions }.distinct()
-            }
-        }
-    }
-}
-
-class ArgumentPermissionGroup(id: String) : Argument<String>(id) {
-    private val str = ArgumentString(id)
-
-    override fun parse(input: String): String {
-        val string = str.parse(input)
-        runBlocking {
-            if(Permissions.getGroupByName(string) == null) {
-                throw ArgumentSyntaxException("Group does not exist!", input, -1)
-            }
-        }
-        return string
-    }
-
-    override fun parser(): String = str.parser()
-
-    init {
-        setSuggestionCallback { _, _, suggestion ->
-            suggestion.entries.addAll(allGroups.filter {
-                suggestion.input.isEmpty() || it.startsWith(suggestion.input)
-            }.map { SuggestionEntry(it) })
-        }
-    }
-
-    override fun nodeProperties(): ByteArray {
-        return BinaryWriter.makeArray { packetWriter: BinaryWriter ->
-            packetWriter.writeVarInt(0) // Single word
-        }
-    }
-
-    companion object {
-        val allGroups by lazy {
-            runBlocking {
-                Database.connection.getAllGroups().map { it.name }
-            }
-        }
-    }
-}
-
 object LiteralArgument : ArgumentTypeDelegation<String>(::ArgumentLiteral)
 object IntArgument : ArgumentTypeDelegation<Int>(::ArgumentInteger)
 object BooleanArgument : ArgumentTypeDelegation<Boolean>(::ArgumentBoolean)
@@ -210,5 +139,3 @@ object PlayerArgument : ArgumentTypeDelegation<EntityFinder>(::ArgumentPlayer)
 object OfflinePlayerArgument : ArgumentTypeDelegation<PlayerDocument>(::ArgumentOfflinePlayer)
 object OptionalPlayerArgument : ArgumentTypeDelegation<String>(::ArgumentOptionalPlayer)
 object InstanceArgument : ArgumentTypeDelegation<Instance>(::ArgumentInstance)
-object PermissionArgument : ArgumentTypeDelegation<String>(::ArgumentPermission)
-object PermissionGroupArgument : ArgumentTypeDelegation<String>(::ArgumentPermissionGroup)

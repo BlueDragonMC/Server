@@ -7,7 +7,9 @@ import com.bluedragonmc.server.command.OfflinePlayerArgument
 import com.bluedragonmc.server.command.StringArrayArgument
 import com.bluedragonmc.server.command.WordArgument
 import com.bluedragonmc.server.event.DataLoadedEvent
-import com.bluedragonmc.server.module.database.*
+import com.bluedragonmc.server.model.PlayerDocument
+import com.bluedragonmc.server.model.Punishment
+import com.bluedragonmc.server.model.PunishmentType
 import kotlinx.coroutines.launch
 import net.minestom.server.MinecraftServer
 import net.minestom.server.command.builder.exception.ArgumentSyntaxException

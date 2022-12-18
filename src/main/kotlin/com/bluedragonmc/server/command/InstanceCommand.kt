@@ -53,7 +53,7 @@ class InstanceCommand(name: String, usageString: String, vararg aliases: String?
                     +Component.translatable("command.instance.players", NamedTextColor.GRAY, Component.text(instance.players.size))
                     +Component.space()
                     val connectButtonColor =
-                        if (sender is Player && sender.instance != instance) NamedTextColor.YELLOW else NamedTextColor.GRAY
+                        if (sender is Player && player.instance != instance) NamedTextColor.YELLOW else NamedTextColor.GRAY
                     +Component.translatable("command.instance.action.connect", connectButtonColor)
                         .hoverEventTranslatable("command.instance.action.connect.hover", NamedTextColor.YELLOW)
                         .clickEvent("/instance join ${instance.uniqueId}")

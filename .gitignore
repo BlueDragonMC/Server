@@ -1,6 +1,7 @@
 .gradle
 **/build/
 !src/**/build/
+games/
 
 # IntelliJ project folder
 .idea

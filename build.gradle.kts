@@ -39,6 +39,7 @@ dependencies {
     implementation(libs.caffeine) // Caching library for database responses
     implementation(libs.bundles.configurate) // Configurate for game configuration
     implementation(libs.bundles.messaging) // Messaging
+    implementation(libs.okhttp)
 
     implementation(project(":common"))
 }

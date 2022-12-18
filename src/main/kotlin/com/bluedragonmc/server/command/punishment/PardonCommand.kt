@@ -3,7 +3,7 @@ package com.bluedragonmc.server.command.punishment
 import com.bluedragonmc.server.command.BlueDragonCommand
 import com.bluedragonmc.server.command.OfflinePlayerArgument
 import com.bluedragonmc.server.service.Database
-import com.bluedragonmc.server.module.database.PlayerDocument
+import com.bluedragonmc.server.model.PlayerDocument
 import kotlinx.coroutines.launch
 
 class PardonCommand(name: String, usageString: String, vararg aliases: String) : BlueDragonCommand(name, aliases, block = {

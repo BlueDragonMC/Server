@@ -25,7 +25,7 @@ class KickCommand(name: String, usageString: String, vararg aliases: String) : B
             +Component.newline()
             +Component.newline()
             +("Kicked by: " withColor NamedTextColor.RED)
-            +if (sender is Player) sender.name else "Console" withColor NamedTextColor.WHITE
+            +if (sender is Player) (sender as Player).name else "Console" withColor NamedTextColor.WHITE
             +Component.newline()
             +("Reason: " withColor NamedTextColor.RED)
             +(reason withColor NamedTextColor.WHITE)

@@ -1,7 +1,7 @@
 package com.bluedragonmc.server
 
-import com.bluedragonmc.server.module.database.PlayerDocument
-import com.bluedragonmc.server.module.database.PunishmentType
+import com.bluedragonmc.server.model.PlayerDocument
+import com.bluedragonmc.server.model.PunishmentType
 import com.bluedragonmc.server.module.gameplay.ShopModule
 import com.bluedragonmc.server.module.minigame.SpawnpointModule
 import net.kyori.adventure.text.Component

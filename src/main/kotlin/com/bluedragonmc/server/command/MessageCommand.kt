@@ -1,8 +1,7 @@
 package com.bluedragonmc.server.command
 
-import com.bluedragonmc.server.CustomPlayer
-import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.service.Messaging
+import com.bluedragonmc.server.service.Permissions
 import kotlinx.coroutines.runBlocking
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -22,7 +21,7 @@ class MessageCommand(name: String, vararg aliases: String) : BlueDragonCommand(n
         val senderName = (sender as? Player)?.name ?: Component.translatable("command.msg.console")
         if (player != null) {
             // Player is on the same server and online
-            val color = (player as CustomPlayer).data.highestGroup?.color ?: NamedTextColor.GRAY
+            val color = Permissions.getMetadata(player.uuid).rankColor
             val senderMessage = formatMessageTranslated("command.msg.sent", Component.text(playerName, color), message)
             val receiverMessage = formatMessageTranslated("command.msg.received", senderName, message)
             sender.sendMessage(senderMessage)
@@ -35,7 +34,7 @@ class MessageCommand(name: String, vararg aliases: String) : BlueDragonCommand(n
                     return@runBlocking
                 }
                 val recipientUuid = UUID.fromString(recipient.uuid!!)
-                val color = Database.connection.getNameColor(recipientUuid) ?: NamedTextColor.GRAY
+                val color = Permissions.getMetadata(recipientUuid).rankColor
                 val senderMessage = formatMessageTranslated("command.msg.sent", Component.text(playerName, color), message)
                 Messaging.outgoing.sendPrivateMessage(message, sender, recipientUuid)
                 sender.sendMessage(senderMessage)

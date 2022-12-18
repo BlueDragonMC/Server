@@ -2,8 +2,7 @@ package com.bluedragonmc.server.command
 
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
-import com.bluedragonmc.server.CustomPlayer
-import com.bluedragonmc.server.module.database.Permissions
+import com.bluedragonmc.server.service.Permissions
 import com.bluedragonmc.server.utils.plus
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.JoinConfiguration
@@ -14,7 +13,7 @@ import net.minestom.server.instance.Instance
 
 class ListCommand(name: String, vararg aliases: String) : BlueDragonCommand(name, aliases, block = {
     syntax {
-        if (sender is ConsoleSender || Permissions.hasPermission((sender as CustomPlayer).data, "command.list.full")) {
+        if (sender is ConsoleSender || Permissions.hasPermission((sender as Player).uuid, "command.list.full") == true) {
             val firstLine = formatMessageTranslated("command.list.response",
                 MinecraftServer.getConnectionManager().onlinePlayers.size)
             val all = Component.join(JoinConfiguration.newlines(),
