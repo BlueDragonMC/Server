@@ -18,19 +18,36 @@ import net.minestom.server.item.Material
 import org.spongepowered.configurate.ConfigurationNode
 import org.spongepowered.configurate.ConfigurationOptions
 import org.spongepowered.configurate.yaml.YamlConfigurationLoader
-import java.io.BufferedReader
-import java.io.InputStreamReader
+import java.nio.file.Paths
+import kotlin.io.path.bufferedReader
+import kotlin.io.path.exists
 
 class ConfigModule(private val configFileName: String? = null) : GameModule() {
 
     private lateinit var root: ConfigurationNode
     private lateinit var parent: Game
-    private val filePrefix = "config/"
+
+    /**
+     * Files in this folder will be treated as overrides
+     * to config placed inside the compiled JAR.
+     */
+    private val externalFolder = "/etc/config/"
+
+    /**
+     *  JAR (zip) entries in this folder inside the compiled JAR will act as
+     *  fallbacks for any configuration that isn't in the external folder.
+     */
+    private val internalFolder = "config/"
 
     private fun loadFile(path: String): ConfigurationNode {
 
-        val reader =
-            BufferedReader(InputStreamReader(parent::class.java.classLoader.getResourceAsStream(filePrefix + path)!!))
+        val overrideFile = Paths.get(externalFolder, path)
+        val reader = if (overrideFile.exists()) {
+            overrideFile.bufferedReader()
+        } else {
+            parent::class.java.classLoader.getResourceAsStream(internalFolder + path)!!.bufferedReader()
+        }
+
         val loader = YamlConfigurationLoader.builder()
             .source { reader }
             .build()
