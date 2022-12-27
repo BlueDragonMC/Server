@@ -21,7 +21,7 @@ class DevelopmentEnvironment : Environment() {
 
     override suspend fun getServerName(): String {
         if (!::serverName.isInitialized) {
-            serverName = "Dev-" + UUID.randomUUID().toString().take(5)
+            serverName = "dev-" + UUID.randomUUID().toString().take(5) + "-" + UUID.randomUUID().toString().take(5)
         }
         return serverName
     }

@@ -8,8 +8,8 @@ import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.event.GameEvent
 import com.bluedragonmc.server.event.GameStateChangedEvent
 import com.bluedragonmc.server.event.PlayerLeaveGameEvent
-import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.model.MapData
+import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.instance.InstanceModule
 import com.bluedragonmc.server.module.map.AnvilFileMapProviderModule
 import com.bluedragonmc.server.module.minigame.SpawnpointModule
