@@ -57,6 +57,7 @@ class SidebarModule(private val title: String) : GameModule() {
      * Games may only have **one** scoreboard binding. Updating a binding overrides all other bindings.
      */
     fun bind(block: ScoreboardBinding.ScoreboardBindingUtils.(Player) -> Collection<Component>): ScoreboardBinding {
+        check(::parent.isInitialized) { "bind() was called before the SidebarModule was initialized!" }
         check(!::binding.isInitialized) { "Only one scoreboard binding can be created per SidebarModule!" }
         binding = ScoreboardBinding(block, this)
         return binding

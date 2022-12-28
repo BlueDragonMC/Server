@@ -56,8 +56,10 @@ fun Component.clickEvent(command: String): Component =
 
 fun Component.clickEvent(action: ClickEvent.Action, value: String): Component {
     if (action == ClickEvent.Action.COPY_TO_CLIPBOARD && hoverEvent() == null) {
-        return clickEvent(ClickEvent.clickEvent(action, value)).hoverEventTranslatable("command.click_to_copy",
-            ALT_COLOR_1)
+        return clickEvent(ClickEvent.clickEvent(action, value)).hoverEventTranslatable(
+            "command.click_to_copy",
+            ALT_COLOR_1
+        )
     }
     return clickEvent(ClickEvent.clickEvent(action, value))
 }
@@ -92,7 +94,11 @@ fun splitAndFormatLore(description: Component, color: TextColor, player: Player)
 fun hasNewline(component: Component): Boolean =
     component.toPlainText().contains("\n") || component.children().any { hasNewline(it) }
 
-fun splitComponentByNewline(component: Component, locale: Locale? = null, list: MutableList<Component> = mutableListOf()): List<Component> {
+fun splitComponentByNewline(
+    component: Component,
+    locale: Locale? = null,
+    list: MutableList<Component> = mutableListOf(),
+): List<Component> {
     if (!hasNewline(component)) {
         return listOf(component) // Components with no newline do not have be rendered and split.
     }
@@ -133,19 +139,25 @@ private fun colorTransition(phase: Float, vararg colors: TextColor): TextColor {
     return NamedTextColor.WHITE
 }
 
+fun progressBar(bars: Int, percentage: Float, completedColor: TextColor, incompleteColor: TextColor): Component {
+    val uncompletedBars = Component.text("|".repeat((percentage * bars).toInt()), completedColor)
+    val completedBars = Component.text("|".repeat((bars - percentage * bars).toInt()), incompleteColor)
+
+    return (uncompletedBars + completedBars).noBold()
+}
+
 fun abilityProgressBar(abilityName: Component, remainingTime: Int, cooldownTime: Int): Component {
-    val bars = 30
+
     val percentage = remainingTime.toFloat() / cooldownTime.toFloat()
-
-    val uncompletedBars = Component.text("|".repeat((percentage * bars).toInt()), NamedTextColor.YELLOW)
-    val completedBars = Component.text("|".repeat((bars - percentage * bars).toInt()), NamedTextColor.GRAY)
-
-    val barsComponent = (uncompletedBars + completedBars).noBold()
+    val barsComponent = progressBar(30, percentage, NamedTextColor.YELLOW, NamedTextColor.GRAY)
 
     val timeString =
         if (percentage <= 0.05)
             Component.translatable("global.ability.ready", NamedTextColor.GREEN)
-        else Component.translatable("global.ability.cooldown_time", Component.text(String.format("%.1f", remainingTime.toFloat() / 1000f)))
+        else Component.translatable(
+            "global.ability.cooldown_time",
+            Component.text(String.format("%.1f", remainingTime.toFloat() / 1000f))
+        )
             .withTransition(percentage, NamedTextColor.GREEN, NamedTextColor.YELLOW, NamedTextColor.RED)
 
     return abilityName + Component.space() + barsComponent + Component.space() + timeString.noBold()
