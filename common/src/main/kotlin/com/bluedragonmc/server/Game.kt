@@ -260,6 +260,7 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
                     }
                 }
             }.delay(Duration.ofSeconds(10)).repeat(Duration.ofSeconds(10)).schedule()
+            players.clear()
         }
     }
 
