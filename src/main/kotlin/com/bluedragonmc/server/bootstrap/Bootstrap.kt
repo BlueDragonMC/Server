@@ -5,9 +5,12 @@ import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import kotlin.reflect.KClass
 
-abstract class Bootstrap(private val requiredEnvironment: KClass<out Environment> = Environment::class) {
+abstract class Bootstrap(private val envType: EnvType = EnvType.ANY) {
+
+    enum class EnvType {
+        PRODUCTION, DEVELOPMENT, ANY
+    }
 
     protected val logger: Logger by lazy {
         LoggerFactory.getLogger(this::class.java)
@@ -15,6 +18,12 @@ abstract class Bootstrap(private val requiredEnvironment: KClass<out Environment
 
     abstract fun hook(eventNode: EventNode<Event>)
 
-    fun canHook() = requiredEnvironment.isInstance(Environment.current)
+    fun canHook(): Boolean {
+        return envType == EnvType.ANY || if (Environment.current.isDev) {
+            envType == EnvType.DEVELOPMENT
+        } else {
+            envType == EnvType.PRODUCTION
+        }
+    }
 
 }

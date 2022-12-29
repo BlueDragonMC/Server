@@ -3,7 +3,6 @@ package com.bluedragonmc.server.bootstrap.prod
 import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.bootstrap.Bootstrap
-import com.bluedragonmc.server.queue.ProductionEnvironment
 import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.service.Messaging
 import kotlinx.coroutines.launch
@@ -29,7 +28,7 @@ import net.minestom.server.utils.binary.BinaryReader
 import java.net.InetSocketAddress
 import java.util.concurrent.ThreadLocalRandom
 
-object InitialInstanceRouter : Bootstrap(ProductionEnvironment::class) {
+object InitialInstanceRouter : Bootstrap(EnvType.PRODUCTION) {
 
     private const val BLUEDRAGON_GET_DEST_CHANNEL = "bluedragonmc:get_dest"
     private const val VELOCITY_PLAYER_INFO_CHANNEL = VelocityProxy.PLAYER_INFO_CHANNEL

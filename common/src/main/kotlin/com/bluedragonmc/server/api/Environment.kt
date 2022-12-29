@@ -14,6 +14,7 @@ abstract class Environment {
         val puffinHostname get() = current.puffinHostname
         val gameClasses get() = current.gameClasses
         val versionInfo get() = current.versionInfo
+        val isDev get() = current.isDev
         suspend fun getServerName() = current.getServerName()
 
         fun setEnvironment(env: Environment) {
@@ -26,8 +27,10 @@ abstract class Environment {
     abstract val queue: Queue
     abstract val mongoHostname: String
     abstract val puffinHostname: String
+    abstract val luckPermsHostname: String
     abstract val gameClasses: Collection<String>
     abstract val versionInfo: VersionInfo
+    abstract val isDev: Boolean
     open val dbName: String = "bluedragon"
 
     abstract suspend fun getServerName(): String

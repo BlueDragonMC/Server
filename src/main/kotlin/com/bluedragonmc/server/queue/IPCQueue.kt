@@ -52,7 +52,7 @@ object IPCQueue : Queue() {
     override fun randomMap(gameType: String): String? = getMaps(gameType)?.randomOrNull()?.name
 
     override fun createInstance(request: GsClient.CreateInstanceRequest): Game? {
-        logger.info("Received request to create instance with type ${request.gameType.name}.")
+        logger.info("Received request to create instance with type ${request.gameType.name}/${request.gameType.mapName}/${request.gameType.mode}.")
         val start = System.nanoTime()
         val map = if (request.gameType.hasMapName()) request.gameType.mapName else randomMap(request.gameType.name)
         if (map == null) {

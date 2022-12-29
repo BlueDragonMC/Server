@@ -1,5 +1,6 @@
 package com.bluedragonmc.server.impl
 
+import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.api.PermissionManager
 import com.bluedragonmc.server.api.PlayerMeta
 import com.bluedragonmc.server.utils.miniMessage
@@ -17,8 +18,9 @@ import java.io.File
 import java.util.*
 import java.util.concurrent.TimeUnit
 
-class PermissionManagerImpl(private val baseUrl: String) : PermissionManager {
+class PermissionManagerImpl : PermissionManager {
 
+    private val baseUrl = Environment.current.luckPermsHostname
     private val cacheControl = CacheControl.Builder().maxAge(10, TimeUnit.SECONDS).build()
 
     private val client = OkHttpClient.Builder()
