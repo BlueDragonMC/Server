@@ -2,17 +2,18 @@ package com.bluedragonmc.server.module.gameplay
 
 import com.bluedragonmc.server.*
 import com.bluedragonmc.server.api.Environment
+import com.bluedragonmc.server.event.PlayerLeaveGameEvent
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.utils.withGradient
 import kotlinx.coroutines.runBlocking
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.Component.text
 import net.kyori.adventure.text.format.NamedTextColor.DARK_GRAY
+import net.kyori.adventure.text.format.NamedTextColor.RED
 import net.kyori.adventure.text.format.TextDecoration
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
-import net.minestom.server.event.instance.RemoveEntityFromInstanceEvent
 import net.minestom.server.event.player.PlayerSpawnEvent
 import net.minestom.server.scoreboard.Sidebar
 import net.minestom.server.scoreboard.Sidebar.ScoreboardLine
@@ -42,11 +43,9 @@ class SidebarModule(private val title: String) : GameModule() {
             if (::binding.isInitialized)
                 binding.updateFor(event.player)
         }
-        eventNode.addListener(RemoveEntityFromInstanceEvent::class.java) { event ->
-            if (event.entity !is Player) return@addListener
-            val player = event.entity as Player
-            sidebars[player]?.removeViewer(player)
-            sidebars.remove(player)
+        eventNode.addListener(PlayerLeaveGameEvent::class.java) { event ->
+            sidebars[event.player]?.removeViewer(event.player)
+            sidebars.remove(event.player)
         }
     }
 
@@ -92,7 +91,9 @@ class SidebarModule(private val title: String) : GameModule() {
                     ).joinToString("/") + " · " + serverId
                 }, DARK_GRAY)
             )
-            private val FOOTER = text(SERVER_IP).withGradient(BRAND_COLOR_PRIMARY_1, BRAND_COLOR_PRIMARY_2)
+            private val ipGradient = text(SERVER_IP).withGradient(BRAND_COLOR_PRIMARY_1, BRAND_COLOR_PRIMARY_2)
+            private val FOOTER = if (Environment.current::class.simpleName?.contains("Development") == true)
+                listOf(ipGradient, text("Development Version", RED)) else listOf(ipGradient)
         }
 
         internal fun updateFor(player: Player) {
@@ -101,7 +102,7 @@ class SidebarModule(private val title: String) : GameModule() {
 
             if (old.lines.size == lines.size) {
                 updateExisting(old, lines)
-            } else if (old.lines.size < lines.size) {
+            } else {
                 // Re-create the sidebar as its size has changed.
                 val new = module.createSidebar()
                 lines.forEachIndexed { i, line -> new.createLine(ScoreboardLine("line-$i", line, lines.size - i)) }

@@ -61,7 +61,13 @@ class TestQueue : Queue() {
      * Adds a player to a game, regardless of their queue status.
      */
     fun join(player: Player, game: Game) {
-        player.sendMessage(Component.translatable("queue.sending", NamedTextColor.GREEN, Component.text(game.instanceId?.toString().orEmpty())))
+        player.sendMessage(
+            Component.translatable(
+                "queue.sending",
+                NamedTextColor.GREEN,
+                Component.text(game.primaryInstanceId?.toString().orEmpty())
+            )
+        )
         game.addPlayer(player)
     }
 
@@ -82,6 +88,9 @@ class TestQueue : Queue() {
                         if (game.name == gameType.name &&
                             (!gameType.selectorsList.contains(CommonTypes.GameType.GameTypeFieldSelector.MAP_NAME) || gameType.mapName == game.mapName)
                         ) {
+                            if (gameType.selectorsList.contains(CommonTypes.GameType.GameTypeFieldSelector.GAME_MODE) && game.mode != gameType.mode) {
+                                continue
+                            }
                             logger.info("Found a good game for ${player.username} to join")
                             queuedPlayers.invalidate(player)
                             join(player, game)
@@ -95,11 +104,16 @@ class TestQueue : Queue() {
                     else gameType.mapName
                     logger.info("Map chosen: $map")
                     try {
-                        GameLoader.createNewGame(gameType.name, map ?: error("No map found for game"), null)
+                        GameLoader.createNewGame(gameType.name, map ?: error("No map found for game"), gameType.mode)
                         instanceStarting = true
                     } catch (e: Throwable) {
                         e.printStackTrace()
-                        player.sendMessage(Component.text(e::class.jvmName + ": " + e.message.orEmpty(), NamedTextColor.RED))
+                        player.sendMessage(
+                            Component.text(
+                                e::class.jvmName + ": " + e.message.orEmpty(),
+                                NamedTextColor.RED
+                            )
+                        )
                         queuedPlayers.invalidate(player)
                     }
                 }

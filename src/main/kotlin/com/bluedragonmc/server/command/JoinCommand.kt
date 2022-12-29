@@ -8,24 +8,43 @@ import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.command.builder.arguments.ArgumentWord
 
 class JoinCommand(name: String, private val usageString: String, vararg aliases: String) : BlueDragonCommand(name, aliases, block = {
+
     val gameArgument = ArgumentWord("game").from(*Environment.gameClasses.toTypedArray())
-    val mapArgument = ArgumentWord("map")
+    val modeArgument by WordArgument
+    val mapArgument by WordArgument
+
     usage(usageString)
+
     syntax(gameArgument) {
         Environment.queue.queue(player, gameType {
             this.name = get(gameArgument)
             selectors += GameTypeFieldSelector.GAME_NAME
         })
     }.requirePlayers()
-    syntax(gameArgument, mapArgument) {
+
+    syntax(gameArgument, modeArgument) {
         Environment.queue.queue(player, gameType {
             this.name = get(gameArgument)
-            this.mapName = get(mapArgument)
+            this.mode = get(modeArgument)
             selectors += GameTypeFieldSelector.GAME_NAME
-            selectors += GameTypeFieldSelector.MAP_NAME
+            selectors += GameTypeFieldSelector.GAME_MODE
         })
     }.apply {
         requirePlayers()
-        requirePermission("command.game.map", Component.translatable("command.join.no_map_permission", NamedTextColor.RED))
+        requirePermission("command.join.mode", Component.translatable("command.join.no_mode_permission", NamedTextColor.RED))
+    }
+
+    syntax(gameArgument, modeArgument, mapArgument) {
+        Environment.queue.queue(player, gameType {
+            this.name = get(gameArgument)
+            this.mode = get(modeArgument)
+            this.mapName = get(mapArgument)
+            selectors += GameTypeFieldSelector.GAME_NAME
+            selectors += GameTypeFieldSelector.MAP_NAME
+            selectors += GameTypeFieldSelector.GAME_MODE
+        })
+    }.apply {
+        requirePlayers()
+        requirePermission("command.join.map", Component.translatable("command.join.no_map_permission", NamedTextColor.RED))
     }
 })

@@ -21,7 +21,7 @@ object Commands : Bootstrap() {
             GameModeCommand.GameModeSurvivalCommand(),
             GiveCommand("give", "/give [player] <item>"),
             InstanceCommand("instance", "/instance <list|add|remove> ...", "in"),
-            JoinCommand("join", "/join <game>"),
+            JoinCommand("join", "/join <game> [mode] [mapName]"),
             KickCommand("kick", "/kick <player> <reason>"),
             KillCommand("kill", "/kill [player]"),
             LeaderboardCommand("leaderboard", "/leaderboard <statistic>"),

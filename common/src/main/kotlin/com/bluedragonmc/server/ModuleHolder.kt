@@ -1,13 +1,8 @@
 package com.bluedragonmc.server
 
-import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.utils.*
-import net.minestom.server.event.Event
-import net.minestom.server.event.EventListener
-import net.minestom.server.event.EventNode
 import org.slf4j.LoggerFactory
-import java.util.function.Consumer
 import kotlin.reflect.KClass
 
 abstract class ModuleHolder {
@@ -36,43 +31,6 @@ abstract class ModuleHolder {
             if (module is T) return module
         }
         return null
-    }
-
-    protected fun onGameStart(vararg deps: KClass<out GameModule>, handler: Consumer<GameStartEvent>) =
-        handleEvent(GameStartEvent::class, handler, *deps)
-
-    protected fun handleEvent(
-        handler: EventListener<out Event>,
-        vararg deps: KClass<out GameModule>,
-    ) = use(InlineModule(handler, deps)) as GameModule
-
-    protected inline fun <reified T : Event> handleEvent(
-        vararg deps: KClass<out GameModule>,
-        handler: Consumer<T>
-    ) = handleEvent(T::class, handler, *deps)
-
-    protected fun <T : Event> handleEvent(
-        eventType: KClass<T>,
-        handler: Consumer<T>,
-        vararg deps: KClass<out GameModule>
-    ) = use(InlineModule(eventType, handler, deps)) as GameModule
-
-    protected class InlineModule<T : Event>(
-        private val eventListener: EventListener<T>,
-        private val deps: Array<out KClass<out GameModule>>
-    ) : GameModule() {
-
-        constructor(
-            eventType: KClass<T>,
-            handler: Consumer<T>,
-            deps: Array<out KClass<out GameModule>>
-        ) : this(EventListener.of(eventType.java, handler), deps)
-
-        override fun initialize(parent: Game, eventNode: EventNode<Event>) {
-            eventNode.addListener(eventListener)
-        }
-
-        override fun getDependencies() = deps
     }
 
     /**
