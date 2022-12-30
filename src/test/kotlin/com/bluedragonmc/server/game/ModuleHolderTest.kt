@@ -167,6 +167,19 @@ class ModuleHolderTest {
     }
 
     @Test
+    fun `Register modules of the same type throws`() {
+        val module = SimpleGameModule()
+        val module2 = SimpleGameModule()
+
+        assertDoesNotThrow {
+            instance.use(module)
+        }
+        assertThrows<IllegalStateException> {
+            instance.use(module2) // Register the same module twice
+        }
+    }
+
+    @Test
     fun `Self-dependency throws`() {
         val module = SelfDependency()
 

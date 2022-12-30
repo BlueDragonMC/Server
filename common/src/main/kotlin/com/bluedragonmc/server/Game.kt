@@ -11,7 +11,6 @@ import com.bluedragonmc.server.event.GameStateChangedEvent
 import com.bluedragonmc.server.event.PlayerLeaveGameEvent
 import com.bluedragonmc.server.model.MapData
 import com.bluedragonmc.server.module.GameModule
-import com.bluedragonmc.server.module.gameplay.SidebarModule
 import com.bluedragonmc.server.module.instance.InstanceModule
 import com.bluedragonmc.server.module.map.AnvilFileMapProviderModule
 import com.bluedragonmc.server.module.minigame.SpawnpointModule
@@ -143,10 +142,6 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
             callCancellable(PlayerLeaveGameEvent(this, event.entity as Player)) {
                 players.remove(event.entity)
             }
-        }
-
-        if (!hasModule<SidebarModule>()) {
-            use(SidebarModule(name))
         }
     }
 

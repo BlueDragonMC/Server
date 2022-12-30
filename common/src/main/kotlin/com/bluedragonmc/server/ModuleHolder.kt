@@ -4,6 +4,7 @@ import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.utils.*
 import org.slf4j.LoggerFactory
 import kotlin.reflect.KClass
+import kotlin.reflect.jvm.jvmName
 
 abstract class ModuleHolder {
 
@@ -71,8 +72,8 @@ abstract class ModuleHolder {
 
         logger.debug("Attempting to register module $module")
         // Ensure this module has not been registered already
-        if (modules.contains(module))
-            throw IllegalStateException("Tried to register module that is already registered: $module")
+        if (modules.contains(module) || modules.any { it::class.jvmName == module::class.jvmName })
+            throw IllegalStateException("Tried to register module of a type that is already registered: $module")
         // Ensure this module does not depend on itself
         if (module.getDependencies().any { it.isInstance(module) })
             throw IllegalStateException("Tried to register module which depends on itself: $module")
