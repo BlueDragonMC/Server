@@ -5,10 +5,7 @@ import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.service.Messaging
-import com.bluedragonmc.server.utils.buildComponent
-import com.bluedragonmc.server.utils.clickEvent
-import com.bluedragonmc.server.utils.hoverEventTranslatable
-import com.bluedragonmc.server.utils.surroundWithSeparators
+import com.bluedragonmc.server.utils.*
 import kotlinx.coroutines.launch
 import net.kyori.adventure.text.Component.*
 import net.kyori.adventure.text.event.ClickEvent
@@ -96,14 +93,14 @@ class InstanceCommand(name: String, usageString: String, vararg aliases: String?
         syntax(instanceArgument) {
             val instance = get(instanceArgument)
             if (instance.players.isNotEmpty()) {
-                player.sendMessage(formatErrorTranslated("command.instance.remove.fail"))
-                return@syntax
+                player.sendMessage(formatErrorTranslated("command.instance.remove.waiting", instance.players.size))
             }
-            MinecraftServer.getInstanceManager().unregisterInstance(instance)
-            Database.IO.launch {
-                Messaging.outgoing.notifyInstanceRemoved(instance.uniqueId)
+            InstanceUtils.forceUnregisterInstance(instance).thenAccept {
+                Database.IO.launch {
+                    Messaging.outgoing.notifyInstanceRemoved(instance.uniqueId)
+                }
+                player.sendMessage(formatMessageTranslated("command.instance.remove.success", instance.uniqueId))
             }
-            player.sendMessage(formatMessageTranslated("command.instance.remove.success", instance.uniqueId))
         }
     }
 })

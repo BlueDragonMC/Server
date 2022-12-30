@@ -2,6 +2,7 @@ package com.bluedragonmc.server.module.map
 
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.GameModule
+import com.bluedragonmc.server.utils.InstanceUtils
 import net.minestom.server.MinecraftServer
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
@@ -47,7 +48,7 @@ class AnvilFileMapProviderModule(val worldFolder: Path) : GameModule() {
             if (isLast) {
                 val key = loadedMaps.entries.find { it.value === instance.instanceContainer }?.key
                 loadedMaps.remove(key)
-                MinecraftServer.getInstanceManager().unregisterInstance(instance.instanceContainer)
+                InstanceUtils.forceUnregisterInstance(instance.instanceContainer)
                 logger.info("Map file '${key?.fileName}' has been unloaded and its instance container has been unregistered.")
             }
         }

@@ -11,6 +11,7 @@ import com.bluedragonmc.server.event.GameStateChangedEvent
 import com.bluedragonmc.server.event.PlayerLeaveGameEvent
 import com.bluedragonmc.server.model.MapData
 import com.bluedragonmc.server.module.GameModule
+import com.bluedragonmc.server.module.gameplay.SidebarModule
 import com.bluedragonmc.server.module.instance.InstanceModule
 import com.bluedragonmc.server.module.map.AnvilFileMapProviderModule
 import com.bluedragonmc.server.module.minigame.SpawnpointModule
@@ -18,6 +19,7 @@ import com.bluedragonmc.server.module.packet.PerInstanceChatModule
 import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.service.Messaging
 import com.bluedragonmc.server.utils.GameState
+import com.bluedragonmc.server.utils.InstanceUtils
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import kotlinx.coroutines.runBlocking
@@ -36,7 +38,7 @@ import net.minestom.server.event.player.PlayerSpawnEvent
 import net.minestom.server.event.trait.InstanceEvent
 import net.minestom.server.event.trait.PlayerEvent
 import net.minestom.server.instance.Instance
-import net.minestom.server.timer.Task
+import net.minestom.server.timer.ExecutionType
 import net.minestom.server.utils.chunk.ChunkUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -142,6 +144,10 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
                 players.remove(event.entity)
             }
         }
+
+        if (!hasModule<SidebarModule>()) {
+            use(SidebarModule(name))
+        }
     }
 
     private fun createEventNode(module: GameModule): EventNode<Event> {
@@ -221,7 +227,7 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
     }
 
     protected open fun removeInstance(instance: Instance) {
-        MinecraftServer.getInstanceManager().unregisterInstance(instance)
+        InstanceUtils.forceUnregisterInstance(instance)
         AnvilFileMapProviderModule.checkReleaseMap(instance)
         if (getInstanceOrNull() == instance) {
             endGame(queueAllPlayers = false) // End the game if the game is using the instance which was unregistered
@@ -278,8 +284,8 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
         state = GameState.ENDING
         games.remove(this)
         // the NotifyInstanceRemovedMessage is published when the MessagingModule is unregistered
-        val instanceRef = getInstanceOrNull()
         while (modules.isNotEmpty()) unregister(modules.first())
+        modules.forEach { it.deinitialize() }
         if (queueAllPlayers) {
             players.forEach {
                 it.sendMessage(Component.translatable("game.status.ending", NamedTextColor.GREEN))
@@ -292,23 +298,14 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
                     selectors += GameTypeFieldSelector.GAME_NAME
                 })
             }
-            var task: Task? = null
-            var repetitions = 0
-            task = MinecraftServer.getSchedulerManager().buildTask {
-                repetitions++
-                if (instanceRef?.isRegistered == false || instanceRef == null) task!!.cancel()
-                getInstanceOrNull()?.players?.forEach { player ->
-                    Environment.queue.queue(player, gameType {
-                        name = if (repetitions >= 3) "Lobby" else this@Game.name
-                        selectors += GameTypeFieldSelector.GAME_NAME
-                    })
-                    if (repetitions >= 5) {
-                        player.kick(Component.text("There was an error adding you to the queue.", NamedTextColor.RED))
-                    }
-                }
-            }.delay(Duration.ofSeconds(10)).repeat(Duration.ofSeconds(10)).schedule()
-            players.clear()
         }
+        MinecraftServer.getSchedulerManager().buildTask {
+            MinecraftServer.getInstanceManager().instances.filter { this.ownsInstance(it) }.forEach { instance ->
+                logger.info("Forcefully unregistering instance ${instance.uniqueId}...")
+                InstanceUtils.forceUnregisterInstance(instance).join()
+            }
+        }.executionType(ExecutionType.ASYNC).delay(Duration.ofSeconds(10))
+        players.clear()
     }
 
     /**
