@@ -1,0 +1,14 @@
+# Taken from Minestom under the Apache License 2.0
+# https://github.com/Minestom/Minestom/blob/master/.github/workflows/trigger-jitpack-build.yml
+# https://github.com/Minestom/Minestom/blob/master/LICENSE
+name: Trigger Jitpack Build
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Jitpack Build
+        run: curl "https://jitpack.io/com/github/BlueDragonMC/Server/${GITHUB_SHA:0:10}/build.log"
