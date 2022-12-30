@@ -92,7 +92,7 @@ class SidebarModule(private val title: String) : GameModule() {
                 }, DARK_GRAY)
             )
             private val ipGradient = text(SERVER_IP).withGradient(BRAND_COLOR_PRIMARY_1, BRAND_COLOR_PRIMARY_2)
-            private val FOOTER = if (Environment.current::class.simpleName?.contains("Development") == true)
+            private val FOOTER = if (Environment.current.isDev)
                 listOf(ipGradient, text("Development Version", RED)) else listOf(ipGradient)
         }
 

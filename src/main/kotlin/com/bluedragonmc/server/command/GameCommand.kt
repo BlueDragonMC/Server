@@ -11,7 +11,6 @@ import net.kyori.adventure.text.event.HoverEvent
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.title.Title
-import java.time.Duration
 
 /**
  * Usage:
@@ -26,7 +25,7 @@ class GameCommand(name: String, usageString: String, vararg aliases: String?) : 
             if (game.state == GameState.INGAME) {
                 game.callEvent(WinModule.WinnerDeclaredEvent(game, TeamModule.Team()))
             }
-            game.endGame(Duration.ZERO)
+            game.endGame()
             sender.sendMessage(formatMessageTranslated("command.game.ended"))
         }.requireInGame()
     }

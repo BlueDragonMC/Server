@@ -118,7 +118,7 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
         }
     }
 
-    protected open fun ownsInstance(instance: Instance): Boolean {
+    open fun ownsInstance(instance: Instance): Boolean {
         return instance.uniqueId == primaryInstanceId
     }
 
@@ -172,7 +172,7 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
     private var playerHasJoined = false
     private val creationTime = System.currentTimeMillis()
 
-    private fun shouldRemoveInstance(instance: Instance) =
+    protected fun shouldRemoveInstance(instance: Instance) =
         autoRemoveInstance && instance.players.isEmpty() &&
                 (playerHasJoined || System.currentTimeMillis() - creationTime > 1_800_000L) // 30 minutes
 
@@ -224,7 +224,7 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
         MinecraftServer.getInstanceManager().unregisterInstance(instance)
         AnvilFileMapProviderModule.checkReleaseMap(instance)
         if (getInstanceOrNull() == instance) {
-            endGameInstantly(queueAllPlayers = false) // End the game if the game is using the instance which was unregistered
+            endGame(queueAllPlayers = false) // End the game if the game is using the instance which was unregistered
         }
     }
 
@@ -266,15 +266,15 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
 
     override fun getPlayers(): MutableCollection<Player> = players
 
-    fun endGame(delay: Duration = Duration.ZERO) {
+    open fun endGameLater(delay: Duration = Duration.ZERO) {
         state = GameState.ENDING
         games.remove(this)
         MinecraftServer.getSchedulerManager().buildTask {
-            endGameInstantly()
+            endGame()
         }.delay(delay).schedule()
     }
 
-    protected fun endGameInstantly(queueAllPlayers: Boolean = true) {
+    open fun endGame(queueAllPlayers: Boolean = true) {
         state = GameState.ENDING
         games.remove(this)
         // the NotifyInstanceRemovedMessage is published when the MessagingModule is unregistered
@@ -333,7 +333,7 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
         MinecraftServer.getSchedulerManager().buildTask {
             if (!games.contains(this) && !playerHasJoined) {
                 logger.error("Game was not registered after 25 seconds!")
-                endGameInstantly(false)
+                endGame(false)
                 games.remove(this)
             }
         }.delay(Duration.ofSeconds(25)).schedule()
@@ -357,7 +357,7 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
         init {
             MinecraftServer.getSchedulerManager().buildShutdownTask {
                 ArrayList(games).forEach { game ->
-                    game.endGameInstantly(false)
+                    game.endGame(false)
                 }
             }
         }

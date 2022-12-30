@@ -90,7 +90,7 @@ class WinModule(
                     )
                 )
             }
-            parent.endGame(Duration.ofSeconds(5))
+            parent.endGameLater(Duration.ofSeconds(5))
         }
     }
 

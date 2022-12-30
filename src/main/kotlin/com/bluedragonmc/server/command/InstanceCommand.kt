@@ -1,5 +1,7 @@
 package com.bluedragonmc.server.command
 
+import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
+import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.service.Messaging
@@ -8,7 +10,7 @@ import com.bluedragonmc.server.utils.clickEvent
 import com.bluedragonmc.server.utils.hoverEventTranslatable
 import com.bluedragonmc.server.utils.surroundWithSeparators
 import kotlinx.coroutines.launch
-import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.Component.*
 import net.kyori.adventure.text.event.ClickEvent
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
@@ -25,36 +27,42 @@ class InstanceCommand(name: String, usageString: String, vararg aliases: String?
     subcommand("list") {
         syntax {
             val component = buildComponent {
-                +Component.translatable(
-                    "command.instance.title", NamedTextColor.BLUE, TextDecoration.BOLD, TextDecoration.UNDERLINED
+                +translatable(
+                    "command.instance.title", BRAND_COLOR_PRIMARY_2, TextDecoration.BOLD, TextDecoration.UNDERLINED
                 )
-                +Component.newline()
+                +text(" (", BRAND_COLOR_PRIMARY_2).decoration(TextDecoration.UNDERLINED, TextDecoration.State.FALSE)
+                +text(MinecraftServer.getInstanceManager().instances.size, BRAND_COLOR_PRIMARY_1)
+                +text(")", BRAND_COLOR_PRIMARY_2)
+                +newline()
                 for (instance in MinecraftServer.getInstanceManager().instances) {
-                    +Component.newline()
-                    +Component.text(instance.uniqueId.toString(), NamedTextColor.DARK_GRAY)
+                    +newline()
+                    +text(instance.uniqueId.toString(), NamedTextColor.DARK_GRAY)
                         .clickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, instance.uniqueId.toString())
-                    +Component.text(" · ", NamedTextColor.GRAY)
-                    +Component.text(instance::class.simpleName.toString(), NamedTextColor.AQUA)
-                    +Component.newline()
-                    +Component.text(" → ", NamedTextColor.GRAY)
-                    val game = Game.findGame(instance.uniqueId)
+                    +text(" · ", NamedTextColor.GRAY)
+                    +text(instance::class.simpleName.toString(), NamedTextColor.AQUA)
+                    +newline()
+                    +text(" → ", NamedTextColor.GRAY)
+                    var isPrimaryInstance = true
+                    val game = Game.findGame(instance.uniqueId) ?:
+                        Game.games.find { it.ownsInstance(instance) }
+                            .also { isPrimaryInstance = false }
                     if(game?.name != null) {
-                        +Component.text(game.name, NamedTextColor.YELLOW)
+                        +text(game.name, if (isPrimaryInstance) NamedTextColor.YELLOW else NamedTextColor.GREEN)
                     } else {
-                        +Component.translatable("command.instance.no_game", NamedTextColor.RED)
+                        +translatable("command.instance.no_game", NamedTextColor.RED)
                     }
-                    +Component.text(" · ", NamedTextColor.GRAY)
+                    +text(" · ", NamedTextColor.GRAY)
                     if(game?.mapName != null) {
-                        +Component.text(game.mapName, NamedTextColor.GOLD)
+                        +text(game.mapName, if (isPrimaryInstance) NamedTextColor.GOLD else NamedTextColor.DARK_GREEN)
                     } else {
-                        +Component.translatable("command.instance.no_map", NamedTextColor.RED)
+                        +translatable("command.instance.no_map", NamedTextColor.RED)
                     }
-                    +Component.text(" · ", NamedTextColor.GRAY)
-                    +Component.translatable("command.instance.players", NamedTextColor.GRAY, Component.text(instance.players.size))
-                    +Component.space()
+                    +text(" · ", NamedTextColor.GRAY)
+                    +translatable("command.instance.players", NamedTextColor.GRAY, text(instance.players.size))
+                    +space()
                     val connectButtonColor =
                         if (sender is Player && player.instance != instance) NamedTextColor.YELLOW else NamedTextColor.GRAY
-                    +Component.translatable("command.instance.action.connect", connectButtonColor)
+                    +translatable("command.instance.action.connect", connectButtonColor)
                         .hoverEventTranslatable("command.instance.action.connect.hover", NamedTextColor.YELLOW)
                         .clickEvent("/instance join ${instance.uniqueId}")
                 }
