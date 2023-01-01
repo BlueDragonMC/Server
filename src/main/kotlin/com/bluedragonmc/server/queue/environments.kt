@@ -21,7 +21,7 @@ private fun isDev(): Boolean {
 
 class ConfiguredEnvironment : Environment() {
 
-    override val queue: Queue = when (System.getenv("BLUEDRAGON_QUEUE_TYPE").uppercase()) {
+    override val queue: Queue = when (System.getenv("BLUEDRAGON_QUEUE_TYPE")?.uppercase()) {
         "IPCQUEUE", "IPC" -> IPCQueue
         "TESTQUEUE", "TEST" -> TestQueue()
         else -> defaultQueue()
