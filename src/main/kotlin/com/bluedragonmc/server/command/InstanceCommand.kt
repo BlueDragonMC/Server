@@ -3,6 +3,7 @@ package com.bluedragonmc.server.command
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.module.map.AnvilFileMapProviderModule.Companion.MAP_NAME_TAG
 import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.service.Messaging
 import com.bluedragonmc.server.utils.*
@@ -33,35 +34,65 @@ class InstanceCommand(name: String, usageString: String, vararg aliases: String?
                 +newline()
                 for (instance in MinecraftServer.getInstanceManager().instances) {
                     +newline()
+                    // Instance ID
                     +text(instance.uniqueId.toString(), NamedTextColor.DARK_GRAY)
                         .clickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, instance.uniqueId.toString())
                     +text(" · ", NamedTextColor.GRAY)
+                    // Instance class name
                     +text(instance::class.simpleName.toString(), NamedTextColor.AQUA)
                     +newline()
                     +text(" → ", NamedTextColor.GRAY)
-                    var isPrimaryInstance = true
-                    val game = Game.findGame(instance.uniqueId) ?:
-                        Game.games.find { it.ownsInstance(instance) }
-                            .also { isPrimaryInstance = false }
-                    if(game?.name != null) {
-                        +text(game.name, if (isPrimaryInstance) NamedTextColor.YELLOW else NamedTextColor.GREEN)
+                    val game = Game.findGame(instance.uniqueId)
+                    if (instance.hasTag(MAP_NAME_TAG)) {
+                        +translatable(
+                            "command.instance.instance_container", NamedTextColor.GRAY,
+                            text(instance.getTag(MAP_NAME_TAG), BRAND_COLOR_PRIMARY_1)
+                        )
                     } else {
-                        +translatable("command.instance.no_game", NamedTextColor.RED)
+                        // Game name
+                        if (game?.name != null) {
+                            +text(game.name, NamedTextColor.YELLOW)
+                            if (game.mode != null) {
+                                +text(" (", NamedTextColor.GRAY)
+                                +text(game.mode!!, NamedTextColor.DARK_GREEN)
+                                +text(")", NamedTextColor.GRAY)
+                            }
+                        } else {
+                            +translatable("command.instance.no_game", NamedTextColor.RED)
+                        }
+                        +text(" · ", NamedTextColor.GRAY)
+                        // Map name
+                        if (game?.mapName != null) {
+                            +text(game.mapName, NamedTextColor.GOLD)
+                        } else {
+                            +translatable("command.instance.no_map", NamedTextColor.RED)
+                        }
+                        +text(" · ", NamedTextColor.GRAY)
+                        // Online players
+                        +translatable("command.instance.players", NamedTextColor.GRAY, text(instance.players.size))
+                        +space()
+                        val connectButtonColor =
+                            if (sender is Player && player.instance != instance) NamedTextColor.YELLOW else NamedTextColor.GRAY
+                        +translatable("command.instance.action.connect", connectButtonColor)
+                            .hoverEventTranslatable("command.instance.action.connect.hover", NamedTextColor.YELLOW)
+                            .clickEvent("/instance join ${instance.uniqueId}")
                     }
-                    +text(" · ", NamedTextColor.GRAY)
-                    if(game?.mapName != null) {
-                        +text(game.mapName, if (isPrimaryInstance) NamedTextColor.GOLD else NamedTextColor.DARK_GREEN)
-                    } else {
-                        +translatable("command.instance.no_map", NamedTextColor.RED)
+                    val requiredBy = Game.games.filter { it.getRequiredInstances().contains(instance) }
+                    if (requiredBy.isNotEmpty()) requiredBy.forEach { game ->
+                        +newline()
+                        +text(" → ", NamedTextColor.GRAY)
+                        +translatable(
+                            "command.instance.required_by",
+                            NamedTextColor.GRAY,
+                            text(game.id, BRAND_COLOR_PRIMARY_1).hoverEvent(
+                                text(game.name, NamedTextColor.YELLOW) +
+                                        text(" · ", NamedTextColor.GRAY) +
+                                        text(game.mapName, NamedTextColor.GOLD) +
+                                        text(" · ", NamedTextColor.GRAY) +
+                                        text(game.mode ?: "--", NamedTextColor.DARK_GREEN)
+                            )
+                        )
                     }
-                    +text(" · ", NamedTextColor.GRAY)
-                    +translatable("command.instance.players", NamedTextColor.GRAY, text(instance.players.size))
-                    +space()
-                    val connectButtonColor =
-                        if (sender is Player && player.instance != instance) NamedTextColor.YELLOW else NamedTextColor.GRAY
-                    +translatable("command.instance.action.connect", connectButtonColor)
-                        .hoverEventTranslatable("command.instance.action.connect.hover", NamedTextColor.YELLOW)
-                        .clickEvent("/instance join ${instance.uniqueId}")
                 }
             }.surroundWithSeparators()
 
@@ -79,7 +110,12 @@ class InstanceCommand(name: String, usageString: String, vararg aliases: String?
                 player.setInstance(instance).whenCompleteAsync { _, throwable ->
                     // Send a generic error message
                     throwable?.let {
-                        player.sendMessage(formatErrorTranslated("command.instance.join.fail.generic", instance.uniqueId))
+                        player.sendMessage(
+                            formatErrorTranslated(
+                                "command.instance.join.fail.generic",
+                                instance.uniqueId
+                            )
+                        )
                     }
                 }
             } catch (exception: IllegalArgumentException) {

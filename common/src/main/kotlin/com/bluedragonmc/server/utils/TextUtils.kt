@@ -48,8 +48,11 @@ fun Component?.surroundWithSeparators(): Component {
 fun Component.toPlainText() = PlainTextComponentSerializer.plainText().serialize(this)
 operator fun Component.plus(component: Component) = append(component)
 
+fun Component.hoverEvent(text: Component) =
+    hoverEvent(HoverEvent.hoverEvent(HoverEvent.Action.SHOW_TEXT, text))
+
 fun Component.hoverEventTranslatable(key: String, color: TextColor): Component =
-    hoverEvent(HoverEvent.hoverEvent(HoverEvent.Action.SHOW_TEXT, Component.translatable(key, color)))
+    hoverEvent(Component.translatable(key, color))
 
 fun Component.clickEvent(command: String): Component =
     clickEvent(ClickEvent.clickEvent(ClickEvent.Action.RUN_COMMAND, command))

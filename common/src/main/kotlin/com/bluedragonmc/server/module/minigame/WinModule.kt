@@ -108,7 +108,7 @@ class WinModule(
                 defaultColors
             }
         }
-        val instance = parent.getInstance()
+        val instance = player.instance ?: return
         val availablePositions = parent.getModule<SpawnpointModule>().spawnpointProvider.getAllSpawnpoints()
         val fireworkMeta = colors.map {
             FireworkMeta.Builder().effects(

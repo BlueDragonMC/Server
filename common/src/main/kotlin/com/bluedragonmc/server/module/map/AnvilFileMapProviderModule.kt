@@ -10,8 +10,10 @@ import net.minestom.server.instance.AnvilLoader
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.InstanceContainer
 import net.minestom.server.instance.SharedInstance
+import net.minestom.server.tag.Tag
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
+import kotlin.io.path.absolutePathString
 
 class AnvilFileMapProviderModule(val worldFolder: Path) : GameModule() {
 
@@ -26,6 +28,7 @@ class AnvilFileMapProviderModule(val worldFolder: Path) : GameModule() {
         instanceContainer = MinecraftServer.getInstanceManager().createInstanceContainer().apply {
             chunkLoader = AnvilLoader(worldFolder)
             loadedMaps[worldFolder] = this
+            setTag(MAP_NAME_TAG, worldFolder.absolutePathString())
         }
     }
 
@@ -34,6 +37,8 @@ class AnvilFileMapProviderModule(val worldFolder: Path) : GameModule() {
         private val logger = LoggerFactory.getLogger(Companion::class.java)
 
         val loadedMaps = mutableMapOf<Path, InstanceContainer>()
+
+        val MAP_NAME_TAG = Tag.String("anvil_file_map_name")
 
         /**
          * This method should be called when a SharedInstance is unregistered.

@@ -41,7 +41,7 @@ class ChestModule : GameModule() {
             val inventoryType: InventoryType
             val pos: Point
             if (event.block.compare(Block.CHEST)) {
-                val rootChest = getRootChest(event.blockPosition)
+                val rootChest = getRootChest(event.instance, event.blockPosition)
                 inventoryType = rootChest.first
                 pos = rootChest.second
 
@@ -167,8 +167,7 @@ class ChestModule : GameModule() {
         override val closeSound = Sound.sound(SoundEvent.BLOCK_CHEST_CLOSE, Sound.Source.BLOCK, 1f, 1f)
     }
 
-    private fun getRootChest(pos: Point): Pair<InventoryType, Point> {
-        val instance = parent.getInstance()
+    private fun getRootChest(instance: Instance, pos: Point): Pair<InventoryType, Point> {
         val nearbyChests = listOf(
             pos.add(1.0, 0.0, 0.0),
             pos.add(-1.0, 0.0, 0.0),

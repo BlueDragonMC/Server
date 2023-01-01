@@ -21,9 +21,10 @@ class VoidDeathModuleTest {
     @Test
     fun `Void death in normal mode`(env: Env) {
         val game = TestUtils.emptyGame(env, VoidDeathModule(0.0, false))
+        val instance = TestUtils.getInstance(game)
 
         val pos = Pos(0.0, -10.0, 0.0)
-        val player = env.createPlayer(game.getInstance(), pos)
+        val player = env.createPlayer(instance, pos)
         TestUtils.waitForSpawn(env, player)
         env.process().eventHandler().call(PlayerMoveEvent(player, pos, true))
 
@@ -33,9 +34,10 @@ class VoidDeathModuleTest {
     @Test
     fun `Void death in respawn mode`(env: Env) {
         val game = TestUtils.emptyGame(env, VoidDeathModule(0.0, true))
+        val instance = TestUtils.getInstance(game)
 
         val pos = Pos(0.0, -10.0, 0.0)
-        val connection = env.createPlayer(game.getInstance(), pos)
+        val connection = env.createPlayer(instance, pos)
         TestUtils.waitForSpawn(env, connection)
         val player = spyk(connection)
         env.process().eventHandler().call(PlayerMoveEvent(player, pos, true))

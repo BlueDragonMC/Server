@@ -59,7 +59,7 @@ class NPCModule : GameModule() {
     }
 
     fun addNPC(
-        instance: Instance = parent.getInstance(),
+        instance: Instance,
         positions: Collection<Pos>,
         customName: Component = Component.text("NPC"),
         skin: PlayerSkin? = null,
@@ -73,7 +73,7 @@ class NPCModule : GameModule() {
     }
 
     fun addNPC(
-        instance: Instance = parent.getInstance(),
+        instance: Instance,
         position: Pos,
         customName: Component = Component.text("NPC"),
         skin: PlayerSkin? = null,

@@ -12,8 +12,6 @@ import com.bluedragonmc.server.event.PlayerLeaveGameEvent
 import com.bluedragonmc.server.model.MapData
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.instance.InstanceModule
-import com.bluedragonmc.server.module.map.AnvilFileMapProviderModule
-import com.bluedragonmc.server.module.minigame.SpawnpointModule
 import com.bluedragonmc.server.module.packet.PerInstanceChatModule
 import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.service.Messaging
@@ -26,7 +24,6 @@ import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.MinecraftServer
 import net.minestom.server.adventure.audience.PacketGroupingAudience
-import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventFilter
@@ -37,14 +34,16 @@ import net.minestom.server.event.player.PlayerSpawnEvent
 import net.minestom.server.event.trait.InstanceEvent
 import net.minestom.server.event.trait.PlayerEvent
 import net.minestom.server.instance.Instance
+import net.minestom.server.tag.Tag
 import net.minestom.server.timer.ExecutionType
-import net.minestom.server.utils.chunk.ChunkUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.*
+import java.util.concurrent.CompletableFuture
 import java.util.function.Consumer
 import kotlin.concurrent.timer
+import kotlin.random.Random
 import kotlin.reflect.jvm.jvmName
 
 open class Game(val name: String, val mapName: String, val mode: String? = null) : ModuleHolder(),
@@ -72,12 +71,12 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
 
     protected val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
-    open val autoRemoveInstance: Boolean = true
-    open val preloadSpawnChunks: Boolean = true
-
-    var primaryInstanceId: UUID? = null
-        get() = field ?: getInstanceOrNull()?.uniqueId?.also { primaryInstanceId = it }
-        private set
+    /**
+     * A random, 8-character identifier unique to this game.
+     */
+    val id = (0 until 8).map {
+        'a' + Random.nextInt(0, 26)
+    }.joinToString("")
 
     open val maxPlayers = 8
 
@@ -98,19 +97,16 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
         when (event) {
             is InstanceEvent -> ownsInstance(event.instance)
             is GameEvent -> event.game == this
-            is PlayerSpawnEvent -> {
-                val primaryInstance = getInstanceOrNull() ?: return@event false
+            is PlayerSpawnEvent -> { // Workaround for PlayerSpawnEvent not being an InstanceEvent
                 if (ownsInstance(event.spawnInstance)) {
-                    // Prevent `PlayerSpawnEvent`s being called very close to one another for the same instance
-                    if (recentSpawns.getIfPresent(event.player) == primaryInstance) {
-                        logger.warn("Player ${event.player.username} was already spawned in instance $primaryInstanceId in the last 5 seconds!")
+                    if (recentSpawns.getIfPresent(event.player) == event.spawnInstance) {
+                        // Prevent `PlayerSpawnEvent`s being called very close to one another for the same instance
+                        logger.warn("Player ${event.player.username} was already spawned in game $id in the last 5 seconds!")
                         return@event false
-                    } else {
-                        recentSpawns.put(event.player, primaryInstance)
                     }
+                    recentSpawns.put(event.player, event.spawnInstance)
                     return@event true
                 }
-                // Workaround for PlayerSpawnEvent not being an InstanceEvent
                 return@event false
             }
 
@@ -120,7 +116,7 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
     }
 
     open fun ownsInstance(instance: Instance): Boolean {
-        return instance.uniqueId == primaryInstanceId
+        return getModuleOrNull<InstanceModule>()?.ownsInstance(instance) ?: false
     }
 
     override fun <T : GameModule> register(module: T) {
@@ -173,10 +169,6 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
     private var playerHasJoined = false
     private val creationTime = System.currentTimeMillis()
 
-    protected fun shouldRemoveInstance(instance: Instance) =
-        autoRemoveInstance && instance.players.isEmpty() &&
-                (playerHasJoined || System.currentTimeMillis() - creationTime > 1_800_000L) // 30 minutes
-
     open fun ready() {
         checkUnmetDependencies()
 
@@ -187,58 +179,32 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
         runBlocking {
             val time = mapData?.time
             if (time != null && time >= 0) {
-                val instance = getInstance()
-                instance.timeRate = 0
-                instance.time = time.toLong()
+                getOwnedInstances().forEach { instance ->
+                    instance.timeRate = 0
+                    instance.time = time.toLong()
+                }
             }
         }
 
         // Let the queue system send players to the game
         games.add(this)
         state = GameState.WAITING
-
-        val cachedInstance = getInstance()
-        timer("instance-unregister-${primaryInstanceId}", daemon = true, period = 10_000) {
-            if (shouldRemoveInstance(cachedInstance)) {
-                logger.info("Removing instance ${cachedInstance.uniqueId} due to inactivity.")
-                removeInstance(cachedInstance)
-                this.cancel()
-            }
-        }
-
-        if (preloadSpawnChunks && !shouldRemoveInstance(cachedInstance)) {
-            if (hasModule<SpawnpointModule>()) {
-                // If the spawnpoint module is present, preload one chunk at each spawnpoint.
-                getModule<SpawnpointModule>().spawnpointProvider.getAllSpawnpoints().forEach { spawnpoint ->
-                    cachedInstance.loadOptionalChunk(spawnpoint)
-                }
-            } else {
-                // If not, we can make an educated guess and load the chunks around (0, 0)
-                ChunkUtils.forChunksInRange(Pos.ZERO, MinecraftServer.getChunkViewDistance()) { chunkX, chunkZ ->
-                    cachedInstance.loadOptionalChunk(chunkX, chunkZ)
-                }
-            }
-        }
     }
 
-    protected open fun removeInstance(instance: Instance) {
-        InstanceUtils.forceUnregisterInstance(instance)
-        AnvilFileMapProviderModule.checkReleaseMap(instance)
-        if (getInstanceOrNull() == instance) {
-            endGame(queueAllPlayers = false) // End the game if the game is using the instance which was unregistered
-        }
+    protected open fun getOwnedInstances(): List<Instance> = MinecraftServer.getInstanceManager().instances.filter {
+        ownsInstance(it)
     }
+
+    fun getRequiredInstances(): List<Instance> = getModule<InstanceModule>().getRequiredInstances().toList()
+
+    /**
+     * Returns an instance owned by this game.
+     * If the game owns multiple instances, an error is thrown.
+     */
+    fun getInstance() = getOwnedInstances().single()
 
     fun callEvent(event: Event) = eventNode.call(event)
     fun callCancellable(event: Event, successCallback: Runnable) = eventNode.callCancellable(event, successCallback)
-
-    /**
-     * Returns the primary instance of the Game. Games may
-     * own more than one instance. It is up to each game
-     * to decide how to implement multiple instances.
-     */
-    fun getInstanceOrNull() = getModuleOrNull<InstanceModule>()?.getInstance()
-    fun getInstance() = getInstanceOrNull() ?: error("No InstanceModule found.")
 
     private val isJoinable
         get() = state.canPlayersJoin
@@ -246,9 +212,9 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
     fun addPlayer(player: Player) {
         findGame(player)?.players?.remove(player)
         players.add(player)
-        if (player.instance != getInstanceOrNull()) {
+        if (player.instance == null || !ownsInstance(player.instance!!)) {
             try {
-                player.setInstance(getInstance())
+                sendPlayerToInstance(player)
             } catch (e: Throwable) {
                 e.printStackTrace()
                 player.sendMessage(
@@ -263,6 +229,11 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
                 })
             }
         }
+    }
+
+    open fun sendPlayerToInstance(player: Player): CompletableFuture<Instance> {
+        val instance = getModule<InstanceModule>().getSpawningInstance(player)
+        return player.setInstance(instance).thenApply { instance }
     }
 
     override fun getPlayers(): MutableCollection<Player> = players
@@ -303,6 +274,10 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
         players.clear()
     }
 
+    open fun isInactive(): Boolean {
+        return players.isEmpty() && (playerHasJoined || System.currentTimeMillis() - creationTime > 600_000)
+    }
+
     /**
      * Load map data from the database (or from cache)
      */
@@ -337,19 +312,71 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
     override fun toString(): String {
         val modules = modules.joinToString { it::class.simpleName ?: it::class.jvmName }
         val players = players.joinToString { it.username }
-        return "Game(name='$name', mapName='$mapName', modules=$modules, players=$players, instanceId=$primaryInstanceId, maxPlayers=$maxPlayers, isJoinable=$isJoinable, state=$state)"
+        return "Game(id='$id', name='$name', mapName='$mapName', mode='$mode', modules=$modules, players=$players, maxPlayers=$maxPlayers, isJoinable=$isJoinable, state=$state)"
     }
 
     companion object {
+        private val logger = LoggerFactory.getLogger(this::class.java)
         val games = mutableListOf<Game>()
 
+        /**
+         * Instances will be cleaned up every 5 seconds.
+         */
+        private const val INSTANCE_CLEANUP_PERIOD = 5_000L
+
+        /**
+         * Instances must be inactive for at least 10 seconds
+         * to be cleaned up.
+         */
+        private const val CLEANUP_MIN_INACTIVE_TIME = 10_000L
+
         fun findGame(player: Player): Game? = games.find { player in it.players }
-        fun findGame(instanceId: UUID): Game? = games.find { it.primaryInstanceId == instanceId }
+        fun findGame(instanceId: UUID): Game? {
+            val instance = MinecraftServer.getInstanceManager().getInstance(instanceId) ?: return null
+            return games.find { it.ownsInstance(instance) }
+        }
+
+        private val INACTIVE_SINCE_TAG = Tag.Long("instance_inactive_since")
 
         init {
             MinecraftServer.getSchedulerManager().buildShutdownTask {
                 ArrayList(games).forEach { game ->
                     game.endGame(false)
+                }
+            }
+
+            timer("Cleanup", daemon = true, period = INSTANCE_CLEANUP_PERIOD) {
+                val instances = MinecraftServer.getInstanceManager().instances
+                val games = ArrayList(games) // Copy to avoid CME
+
+                instances.forEach { instance ->
+                    val owner = findGame(instance.uniqueId)
+                    // Remove empty instances which are not owned by a game OR are owned by an inactive game.
+                    if ((owner == null || owner.isInactive()) && instance.players.isEmpty()) {
+                        // Only instances that are not required by any game should be removed.
+                        if (games.none { it.getRequiredInstances().contains(instance) }) {
+                            val inactiveSince = instance.getTag(INACTIVE_SINCE_TAG)
+                            if (inactiveSince == null) {
+                                // The instance has recently turned inactive.
+                                instance.setTag(INACTIVE_SINCE_TAG, System.currentTimeMillis())
+                            } else {
+                                val duration = System.currentTimeMillis() - inactiveSince
+                                if (duration >= CLEANUP_MIN_INACTIVE_TIME) {
+                                    // Instances inactive for more than the minimum inactive time should be removed.
+                                    logger.info("Removing inactive instance ${instance.uniqueId}")
+                                    InstanceUtils.forceUnregisterInstance(instance)
+                                }
+                            }
+                        }
+                    } else instance.removeTag(INACTIVE_SINCE_TAG)
+                }
+
+                // End all inactive games with no owned instances
+                games.forEach { game ->
+                    if (game.isInactive() && game.getOwnedInstances().isEmpty()) {
+                        logger.info("Removing inactive game ${game.id} (${game.name}/${game.mapName}/${game.mode})")
+                        game.endGame(false)
+                    }
                 }
             }
         }

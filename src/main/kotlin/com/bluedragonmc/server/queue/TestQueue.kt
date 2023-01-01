@@ -65,7 +65,7 @@ class TestQueue : Queue() {
             Component.translatable(
                 "queue.sending",
                 NamedTextColor.GREEN,
-                Component.text(game.primaryInstanceId?.toString().orEmpty())
+                Component.text(game.id)
             )
         )
         game.addPlayer(player)

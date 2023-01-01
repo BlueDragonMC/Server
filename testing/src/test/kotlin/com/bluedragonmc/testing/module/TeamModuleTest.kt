@@ -1,5 +1,6 @@
 package com.bluedragonmc.testing.module
 
+import com.bluedragonmc.server.module.instance.InstanceModule
 import com.bluedragonmc.server.module.minigame.TeamModule
 import com.bluedragonmc.testing.utils.TestUtils
 import net.kyori.adventure.text.TranslatableComponent
@@ -22,9 +23,10 @@ class TeamModuleTest {
 
     private fun setup(env: Env, module: TeamModule, playerCount: Int): List<Player> {
         val game = TestUtils.emptyGame(env, module)
+        val instance = TestUtils.getInstance(game)
         // Create 10 players and wait for them all to spawn
         val players = (0 until playerCount).map {
-            env.createPlayer(game.getInstance(), Pos.ZERO)
+            env.createPlayer(instance, Pos.ZERO)
         }
         // Wait for them all to spawn, then add them to the game
         players.forEachIndexed { index, player ->
@@ -76,7 +78,8 @@ class TeamModuleTest {
 
         // Create a player and wait for them to spawn
         val conn = env.createConnection()
-        val player = conn.connect(game.getInstance(), Pos.ZERO).join()
+        val instance = (game.getModule<InstanceModule>() as TestUtils.FlatInstanceModule).getInstance()
+        val player = conn.connect(instance, Pos.ZERO).join()
         TestUtils.waitForSpawn(env, player)
         game.addPlayer(player)
 

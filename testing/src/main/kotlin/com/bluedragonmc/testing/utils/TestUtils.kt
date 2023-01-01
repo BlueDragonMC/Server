@@ -54,7 +54,7 @@ object TestUtils {
         suspendCoroutine { continutation ->
             val player = createCustomPlayer()
             player.eventNode().addListener(PlayerLoginEvent::class.java) { event ->
-                event.setSpawningInstance(game.getInstance())
+                event.setSpawningInstance(game.getModule<InstanceModule>().getSpawningInstance(event.player))
             }
             env.process().connection().startPlayState(player, true).thenApply {
                 env.process().connection().updateWaitingPlayers()
@@ -80,6 +80,10 @@ object TestUtils {
         return player
     }
 
+    fun getInstance(game: Game): Instance {
+        return (game.getModule<InstanceModule>() as FlatInstanceModule).getInstance()
+    }
+
     private class EmptyGame(env: Env) : Game("empty", "empty", null) {
 
         override fun useMandatoryModules() {
@@ -93,16 +97,15 @@ object TestUtils {
         override fun loadMapData() {
             // map data should not be loaded from anywhere
         }
-
-        override val preloadSpawnChunks = false
-        override val autoRemoveInstance = false
     }
 
-    private class FlatInstanceModule(private val env: Env) : InstanceModule() {
+    class FlatInstanceModule(private val env: Env) : InstanceModule() {
 
         private lateinit var instance: Instance
 
-        override fun getInstance() = instance
+        fun getInstance() = instance
+        override fun getSpawningInstance(player: Player): Instance = this.instance
+        override fun ownsInstance(instance: Instance): Boolean = instance == this.instance
 
         override fun initialize(parent: Game, eventNode: EventNode<Event>) {
             instance = env.createFlatInstance()

@@ -3,6 +3,7 @@ package com.bluedragonmc.server.module.instance
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.NAMESPACE
 import net.minestom.server.MinecraftServer
+import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.instance.Instance
@@ -11,15 +12,22 @@ import net.minestom.server.utils.NamespaceID
 import net.minestom.server.world.DimensionType
 
 class CustomGeneratorInstanceModule(
-    val dimensionType: DimensionType = DimensionType.OVERWORLD, val generator: Generator
+    private val dimensionType: DimensionType = DimensionType.OVERWORLD, private val generator: Generator,
 ) : InstanceModule() {
     private lateinit var instance: Instance
-    override fun getInstance(): Instance = instance
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         instance = MinecraftServer.getInstanceManager().createInstanceContainer(dimensionType)
         instance.setGenerator(generator)
     }
+
+    override fun ownsInstance(instance: Instance): Boolean {
+        return instance == this.instance
+    }
+
+    override fun getSpawningInstance(player: Player): Instance = instance
+
+    fun getInstance() = instance
 
     companion object {
         fun getFullbrightDimension() = MinecraftServer.getDimensionTypeManager().getDimension(

@@ -57,7 +57,7 @@ class IncomingRPCHandlerImpl : IncomingRPCHandler {
             return createInstanceResponse {
                 this.gameState = state
                 this.success = game != null
-                game?.primaryInstanceId?.toString()?.let { this.instanceUuid = it }
+                game?.id?.let { this.instanceUuid = it }
             }
         }
 
@@ -78,10 +78,10 @@ class IncomingRPCHandlerImpl : IncomingRPCHandler {
 
         override suspend fun getInstances(request: Empty): GsClient.GetInstancesResponse {
             return getInstancesResponse {
-                Game.games.filter { it.primaryInstanceId != null }.forEach { game ->
+                Game.games.forEach { game ->
                     instances += GetInstancesResponseKt.runningInstance {
                         this.gameState = game.rpcGameState
-                        this.instanceUuid = game.primaryInstanceId!!.toString()
+                        this.instanceUuid = game.id
                         this.gameType = game.gameType
                     }
                 }

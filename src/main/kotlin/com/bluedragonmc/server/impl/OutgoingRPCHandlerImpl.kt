@@ -54,11 +54,10 @@ class OutgoingRPCHandlerImpl(serverAddress: String) : OutgoingRPCHandler {
 
         override fun initialize(parent: Game, eventNode: EventNode<Event>): Unit = runBlocking {
             this@MessagingModule.parent = parent
-            instanceId = parent.getInstance().uniqueId
-            Messaging.outgoing.initInstance(parent.getInstance(), parent.gameType)
+            Messaging.outgoing.initGame(parent.id, parent.gameType)
 
             eventNode.listenSuspend<GameStateChangedEvent> { event ->
-                Messaging.outgoing.updateGameState(parent.getInstance(), event.rpcGameState)
+                Messaging.outgoing.updateGameState(parent.id, event.rpcGameState)
             }
 
             eventNode.listenSuspend<AddEntityToInstanceEvent> { event ->
@@ -71,7 +70,7 @@ class OutgoingRPCHandlerImpl(serverAddress: String) : OutgoingRPCHandler {
             eventNode.listen<PlayerSpawnEvent> {
                 MinecraftServer.getSchedulerManager().scheduleNextTick {
                     Messaging.IO.launch {
-                        Messaging.outgoing.updateGameState(parent.getInstance(), parent.rpcGameState)
+                        Messaging.outgoing.updateGameState(parent.id, parent.rpcGameState)
                     }
                 }
             }
@@ -79,7 +78,7 @@ class OutgoingRPCHandlerImpl(serverAddress: String) : OutgoingRPCHandler {
             eventNode.listen<PlayerDisconnectEvent> {
                 MinecraftServer.getSchedulerManager().scheduleNextTick {
                     Messaging.IO.launch {
-                        Messaging.outgoing.updateGameState(parent.getInstance(), parent.rpcGameState)
+                        Messaging.outgoing.updateGameState(parent.id, parent.rpcGameState)
                     }
                 }
             }
@@ -114,21 +113,21 @@ class OutgoingRPCHandlerImpl(serverAddress: String) : OutgoingRPCHandler {
         game.use(MessagingModule())
     }
 
-    override suspend fun initInstance(instance: Instance, gameType: CommonTypes.GameType) {
+    override suspend fun initGame(id: String, gameType: CommonTypes.GameType) {
         instanceSvcStub.createInstance(
             ServerTracking.InstanceCreatedRequest.newBuilder()
-                .setInstanceUuid(instance.uniqueId.toString())
+                .setInstanceUuid(id)
                 .setGameType(gameType)
                 .setServerName(serverName)
                 .build()
         )
     }
 
-    override suspend fun updateGameState(instance: Instance, gameState: CommonTypes.GameState) {
+    override suspend fun updateGameState(id: String, gameState: CommonTypes.GameState) {
         gameStateSvcStub.updateGameState(
             ServerTracking.GameStateUpdateRequest.newBuilder()
                 .setServerName(serverName)
-                .setInstanceUuid(instance.uniqueId.toString())
+                .setInstanceUuid(id)
                 .setGameState(gameState)
                 .build()
         )

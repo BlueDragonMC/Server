@@ -4,6 +4,7 @@ import com.bluedragonmc.api.grpc.CommonTypes.GameType.GameTypeFieldSelector
 import com.bluedragonmc.api.grpc.gameType
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.api.Environment
+import com.bluedragonmc.server.module.instance.InstanceModule
 import net.kyori.adventure.text.Component
 import net.minestom.server.MinecraftServer
 import net.minestom.server.event.EventNode
@@ -57,7 +58,7 @@ object InstanceUtils {
             if (lobby != null) {
                 return CompletableFuture.allOf(
                     *instance.players
-                        .map { it.setInstance(lobby.getInstance()) }
+                        .map { it.setInstance(lobby.getModule<InstanceModule>().getSpawningInstance(it)) }
                         .toTypedArray()
                 )
             } else {
