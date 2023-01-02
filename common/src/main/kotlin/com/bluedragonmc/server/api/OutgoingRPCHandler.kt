@@ -28,8 +28,8 @@ interface OutgoingRPCHandler {
     suspend fun notifyInstanceRemoved(instanceId: UUID)
 
     // Player tracking
-    suspend fun recordInstanceChange(player: Player, newInstance: Instance)
-    suspend fun playerTransfer(player: Player, newInstance: Instance?)
+    suspend fun recordInstanceChange(player: Player, newGame: String)
+    suspend fun playerTransfer(player: Player, newGame: String?)
     suspend fun queryPlayer(username: String? = null, uuid: UUID? = null): QueryPlayerResponse
 
     // Queue

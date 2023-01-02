@@ -61,10 +61,10 @@ class OutgoingRPCHandlerImpl(serverAddress: String) : OutgoingRPCHandler {
             }
 
             eventNode.listenSuspend<AddEntityToInstanceEvent> { event ->
-                Messaging.outgoing.recordInstanceChange(
-                    event.entity as? Player ?: return@listenSuspend,
-                    event.instance
-                )
+                val gameId = Game.findGame(event.instance.uniqueId)?.id
+                if (gameId != null) {
+                    Messaging.outgoing.recordInstanceChange(event.entity as? Player ?: return@listenSuspend, gameId)
+                }
             }
 
             eventNode.listen<PlayerSpawnEvent> {
@@ -142,24 +142,24 @@ class OutgoingRPCHandlerImpl(serverAddress: String) : OutgoingRPCHandler {
         )
     }
 
-    override suspend fun recordInstanceChange(player: Player, newInstance: Instance) {
+    override suspend fun recordInstanceChange(player: Player, newGame: String) {
         playerTrackerStub.playerInstanceChange(
             PlayerTrackerOuterClass.PlayerInstanceChangeRequest.newBuilder()
                 .setServerName(serverName)
                 .setUuid(player.uuid.toString())
-                .setInstanceId(newInstance.uniqueId.toString())
+                .setInstanceId(newGame)
                 .build()
         )
     }
 
-    override suspend fun playerTransfer(player: Player, newInstance: Instance?) {
+    override suspend fun playerTransfer(player: Player, newGame: String?) {
         playerTrackerStub.playerTransfer(
             PlayerTrackerOuterClass.PlayerTransferRequest.newBuilder()
                 .setUuid(player.uuid.toString())
                 .setNewServerName(serverName)
                 .apply {
-                    if (newInstance != null) {
-                        setNewInstance(newInstance.uniqueId.toString())
+                    if (newGame != null) {
+                        newInstance = newGame
                     }
                 }
                 .build()

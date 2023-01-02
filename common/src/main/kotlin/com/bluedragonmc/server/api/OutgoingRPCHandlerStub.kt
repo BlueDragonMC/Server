@@ -40,11 +40,11 @@ class OutgoingRPCHandlerStub : OutgoingRPCHandler {
 
     }
 
-    override suspend fun recordInstanceChange(player: Player, newInstance: Instance) {
+    override suspend fun recordInstanceChange(player: Player, newGame: String) {
 
     }
 
-    override suspend fun playerTransfer(player: Player, newInstance: Instance?) {
+    override suspend fun playerTransfer(player: Player, newGame: String?) {
 
     }
 

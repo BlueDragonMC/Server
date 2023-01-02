@@ -3,6 +3,7 @@ package com.bluedragonmc.server.bootstrap.prod
 import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.bootstrap.Bootstrap
+import com.bluedragonmc.server.module.instance.InstanceModule
 import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.service.Messaging
 import kotlinx.coroutines.launch
@@ -15,7 +16,6 @@ import net.minestom.server.event.EventNode
 import net.minestom.server.event.player.PlayerDisconnectEvent
 import net.minestom.server.event.player.PlayerLoginEvent
 import net.minestom.server.extras.velocity.VelocityProxy
-import net.minestom.server.instance.Instance
 import net.minestom.server.listener.LoginStartListener
 import net.minestom.server.network.ConnectionState
 import net.minestom.server.network.packet.client.login.LoginPluginResponsePacket
@@ -59,17 +59,17 @@ object InitialInstanceRouter : Bootstrap(EnvType.PRODUCTION) {
                 }
             }
 
-        var startingInstance: Instance? = null
+        var startingGame: Game? = null
 
         private var playing = false
 
         fun isReady() =
-            !playing && player != null && startingInstance != null && player!!.playerConnection.connectionState == ConnectionState.LOGIN
+            !playing && player != null && startingGame != null && player!!.playerConnection.connectionState == ConnectionState.LOGIN
 
         fun tryStartPlayState() {
             logger.trace("Trying to start play state")
             if (!isReady()) {
-                logger.trace("Not ready, can't start play state; player = '$player', startingInstance = '$startingInstance'")
+                logger.trace("Not ready, can't start play state; player = '$player', startingInstance = '$startingGame'")
                 return
             }
             playing = true
@@ -78,7 +78,7 @@ object InitialInstanceRouter : Bootstrap(EnvType.PRODUCTION) {
                 MinecraftServer.getConnectionManager().startPlayState(player!!, true)
             }
             Messaging.IO.launch {
-                Messaging.outgoing.playerTransfer(player!!, startingInstance)
+                Messaging.outgoing.playerTransfer(player!!, startingGame?.id)
             }
         }
     }
@@ -122,20 +122,19 @@ object InitialInstanceRouter : Bootstrap(EnvType.PRODUCTION) {
 
     private fun handleInstanceDestination(packet: LoginPluginResponsePacket, connection: PlayerSocketConnection) {
         // Update the player's spawning instance, which was received from Velocity
-        val reader = BinaryReader(packet.data)
-        val instanceUid = reader.readUuid()
-        val instance = MinecraftServer.getInstanceManager().getInstance(instanceUid)
+        val gameId = String(packet.data)
+        val game = Game.findGame(gameId)
         val username = connection.loginUsername!!
-        logger.debug("Desired instance for player $username: $instance ($instanceUid)")
-        if (instance == null) {
-            logger.trace("Disconnecting player - desired instance ($instanceUid) is null")
+        logger.debug("Desired game for player $username: $gameId")
+        if (game == null) {
+            logger.trace("Disconnecting player - desired game ($gameId) not found")
             connection.sendPacket(LoginDisconnectPacket(INVALID_WORLD))
             connection.disconnect()
             return
         }
-        logger.debug("Trying to send player $username to instance $instance")
+        logger.debug("Trying to send player $username to game $game")
         players.getOrPut(username) { PartialPlayer() }.apply {
-            startingInstance = instance
+            startingGame = game
             tryStartPlayState()
         }
     }
@@ -182,7 +181,8 @@ object InitialInstanceRouter : Bootstrap(EnvType.PRODUCTION) {
             event.player.kick(HANDSHAKE_FAILED)
             return
         }
-        val instance = players[event.player.username]?.startingInstance
+        val game = players[event.player.username]?.startingGame
+        val instance = game?.getModule<InstanceModule>()?.getSpawningInstance(event.player)
         players.remove(event.player.username)
         if (instance == null) {
             // If the instance was not set or doesn't exist, disconnect the player.
@@ -191,14 +191,14 @@ object InitialInstanceRouter : Bootstrap(EnvType.PRODUCTION) {
             return
         }
         // If the instance exists, set the player's spawning instance and allow them to connect.
-        logger.info("Spawning player ${event.player.username} in instance $instance")
+        logger.info("Spawning player ${event.player.username} in game '${game.id}' and instance '$instance'")
         event.setSpawningInstance(instance)
 
         MinecraftServer.getSchedulerManager().scheduleNextTick {
             event.player.sendMessage(Component.translatable("global.instance.placing",
                 NamedTextColor.GRAY,
-                Component.text(instance.uniqueId.toString())))
-            Game.findGame(instance.uniqueId)?.addPlayer(event.player)
+                Component.text(game.id + "/" + instance.uniqueId.toString())))
+            game.addPlayer(event.player)
         }
     }
 }

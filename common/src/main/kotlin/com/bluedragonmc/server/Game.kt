@@ -335,6 +335,7 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
             val instance = MinecraftServer.getInstanceManager().getInstance(instanceId) ?: return null
             return games.find { it.ownsInstance(instance) }
         }
+        fun findGame(gameId: String): Game? = games.find { it.id == gameId }
 
         private val INACTIVE_SINCE_TAG = Tag.Long("instance_inactive_since")
 
