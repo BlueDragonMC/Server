@@ -4,10 +4,7 @@ import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.map.AnvilFileMapProviderModule.Companion.MAP_NAME_TAG
-import com.bluedragonmc.server.service.Database
-import com.bluedragonmc.server.service.Messaging
 import com.bluedragonmc.server.utils.*
-import kotlinx.coroutines.launch
 import net.kyori.adventure.text.Component.*
 import net.kyori.adventure.text.event.ClickEvent
 import net.kyori.adventure.text.format.NamedTextColor
@@ -132,9 +129,6 @@ class InstanceCommand(name: String, usageString: String, vararg aliases: String?
                 player.sendMessage(formatErrorTranslated("command.instance.remove.waiting", instance.players.size))
             }
             InstanceUtils.forceUnregisterInstance(instance).thenAccept {
-                Database.IO.launch {
-                    Messaging.outgoing.notifyInstanceRemoved(instance.uniqueId)
-                }
                 player.sendMessage(formatMessageTranslated("command.instance.remove.success", instance.uniqueId))
             }
         }
