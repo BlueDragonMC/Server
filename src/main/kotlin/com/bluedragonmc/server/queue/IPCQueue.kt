@@ -6,6 +6,7 @@ import com.bluedragonmc.api.grpc.PlayerHolderOuterClass.SendPlayerRequest
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.api.Queue
 import com.bluedragonmc.server.lobby
+import com.bluedragonmc.server.module.instance.InstanceModule
 import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.service.Messaging
 import kotlinx.coroutines.launch
@@ -68,21 +69,9 @@ object IPCQueue : Queue() {
     }
 
     override fun sendPlayer(request: SendPlayerRequest) {
-        val uuid = UUID.fromString(request.instanceId)
-        val instance = MinecraftServer.getInstanceManager().getInstance(uuid) ?: return
+        val gameId = request.instanceId
         val player = MinecraftServer.getConnectionManager().getPlayer(UUID.fromString(request.playerUuid)) ?: return
-        // Only allow players that have fully logged in, preventing them from being sent to the game twice
-        if (player.playerConnection.connectionState != ConnectionState.PLAY) return
-        if (player.instance == instance || player.instance == null) return
-        player.sendMessage(
-            Component.translatable(
-                "queue.sending",
-                NamedTextColor.DARK_GRAY,
-                Component.text(uuid.toString())
-            )
-        )
-        logger.info("Sending player ${player.username} to instance ${request.instanceId}. (current instance: ${player.instance?.uniqueId})")
-        val game = Game.findGame(instance.uniqueId) ?: run {
+        val game = Game.findGame(gameId) ?: run {
             player.sendMessage(
                 Component.translatable(
                     "queue.error_sending",
@@ -92,6 +81,19 @@ object IPCQueue : Queue() {
             )
             return
         }
+        val instance = game.getModule<InstanceModule>().getSpawningInstance(player)
+        // Only allow players that have fully logged in, preventing them from being sent to the game twice
+        if (player.playerConnection.connectionState != ConnectionState.PLAY) return
+        if (Game.findGame(player) == game || player.instance == null) return
+        player.sendMessage(
+            Component.translatable(
+                "queue.sending",
+                NamedTextColor.DARK_GRAY,
+                Component.text(gameId + "/" + instance.uniqueId.toString())
+            )
+        )
+        logger.info("Sending player ${player.username} to game '$gameId' and instance '${instance.uniqueId}'. (current instance: ${player.instance?.uniqueId})")
+
         game.addPlayer(player)
     }
 

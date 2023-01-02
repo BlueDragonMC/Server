@@ -25,7 +25,7 @@ interface OutgoingRPCHandler {
     fun onGameCreated(game: Game)
     suspend fun initGame(id: String, gameType: GameType)
     suspend fun updateGameState(id: String, gameState: GameState)
-    suspend fun notifyInstanceRemoved(instanceId: UUID)
+    suspend fun notifyInstanceRemoved(gameId: String)
 
     // Player tracking
     suspend fun recordInstanceChange(player: Player, newGame: String)
