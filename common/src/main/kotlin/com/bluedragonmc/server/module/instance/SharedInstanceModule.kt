@@ -28,6 +28,9 @@ class SharedInstanceModule : InstanceModule() {
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         instanceContainer = parent.getModule<AnvilFileMapProviderModule>().instanceContainer
+        if (!instanceContainer.isRegistered) {
+            MinecraftServer.getInstanceManager().registerInstance(instanceContainer)
+        }
         instance = MinecraftServer.getInstanceManager().createSharedInstance(instanceContainer)
     }
 }
