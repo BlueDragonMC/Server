@@ -330,11 +330,14 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
          */
         private const val CLEANUP_MIN_INACTIVE_TIME = 10_000L
 
-        fun findGame(player: Player): Game? = games.find { player in it.players }
+        fun findGame(player: Player): Game? =
+            games.find { player in it.players || it.ownsInstance(player.instance ?: return@find false) }
+
         fun findGame(instanceId: UUID): Game? {
             val instance = MinecraftServer.getInstanceManager().getInstance(instanceId) ?: return null
             return games.find { it.ownsInstance(instance) }
         }
+
         fun findGame(gameId: String): Game? = games.find { it.id == gameId }
 
         private val INACTIVE_SINCE_TAG = Tag.Long("instance_inactive_since")

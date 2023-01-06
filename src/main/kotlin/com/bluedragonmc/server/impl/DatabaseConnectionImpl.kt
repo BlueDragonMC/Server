@@ -145,7 +145,11 @@ internal class DatabaseConnectionImpl(connectionString: String) : DatabaseConnec
             else -> error("Invalid sort order")
         }
 
-        return getPlayersCollection().find().sort(sort).limit(limit).toList()
+        return getPlayersCollection()
+            .find("{\"statistics.$key\": {\$exists: true}}")
+            .sort(sort)
+            .limit(limit)
+            .toList()
             .filter { it.statistics.containsKey(key) }
     }
 
