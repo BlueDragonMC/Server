@@ -3,7 +3,7 @@ This guide covers how to integrate other server software with [BlueDragonMC/Puff
 ## 1: Background
 ### 1.1: Kubernetes
 In production, BlueDragon runs in a [Kubernetes](https://kubernetes.io/) cluster.
-* Game servers are controlled by [Agones](https://agones.dev) by a [fleet](https://agones.dev/site/docs/reference/fleet/).
+* Game servers are controlled by [Agones](https://agones.dev) with a [fleet](https://agones.dev/site/docs/reference/fleet/).
 * Proxies are not currently handled by a fleet, however this may change in the future.
 ## 2: Messaging
 ### 2.1: Reference - All gRPC Services

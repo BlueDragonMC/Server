@@ -1,4 +1,10 @@
 # Server
+![GitHub Workflow Status (with branch)](https://img.shields.io/github/actions/workflow/status/BlueDragonMC/Server/gradle.yml?branch=main&label=Java%20CI%20with%20Gradle&logo=github)
+![GitHub last commit](https://img.shields.io/github/last-commit/BlueDragonMC/Server)
+![Jitpack CI Status](https://img.shields.io/badge/dynamic/json?color=blue&label=jitpack&query=%24.status&url=https%3A%2F%2Fjitpack.io%2Fapi%2Fbuilds%2Fcom.github.BlueDragonMC%2FServer%2Flatest&logo=gradle)
+
+[![BlueDragon Logo](./favicon_64.png)](https://bluedragonmc.com)
+
 BlueDragon's [Minestom](https://minestom.net/) implementation. It currently includes:
 - Creating isolated instances for different game types and modes
 - A modular system for adding functionality to games
