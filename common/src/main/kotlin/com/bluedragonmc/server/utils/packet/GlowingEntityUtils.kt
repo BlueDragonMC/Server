@@ -43,7 +43,7 @@ object GlowingEntityUtils {
     fun removeGlow(entity: Entity, viewers: Collection<Player>) {
         val team = entity.getTag(CURRENT_GLOW_TAG)
         PacketGroupingAudience.of(viewers).sendGroupedPacket(TeamsPacket(
-            team, TeamsPacket.RemoveEntitiesToTeamAction(arrayOf(entity.uuid.toString()))
+            team, TeamsPacket.RemoveEntitiesToTeamAction(listOf(entity.uuid.toString()))
         ))
     }
 }

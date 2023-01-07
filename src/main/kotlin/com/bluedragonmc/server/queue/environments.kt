@@ -1,5 +1,6 @@
 package com.bluedragonmc.server.queue
 
+import agones.dev.sdk.Agones
 import com.bluedragonmc.server.GitVersionInfo
 import com.bluedragonmc.server.VersionInfo
 import com.bluedragonmc.server.api.Environment
@@ -22,8 +23,8 @@ private fun isDev(): Boolean {
 class ConfiguredEnvironment : Environment() {
 
     override val queue: Queue = when (System.getenv("BLUEDRAGON_QUEUE_TYPE")?.uppercase()) {
-        "IPCQUEUE", "IPC" -> IPCQueue
-        "TESTQUEUE", "TEST" -> TestQueue()
+        "IPCQUEUE", "IPC", "PROD" -> IPCQueue
+        "TESTQUEUE", "TEST", "DEV" -> TestQueue()
         else -> defaultQueue()
     }
 
@@ -36,16 +37,17 @@ class ConfiguredEnvironment : Environment() {
     override val isDev: Boolean = isDev()
 
     private lateinit var serverName: String
+    private val isAgonesEnabled get() = System.getenv("BLUEDRAGON_AGONES_DISABLED") == null
 
     override suspend fun getServerName(): String {
         if (!::serverName.isInitialized) {
             serverName = if (System.getenv("HOSTNAME") != null) {
                 System.getenv("HOSTNAME")
-            } else if (isDev()) {
+            } else if (isDev() || !isAgonesEnabled) {
                 "dev-" + UUID.randomUUID().toString().take(5) + "-" + UUID.randomUUID().toString().take(5)
             } else {
                 runBlocking {
-                    AgonesIntegration.stub.getGameServer(AgonesIntegration.empty).objectMeta.name
+                    AgonesIntegration.stub.getGameServer(Agones.Empty.getDefaultInstance()).objectMeta.name
                 }
             }
         }

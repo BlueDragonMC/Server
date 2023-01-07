@@ -16,16 +16,18 @@ import net.minestom.server.event.EventNode
 import net.minestom.server.event.player.PlayerDisconnectEvent
 import net.minestom.server.event.player.PlayerLoginEvent
 import net.minestom.server.extras.velocity.VelocityProxy
-import net.minestom.server.listener.LoginStartListener
 import net.minestom.server.network.ConnectionState
+import net.minestom.server.network.NetworkBuffer
+import net.minestom.server.network.NetworkBuffer.STRING
 import net.minestom.server.network.packet.client.login.LoginPluginResponsePacket
 import net.minestom.server.network.packet.client.login.LoginStartPacket
 import net.minestom.server.network.packet.server.login.LoginDisconnectPacket
 import net.minestom.server.network.packet.server.login.LoginPluginRequestPacket
+import net.minestom.server.network.player.GameProfile
 import net.minestom.server.network.player.PlayerConnection
 import net.minestom.server.network.player.PlayerSocketConnection
-import net.minestom.server.utils.binary.BinaryReader
 import java.net.InetSocketAddress
+import java.nio.ByteBuffer
 import java.util.concurrent.ThreadLocalRandom
 
 object InitialInstanceRouter : Bootstrap(EnvType.PRODUCTION) {
@@ -103,7 +105,7 @@ object InitialInstanceRouter : Bootstrap(EnvType.PRODUCTION) {
         connection.addPluginRequestEntry(messageId, BLUEDRAGON_GET_DEST_CHANNEL)
         connection.sendPacket(LoginPluginRequestPacket(messageId, BLUEDRAGON_GET_DEST_CHANNEL, byteArrayOf())) // send to proxy
         // Use Minestom's handler to process the packet, which will send a request to Velocity for the player's UUID, username, skin, etc.
-        LoginStartListener.listener(packet, connection)
+        packet.process(connection)
     }
 
     private fun handleLoginPluginMessage(packet: LoginPluginResponsePacket, connection: PlayerConnection) {
@@ -125,9 +127,9 @@ object InitialInstanceRouter : Bootstrap(EnvType.PRODUCTION) {
         val gameId = String(packet.data)
         val game = Game.findGame(gameId)
         val username = connection.loginUsername!!
-        logger.debug("Desired game for player $username: $gameId")
+        logger.info("Routing player player $username to game '$gameId'...")
         if (game == null) {
-            logger.trace("Disconnecting player - desired game ($gameId) not found")
+            logger.warn("Disconnecting player during login phase - desired game ($gameId) not found")
             connection.sendPacket(LoginDisconnectPacket(INVALID_WORLD))
             connection.disconnect()
             return
@@ -147,8 +149,8 @@ object InitialInstanceRouter : Bootstrap(EnvType.PRODUCTION) {
             connection.disconnect()
             return
         }
-        val reader = BinaryReader(packet.data)
-        val success = VelocityProxy.checkIntegrity(reader)
+        val buffer = NetworkBuffer(ByteBuffer.wrap(packet.data))
+        val success = VelocityProxy.checkIntegrity(buffer)
 
         if (!success) {
             logger.warn("Velocity proxy validation failed for connection: ${connection.identifier}")
@@ -157,18 +159,20 @@ object InitialInstanceRouter : Bootstrap(EnvType.PRODUCTION) {
             return
         }
 
-        val addr = VelocityProxy.readAddress(reader)
+        // Read details from the packet
+        val addr = buffer.read(STRING)
         val port = (connection.remoteAddress as InetSocketAddress).port
-        val providedUuid = reader.readUuid()
-        val username = reader.readSizedString(16)
-        val skin = VelocityProxy.readSkin(reader)
+        val profile = GameProfile(buffer)
+
+        // Set the player's connecting address, username, and skin
         connection.remoteAddress = InetSocketAddress(addr, port)
-        connection.UNSAFE_setLoginUsername(username)
-        val uuid = providedUuid ?: MinecraftServer.getConnectionManager().getPlayerConnectionUuid(connection, username)
-        val player = MinecraftServer.getConnectionManager().playerProvider.createPlayer(uuid, username, connection)
-        player.skin = skin
-        logger.debug("Velocity modern forwarding succeeded for $username; created player object: $player")
-        players.getOrPut(username) { PartialPlayer() }.apply {
+        connection.UNSAFE_setLoginUsername(profile.name)
+        connection.UNSAFE_setProfile(profile)
+
+        val uuid = profile.uuid
+        val player = MinecraftServer.getConnectionManager().playerProvider.createPlayer(uuid, profile.name, connection)
+        logger.debug("Velocity modern forwarding succeeded for ${profile.name}; created player object: $player")
+        players.getOrPut(profile.name) { PartialPlayer() }.apply {
             this.player = player
             tryStartPlayState()
         }

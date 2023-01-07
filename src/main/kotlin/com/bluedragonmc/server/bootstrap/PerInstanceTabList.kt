@@ -67,7 +67,8 @@ object PerInstanceTabList : Bootstrap() {
         ) else emptyList(),
         player.gameMode,
         player.latency,
-        player.name
+        player.name,
+        player.playerConnection.playerPublicKey()
     )
 
     private fun getRemovePlayerPacket(player: Player) =
