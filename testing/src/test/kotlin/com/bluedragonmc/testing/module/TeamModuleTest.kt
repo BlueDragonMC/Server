@@ -4,14 +4,14 @@ import com.bluedragonmc.server.module.instance.InstanceModule
 import com.bluedragonmc.server.module.minigame.TeamModule
 import com.bluedragonmc.testing.utils.TestUtils
 import net.kyori.adventure.text.TranslatableComponent
-import net.minestom.server.api.Env
-import net.minestom.server.api.EnvTest
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.Player
-import net.minestom.server.network.packet.server.play.ChatMessagePacket
+import net.minestom.server.network.packet.server.play.SystemChatPacket
 import net.minestom.server.network.packet.server.play.TeamsPacket
 import net.minestom.server.network.packet.server.play.TeamsPacket.AddEntitiesToTeamAction
 import net.minestom.server.network.packet.server.play.TeamsPacket.CreateTeamAction
+import net.minestom.testing.Env
+import net.minestom.testing.EnvTest
 import org.junit.jupiter.api.Test
 import kotlin.math.abs
 import kotlin.test.assertEquals
@@ -84,7 +84,7 @@ class TeamModuleTest {
         game.addPlayer(player)
 
         // Track incoming chat packets
-        val chat = conn.trackIncoming(ChatMessagePacket::class.java)
+        val chat = conn.trackIncoming(SystemChatPacket::class.java)
         val teams = conn.trackIncoming(TeamsPacket::class.java)
 
         TestUtils.startGame(game)
