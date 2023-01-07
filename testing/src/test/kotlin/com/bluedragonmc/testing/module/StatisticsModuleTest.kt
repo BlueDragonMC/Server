@@ -1,14 +1,14 @@
 package com.bluedragonmc.testing.module
 
 import com.bluedragonmc.server.CustomPlayer
-import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.module.database.StatisticsModule
+import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.testing.utils.DatabaseConnectionStub
 import com.bluedragonmc.testing.utils.TestUtils
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
-import net.minestom.server.api.Env
-import net.minestom.server.api.EnvTest
+import net.minestom.testing.Env
+import net.minestom.testing.EnvTest
 import org.junit.jupiter.api.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue

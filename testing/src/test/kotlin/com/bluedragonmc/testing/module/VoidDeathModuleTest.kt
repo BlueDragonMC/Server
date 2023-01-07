@@ -6,10 +6,10 @@ import io.mockk.spyk
 import io.mockk.unmockkAll
 import io.mockk.verify
 import io.mockk.verifyAll
-import net.minestom.server.api.Env
-import net.minestom.server.api.EnvTest
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.event.player.PlayerMoveEvent
+import net.minestom.testing.Env
+import net.minestom.testing.EnvTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import kotlin.test.assertFalse
