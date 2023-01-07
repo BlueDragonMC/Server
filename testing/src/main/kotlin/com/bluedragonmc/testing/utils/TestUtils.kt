@@ -13,7 +13,6 @@ import com.bluedragonmc.server.service.Messaging
 import io.mockk.coEvery
 import io.mockk.spyk
 import kotlinx.coroutines.runBlocking
-import net.minestom.server.api.Env
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
@@ -21,6 +20,7 @@ import net.minestom.server.event.player.PlayerLoginEvent
 import net.minestom.server.instance.Instance
 import net.minestom.server.network.packet.server.SendablePacket
 import net.minestom.server.network.player.PlayerConnection
+import net.minestom.testing.Env
 import java.net.InetSocketAddress
 import java.net.SocketAddress
 import java.time.Duration

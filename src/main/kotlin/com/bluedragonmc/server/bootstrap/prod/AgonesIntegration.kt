@@ -1,8 +1,8 @@
 package com.bluedragonmc.server.bootstrap.prod
 
+import agones.dev.sdk.Agones
 import agones.dev.sdk.SDKGrpcKt
 import agones.dev.sdk.duration
-import agones.dev.sdk.empty
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.bootstrap.Bootstrap
 import com.bluedragonmc.server.service.Database
@@ -22,7 +22,6 @@ object AgonesIntegration : Bootstrap(EnvType.PRODUCTION) {
 
     private lateinit var channel: ManagedChannel
     lateinit var stub: SDKGrpcKt.SDKCoroutineStub
-    val empty = empty { }
 
     // The amount of milliseconds in between health check pings
     private const val HEALTH_CHECK_INTERVAL = 10_000L
@@ -32,6 +31,11 @@ object AgonesIntegration : Bootstrap(EnvType.PRODUCTION) {
 
     override fun hook(eventNode: EventNode<Event>) {
 
+        if (System.getenv("BLUEDRAGON_AGONES_DISABLED") != null) {
+            logger.warn("Agones integration disabled by environment variable.")
+            return
+        }
+
         channel = ManagedChannelBuilder
             .forAddress("localhost", System.getProperty("AGONES_SDK_GRPC_PORT")?.toIntOrNull() ?: 9357)
             .usePlaintext()
@@ -39,14 +43,14 @@ object AgonesIntegration : Bootstrap(EnvType.PRODUCTION) {
         stub = SDKGrpcKt.SDKCoroutineStub(channel)
 
         runBlocking {
-            logger.info("Agones supplied server name: ${stub.getGameServer(empty).objectMeta.name}")
+            logger.info("Agones supplied server name: ${stub.getGameServer(Agones.Empty.getDefaultInstance()).objectMeta.name}")
         }
 
         val healthFlow = flow {
             while(true) {
                 // Send a health message every second
                 if (isHealthy()) {
-                    emit(empty)
+                    emit(Agones.Empty.getDefaultInstance())
                 }
                 delay(HEALTH_CHECK_INTERVAL)
                 if (MinecraftServer.getConnectionManager().onlinePlayers.isNotEmpty()) {
@@ -63,7 +67,7 @@ object AgonesIntegration : Bootstrap(EnvType.PRODUCTION) {
         }
 
         runBlocking {
-            stub.ready(empty)
+            stub.ready(Agones.Empty.getDefaultInstance())
             logger.info("Agones - Ready")
         }
 

@@ -8,10 +8,7 @@ import java.nio.file.Paths
 import java.util.*
 import java.util.jar.JarEntry
 import java.util.jar.JarInputStream
-import kotlin.io.path.inputStream
-import kotlin.io.path.listDirectoryEntries
-import kotlin.io.path.name
-import kotlin.io.path.pathString
+import kotlin.io.path.*
 import kotlin.reflect.full.primaryConstructor
 import kotlin.system.measureTimeMillis
 
@@ -20,7 +17,7 @@ object GameLoader {
     private val logger = LoggerFactory.getLogger(this::class.java)
 
     private val gamesList by lazy {
-        Paths.get("games").listDirectoryEntries().associateWith(::getPluginProperties)
+        Paths.get("games").listDirectoryEntries().filter { it.isRegularFile() }.associateWith(::getPluginProperties)
     }
 
     val gameNames by lazy {
