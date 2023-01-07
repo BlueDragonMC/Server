@@ -9,7 +9,6 @@ import net.minestom.server.entity.Player
 import net.minestom.server.entity.damage.DamageType
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
-import net.minestom.server.event.player.PlayerMoveEvent
 import net.minestom.server.event.player.PlayerTickEvent
 import net.minestom.server.instance.block.Block
 import net.minestom.server.item.Enchantment
@@ -61,7 +60,7 @@ object FallDamageModule : GameModule() {
                 }
             } else {
                 // If the player does not have the tag, and they are falling, add the fall start tag.
-                if (!player.hasTag(FALL_START_TAG) && player.velocity.y < 0.0) {
+                if (!player.hasTag(FALL_START_TAG) && player.position.y < player.getTag(LAST_Y_TAG)) {
                     player.setTag(FALL_START_TAG, event.player.position.y)
                 }
             }

@@ -209,10 +209,10 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
     private val isJoinable
         get() = state.canPlayersJoin
 
-    fun addPlayer(player: Player) {
+    fun addPlayer(player: Player, sendPlayer: Boolean = true) {
         findGame(player)?.players?.remove(player)
         players.add(player)
-        if (player.instance == null || !ownsInstance(player.instance!!)) {
+        if (sendPlayer && (player.instance == null || !ownsInstance(player.instance!!))) {
             try {
                 sendPlayerToInstance(player)
             } catch (e: Throwable) {
