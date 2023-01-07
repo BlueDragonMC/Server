@@ -3,10 +3,10 @@ package com.bluedragonmc.server
 import com.bluedragonmc.server.model.PlayerDocument
 import com.bluedragonmc.server.model.PunishmentType
 import com.bluedragonmc.server.module.gameplay.ShopModule
-import com.bluedragonmc.server.module.minigame.SpawnpointModule
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.MinecraftServer
+import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.Entity
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
@@ -39,9 +39,11 @@ class CustomPlayer(uuid: UUID, username: String, playerConnection: PlayerConnect
 
     fun isDataInitialized() = ::data.isInitialized
 
-    fun getFirstMute() = if(isDataInitialized()) data.punishments.firstOrNull { it.type == PunishmentType.MUTE && it.isInEffect() } else null
+    fun getFirstMute() =
+        if (isDataInitialized()) data.punishments.firstOrNull { it.type == PunishmentType.MUTE && it.isInEffect() } else null
 
-    fun getFirstBan() = if(isDataInitialized()) data.punishments.firstOrNull { it.type == PunishmentType.BAN && it.isInEffect() } else null
+    fun getFirstBan() =
+        if (isDataInitialized()) data.punishments.firstOrNull { it.type == PunishmentType.BAN && it.isInEffect() } else null
 
     override fun spectate(entity: Entity) {
         super.spectate(entity)
@@ -67,11 +69,11 @@ class CustomPlayer(uuid: UUID, username: String, playerConnection: PlayerConnect
         if (isSpectating && prevGameMode == GameMode.SPECTATOR && gameMode != GameMode.SPECTATOR) {
             stopSpectating()
         }
-        if(prevGameMode != GameMode.SPECTATOR && gameMode == GameMode.SPECTATOR) { // Entering spectator mode
+        if (prevGameMode != GameMode.SPECTATOR && gameMode == GameMode.SPECTATOR) { // Entering spectator mode
             wasInvisible = isInvisible
             isInvisible = true // Make the player invisible so their floating head does not appear for everyone
         }
-        if(prevGameMode == GameMode.SPECTATOR && gameMode != GameMode.SPECTATOR) { // Leaving spectator mode
+        if (prevGameMode == GameMode.SPECTATOR && gameMode != GameMode.SPECTATOR) { // Leaving spectator mode
             isInvisible = wasInvisible
         }
     }
@@ -85,19 +87,16 @@ class CustomPlayer(uuid: UUID, username: String, playerConnection: PlayerConnect
     }
 
     override fun setInstance(instance: Instance): CompletableFuture<Void> {
+        return if (instance != this@CustomPlayer.instance) {
+            setInstance(instance, if (this.instance != null) getPosition() else respawnPoint)
+        } else {
+            AsyncUtils.VOID_FUTURE
+        }
+    }
+
+    override fun setInstance(instance: Instance, spawnPosition: Pos): CompletableFuture<Void> {
         try {
-            Game.findGame(this)?.apply {
-                val spawnpoint =
-                    getModuleOrNull<SpawnpointModule>()?.spawnpointProvider?.getSpawnpoint(this@CustomPlayer)
-                if (spawnpoint != null && instance != this@CustomPlayer.instance) {
-                    return super.setInstance(instance, spawnpoint)
-                }
-            }
-            return if (instance != this@CustomPlayer.instance) {
-                super.setInstance(instance, if (this.instance != null) getPosition() else respawnPoint)
-            } else {
-                AsyncUtils.VOID_FUTURE
-            }
+            return super.setInstance(instance, spawnPosition)
         } catch (e: Throwable) {
             MinecraftServer.getExceptionManager().handleException(e)
             kick(Component.text("Failed to change instances! (${e.message})", NamedTextColor.RED))

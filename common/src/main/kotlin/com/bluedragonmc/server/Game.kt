@@ -12,6 +12,7 @@ import com.bluedragonmc.server.event.PlayerLeaveGameEvent
 import com.bluedragonmc.server.model.MapData
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.instance.InstanceModule
+import com.bluedragonmc.server.module.minigame.SpawnpointModule
 import com.bluedragonmc.server.module.packet.PerInstanceChatModule
 import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.service.Messaging
@@ -233,6 +234,10 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
 
     open fun sendPlayerToInstance(player: Player): CompletableFuture<Instance> {
         val instance = getModule<InstanceModule>().getSpawningInstance(player)
+        if (hasModule<SpawnpointModule>()) {
+            val spawnpoint = getModule<SpawnpointModule>().spawnpointProvider.getSpawnpoint(player)
+            return player.setInstance(instance, spawnpoint).thenApply { instance }
+        }
         return player.setInstance(instance).thenApply { instance }
     }
 

@@ -4,6 +4,7 @@ import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.bootstrap.Bootstrap
 import com.bluedragonmc.server.module.instance.InstanceModule
+import com.bluedragonmc.server.module.minigame.SpawnpointModule
 import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.service.Messaging
 import kotlinx.coroutines.launch
@@ -94,6 +95,11 @@ object InitialInstanceRouter : Bootstrap(EnvType.PRODUCTION) {
         // If the instance exists, set the player's spawning instance and allow them to connect.
         logger.info("Spawning player ${event.player.username} in game '${game.id}' and instance '${instance.uniqueId}'")
         event.setSpawningInstance(instance)
+
+        if (game.hasModule<SpawnpointModule>()) {
+            event.player.respawnPoint =
+                game.getModule<SpawnpointModule>().spawnpointProvider.getSpawnpoint(event.player)
+        }
 
         MinecraftServer.getSchedulerManager().scheduleNextTick {
             event.player.sendMessage(

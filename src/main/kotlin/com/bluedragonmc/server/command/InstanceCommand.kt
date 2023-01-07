@@ -4,6 +4,7 @@ import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.map.AnvilFileMapProviderModule.Companion.MAP_NAME_TAG
+import com.bluedragonmc.server.module.minigame.SpawnpointModule
 import com.bluedragonmc.server.utils.*
 import net.kyori.adventure.text.Component.*
 import net.kyori.adventure.text.event.ClickEvent
@@ -104,7 +105,18 @@ class InstanceCommand(name: String, usageString: String, vararg aliases: String?
             val instance = get(instanceArgument)
             player.sendMessage(formatMessageTranslated("queue.sending", instance.uniqueId))
             try {
-                player.setInstance(instance).whenCompleteAsync { _, throwable ->
+                val spawnpoint = Game.findGame(instance.uniqueId)
+                    ?.getModuleOrNull<SpawnpointModule>()
+                    ?.spawnpointProvider
+                    ?.getSpawnpoint(player)
+
+                val completableFuture = if (spawnpoint == null) {
+                    player.setInstance(instance)
+                } else {
+                    player.setInstance(instance, spawnpoint)
+                }
+
+                completableFuture.whenCompleteAsync { _, throwable ->
                     // Send a generic error message
                     throwable?.let {
                         player.sendMessage(
