@@ -60,6 +60,10 @@ class OutgoingRPCHandlerStub : OutgoingRPCHandler {
 
     }
 
+    override suspend fun getDestination(player: UUID): String? {
+        error("getDestination not implemented without gRPC messaging enabled!")
+    }
+
     override suspend fun sendPrivateMessage(message: Component, sender: CommandSender, recipient: UUID) {
 
     }

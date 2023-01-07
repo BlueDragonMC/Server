@@ -193,6 +193,14 @@ class OutgoingRPCHandlerImpl(serverAddress: String) : OutgoingRPCHandler {
         )
     }
 
+    override suspend fun getDestination(player: UUID): String? {
+        return queueStub.getDestinationGame(
+            Queue.GetDestinationRequest.newBuilder()
+                .setPlayerUuid(player.toString())
+                .build()
+        ).gameId
+    }
+
     override suspend fun sendPrivateMessage(message: Component, sender: CommandSender, recipient: UUID) {
         privateMessageStub.sendMessage(
             VelocityMessage.PrivateMessageRequest.newBuilder()

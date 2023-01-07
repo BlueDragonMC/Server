@@ -35,6 +35,7 @@ interface OutgoingRPCHandler {
     // Queue
     suspend fun addToQueue(player: Player, gameType: GameType)
     suspend fun removeFromQueue(player: Player)
+    suspend fun getDestination(player: UUID): String?
 
     // Private messaging
     suspend fun sendPrivateMessage(message: Component, sender: CommandSender, recipient: UUID)

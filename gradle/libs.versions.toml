@@ -9,7 +9,7 @@ kmongo = "4.6.1"
 caffeine = "3.1.1"
 okhttp = "4.10.0"
 # Auto-generated GRPC/Protobuf messaging code
-rpc = "4420a7d1bc"
+rpc = "3c2e12a1d8"
 # Agones SDK and its necessary runtime dependencies
 agones-kt = "0.1.2"
 grpc = "1.50.2"
