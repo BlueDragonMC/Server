@@ -44,8 +44,6 @@ object FallDamageModule : GameModule() {
                 player.setTag(FALL_START_TAG, event.player.position.y + 1.0)
             }
 
-            player.setTag(LAST_Y_TAG, player.position.y)
-
             if (event.player.isOnGround) {
                 // When the player touches the ground, compare their fall start to their current y-position.
                 if (player.hasTag(FALL_START_TAG)) {
@@ -64,6 +62,8 @@ object FallDamageModule : GameModule() {
                     player.setTag(FALL_START_TAG, event.player.position.y)
                 }
             }
+
+            player.setTag(LAST_Y_TAG, player.position.y)
         }
     }
 
