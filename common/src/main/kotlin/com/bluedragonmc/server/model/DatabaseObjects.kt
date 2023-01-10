@@ -26,6 +26,8 @@ data class PlayerDocument constructor(
     var statistics: MutableMap<String, Double> = mutableMapOf(),
     var achievements: List<Achievement> = emptyList(),
     var cosmetics: List<CosmeticEntry> = emptyList(),
+    val firstJoinDate: Long = System.currentTimeMillis(),
+    var lastJoinDate: Long = System.currentTimeMillis()
 ) {
 
     suspend fun <T> update(field: KMutableProperty<T>, value: T) {

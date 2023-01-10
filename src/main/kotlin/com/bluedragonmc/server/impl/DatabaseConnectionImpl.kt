@@ -124,6 +124,7 @@ internal class DatabaseConnectionImpl(connectionString: String) : DatabaseConnec
             if (player.data.usernameLower != player.username.lowercase()) {
                 player.data.update(PlayerDocument::usernameLower, player.username.lowercase())
             }
+            player.data.update(PlayerDocument::lastJoinDate, System.currentTimeMillis())
             MinecraftServer.getGlobalEventHandler().call(DataLoadedEvent(player))
             logger.info("Loaded player data for ${player.username}")
         }
