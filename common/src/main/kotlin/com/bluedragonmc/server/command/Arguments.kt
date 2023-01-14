@@ -1,5 +1,6 @@
 package com.bluedragonmc.server.command
 
+import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.model.PlayerDocument
 import com.bluedragonmc.server.service.Database
 import kotlinx.coroutines.runBlocking
@@ -62,6 +63,36 @@ class ArgumentInstance(id: String) : Argument<Instance>(id) {
         val uuid = backingArgument.parse(input)
         return MinecraftServer.getInstanceManager().getInstance(uuid)
             ?: throw ArgumentSyntaxException("Instance not found", uuid.toString(), INVALID_INSTANCE)
+    }
+
+    override fun parser(): String = backingArgument.parser()
+}
+
+class ArgumentGameId(id: String) : Argument<Game>(id) {
+    private val backingArgument = ArgumentString(id)
+
+    companion object {
+        private const val INVALID_GAME_ID = -1 // Arbitrary error code, see ArgumentSyntaxException
+    }
+
+    init {
+        setSuggestionCallback { _, _, suggestion ->
+            suggestion.entries.addAll(Game.games.map {
+                SuggestionEntry(it.id)
+            }.filter { it.entry.startsWith(suggestion.input) })
+        }
+    }
+
+    override fun parse(input: String): Game {
+        val gameId = backingArgument.parse(input)
+        return Game.findGame(gameId)
+            ?: throw ArgumentSyntaxException("Game not found", gameId, INVALID_GAME_ID)
+    }
+
+    override fun nodeProperties(): ByteArray {
+        return BinaryWriter.makeArray { packetWriter: BinaryWriter ->
+            packetWriter.writeVarInt(0) // Single word
+        }
     }
 
     override fun parser(): String = backingArgument.parser()
@@ -135,6 +166,8 @@ object BlockPosArgument : ArgumentTypeDelegation<RelativeVec>(::ArgumentRelative
 object BlockStateArgument : ArgumentTypeDelegation<Block>(::ArgumentBlockState)
 object ItemStackArgument : ArgumentTypeDelegation<ItemStack>(::ArgumentItemStack)
 object WordArgument : ArgumentTypeDelegation<String>(::ArgumentWord)
+object StringArgument : ArgumentTypeDelegation<String>(::ArgumentString)
+object GameArgument : ArgumentTypeDelegation<Game>(::ArgumentGameId)
 object PlayerArgument : ArgumentTypeDelegation<EntityFinder>(::ArgumentPlayer)
 object OfflinePlayerArgument : ArgumentTypeDelegation<PlayerDocument>(::ArgumentOfflinePlayer)
 object OptionalPlayerArgument : ArgumentTypeDelegation<String>(::ArgumentOptionalPlayer)
