@@ -19,7 +19,7 @@ import kotlin.math.floor
 object FallDamageModule : GameModule() {
 
     private val FALL_START_TAG = Tag.Double("fall_start")
-    private val LAST_Y_TAG = Tag.Double("last_y") // Only used for elytra because player.velocity.y is unreliable
+    private val LAST_Y_TAG = Tag.Double("last_y")
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         eventNode.addListener(PlayerTickEvent::class.java) { event ->
@@ -58,7 +58,9 @@ object FallDamageModule : GameModule() {
                 }
             } else {
                 // If the player does not have the tag, and they are falling, add the fall start tag.
-                if (!player.hasTag(FALL_START_TAG) && player.position.y < player.getTag(LAST_Y_TAG)) {
+                if (!player.hasTag(FALL_START_TAG) && player.hasTag(LAST_Y_TAG) &&
+                    player.position.y < player.getTag(LAST_Y_TAG)
+                ) {
                     player.setTag(FALL_START_TAG, event.player.position.y)
                 }
             }
