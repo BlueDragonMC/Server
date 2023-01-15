@@ -86,29 +86,11 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
             }
         }
 
-    private val recentSpawns: Cache<Player, Instance> = Caffeine.newBuilder()
-        .weakKeys()
-        .weakValues()
-        .expireAfterWrite(Duration.ofSeconds(5))
-        .build()
-
     protected val eventNode = EventNode.event("$name-$mapName-$mode", EventFilter.ALL) { event ->
         when (event) {
             is InstanceEvent -> ownsInstance(event.instance)
-            is GameEvent -> event.game == this
-            is PlayerSpawnEvent -> { // Workaround for PlayerSpawnEvent not being an InstanceEvent
-                if (ownsInstance(event.spawnInstance)) {
-                    if (recentSpawns.getIfPresent(event.player) == event.spawnInstance) {
-                        // Prevent `PlayerSpawnEvent`s being called very close to one another for the same instance
-                        logger.warn("Player ${event.player.username} was already spawned in game $id in the last 5 seconds!")
-                        return@event false
-                    }
-                    recentSpawns.put(event.player, event.spawnInstance)
-                    return@event true
-                }
-                return@event false
-            }
-
+            is GameEvent -> event.game === this
+            is PlayerSpawnEvent -> ownsInstance(event.spawnInstance) // Workaround for PlayerSpawnEvent not being an InstanceEvent
             is PlayerEvent -> event.player.isActive && ownsInstance(event.player.instance ?: return@event false)
             else -> false
         }
