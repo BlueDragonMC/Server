@@ -5,13 +5,13 @@ import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.DataLoadedEvent
 import com.bluedragonmc.server.model.PlayerDocument
 import com.bluedragonmc.server.module.GameModule
-import com.bluedragonmc.server.module.minigame.WinModule
+import com.bluedragonmc.server.module.database.StatisticsModule.StatisticRecorder
 import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.utils.listenAsync
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.mongodb.internal.operation.OrderBy
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.launch
 import net.minestom.server.MinecraftServer
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
@@ -24,13 +24,16 @@ import java.util.function.Predicate
 /**
  * A module to save and retrieve players' statistics,
  * as well as rank players by their statistic values.
+ *
+ * It is recommended, however not required, to use a
+ * [StatisticRecorder] to record statistics
  */
-class StatisticsModule(private val recordWins: Boolean = true) : GameModule() {
+class StatisticsModule(private vararg val recorders : StatisticRecorder) : GameModule() {
 
     companion object {
         // Caches should be static to reduce the number of expensive DB queries
         private val statisticsCache: Cache<String, List<PlayerDocument>> =
-            Caffeine.newBuilder().expireAfterWrite(Duration.ofMinutes(10)).build()
+            Caffeine.newBuilder().expireAfterWrite(Duration.ofMinutes(5)).build()
 
         private lateinit var mostRecentInstance: StatisticsModule
 
@@ -43,17 +46,9 @@ class StatisticsModule(private val recordWins: Boolean = true) : GameModule() {
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         mostRecentInstance = this
-        if (recordWins) {
-            eventNode.addListener(WinModule.WinnerDeclaredEvent::class.java) { event ->
-                event.winningTeam.players.forEach { player ->
-                    val statName = if (parent.mode == null) "game_${parent.name.lowercase()}_wins"
-                    else "game_${parent.name.lowercase()}_${parent.mode.lowercase()}_wins"
-                    runBlocking {
-                        recordStatistic(player, statName) { value -> value?.plus(1) ?: 1.0 }
-                    }
-                    logger.info("Incremented '$statName' statistic for player ${player.username}.")
-                }
-            }
+
+        recorders.forEach {
+            it.subscribe(this, parent, eventNode)
         }
     }
 
@@ -119,7 +114,7 @@ class StatisticsModule(private val recordWins: Boolean = true) : GameModule() {
      */
     suspend fun incrementStatistic(
         player: Player,
-        key: String
+        key: String,
     ) = recordStatistic(player, key) { current -> current?.plus(1.0) ?: 1.0 }
 
     /**
@@ -159,5 +154,24 @@ class StatisticsModule(private val recordWins: Boolean = true) : GameModule() {
         statisticsCache.put(sortOrderBy.toString() + key, documents)
 
         return documents.associateWith { it.statistics[key]!! }
+    }
+
+    class EventStatisticRecorder<T : Event>(private val eventType: Class<T>, val handler: suspend StatisticsModule.(Game, T) -> Unit) : StatisticRecorder() {
+        override fun subscribe(module: StatisticsModule, game: Game, eventNode: EventNode<Event>) {
+            eventNode.addListener(eventType) { event ->
+                Database.IO.launch { handler(module, game, event) }
+            }
+        }
+    }
+
+    class MultiStatisticRecorder(private vararg val recorders: StatisticRecorder) : StatisticRecorder() {
+        override fun subscribe(module: StatisticsModule, game: Game, eventNode: EventNode<Event>) {
+            recorders.forEach { it.subscribe(module, game, eventNode) }
+        }
+    }
+
+    abstract class StatisticRecorder {
+
+        abstract fun subscribe(module: StatisticsModule, game: Game, eventNode: EventNode<Event>)
     }
 }
