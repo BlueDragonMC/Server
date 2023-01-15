@@ -18,8 +18,6 @@ import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.service.Messaging
 import com.bluedragonmc.server.utils.GameState
 import com.bluedragonmc.server.utils.InstanceUtils
-import com.github.benmanes.caffeine.cache.Cache
-import com.github.benmanes.caffeine.cache.Caffeine
 import kotlinx.coroutines.runBlocking
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -73,10 +71,10 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
     protected val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
     /**
-     * A random, 8-character identifier unique to this game.
+     * A random, 4-character identifier unique to this game.
      */
-    val id = (0 until 8).map {
-        'a' + Random.nextInt(0, 26)
+    val id = (0 until 4).map {
+        'a' + Random.nextInt(0, 27)
     }.joinToString("")
 
     open val maxPlayers = 8

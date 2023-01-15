@@ -81,23 +81,32 @@ class SidebarModule(private val title: String) : GameModule() {
         }
 
         private companion object {
-            private val HEADER = setOf(
-                text(Calendar.getInstance().run {
-                    val serverId = runBlocking { Environment.getServerName().substringAfter("-") }
+
+            private val ipGradient = text(SERVER_IP).withGradient(BRAND_COLOR_PRIMARY_1, BRAND_COLOR_PRIMARY_2)
+
+            private fun getHeader(game: Game): Iterable<Component> {
+                val dateString = Calendar.getInstance().run {
                     listOf(
                         get(Calendar.MONTH) + 1,
                         get(Calendar.DAY_OF_MONTH),
                         get(Calendar.YEAR).toString().takeLast(2)
-                    ).joinToString("/") + " · " + serverId
-                }, DARK_GRAY)
-            )
-            private val ipGradient = text(SERVER_IP).withGradient(BRAND_COLOR_PRIMARY_1, BRAND_COLOR_PRIMARY_2)
-            private val FOOTER = if (Environment.current.isDev)
-                listOf(ipGradient, text("Development Version", RED)) else listOf(ipGradient)
+                    ).joinToString("/")
+                }
+                val serverId = runBlocking { Environment.getServerName().substringAfter("-") }
+                return setOf(text("$dateString · $serverId · ${game.id}", DARK_GRAY))
+            }
+
+            private fun getFooter(): Iterable<Component> {
+                return if (Environment.current.isDev) {
+                    listOf(ipGradient, text("⚠ Development Version", RED))
+                } else {
+                    listOf(ipGradient)
+                }
+            }
         }
 
         internal fun updateFor(player: Player) {
-            val lines = HEADER + updateFunction(ScoreboardBindingUtils(), player) + FOOTER
+            val lines = getHeader(module.parent) + updateFunction(ScoreboardBindingUtils(), player) + getFooter()
             val old = module.sidebars[player] ?: module.createSidebar()
 
             if (old.lines.size == lines.size) {
