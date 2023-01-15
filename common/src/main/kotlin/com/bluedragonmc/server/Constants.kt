@@ -47,11 +47,6 @@ val ALT_COLOR_1: TextColor = NamedTextColor.YELLOW
 val ALT_COLOR_2: TextColor = NamedTextColor.GOLD
 
 /**
- * The hostname of the server, used in the scoreboard footer.
- */
-const val SERVER_IP = "bluedragonmc.com"
-
-/**
  * The name of the server ("BlueDragon") with a nice gradient. This is not bold.
  */
 val SERVER_NAME_GRADIENT = Component.text("BlueDragon").withGradient(BRAND_COLOR_PRIMARY_1, BRAND_COLOR_PRIMARY_3)

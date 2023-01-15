@@ -11,6 +11,7 @@ import net.kyori.adventure.text.Component.text
 import net.kyori.adventure.text.format.NamedTextColor.DARK_GRAY
 import net.kyori.adventure.text.format.NamedTextColor.RED
 import net.kyori.adventure.text.format.TextDecoration
+import net.kyori.adventure.translation.GlobalTranslator
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
@@ -82,8 +83,6 @@ class SidebarModule(private val title: String) : GameModule() {
 
         private companion object {
 
-            private val ipGradient = text(SERVER_IP).withGradient(BRAND_COLOR_PRIMARY_1, BRAND_COLOR_PRIMARY_2)
-
             private fun getHeader(game: Game): Iterable<Component> {
                 val dateString = Calendar.getInstance().run {
                     listOf(
@@ -96,17 +95,21 @@ class SidebarModule(private val title: String) : GameModule() {
                 return setOf(text("$dateString · $serverId · ${game.id}", DARK_GRAY))
             }
 
-            private fun getFooter(): Iterable<Component> {
+            private fun getFooter(player: Player): Iterable<Component> {
+                val ipGradient = GlobalTranslator.render(
+                    Component.translatable("global.server.domain.stylized"), player.locale ?: DEFAULT_LOCALE
+                ).withGradient(BRAND_COLOR_PRIMARY_1, BRAND_COLOR_PRIMARY_2)
+
                 return if (Environment.current.isDev) {
-                    listOf(ipGradient, text("⚠ Development Version", RED))
+                    setOf(text("⚠ Development Version", RED), ipGradient)
                 } else {
-                    listOf(ipGradient)
+                    setOf(ipGradient)
                 }
             }
         }
 
         internal fun updateFor(player: Player) {
-            val lines = getHeader(module.parent) + updateFunction(ScoreboardBindingUtils(), player) + getFooter()
+            val lines = getHeader(module.parent) + updateFunction(ScoreboardBindingUtils(), player) + getFooter(player)
             val old = module.sidebars[player] ?: module.createSidebar()
 
             if (old.lines.size == lines.size) {

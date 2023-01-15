@@ -74,7 +74,7 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
      * A random, 4-character identifier unique to this game.
      */
     val id = (0 until 4).map {
-        'a' + Random.nextInt(0, 27)
+        'a' + Random.nextInt(0, 26)
     }.joinToString("")
 
     open val maxPlayers = 8
