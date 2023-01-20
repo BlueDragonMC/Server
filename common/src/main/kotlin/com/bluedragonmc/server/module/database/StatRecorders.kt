@@ -56,7 +56,7 @@ object StatRecorders {
     )
 
     private fun getStatPrefix(game: Game): String {
-        return if (game.mode.isNullOrBlank()) "game_${game.name.lowercase()}_wins"
-        else "game_${game.name.lowercase()}_${game.mode.lowercase()}_wins"
+        return if (game.mode.isNullOrBlank()) "game_${game.name.lowercase()}"
+        else "game_${game.name.lowercase()}_${game.mode.lowercase()}"
     }
 }
