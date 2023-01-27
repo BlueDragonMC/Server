@@ -10,6 +10,7 @@ import net.minestom.server.event.EventNode
 import net.minestom.server.instance.AnvilLoader
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.InstanceContainer
+import net.minestom.server.instance.LightingChunk
 
 @DependsOn(AnvilFileMapProviderModule::class)
 class InstanceContainerModule : InstanceModule() {
@@ -24,6 +25,7 @@ class InstanceContainerModule : InstanceModule() {
         this.instance = parent.getModule<AnvilFileMapProviderModule>().instanceContainer.copy().apply {
             chunkLoader = AnvilLoader(parent.getModule<AnvilFileMapProviderModule>().worldFolder)
         }
+        instance.setChunkSupplier(::LightingChunk)
         MinecraftServer.getInstanceManager().registerInstance(instance)
     }
 }

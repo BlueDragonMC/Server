@@ -6,10 +6,7 @@ import com.bluedragonmc.server.utils.InstanceUtils
 import net.minestom.server.MinecraftServer
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
-import net.minestom.server.instance.AnvilLoader
-import net.minestom.server.instance.Instance
-import net.minestom.server.instance.InstanceContainer
-import net.minestom.server.instance.SharedInstance
+import net.minestom.server.instance.*
 import net.minestom.server.tag.Tag
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
@@ -30,6 +27,7 @@ class AnvilFileMapProviderModule(val worldFolder: Path) : GameModule() {
             loadedMaps[worldFolder] = this
             setTag(MAP_NAME_TAG, worldFolder.absolutePathString())
         }
+        instanceContainer.setChunkSupplier(::LightingChunk)
     }
 
     companion object {

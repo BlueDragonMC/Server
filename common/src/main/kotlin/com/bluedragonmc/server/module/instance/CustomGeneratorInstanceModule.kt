@@ -7,6 +7,7 @@ import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.instance.Instance
+import net.minestom.server.instance.LightingChunk
 import net.minestom.server.instance.generator.Generator
 import net.minestom.server.utils.NamespaceID
 import net.minestom.server.world.DimensionType
@@ -19,6 +20,7 @@ class CustomGeneratorInstanceModule(
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         instance = MinecraftServer.getInstanceManager().createInstanceContainer(dimensionType)
         instance.setGenerator(generator)
+        instance.setChunkSupplier(::LightingChunk)
     }
 
     override fun ownsInstance(instance: Instance): Boolean {
