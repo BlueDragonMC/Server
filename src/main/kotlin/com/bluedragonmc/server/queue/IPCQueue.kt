@@ -96,5 +96,4 @@ object IPCQueue : Queue() {
 
         game.addPlayer(player)
     }
-
 }

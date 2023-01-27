@@ -35,6 +35,7 @@ import net.minestom.server.event.trait.PlayerEvent
 import net.minestom.server.instance.Instance
 import net.minestom.server.tag.Tag
 import net.minestom.server.timer.ExecutionType
+import net.minestom.server.utils.async.AsyncUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.Duration
@@ -190,13 +191,12 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
     private val isJoinable
         get() = state.canPlayersJoin
 
-    fun addPlayer(player: Player, sendPlayer: Boolean = true) {
+    fun addPlayer(player: Player, sendPlayer: Boolean = true): CompletableFuture<Instance> {
         findGame(player)?.players?.remove(player)
         players.add(player)
         if (sendPlayer && (player.instance == null || !ownsInstance(player.instance!!))) {
             try {
-                val newInstance = sendPlayerToInstance(player).join()
-                logger.info("Sent player ${player.username} to instance $id/${newInstance.uniqueId}.")
+                return sendPlayerToInstance(player)
             } catch (e: Throwable) {
                 e.printStackTrace()
                 player.sendMessage(
@@ -211,6 +211,7 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
                 })
             }
         }
+        return AsyncUtils.empty()
     }
 
     open fun sendPlayerToInstance(player: Player): CompletableFuture<Instance> {
@@ -354,7 +355,9 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
                                 if (duration >= CLEANUP_MIN_INACTIVE_TIME) {
                                     // Instances inactive for more than the minimum inactive time should be removed.
                                     logger.info("Removing inactive instance ${instance.uniqueId}")
-                                    InstanceUtils.forceUnregisterInstance(instance)
+                                    InstanceUtils.forceUnregisterInstance(instance).thenAccept {
+                                        logger.info("Instance ${instance.uniqueId} was force-removed!")
+                                    }
                                 }
                             }
                         }
