@@ -195,7 +195,8 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
         players.add(player)
         if (sendPlayer && (player.instance == null || !ownsInstance(player.instance!!))) {
             try {
-                sendPlayerToInstance(player)
+                val newInstance = sendPlayerToInstance(player).join()
+                logger.info("Sent player ${player.username} to instance $id/${newInstance.uniqueId}.")
             } catch (e: Throwable) {
                 e.printStackTrace()
                 player.sendMessage(

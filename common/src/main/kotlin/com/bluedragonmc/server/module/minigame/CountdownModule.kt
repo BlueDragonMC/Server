@@ -111,6 +111,7 @@ class CountdownModule(
     private fun createCountdownTask(parent: Game): Timer {
         if (!allowMoveDuringCountdown) parent.players.filter { it.isActive }.forEach { it.teleport(it.respawnPoint) }
         secondsLeft = countdownSeconds
+        countdown?.cancel()
         countdownRunning = true
         return fixedRateTimer("countdown", initialDelay = 1000, period = 1000) {
             val seconds = secondsLeft ?: run {

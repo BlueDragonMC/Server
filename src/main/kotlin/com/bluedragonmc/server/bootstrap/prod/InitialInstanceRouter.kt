@@ -82,6 +82,7 @@ object InitialInstanceRouter : Bootstrap(EnvType.PRODUCTION) {
         val game = if (!destination.isNullOrBlank()) {
             Game.findGame(destination)
         } else {
+            logger.warn("Invalid destination ('$destination') supplied for player ${event.player.username}, sending to Lobby.")
             // If no destination was found, send the player to a lobby.
             Game.games.find { it.name.lowercase() == "lobby" }
         }
@@ -101,18 +102,16 @@ object InitialInstanceRouter : Bootstrap(EnvType.PRODUCTION) {
                 game.getModule<SpawnpointModule>().spawnpointProvider.getSpawnpoint(event.player)
         }
 
-        MinecraftServer.getSchedulerManager().scheduleNextTick {
-            event.player.sendMessage(
-                Component.translatable(
-                    "global.instance.placing",
-                    NamedTextColor.GRAY,
-                    Component.text(game.id + "/" + instance.uniqueId.toString())
-                )
+        event.player.sendMessage(
+            Component.translatable(
+                "global.instance.placing",
+                NamedTextColor.GRAY,
+                Component.text(game.id + "/" + instance.uniqueId.toString())
             )
-            game.addPlayer(event.player, sendPlayer = false)
-            Messaging.IO.launch {
-                Messaging.outgoing.playerTransfer(event.player, game.id)
-            }
+        )
+        game.addPlayer(event.player, sendPlayer = false)
+        Messaging.IO.launch {
+            Messaging.outgoing.playerTransfer(event.player, game.id)
         }
     }
 }

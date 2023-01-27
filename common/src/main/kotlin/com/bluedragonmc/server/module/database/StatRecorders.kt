@@ -3,6 +3,7 @@ package com.bluedragonmc.server.module.database
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.PlayerKillPlayerEvent
 import com.bluedragonmc.server.module.minigame.WinModule
+import com.bluedragonmc.server.utils.GameState
 import net.minestom.server.event.player.PlayerDeathEvent
 
 object StatRecorders {
@@ -18,7 +19,9 @@ object StatRecorders {
      * Increments a statistic when a player dies by any cause.
      */
     val PLAYER_DEATHS_ALL = StatisticsModule.EventStatisticRecorder(PlayerDeathEvent::class.java) { game, event ->
-        incrementStatistic(event.player, getStatPrefix(game) + "_deaths")
+        if (game.state == GameState.INGAME) {
+            incrementStatistic(event.player, getStatPrefix(game) + "_deaths")
+        }
     }
 
     /**
