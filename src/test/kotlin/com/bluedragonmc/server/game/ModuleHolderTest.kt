@@ -11,6 +11,7 @@ import io.mockk.verifyOrder
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import org.junit.jupiter.api.*
+import java.util.function.Predicate
 import kotlin.test.assertContains
 import kotlin.test.assertContentEquals
 import kotlin.test.assertFalse
@@ -21,7 +22,7 @@ class ModuleHolderTest {
     private lateinit var instance: ModuleHolder
 
     private class SimpleModuleHolder : ModuleHolder() {
-        override fun <T : GameModule> register(module: T) {}
+        override fun <T : GameModule> register(module: T, filter: Predicate<Event>) {}
     }
 
     private open class GameModuleStub : GameModule() {
@@ -56,7 +57,7 @@ class ModuleHolderTest {
         instance.use(module)
         assertContains(instance.modules, module)
         verify {
-            instance.register(module)
+            instance.register(module, any())
         }
     }
 
@@ -68,14 +69,14 @@ class ModuleHolderTest {
         instance.use(dependent)
         assertTrue(instance.modules.isEmpty())
         verify(inverse = true) {
-            instance.register(dependent) // Make sure the dependent module was not registered too early
+            instance.register(dependent, any()) // Make sure the dependent module was not registered too early
         }
         instance.use(module)
         assertContentEquals(instance.modules, listOf(module, dependent))
         verifyOrder {
             // Make sure the two modules were registered, and in the correct order
-            instance.register(module)
-            instance.register(dependent)
+            instance.register(module, any())
+            instance.register(dependent, any())
         }
     }
 
@@ -107,9 +108,9 @@ class ModuleHolderTest {
 
         verifyOrder {
             // Make sure all modules were registered after their dependencies
-            instance.register(first)
-            instance.register(second)
-            instance.register(third)
+            instance.register(first, any())
+            instance.register(second, any())
+            instance.register(third, any())
         }
     }
 
@@ -126,9 +127,9 @@ class ModuleHolderTest {
 
         // Make sure they were initialized in the correct order
         verifyOrder {
-            instance.register(module)
-            instance.register(dependent1)
-            instance.register(dependent2)
+            instance.register(module, any())
+            instance.register(dependent1, any())
+            instance.register(dependent2, any())
         }
     }
 
@@ -147,10 +148,10 @@ class ModuleHolderTest {
 
         // Ensure multiDependency was registered last, after BOTH of its dependencies have been initialized
         verifyOrder {
-            instance.register(root)
-            instance.register(dependent1)
-            instance.register(dependent2)
-            instance.register(multiDependency)
+            instance.register(root, any())
+            instance.register(dependent1, any())
+            instance.register(dependent2, any())
+            instance.register(multiDependency, any())
         }
     }
 
