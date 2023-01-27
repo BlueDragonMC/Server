@@ -10,6 +10,7 @@ import com.bluedragonmc.server.module.GlobalCosmeticModule
 import com.bluedragonmc.server.module.database.AwardsModule
 import com.bluedragonmc.server.utils.CircularList
 import com.bluedragonmc.server.utils.FireworkUtils
+import com.bluedragonmc.server.utils.GameState
 import com.bluedragonmc.server.utils.surroundWithSeparators
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -36,7 +37,7 @@ class WinModule(
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         this.parent = parent
         eventNode.addListener(SpectatorModule.StartSpectatingEvent::class.java) {
-            if (winCondition == WinCondition.MANUAL) return@addListener
+            if (winCondition == WinCondition.MANUAL || parent.state != GameState.INGAME) return@addListener
             val spectatorModule =
                 parent.getModule<SpectatorModule>() // This module is required for all the win conditions
             if (winCondition == WinCondition.LAST_TEAM_ALIVE) {
