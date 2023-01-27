@@ -17,9 +17,6 @@ import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.player.AsyncPlayerPreLoginEvent
 import net.minestom.server.event.player.PlayerLoginEvent
-import net.minestom.server.network.packet.client.login.LoginStartPacket
-import net.minestom.server.network.player.PlayerConnection
-import net.minestom.server.network.player.PlayerSocketConnection
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
@@ -34,20 +31,12 @@ object InitialInstanceRouter : Bootstrap(EnvType.PRODUCTION) {
         Component.text("Failed to load your player data!", NamedTextColor.RED)
 
     override fun hook(eventNode: EventNode<Event>) {
-        MinecraftServer.getPacketListenerManager()
-            .setListener(LoginStartPacket::class.java, ::handleLoginStart)
         MinecraftServer.getGlobalEventHandler()
             .addListener(PlayerLoginEvent::class.java, ::handlePlayerLogin)
         MinecraftServer.getGlobalEventHandler()
             .addListener(AsyncPlayerPreLoginEvent::class.java) { event ->
                 loadData(event.player as CustomPlayer)
             }
-    }
-
-    private fun handleLoginStart(packet: LoginStartPacket, connection: PlayerConnection) {
-        if (connection !is PlayerSocketConnection) return
-        logger.info("Player login start: ${packet.username}")
-        packet.process(connection)
     }
 
     private fun loadData(player: Player) {

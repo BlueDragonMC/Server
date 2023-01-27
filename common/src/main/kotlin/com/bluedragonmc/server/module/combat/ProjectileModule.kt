@@ -25,6 +25,7 @@ import net.minestom.server.event.player.PlayerUseItemOnBlockEvent
 import net.minestom.server.instance.EntityTracker
 import net.minestom.server.instance.Explosion
 import net.minestom.server.instance.Instance
+import net.minestom.server.instance.block.BlockFace
 import net.minestom.server.inventory.TransactionOption
 import net.minestom.server.item.Enchantment
 import net.minestom.server.item.ItemStack
@@ -284,7 +285,7 @@ class ProjectileModule : GameModule() {
                 // (seeing if a PlayerBlockBreakEvent would be cancelled)
                 val player = projectile.shooter as? Player ?: return@filter false
                 val block = instance.getBlock(pos)
-                val event = ProjectileBreakBlockEvent(parent, player, block, pos)
+                val event = ProjectileBreakBlockEvent(parent, player, block, pos, BlockFace.TOP) // todo calculate block face?
                 parent.callEvent(event)
 
                 if (dropItems && !event.isCancelled) {
