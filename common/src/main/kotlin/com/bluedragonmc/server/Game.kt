@@ -30,6 +30,7 @@ import net.minestom.server.event.EventListener
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.instance.RemoveEntityFromInstanceEvent
 import net.minestom.server.event.player.PlayerSpawnEvent
+import net.minestom.server.event.server.ServerTickMonitorEvent
 import net.minestom.server.event.trait.InstanceEvent
 import net.minestom.server.event.trait.PlayerEvent
 import net.minestom.server.instance.Instance
@@ -42,6 +43,7 @@ import java.time.Duration
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import java.util.function.Consumer
+import java.util.function.Predicate
 import kotlin.concurrent.timer
 import kotlin.random.Random
 import kotlin.reflect.jvm.jvmName
@@ -93,6 +95,7 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
             is GameEvent -> event.game === this
             is PlayerSpawnEvent -> ownsInstance(event.spawnInstance) // Workaround for PlayerSpawnEvent not being an InstanceEvent
             is PlayerEvent -> event.player.isActive && ownsInstance(event.player.instance ?: return@event false)
+            is ServerTickMonitorEvent -> true
             else -> false
         }
     }
@@ -101,9 +104,9 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
         return getModuleOrNull<InstanceModule>()?.ownsInstance(instance) ?: false
     }
 
-    override fun <T : GameModule> register(module: T) {
+    override fun <T : GameModule> register(module: T, filter: Predicate<Event>) {
         // Create an event node for the module.
-        val eventNode = createEventNode(module)
+        val eventNode = createEventNode(module, filter)
 
         module.eventNode = eventNode
         module.initialize(this, eventNode)
@@ -123,8 +126,8 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
         }
     }
 
-    private fun createEventNode(module: GameModule): EventNode<Event> {
-        val child = EventNode.all(module::class.simpleName.orEmpty())
+    private fun createEventNode(module: GameModule, filter: Predicate<Event>): EventNode<Event> {
+        val child = EventNode.event(module::class.simpleName.orEmpty(), EventFilter.ALL, filter)
         child.priority = module.eventPriority
         eventNode.addChild(child)
         return child

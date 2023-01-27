@@ -2,7 +2,9 @@ package com.bluedragonmc.server
 
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.utils.*
+import net.minestom.server.event.Event
 import org.slf4j.LoggerFactory
+import java.util.function.Predicate
 import kotlin.reflect.KClass
 import kotlin.reflect.jvm.jvmName
 
@@ -68,7 +70,7 @@ abstract class ModuleHolder {
      * The module may or not be registered immediately, depending
      * on if its dependencies have been filled.
      */
-    fun <T : GameModule> use(module: T): T {
+    fun <T : GameModule> use(module: T, filter: Predicate<Event> = Predicate { true }): T {
 
         logger.debug("Attempting to register module $module")
         // Ensure this module has not been registered already
@@ -86,7 +88,7 @@ abstract class ModuleHolder {
         // If not all the module's dependencies were found, delay the loading of
         // the module until after all of its dependencies have been registered.
         if (canAddModule(module)) {
-            register(module)
+            register(module, filter)
             modules.add(module)
             solveDependencies(module)
         } else {
@@ -105,7 +107,7 @@ abstract class ModuleHolder {
         checkUnmetDependencies()
     }
 
-    abstract fun <T : GameModule> register(module: T)
+    abstract fun <T : GameModule> register(module: T, filter: Predicate<Event>)
 
     fun checkUnmetDependencies() {
         dependencyTree.dfs { node, _ ->
