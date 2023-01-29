@@ -6,14 +6,9 @@ import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.model.*
 import com.bluedragonmc.server.service.Database
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.EncodeDefault
-import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.*
 import net.minestom.server.coordinate.Pos
+import org.bson.*
 import java.time.Duration
 import java.time.Instant
 import java.util.*
@@ -104,7 +99,6 @@ enum class Severity {
     TRACE, DEBUG, INFO, WARN, ERROR, FATAL
 }
 
-@Serializable
 data class EventLog(
     val type: String,
     val severity: Severity,
@@ -113,16 +107,11 @@ data class EventLog(
         private val serverName = runBlocking { Environment.getServerName() }
     }
 
-    private val date: Long = System.currentTimeMillis()
-    private val node: String = serverName
-    private val properties = mutableMapOf<String, JsonElement>()
+    val date: Long = System.currentTimeMillis()
+    val node: String = serverName
+    val properties = mutableMapOf<String, @Contextual Any?>()
 
-    fun withProperty(name: String, value: JsonElement) = apply {
+    fun withProperty(name: String, value: Any?) = apply {
         properties[name] = value
     }
-
-    fun withProperty(name: String, value: String?) = withProperty(name, JsonPrimitive(value))
-
-    fun withProperty(name: String, value: Iterable<String?>) =
-        withProperty(name, JsonArray(value.map { JsonPrimitive(it) }))
 }

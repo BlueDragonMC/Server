@@ -20,6 +20,7 @@ import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.MinecraftServer
 import net.minestom.server.entity.Player
 import net.minestom.server.network.packet.server.login.LoginDisconnectPacket
+import org.bson.Document
 import org.litote.kmongo.coroutine.CoroutineClient
 import org.litote.kmongo.coroutine.CoroutineCollection
 import org.litote.kmongo.coroutine.CoroutineDatabase
@@ -68,7 +69,7 @@ internal class DatabaseConnectionImpl(connectionString: String) : DatabaseConnec
 
     private fun getPlayersCollection(): CoroutineCollection<PlayerDocument> = database.getCollection("players")
     private fun getMapsCollection(): CoroutineCollection<MapData> = database.getCollection("maps")
-    private fun getEventsCollection(): CoroutineCollection<EventLog> = database.getCollection("events")
+    private fun getEventsCollection(): CoroutineCollection<Document> = database.getCollection("events")
 
     override suspend fun getPlayerDocument(username: String): PlayerDocument? {
         MinecraftServer.getConnectionManager().findPlayer(username)?.let {
@@ -166,6 +167,11 @@ internal class DatabaseConnectionImpl(connectionString: String) : DatabaseConnec
     }
 
     override suspend fun logEvent(event: EventLog) {
-        getEventsCollection().insertOne(event)
+        val doc = Document()
+        doc["type"] = event.type
+        doc["node"] = event.node
+        doc["date"] = event.date
+        doc["properties"] = event.properties
+        getEventsCollection().insertOne(doc)
     }
 }

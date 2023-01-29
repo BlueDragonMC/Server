@@ -22,6 +22,14 @@ import java.net.InetAddress
 object IntegrationsInit : Bootstrap() {
     override fun hook(eventNode: EventNode<Event>) {
 
+        MinecraftServer.getSchedulerManager().buildShutdownTask {
+            runBlocking {
+                Database.connection.logEvent(
+                    EventLog("game_server_shutdown", Severity.DEBUG)
+                )
+            }
+        }
+
         Database.initialize(DatabaseConnectionImpl("mongodb://${Environment.mongoHostname}"))
         Permissions.initialize(PermissionManagerImpl())
 
@@ -44,14 +52,6 @@ object IntegrationsInit : Bootstrap() {
                         .withProperty("puffin_hostname", Environment.puffinHostname)
                         .withProperty("luckperms_hostname", Environment.current.luckPermsHostname)
                         .withProperty("game_classes", Environment.current.gameClasses)
-                )
-            }
-        }
-
-        MinecraftServer.getSchedulerManager().buildShutdownTask {
-            runBlocking {
-                Database.connection.logEvent(
-                    EventLog("game_server_shutdown", Severity.DEBUG)
                 )
             }
         }
