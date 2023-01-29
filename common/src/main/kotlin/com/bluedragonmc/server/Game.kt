@@ -265,15 +265,19 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
     }
 
     open fun isInactive(): Boolean {
-
+        // Games with players are always considered active
         if (players.isNotEmpty()) return false
-        if (System.currentTimeMillis() - creationTime <= 600_000 && !playerHasJoined) return false
+        // Games without players are always inactive after 4 hours
+        if (System.currentTimeMillis() - creationTime >= 1_000 * 60 * 60 * 4) return true
+        // Games without players are always active in the first 30 minutes after being created
+        if (System.currentTimeMillis() - creationTime <= 1_000 * 60 * 30 && !playerHasJoined) return false
 
         try {
             return runBlocking {
                 Messaging.outgoing.checkRemoveInstance(id)
             }
         } catch (e: Throwable) {
+            e.printStackTrace()
             return true
         }
     }

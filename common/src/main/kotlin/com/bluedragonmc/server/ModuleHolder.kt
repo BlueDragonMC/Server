@@ -54,12 +54,12 @@ abstract class ModuleHolder {
             if (node.value is EmptyModuleDependency && node.value!!.type.isInstance(module)) {
                 // This dependency has been solved
                 logger.debug("Dependency [${node.value!!.type}] of module ${node.parent.value} SOLVED with $module")
-                node.value = FilledModuleDependency(node.value!!.type, module)
+                node.value = FilledModuleDependency(node.value!!.type, module, null)
                 // If all dependencies have been filled, use this module
                 if (node.parent.value is FilledModuleDependency && canAddModule(module)) {
-                    val parentModule = (node.parent.value as FilledModuleDependency<*>).instance
-                    logger.debug("Using module because its dependencies have been solved: $parentModule")
-                    use(parentModule)
+                    val parentValue = (node.parent.value as FilledModuleDependency<*>)
+                    logger.debug("Using module because its dependencies have been solved: ${parentValue.instance}")
+                    use(parentValue.instance, parentValue.eventFilter!!)
                 }
             }
         }
@@ -82,7 +82,7 @@ abstract class ModuleHolder {
 
         // Create a node in the dependency tree for this module if it doesn't already exist
         if (dependencyTree.getChildren().none { it.value!!.type == module::class }) {
-            addNode(module)
+            addNode(module, filter)
         }
 
         // If not all the module's dependencies were found, delay the loading of
@@ -122,8 +122,8 @@ abstract class ModuleHolder {
      * the module's dependencies, and add it to the
      * dependency tree.
      */
-    private fun addNode(module: GameModule) {
-        val moduleDependencyNode = Node<ModuleDependency<*>>(FilledModuleDependency(module::class, module))
+    private fun addNode(module: GameModule, filter: Predicate<Event>) {
+        val moduleDependencyNode = Node<ModuleDependency<*>>(FilledModuleDependency(module::class, module, filter))
         // Add this module's dependencies as children in its branch of the tree
         moduleDependencyNode.addChildren(module.getDependencies().map { EmptyModuleDependency(it) })
         // Fill all dependencies which have already been registered.
@@ -136,7 +136,7 @@ abstract class ModuleHolder {
     private fun fillDependencies(node: Node<ModuleDependency<*>>) {
         node.getChildren().forEach { childNode ->
             modules.firstOrNull { module -> childNode.value?.type?.isInstance(module) == true }?.let { found ->
-                childNode.value = FilledModuleDependency(found::class, found)
+                childNode.value = FilledModuleDependency(found::class, found, null)
             }
         }
     }
