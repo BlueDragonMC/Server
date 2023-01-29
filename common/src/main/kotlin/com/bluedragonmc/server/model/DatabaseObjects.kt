@@ -2,12 +2,17 @@
 
 package com.bluedragonmc.server.model
 
+import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.model.*
 import com.bluedragonmc.server.service.Database
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
 import net.minestom.server.coordinate.Pos
 import java.time.Duration
 import java.time.Instant
@@ -27,7 +32,7 @@ data class PlayerDocument constructor(
     var achievements: List<Achievement> = emptyList(),
     var cosmetics: List<CosmeticEntry> = emptyList(),
     val firstJoinDate: Long = System.currentTimeMillis(),
-    var lastJoinDate: Long = System.currentTimeMillis()
+    var lastJoinDate: Long = System.currentTimeMillis(),
 ) {
 
     suspend fun <T> update(field: KMutableProperty<T>, value: T) {
@@ -66,11 +71,13 @@ data class Punishment(
         val expiration = Instant.ofEpochMilli(expiresAt.time)
         val now = Instant.now()
         val duration = Duration.between(now, expiration)
-        return String.format("%02dd %02dh %02dm %02ds",
+        return String.format(
+            "%02dd %02dh %02dm %02ds",
             duration.toDaysPart(),
             duration.toHoursPart(),
             duration.toMinutesPart(),
-            duration.toSecondsPart())
+            duration.toSecondsPart()
+        )
     }
 }
 
@@ -92,3 +99,30 @@ data class MapData(
      */
     val additionalLocations: List<List<@Serializable(with = PosSerializer::class) Pos>> = emptyList(),
 )
+
+enum class Severity {
+    TRACE, DEBUG, INFO, WARN, ERROR, FATAL
+}
+
+@Serializable
+data class EventLog(
+    val type: String,
+    val severity: Severity,
+) {
+    companion object {
+        private val serverName = runBlocking { Environment.getServerName() }
+    }
+
+    private val date: Long = System.currentTimeMillis()
+    private val node: String = serverName
+    private val properties = mutableMapOf<String, JsonElement>()
+
+    fun withProperty(name: String, value: JsonElement) = apply {
+        properties[name] = value
+    }
+
+    fun withProperty(name: String, value: String?) = withProperty(name, JsonPrimitive(value))
+
+    fun withProperty(name: String, value: Iterable<String?>) =
+        withProperty(name, JsonArray(value.map { JsonPrimitive(it) }))
+}

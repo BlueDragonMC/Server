@@ -5,9 +5,12 @@ import com.bluedragonmc.api.grpc.Queue
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.api.OutgoingRPCHandler
 import com.bluedragonmc.server.event.GameStateChangedEvent
+import com.bluedragonmc.server.model.EventLog
+import com.bluedragonmc.server.model.Severity
 import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.instance.InstanceModule
+import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.service.Messaging
 import com.bluedragonmc.server.utils.listen
 import com.bluedragonmc.server.utils.listenSuspend
@@ -66,7 +69,7 @@ class OutgoingRPCHandlerImpl(serverAddress: String) : OutgoingRPCHandler {
                 }
             }
 
-            eventNode.listen<PlayerSpawnEvent> {
+            eventNode.listen<PlayerSpawnEvent> { event ->
                 MinecraftServer.getSchedulerManager().scheduleNextTick {
                     Messaging.IO.launch {
                         Messaging.outgoing.updateGameState(parent.id, parent.rpcGameState)
@@ -74,17 +77,30 @@ class OutgoingRPCHandlerImpl(serverAddress: String) : OutgoingRPCHandler {
                 }
             }
 
-            eventNode.listen<PlayerDisconnectEvent> {
+            eventNode.listen<PlayerDisconnectEvent> { event ->
                 MinecraftServer.getSchedulerManager().scheduleNextTick {
                     Messaging.IO.launch {
                         Messaging.outgoing.updateGameState(parent.id, parent.rpcGameState)
                     }
+                }
+                Database.IO.launch {
+                    Database.connection.logEvent(
+                        EventLog("player_logout", Severity.DEBUG)
+                            .withProperty("player_uuid", event.player.uuid.toString())
+                    )
                 }
             }
         }
 
         override fun deinitialize(): Unit = runBlocking {
             Messaging.outgoing.notifyInstanceRemoved(parent.id)
+
+            Database.IO.launch {
+                Database.connection.logEvent(
+                    EventLog("game_removed", Severity.DEBUG)
+                        .withProperty("game_id", parent.id)
+                )
+            }
         }
     }
 

@@ -4,6 +4,7 @@ import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.api.DatabaseConnection
 import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.event.DataLoadedEvent
+import com.bluedragonmc.server.model.EventLog
 import com.bluedragonmc.server.model.MapData
 import com.bluedragonmc.server.model.PlayerDocument
 import com.bluedragonmc.server.model.Punishment
@@ -67,6 +68,7 @@ internal class DatabaseConnectionImpl(connectionString: String) : DatabaseConnec
 
     private fun getPlayersCollection(): CoroutineCollection<PlayerDocument> = database.getCollection("players")
     private fun getMapsCollection(): CoroutineCollection<MapData> = database.getCollection("maps")
+    private fun getEventsCollection(): CoroutineCollection<EventLog> = database.getCollection("events")
 
     override suspend fun getPlayerDocument(username: String): PlayerDocument? {
         MinecraftServer.getConnectionManager().findPlayer(username)?.let {
@@ -161,5 +163,9 @@ internal class DatabaseConnectionImpl(connectionString: String) : DatabaseConnec
 
     override suspend fun <T> updatePlayer(playerUuid: String, field: KMutableProperty<T>, value: T) {
         getPlayersCollection().updateOneById(playerUuid, setValue(field, value))
+    }
+
+    override suspend fun logEvent(event: EventLog) {
+        getEventsCollection().insertOne(event)
     }
 }

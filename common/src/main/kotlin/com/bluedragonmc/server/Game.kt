@@ -9,7 +9,9 @@ import com.bluedragonmc.server.event.GameEvent
 import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.event.GameStateChangedEvent
 import com.bluedragonmc.server.event.PlayerLeaveGameEvent
+import com.bluedragonmc.server.model.EventLog
 import com.bluedragonmc.server.model.MapData
+import com.bluedragonmc.server.model.Severity
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.instance.InstanceModule
 import com.bluedragonmc.server.module.minigame.SpawnpointModule
@@ -18,6 +20,7 @@ import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.service.Messaging
 import com.bluedragonmc.server.utils.GameState
 import com.bluedragonmc.server.utils.InstanceUtils
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -122,6 +125,16 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
             if (event.entity !is Player) return@handleEvent
             callCancellable(PlayerLeaveGameEvent(this, event.entity as Player)) {
                 players.remove(event.entity)
+            }
+        }
+        onGameStart {
+            Database.IO.launch {
+                Database.connection.logEvent(
+                    EventLog("game_started", Severity.DEBUG)
+                        .withProperty("game_id", id)
+                        .withProperty("players", players.map { it.uuid.toString() })
+                        .withProperty("modules", modules.map { it.toString() })
+                )
             }
         }
     }
@@ -303,7 +316,8 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
         // Ensure the game was registered with `ready()` method
         MinecraftServer.getSchedulerManager().buildTask {
             if (!games.contains(this) && !playerHasJoined) {
-                logger.error("Game was not registered after 25 seconds!")
+                MinecraftServer.getExceptionManager()
+                    .handleException(IllegalStateException("Game was not registered after 25 seconds! (id: $id)"))
                 endGame(false)
                 games.remove(this)
             }
@@ -311,6 +325,16 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
 
         // Allow the game to start receiving events
         MinecraftServer.getGlobalEventHandler().addChild(eventNode)
+
+        Database.IO.launch {
+            Database.connection.logEvent(
+                EventLog("game_created", Severity.DEBUG)
+                    .withProperty("game_id", id)
+                    .withProperty("game_type", name)
+                    .withProperty("map_name", mapName)
+                    .withProperty("mode", mode)
+            )
+        }
     }
 
     override fun toString(): String {

@@ -19,6 +19,7 @@ dependencies {
     implementation(libs.minimessage)
     implementation(libs.bundles.configurate)
     implementation(libs.bundles.messaging)
+    implementation(libs.serialization.json)
 }
 
 publishing {

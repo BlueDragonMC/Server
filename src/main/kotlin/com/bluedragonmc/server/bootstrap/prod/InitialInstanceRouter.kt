@@ -3,6 +3,8 @@ package com.bluedragonmc.server.bootstrap.prod
 import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.bootstrap.Bootstrap
+import com.bluedragonmc.server.model.EventLog
+import com.bluedragonmc.server.model.Severity
 import com.bluedragonmc.server.module.instance.InstanceModule
 import com.bluedragonmc.server.module.minigame.SpawnpointModule
 import com.bluedragonmc.server.service.Database
@@ -112,6 +114,14 @@ object InitialInstanceRouter : Bootstrap(EnvType.PRODUCTION) {
         game.addPlayer(event.player, sendPlayer = false)
         Messaging.IO.launch {
             Messaging.outgoing.playerTransfer(event.player, game.id)
+        }
+        Database.IO.launch {
+            Database.connection.logEvent(
+                EventLog("player_login", Severity.DEBUG)
+                    .withProperty("player_uuid", event.player.uuid.toString())
+                    .withProperty("initial_game_id", game.id)
+                    .withProperty("given_destination", destination)
+            )
         }
     }
 }

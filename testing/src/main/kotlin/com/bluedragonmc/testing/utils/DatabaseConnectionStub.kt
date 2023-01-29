@@ -2,6 +2,7 @@ package com.bluedragonmc.testing.utils
 
 import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.api.DatabaseConnection
+import com.bluedragonmc.server.model.EventLog
 import com.bluedragonmc.server.model.MapData
 import com.bluedragonmc.server.model.PlayerDocument
 import net.minestom.server.entity.Player
@@ -39,6 +40,10 @@ class DatabaseConnectionStub : DatabaseConnection {
     }
 
     override suspend fun <T> updatePlayer(playerUuid: String, field: KMutableProperty<T>, value: T) {
+
+    }
+
+    override suspend fun logEvent(event: EventLog) {
 
     }
 

@@ -6,6 +6,8 @@ import com.bluedragonmc.api.grpc.PlayerHolderOuterClass.SendPlayerRequest
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.api.Queue
 import com.bluedragonmc.server.lobby
+import com.bluedragonmc.server.model.EventLog
+import com.bluedragonmc.server.model.Severity
 import com.bluedragonmc.server.module.instance.InstanceModule
 import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.service.Messaging
@@ -35,6 +37,13 @@ object IPCQueue : Queue() {
                 Messaging.outgoing.removeFromQueue(player)
             } else {
                 Messaging.outgoing.addToQueue(player, gameType)
+                Database.connection.logEvent(
+                    EventLog("player_queued", Severity.DEBUG)
+                        .withProperty("player_uuid", player.uuid.toString())
+                        .withProperty("game_type", gameType.name)
+                        .withProperty("map_name", gameType.mapName)
+                        .withProperty("mode", gameType.mode)
+                )
             }
         }
     }
@@ -93,5 +102,14 @@ object IPCQueue : Queue() {
         logger.info("Sending player ${player.username} to game '$gameId' and instance '${instance.uniqueId}'. (current instance: ${player.instance?.uniqueId})")
 
         game.addPlayer(player)
+
+        Database.IO.launch {
+            Database.connection.logEvent(
+                EventLog("player_sent", Severity.DEBUG)
+                    .withProperty("player_uuid", player.uuid.toString())
+                    .withProperty("instance_uuid", instance.uniqueId.toString())
+                    .withProperty("game_id", gameId)
+            )
+        }
     }
 }
