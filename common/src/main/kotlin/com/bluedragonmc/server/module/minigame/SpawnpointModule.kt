@@ -22,7 +22,7 @@ class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule(
             error("Team module not present! TeamDatabaseSpawnpointProvider cannot determine players' teams.")
         }
         spawnpointProvider.initialize(parent)
-        logger.info("Initialized spawnpoint provider: ${spawnpointProvider::class.simpleName}")
+        logger.debug("Initialized spawnpoint provider: ${spawnpointProvider::class.simpleName}")
         eventNode.addListener(PlayerSpawnEvent::class.java) { event ->
             event.player.respawnPoint = spawnpointProvider.getSpawnpoint(event.player)
         }

@@ -310,15 +310,15 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
         val games = mutableListOf<Game>()
 
         /**
-         * Instances will be cleaned up every 5 seconds.
+         * Instances will be cleaned up every 10 seconds.
          */
-        private const val INSTANCE_CLEANUP_PERIOD = 5_000L
+        private const val INSTANCE_CLEANUP_PERIOD = 10_000L
 
         /**
-         * Instances must be inactive for at least 10 seconds
+         * Instances must be inactive for at least 2 minutes
          * to be cleaned up.
          */
-        private const val CLEANUP_MIN_INACTIVE_TIME = 10_000L
+        private const val CLEANUP_MIN_INACTIVE_TIME = 120_000L
 
         fun findGame(player: Player): Game? =
             games.find { player in it.players || it.ownsInstance(player.instance ?: return@find false) }
@@ -358,9 +358,7 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
                                 if (duration >= CLEANUP_MIN_INACTIVE_TIME) {
                                     // Instances inactive for more than the minimum inactive time should be removed.
                                     logger.info("Removing inactive instance ${instance.uniqueId}")
-                                    InstanceUtils.forceUnregisterInstance(instance).thenAccept {
-                                        logger.info("Instance ${instance.uniqueId} was force-removed!")
-                                    }
+                                    InstanceUtils.forceUnregisterInstance(instance)
                                 }
                             }
                         }
