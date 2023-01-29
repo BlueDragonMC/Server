@@ -141,6 +141,15 @@ class OutgoingRPCHandlerImpl(serverAddress: String) : OutgoingRPCHandler {
         )
     }
 
+    override suspend fun checkRemoveInstance(gameId: String): Boolean {
+        return instanceSvcStub.checkRemoveInstance(
+            ServerTracking.InstanceRemovedRequest.newBuilder()
+                .setServerName(serverName)
+                .setInstanceUuid(gameId)
+                .build()
+        ).shouldRemove
+    }
+
     override suspend fun recordInstanceChange(player: Player, newGame: String) {
         playerTrackerStub.playerInstanceChange(
             PlayerTrackerOuterClass.PlayerInstanceChangeRequest.newBuilder()

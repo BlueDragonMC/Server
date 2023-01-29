@@ -40,6 +40,10 @@ class OutgoingRPCHandlerStub : OutgoingRPCHandler {
 
     }
 
+    override suspend fun checkRemoveInstance(gameId: String): Boolean {
+        return true
+    }
+
     override suspend fun recordInstanceChange(player: Player, newGame: String) {
 
     }

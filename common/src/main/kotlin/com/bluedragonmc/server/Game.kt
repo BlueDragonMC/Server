@@ -265,7 +265,17 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
     }
 
     open fun isInactive(): Boolean {
-        return players.isEmpty() && (playerHasJoined || System.currentTimeMillis() - creationTime > 600_000)
+
+        if (players.isNotEmpty()) return false
+        if (System.currentTimeMillis() - creationTime <= 600_000 && !playerHasJoined) return false
+
+        try {
+            return runBlocking {
+                Messaging.outgoing.checkRemoveInstance(id)
+            }
+        } catch (e: Throwable) {
+            return true
+        }
     }
 
     /**
