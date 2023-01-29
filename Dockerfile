@@ -10,18 +10,19 @@ COPY . /work
 WORKDIR /work
 # Run gradle in the /work directory
 RUN --mount=target=/home/gradle/.gradle,type=cache \
-    /usr/bin/gradle --console=plain --info --stacktrace --no-daemon --build-cache -x test build
+    /usr/bin/gradle --console=plain --info --stacktrace --no-daemon --build-cache build
 
 # Run the built JAR and expose port 25565
-FROM eclipse-temurin:17
+FROM eclipse-temurin:17-jre-alpine
 EXPOSE 25565
 EXPOSE 50051
 WORKDIR /server
 
-# Copy the built JAR from the previous step
-COPY --from=build /work/build/libs/Server-*-all.jar /server/server.jar
 # Copy config files and assets
 COPY favicon_64.png /server/favicon_64.png
+
+# Copy the built JAR from the previous step
+COPY --from=build /work/build/libs/Server-*-all.jar /server/server.jar
 
 # Run the server
 CMD ["java", "-jar", "/server/server.jar"]
