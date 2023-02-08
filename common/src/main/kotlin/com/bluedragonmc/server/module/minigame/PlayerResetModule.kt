@@ -8,6 +8,7 @@ import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.player.PlayerSpawnEvent
+import org.jglrxavpok.hephaistos.nbt.NBTCompound
 import java.time.Duration
 
 /**
@@ -21,6 +22,7 @@ import java.time.Duration
  * - Stop fire damage
  * - Disable glowing
  * - Reset XP
+ * - Clear all tags
  */
 class PlayerResetModule(val defaultGameMode: GameMode? = null) : GameModule() {
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
@@ -45,6 +47,7 @@ class PlayerResetModule(val defaultGameMode: GameMode? = null) : GameModule() {
         player.isAllowFlying = false
         player.level = 0
         player.exp = 0F
+        player.tagHandler().updateContent(NBTCompound.EMPTY)
         player.stopSpectating()
     }
 }
