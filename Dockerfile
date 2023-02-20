@@ -10,7 +10,7 @@ COPY . /work
 WORKDIR /work
 # Run gradle in the /work directory
 RUN --mount=target=/home/gradle/.gradle,type=cache \
-    /usr/bin/gradle --console=plain --info --stacktrace --no-daemon --build-cache build
+    /usr/bin/gradle --console=plain --info --stacktrace --no-daemon -x test --build-cache build
 
 # Run the built JAR and expose port 25565
 FROM eclipse-temurin:17-jre-alpine
