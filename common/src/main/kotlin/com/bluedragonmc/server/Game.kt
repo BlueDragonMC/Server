@@ -45,6 +45,7 @@ import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.*
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.CopyOnWriteArrayList
 import java.util.function.Consumer
 import java.util.function.Predicate
 import kotlin.concurrent.timer
@@ -70,7 +71,7 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
             joinable = state.canPlayersJoin
         }
 
-    internal val players = mutableListOf<Player>()
+    internal val players: MutableList<Player> = CopyOnWriteArrayList()
 
     var mapData: MapData? = null
 
@@ -345,18 +346,18 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
 
     companion object {
         private val logger = LoggerFactory.getLogger(this::class.java)
-        val games = mutableListOf<Game>()
+        val games: MutableList<Game> = CopyOnWriteArrayList()
 
         /**
-         * Instances will be cleaned up every 10 seconds.
+         * Instances will be cleaned up every 10 seconds (by default).
          */
-        private const val INSTANCE_CLEANUP_PERIOD = 10_000L
+        private val INSTANCE_CLEANUP_PERIOD = System.getenv("SERVER_INSTANCE_CLEANUP_PERIOD").toLongOrNull() ?: 10_000L
 
         /**
          * Instances must be inactive for at least 2 minutes
-         * to be cleaned up.
+         * to be cleaned up (by default).
          */
-        private const val CLEANUP_MIN_INACTIVE_TIME = 120_000L
+        private val CLEANUP_MIN_INACTIVE_TIME = System.getenv("SERVER_INSTANCE_MIN_INACTIVE_TIME").toLongOrNull() ?: 120_000L
 
         fun findGame(player: Player): Game? =
             games.find { player in it.players || it.ownsInstance(player.instance ?: return@find false) }

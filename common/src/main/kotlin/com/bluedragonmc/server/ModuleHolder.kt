@@ -4,6 +4,7 @@ import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.utils.*
 import net.minestom.server.event.Event
 import org.slf4j.LoggerFactory
+import java.util.concurrent.CopyOnWriteArrayList
 import java.util.function.Predicate
 import kotlin.reflect.KClass
 import kotlin.reflect.jvm.jvmName
@@ -20,7 +21,7 @@ abstract class ModuleHolder {
     /**
      * A list of modules that have been loaded and subscribed to an event node.
      */
-    val modules = mutableListOf<GameModule>()
+    val modules: MutableList<GameModule> = CopyOnWriteArrayList()
 
     private fun <T : GameModule> hasModule(type: KClass<T>): Boolean = modules.any { type.isInstance(it) }
     inline fun <reified T : GameModule> hasModule(): Boolean = modules.any { it is T }
