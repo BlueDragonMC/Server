@@ -351,13 +351,13 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
         /**
          * Instances will be cleaned up every 10 seconds (by default).
          */
-        private val INSTANCE_CLEANUP_PERIOD = System.getenv("SERVER_INSTANCE_CLEANUP_PERIOD").toLongOrNull() ?: 10_000L
+        private val INSTANCE_CLEANUP_PERIOD = System.getenv("SERVER_INSTANCE_CLEANUP_PERIOD")?.toLongOrNull() ?: 10_000L
 
         /**
          * Instances must be inactive for at least 2 minutes
          * to be cleaned up (by default).
          */
-        private val CLEANUP_MIN_INACTIVE_TIME = System.getenv("SERVER_INSTANCE_MIN_INACTIVE_TIME").toLongOrNull() ?: 120_000L
+        private val CLEANUP_MIN_INACTIVE_TIME = System.getenv("SERVER_INSTANCE_MIN_INACTIVE_TIME")?.toLongOrNull() ?: 120_000L
 
         fun findGame(player: Player): Game? =
             games.find { player in it.players || it.ownsInstance(player.instance ?: return@find false) }
