@@ -26,7 +26,7 @@ import net.minestom.server.item.Material
  * When the module is unloaded, players keep their kits.
  */
 @DependsOn(GuiModule::class)
-class KitsModule(
+open class KitsModule(
     val showMenu: Boolean = false,
     val giveKitsOnStart: Boolean = true,
     val giveKitsOnSelect: Boolean = false,
@@ -75,7 +75,7 @@ class KitsModule(
     /**
      * Gives the player all the items in a specific kit.
      */
-    fun giveKit(player: Player, kit: Kit) {
+    open fun giveKit(player: Player, kit: Kit) {
         player.inventory.clear()
         for (item in kit.items) {
             player.inventory.setItemStack(item.key, item.value)
