@@ -117,6 +117,7 @@ class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule(
 
         private lateinit var spawnpoints: CircularList<Pos>
         private val cachedSpawnpoints = hashMapOf<TeamModule.Team, Pos>()
+        private val noTeamSpawnpoints = hashMapOf<Player, Pos>()
 
         /**
          * Counter for the index in `spawnpoints`, incremented every time a non-cached spawnpoint is requested for a team.
@@ -138,11 +139,11 @@ class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule(
 
         private fun teamOf(player: Player) = teamModule.getTeam(player)
         override fun getSpawnpoint(player: Player) =
-            teamOf(player)?.let { cachedSpawnpoints[it] ?: findSpawnpoint(it) } ?: spawnpoints[m++]
+            teamOf(player)?.let { team ->
+                cachedSpawnpoints.getOrPut(team) { spawnpoints[n++] }
+            } ?: noTeamSpawnpoints.getOrPut(player) { spawnpoints[m++] }
 
         override fun getAllSpawnpoints(): List<Pos> = spawnpoints.toList()
-
-        private fun findSpawnpoint(team: TeamModule.Team) = spawnpoints[n++].also { cachedSpawnpoints[team] = it }
 
     }
 }
