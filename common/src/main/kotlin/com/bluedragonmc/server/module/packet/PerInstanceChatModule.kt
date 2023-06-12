@@ -7,7 +7,7 @@ import net.minestom.server.event.EventNode
 import net.minestom.server.event.player.PlayerChatEvent
 import net.minestom.server.event.player.PlayerDeathEvent
 
-object PerInstanceChatModule : GameModule() {
+class PerInstanceChatModule : GameModule() {
 
     override val eventPriority = 99 // higher = runs last
 

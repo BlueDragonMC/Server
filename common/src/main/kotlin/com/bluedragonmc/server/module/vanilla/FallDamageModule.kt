@@ -16,10 +16,42 @@ import net.minestom.server.potion.PotionEffect
 import net.minestom.server.tag.Tag
 import kotlin.math.floor
 
-object FallDamageModule : GameModule() {
+class FallDamageModule : GameModule() {
 
-    private val FALL_START_TAG = Tag.Double("fall_start")
-    private val LAST_Y_TAG = Tag.Double("last_y")
+    companion object {
+        private val FALL_START_TAG = Tag.Double("fall_start")
+        private val LAST_Y_TAG = Tag.Double("last_y")
+
+        private fun getJumpBoostLevel(player: Player) =
+            player.activeEffects.filter { it.potion.effect == PotionEffect.JUMP_BOOST }
+                .sumOf { it.potion.amplifier.toInt() }
+
+        private fun getReducedDamage(player: Player, originalDamage: Double): Double {
+            val blockBelow: Block = player.instance!!.getBlock(getLandingPos(player))
+            val blockBelowReduction = when {
+                // Honey blocks and hay bales reduce fall damage by 20%
+                blockBelow.compare(Block.HAY_BLOCK) || blockBelow.compare(Block.HONEY_BLOCK) -> 0.2
+                // Beds reduce fall damage by 50%
+                blockBelow.compare(Block.RED_BED, Block.Comparator.ID) -> 0.5
+                // Sweet berry bushes and cobwebs negate all fall damage
+                blockBelow.compare(Block.SWEET_BERRY_BUSH) || blockBelow.compare(Block.COBWEB) || (blockBelow.compare(Block.SLIME_BLOCK) && !player.isSneaking) -> 1.0
+                else -> 0.0
+            }
+            // Feather falling reduces fall damage by 12% per level
+            val featherFallingLevel = player.boots.meta().enchantmentMap[Enchantment.FEATHER_FALLING] ?: 0
+            // Protection reduces damage by 4% per level
+            val protLevel = player.getArmor().sumOf { it.meta().enchantmentMap[Enchantment.PROTECTION]?.toInt() ?: 0 }
+            val protectionPercentage = ((0.04 * protLevel) + (0.12 * featherFallingLevel)).coerceAtMost(0.8)
+            return originalDamage * (1.0 - protectionPercentage) * (1.0 - blockBelowReduction)
+        }
+
+        private fun getLandingPos(player: Player): Pos {
+            val x = floor(player.position.x)
+            val y = floor(player.position.y - 0.2)
+            val z = floor(player.position.z)
+            return Pos(x, y, z)
+        }
+    }
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         eventNode.addListener(PlayerTickEvent::class.java) { event ->
@@ -67,35 +99,5 @@ object FallDamageModule : GameModule() {
 
             player.setTag(LAST_Y_TAG, player.position.y)
         }
-    }
-
-    private fun getJumpBoostLevel(player: Player) =
-        player.activeEffects.filter { it.potion.effect == PotionEffect.JUMP_BOOST }
-            .sumOf { it.potion.amplifier.toInt() }
-
-    private fun getReducedDamage(player: Player, originalDamage: Double): Double {
-        val blockBelow: Block = player.instance!!.getBlock(getLandingPos(player))
-        val blockBelowReduction = when {
-            // Honey blocks and hay bales reduce fall damage by 20%
-            blockBelow.compare(Block.HAY_BLOCK) || blockBelow.compare(Block.HONEY_BLOCK) -> 0.2
-            // Beds reduce fall damage by 50%
-            blockBelow.compare(Block.RED_BED, Block.Comparator.ID) -> 0.5
-            // Sweet berry bushes and cobwebs negate all fall damage
-            blockBelow.compare(Block.SWEET_BERRY_BUSH) || blockBelow.compare(Block.COBWEB) || (blockBelow.compare(Block.SLIME_BLOCK) && !player.isSneaking) -> 1.0
-            else -> 0.0
-        }
-        // Feather falling reduces fall damage by 12% per level
-        val featherFallingLevel = player.boots.meta().enchantmentMap[Enchantment.FEATHER_FALLING] ?: 0
-        // Protection reduces damage by 4% per level
-        val protLevel = player.getArmor().sumOf { it.meta().enchantmentMap[Enchantment.PROTECTION]?.toInt() ?: 0 }
-        val protectionPercentage = ((0.04 * protLevel) + (0.12 * featherFallingLevel)).coerceAtMost(0.8)
-        return originalDamage * (1.0 - protectionPercentage) * (1.0 - blockBelowReduction)
-    }
-
-    private fun getLandingPos(player: Player): Pos {
-        val x = floor(player.position.x)
-        val y = floor(player.position.y - 0.2)
-        val z = floor(player.position.z)
-        return Pos(x, y, z)
     }
 }
