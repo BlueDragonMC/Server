@@ -58,9 +58,9 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
 
             target.velocity = target.velocity.apply { x, y, z ->
                 Vec(
-                    x / 2.0 - (xKnockback / magnitude * horizontal) * extra,
+                    x / 2.0 - if (magnitude == 0.0) 0.0 else (xKnockback / magnitude * horizontal) * extra,
                     (y / 2.0 + vertical).coerceAtMost(verticalLimit),
-                    z / 2.0 - (zKnockback / magnitude * horizontal) * extra
+                    z / 2.0 - if (magnitude == 0.0) 0.0 else (zKnockback / magnitude * horizontal) * extra
                 )
             }
         }
