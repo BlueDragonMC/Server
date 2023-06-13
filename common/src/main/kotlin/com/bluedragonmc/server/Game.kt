@@ -117,7 +117,7 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
     }
 
     protected open fun useMandatoryModules() {
-        use(PerInstanceChatModule)
+        use(PerInstanceChatModule())
         Messaging.outgoing.onGameCreated(this)
         handleEvent<PlayerSpawnEvent> {
             playerHasJoined = true
