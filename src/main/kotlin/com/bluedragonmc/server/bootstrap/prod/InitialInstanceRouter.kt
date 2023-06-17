@@ -36,20 +36,12 @@ object InitialInstanceRouter : Bootstrap(EnvType.PRODUCTION) {
         Component.text("Failed to load your player data!", NamedTextColor.RED)
 
     override fun hook(eventNode: EventNode<Event>) {
-        MinecraftServer.getPacketListenerManager()
-            .setListener(LoginStartPacket::class.java, ::handleLoginStart)
         MinecraftServer.getGlobalEventHandler()
             .addListener(PlayerLoginEvent::class.java, ::handlePlayerLogin)
         MinecraftServer.getGlobalEventHandler()
             .addListener(AsyncPlayerPreLoginEvent::class.java) { event ->
                 loadData(event.player as CustomPlayer)
             }
-    }
-
-    private fun handleLoginStart(packet: LoginStartPacket, connection: PlayerConnection) {
-        if (connection !is PlayerSocketConnection) return
-        logger.info("Player login start: ${packet.username}")
-        packet.process(connection)
     }
 
     private fun loadData(player: Player) {

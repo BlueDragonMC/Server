@@ -5,11 +5,10 @@ import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.instance.AddEntityToInstanceEvent
 import net.minestom.server.event.instance.RemoveEntityFromInstanceEvent
-import net.minestom.server.network.packet.server.play.PlayerInfoPacket
-import net.minestom.server.network.packet.server.play.PlayerInfoPacket.AddPlayer
-import net.minestom.server.network.packet.server.play.PlayerInfoPacket.AddPlayer.Property
-import net.minestom.server.network.packet.server.play.PlayerInfoPacket.RemovePlayer
+import net.minestom.server.network.packet.server.play.PlayerInfoRemovePacket
+import net.minestom.server.network.packet.server.play.PlayerInfoUpdatePacket
 import net.minestom.server.utils.PacketUtils
+import java.util.*
 
 object PerInstanceTabList : Bootstrap() {
     override fun hook(eventNode: EventNode<Event>) {
@@ -38,41 +37,37 @@ object PerInstanceTabList : Bootstrap() {
             // Remove this player from everyone's tablist
             PacketUtils.sendGroupedPacket(
                 event.instance.players - player,
-                getRemovePlayerPacket(player)
+                getRemovePlayerPacket(setOf(player))
             )
         }
     }
 
     private fun getAddPlayerPacket(players: Iterable<Player>) =
-        PlayerInfoPacket(PlayerInfoPacket.Action.ADD_PLAYER, players.map { getAddPlayerEntry(it) })
+        PlayerInfoUpdatePacket(EnumSet.of(PlayerInfoUpdatePacket.Action.ADD_PLAYER), players.map { getAddPlayerEntry(it) })
 
     private fun getRemovePlayerPacket(players: Iterable<Player>) =
-        PlayerInfoPacket(PlayerInfoPacket.Action.REMOVE_PLAYER, players.map { getRemovePlayerEntry(it) })
+        PlayerInfoRemovePacket(players.map { it.uuid })
 
     private fun getAddPlayerPacket(player: Player) =
-        PlayerInfoPacket(
-            PlayerInfoPacket.Action.ADD_PLAYER,
+        PlayerInfoUpdatePacket(
+            PlayerInfoUpdatePacket.Action.ADD_PLAYER,
             getAddPlayerEntry(player)
         )
 
-    private fun getAddPlayerEntry(player: Player) = AddPlayer(
+    private fun getAddPlayerEntry(player: Player) = PlayerInfoUpdatePacket.Entry(
         player.uuid,
         player.username,
         if (player.skin != null) listOf(
-            Property(
+            PlayerInfoUpdatePacket.Property(
                 "textures",
                 player.skin!!.textures(),
                 player.skin!!.signature()
             )
         ) else emptyList(),
-        player.gameMode,
+        true,
         player.latency,
+        player.gameMode,
         player.name,
-        player.playerConnection.playerPublicKey()
+        null
     )
-
-    private fun getRemovePlayerPacket(player: Player) =
-        PlayerInfoPacket(PlayerInfoPacket.Action.REMOVE_PLAYER, getRemovePlayerEntry(player))
-
-    private fun getRemovePlayerEntry(player: Player) = RemovePlayer(player.uuid)
 }

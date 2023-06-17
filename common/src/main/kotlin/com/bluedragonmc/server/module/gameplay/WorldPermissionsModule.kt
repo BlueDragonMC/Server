@@ -14,6 +14,7 @@ import net.minestom.server.event.player.PlayerBlockBreakEvent
 import net.minestom.server.event.player.PlayerBlockInteractEvent
 import net.minestom.server.event.player.PlayerBlockPlaceEvent
 import net.minestom.server.instance.block.Block
+import net.minestom.server.instance.block.BlockFace
 
 /**
  * This module can prevent the player from placing, breaking, or interacting with blocks in the world.
@@ -43,7 +44,8 @@ class WorldPermissionsModule(
                             event.player,
                             event.block,
                             event.resultBlock,
-                            event.blockPosition
+                            event.blockPosition,
+                            event.blockFace
                         )
                     ) {
                         event.player.sendMessage(
@@ -68,7 +70,8 @@ class WorldPermissionsModule(
                         event.player,
                         event.block,
                         event.block,
-                        event.blockPosition
+                        event.blockPosition,
+                        BlockFace.TOP
                     )
                 ) {
                     event.isCancelled = true
@@ -93,6 +96,6 @@ class WorldPermissionsModule(
      * Called when a player breaks a non-player-placed block when they are not supposed to be allowed to.
      * If this event is cancelled, the player will be allowed to break the block.
      */
-    class PreventPlayerBreakMapEvent(player: Player, block: Block, resultBlock: Block, blockPosition: Point) :
-        PlayerBlockBreakEvent(player, block, resultBlock, blockPosition)
+    class PreventPlayerBreakMapEvent(player: Player, block: Block, resultBlock: Block, blockPosition: Point, blockFace: BlockFace) :
+        PlayerBlockBreakEvent(player, block, resultBlock, blockPosition, blockFace)
 }

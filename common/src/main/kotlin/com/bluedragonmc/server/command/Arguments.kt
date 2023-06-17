@@ -5,6 +5,7 @@ import com.bluedragonmc.server.model.PlayerDocument
 import com.bluedragonmc.server.service.Database
 import kotlinx.coroutines.runBlocking
 import net.minestom.server.MinecraftServer
+import net.minestom.server.command.CommandSender
 import net.minestom.server.command.builder.arguments.*
 import net.minestom.server.command.builder.arguments.minecraft.ArgumentBlockState
 import net.minestom.server.command.builder.arguments.minecraft.ArgumentEntity
@@ -59,8 +60,8 @@ class ArgumentInstance(id: String) : Argument<Instance>(id) {
         }
     }
 
-    override fun parse(input: String): Instance {
-        val uuid = backingArgument.parse(input)
+    override fun parse(sender: CommandSender, input: String): Instance {
+        val uuid = backingArgument.parse(sender, input)
         return MinecraftServer.getInstanceManager().getInstance(uuid)
             ?: throw ArgumentSyntaxException("Instance not found", uuid.toString(), INVALID_INSTANCE)
     }
@@ -83,8 +84,8 @@ class ArgumentGameId(id: String) : Argument<Game>(id) {
         }
     }
 
-    override fun parse(input: String): Game {
-        val gameId = backingArgument.parse(input)
+    override fun parse(sender: CommandSender, input: String): Game {
+        val gameId = backingArgument.parse(sender, input)
         return Game.findGame(gameId)
             ?: throw ArgumentSyntaxException("Game not found", gameId, INVALID_GAME_ID)
     }
@@ -105,7 +106,7 @@ class ArgumentGameId(id: String) : Argument<Game>(id) {
  */
 class ArgumentOfflinePlayer(id: String) : Argument<PlayerDocument>(id) {
 
-    override fun parse(input: String): PlayerDocument {
+    override fun parse(sender: CommandSender, input: String): PlayerDocument {
         val doc: PlayerDocument?
         runBlocking {
             doc = Database.connection.getPlayerDocument(input)
@@ -139,7 +140,7 @@ class ArgumentOfflinePlayer(id: String) : Argument<PlayerDocument>(id) {
 class ArgumentOptionalPlayer(id: String) : Argument<String>(id) {
     private val backingArgument = ArgumentString(id)
 
-    override fun parse(input: String) = backingArgument.parse(input)
+    override fun parse(sender: CommandSender, input: String) = backingArgument.parse(sender, input)
 
     override fun parser(): String = "brigadier:string"
 

@@ -144,7 +144,7 @@ private fun colorTransition(phase: Float, vararg colors: TextColor): TextColor {
 
 fun progressBar(bars: Int, percentage: Float, completedColor: TextColor, incompleteColor: TextColor): Component {
     val uncompletedBars = Component.text("|".repeat((percentage * bars).toInt()), completedColor)
-    val completedBars = Component.text("|".repeat((bars - percentage * bars).toInt()), incompleteColor)
+    val completedBars = Component.text("|".repeat(bars - (percentage * bars).toInt()), incompleteColor)
 
     return (uncompletedBars + completedBars).noBold()
 }

@@ -20,8 +20,7 @@ import net.minestom.server.instance.EntityTracker
 import net.minestom.server.instance.Instance
 import net.minestom.server.network.packet.server.play.EntityHeadLookPacket
 import net.minestom.server.network.packet.server.play.EntityRotationPacket
-import net.minestom.server.network.packet.server.play.PlayerInfoPacket
-import java.time.Duration
+import net.minestom.server.network.packet.server.play.PlayerInfoUpdatePacket
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import java.util.function.Consumer
@@ -102,21 +101,20 @@ class NPCModule : GameModule() {
         override fun hasNoGravity() = false
 
         private val randomName = UUID.randomUUID().toString().substringBefore('-')
-        private val addPlayerPacket: PlayerInfoPacket = PlayerInfoPacket(PlayerInfoPacket.Action.ADD_PLAYER,
-            PlayerInfoPacket.AddPlayer(uuid,
+        private val addPlayerPacket = PlayerInfoUpdatePacket(PlayerInfoUpdatePacket.Action.ADD_PLAYER,
+            PlayerInfoUpdatePacket.Entry(uuid,
                 randomName,
-                if (skin != null) listOf(PlayerInfoPacket.AddPlayer.Property("textures",
+                if (skin != null) listOf(PlayerInfoUpdatePacket.Property("textures",
                     skin.textures(),
                     skin.signature()))
                 else emptyList(),
-                GameMode.CREATIVE,
+                false,
                 0,
+                GameMode.CREATIVE,
                 Component.text("[NPC] $randomName", NamedTextColor.DARK_GRAY, TextDecoration.ITALIC),
                 null
             )
         )
-        private val removePlayerPacket: PlayerInfoPacket =
-            PlayerInfoPacket(PlayerInfoPacket.Action.REMOVE_PLAYER, PlayerInfoPacket.RemovePlayer(uuid))
 
         private lateinit var hologram: Hologram
 
@@ -167,10 +165,6 @@ class NPCModule : GameModule() {
 
         override fun updateNewViewer(player: Player) {
             player.sendPacket(addPlayerPacket)
-
-            MinecraftServer.getSchedulerManager().buildTask {
-                player.sendPacket(removePlayerPacket)
-            }.delay(Duration.ofSeconds(5)).schedule()
 
             super.updateNewViewer(player)
             MinecraftServer.getSchedulerManager().scheduleNextTick {

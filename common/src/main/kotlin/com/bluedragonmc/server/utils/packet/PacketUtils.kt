@@ -14,8 +14,7 @@ object PacketUtils {
     fun getRelativePosLookPacket(player: Player, position: Pos) = PlayerPositionAndLookPacket(
         position.withView(0.0f, 0.0f),
         (0x08 or 0x10).toByte(), // flags - see https://wiki.vg/Protocol#Synchronize_Player_Position
-        player.nextTeleportId,
-        false
+        player.nextTeleportId
     )
 
     fun createParticlePacket(pos: Pos, type: Particle, count: Int): ParticlePacket =
