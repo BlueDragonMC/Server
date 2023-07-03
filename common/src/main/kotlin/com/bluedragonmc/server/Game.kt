@@ -15,7 +15,6 @@ import com.bluedragonmc.server.model.Severity
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.instance.InstanceModule
 import com.bluedragonmc.server.module.minigame.SpawnpointModule
-import com.bluedragonmc.server.module.packet.PerInstanceChatModule
 import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.service.Messaging
 import com.bluedragonmc.server.utils.GameState
@@ -117,7 +116,6 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
     }
 
     protected open fun useMandatoryModules() {
-        use(PerInstanceChatModule())
         Messaging.outgoing.onGameCreated(this)
         handleEvent<PlayerSpawnEvent> {
             playerHasJoined = true

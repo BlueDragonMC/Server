@@ -58,7 +58,8 @@ fun start() {
         IntegrationsInit,
         MojangAuthentication,
         OpenToLAN,
-//        PerInstanceTabList,
+        PerInstanceChat,
+        PerInstanceTabList,
         ServerListPingHandler,
         TabListFormat,
         VelocityForwarding

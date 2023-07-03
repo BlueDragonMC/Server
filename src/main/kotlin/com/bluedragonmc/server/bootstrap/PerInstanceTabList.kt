@@ -43,15 +43,25 @@ object PerInstanceTabList : Bootstrap() {
     }
 
     private fun getAddPlayerPacket(players: Iterable<Player>) =
-        PlayerInfoUpdatePacket(EnumSet.of(PlayerInfoUpdatePacket.Action.ADD_PLAYER), players.map { getAddPlayerEntry(it) })
+        PlayerInfoUpdatePacket(
+            EnumSet.of(
+                PlayerInfoUpdatePacket.Action.ADD_PLAYER,
+                PlayerInfoUpdatePacket.Action.UPDATE_LISTED,
+                PlayerInfoUpdatePacket.Action.UPDATE_DISPLAY_NAME
+            ),
+            players.map { getAddPlayerEntry(it) })
 
     private fun getRemovePlayerPacket(players: Iterable<Player>) =
         PlayerInfoRemovePacket(players.map { it.uuid })
 
     private fun getAddPlayerPacket(player: Player) =
         PlayerInfoUpdatePacket(
-            PlayerInfoUpdatePacket.Action.ADD_PLAYER,
-            getAddPlayerEntry(player)
+            EnumSet.of(
+                PlayerInfoUpdatePacket.Action.ADD_PLAYER,
+                PlayerInfoUpdatePacket.Action.UPDATE_DISPLAY_NAME,
+                PlayerInfoUpdatePacket.Action.UPDATE_LISTED
+            ),
+            listOf(getAddPlayerEntry(player))
         )
 
     private fun getAddPlayerEntry(player: Player) = PlayerInfoUpdatePacket.Entry(

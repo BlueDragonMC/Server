@@ -12,12 +12,16 @@ import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.event.HoverEvent
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.event.Event
+import net.minestom.server.event.EventFilter
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.player.PlayerChatEvent
 
 object GlobalChatFormat : Bootstrap() {
     override fun hook(eventNode: EventNode<Event>) {
-        eventNode.addListener(PlayerChatEvent::class.java) { event ->
+        val child = EventNode.event("global-chat-format", EventFilter.ALL) { true }
+        child.priority = Integer.MAX_VALUE // High priority; runs last
+        eventNode.addChild(child)
+        child.addListener(PlayerChatEvent::class.java) { event ->
             val player = event.player as CustomPlayer
             player.getFirstMute()?.let { mute ->
                 event.isCancelled = true
