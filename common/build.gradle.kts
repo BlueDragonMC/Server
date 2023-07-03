@@ -20,6 +20,7 @@ dependencies {
     implementation(libs.bundles.configurate)
     implementation(libs.bundles.messaging)
     implementation(libs.serialization.json)
+    implementation(libs.bundles.tinylog)
 }
 
 publishing {
