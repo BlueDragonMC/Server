@@ -39,69 +39,89 @@ class ShopModule : GuiModule() {
 
     class ShopItemsBuilder(private val module: ShopModule, private val itemsBuilder: ItemsBuilder) {
 
+        fun teamUpgrade(
+            row: Int,
+            column: Int,
+            price: Int,
+            currency: Material,
+            virtualItem: VirtualItem,
+            displayOverride: (Player) -> ItemStack,
+        ) =
+            item(row, column, displayOverride, price, currency, virtualItem)
+
         fun teamUpgrade(row: Int, column: Int, price: Int, currency: Material, virtualItem: VirtualItem) =
-            item(row, column, ItemStack.of(virtualItem.displayItem), price, currency, virtualItem)
+            item(row, column, { ItemStack.of(virtualItem.displayItem) }, price, currency, virtualItem)
+
+        fun item(row: Int, column: Int, itemStack: ItemStack, price: Int, currency: Material) =
+            item(row, column, { itemStack }, price, currency)
 
         fun item(row: Int, column: Int, material: Material, price: Int, currency: Material) =
             item(row, column, material, 1, price, currency)
 
+        fun item(row: Int, column: Int, material: (Player) -> Material, amount: Int, price: Int, currency: Material) =
+            item(row, column, { player -> ItemStack.of(material(player), amount) }, price, currency)
+
         fun item(row: Int, column: Int, material: Material, amount: Int, price: Int, currency: Material) =
-            item(row, column, ItemStack.of(material, amount), price, currency)
+            item(row, column, { ItemStack.of(material, amount) }, price, currency)
 
         fun item(
             row: Int,
             column: Int,
-            itemStack: ItemStack,
+            itemStackProvider: (Player) -> ItemStack,
             price: Int,
             currency: Material,
             virtualItem: VirtualItem? = null,
         ) {
-            itemsBuilder.slot(itemsBuilder.pos(row, column), itemStack.material(), { player ->
-                if (virtualItem != null) {
-                    displayName(virtualItem.name.noItalic())
-                } else {
-                    displayName(
-                        itemStack.material().displayName(NamedTextColor.WHITE)
-                            .noItalic() + Component.text(" x${itemStack.amount()}", NamedTextColor.GRAY).noItalic()
-                    )
-                }
-
-                val info = listOf(
-                    // Price
-                    Component.text("Price: ", NamedTextColor.GRAY).noItalic() + Component.text(
-                        "$price ", NamedTextColor.WHITE
-                    ).noItalic() + currency.displayName(NamedTextColor.WHITE).noItalic(),
-                    // Whether the player can afford the item or not
-                    if (virtualItem?.isOwnedBy(player) == true)
-                        Component.translatable("module.shop.already_owned", NamedTextColor.RED).noItalic()
-                    else if (player.inventory.takeItemStack(
-                            ItemStack.of(currency, price), TransactionOption.DRY_RUN
+            itemsBuilder.slot(
+                itemsBuilder.pos(row, column),
+                { player -> itemStackProvider(player).material() },
+                { player ->
+                    val itemStack = itemStackProvider(player)
+                    if (virtualItem != null) {
+                        displayName(virtualItem.name.noItalic())
+                    } else {
+                        displayName(
+                            itemStack.material().displayName(NamedTextColor.WHITE)
+                                .noItalic() + Component.text(" x${itemStack.amount()}", NamedTextColor.GRAY).noItalic()
                         )
-                    ) Component.translatable("module.shop.click_to_purchase", NamedTextColor.GREEN).noItalic()
-                    else Component.translatable(
-                        "module.shop.not_enough_currency",
-                        NamedTextColor.RED,
-                        currency.displayName()
-                    ).noItalic()
-                )
-
-                if (virtualItem != null) {
-                    // Display team upgrade descriptions if applicable
-                    lore(splitAndFormatLore(virtualItem.description, ALT_COLOR_1, player) + info)
-
-                    if (virtualItem.eventNode.parent == null) {
-                        module.eventNode.addChild(virtualItem.eventNode)
                     }
-                } else lore(info)
 
-                meta { metaBuilder ->
-                    metaBuilder.enchantments(itemStack.meta().enchantmentMap)
-                }
-            }) {
+                    val info = listOf(
+                        // Price
+                        Component.text("Price: ", NamedTextColor.GRAY).noItalic() + Component.text(
+                            "$price ", NamedTextColor.WHITE
+                        ).noItalic() + currency.displayName(NamedTextColor.WHITE).noItalic(),
+                        // Whether the player can afford the item or not
+                        if (virtualItem?.isOwnedBy(player) == true)
+                            Component.translatable("module.shop.already_owned", NamedTextColor.RED).noItalic()
+                        else if (player.inventory.takeItemStack(
+                                ItemStack.of(currency, price), TransactionOption.DRY_RUN
+                            )
+                        ) Component.translatable("module.shop.click_to_purchase", NamedTextColor.GREEN).noItalic()
+                        else Component.translatable(
+                            "module.shop.not_enough_currency",
+                            NamedTextColor.RED,
+                            currency.displayName()
+                        ).noItalic()
+                    )
+
+                    if (virtualItem != null) {
+                        // Display team upgrade descriptions if applicable
+                        lore(splitAndFormatLore(virtualItem.description, ALT_COLOR_1, player) + info)
+
+                        if (virtualItem.eventNode.parent == null) {
+                            module.eventNode.addChild(virtualItem.eventNode)
+                        }
+                    } else lore(info)
+
+                    meta { metaBuilder ->
+                        metaBuilder.enchantments(itemStack.meta().enchantmentMap)
+                    }
+                }) {
                 if (virtualItem != null) {
                     buyVirtualItem(this.player, virtualItem, price, currency)
                 } else {
-                    buyItem(this.player, itemStack, price, currency)
+                    buyItem(this.player, itemStackProvider(this.player), price, currency)
                 }
             }
         }
@@ -111,7 +131,13 @@ class ShopModule : GuiModule() {
                 player.inventory.takeItemStack(ItemStack.of(currency, price), TransactionOption.ALL_OR_NOTHING)
             val addSuccess = player.inventory.addItemStack(item, TransactionOption.DRY_RUN)
             if (!removeSuccess) {
-                player.sendMessage(Component.translatable("module.shop.not_enough_currency", NamedTextColor.RED, currency.displayName()))
+                player.sendMessage(
+                    Component.translatable(
+                        "module.shop.not_enough_currency",
+                        NamedTextColor.RED,
+                        currency.displayName()
+                    )
+                )
                 return
             }
             if (!addSuccess) {
@@ -129,7 +155,13 @@ class ShopModule : GuiModule() {
             val removeSuccess =
                 player.inventory.takeItemStack(ItemStack.of(currency, price), TransactionOption.ALL_OR_NOTHING)
             if (!removeSuccess) {
-                player.sendMessage(Component.translatable("module.shop.not_enough_currency", NamedTextColor.RED, currency.displayName()))
+                player.sendMessage(
+                    Component.translatable(
+                        "module.shop.not_enough_currency",
+                        NamedTextColor.RED,
+                        currency.displayName()
+                    )
+                )
                 return
             }
             (player as CustomPlayer).virtualItems.add(item)
@@ -160,8 +192,8 @@ class ShopModule : GuiModule() {
          * to any shop.
          */
         val eventNode =
-            EventNode.event("virtualitem-${name.toPlainText()}-owners", EventFilter.PLAYER) {
-                    event -> isOwnedBy(event.player)
+            EventNode.event("virtualitem-${name.toPlainText()}-owners", EventFilter.PLAYER) { event ->
+                isOwnedBy(event.player)
             }
     }
 }
