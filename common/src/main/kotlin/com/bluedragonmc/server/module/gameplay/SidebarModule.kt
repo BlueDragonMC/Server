@@ -4,12 +4,13 @@ import com.bluedragonmc.server.*
 import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.event.PlayerLeaveGameEvent
 import com.bluedragonmc.server.module.GameModule
+import com.bluedragonmc.server.module.minigame.CountdownModule
+import com.bluedragonmc.server.utils.GameState
 import com.bluedragonmc.server.utils.withGradient
 import kotlinx.coroutines.runBlocking
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.Component.text
-import net.kyori.adventure.text.format.NamedTextColor.DARK_GRAY
-import net.kyori.adventure.text.format.NamedTextColor.RED
+import net.kyori.adventure.text.format.NamedTextColor.*
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.translation.GlobalTranslator
 import net.minestom.server.entity.Player
@@ -72,7 +73,42 @@ class SidebarModule(private val title: String) : GameModule() {
 
         inner class ScoreboardBindingUtils {
             private var spaces = 1
+
             fun getSpacer() = text(" ".repeat(spaces++))
+
+            fun getStatusSection() = when (module.parent.state) {
+                GameState.SERVER_STARTING -> listOf(
+                    getSpacer(),
+                    Component.translatable("module.sidebar.server_starting", YELLOW),
+                    getSpacer()
+                )
+
+                GameState.WAITING -> listOf(
+                    getSpacer(),
+                    Component.translatable("module.sidebar.waiting", YELLOW),
+                    getSpacer()
+                )
+
+                GameState.STARTING -> {
+                    val countdownTime = module.parent.getModuleOrNull<CountdownModule>()?.getTimeLeft()
+                    listOf(
+                        getSpacer(),
+                        if (countdownTime != null) {
+                            Component.translatable(
+                                "module.sidebar.starting",
+                                YELLOW,
+                                text(countdownTime)
+                            )
+                        } else {
+                            Component.translatable("module.sidebar.starting.indeterminant", YELLOW)
+                        },
+                        getSpacer()
+                    )
+                }
+
+                GameState.INGAME -> listOf(getSpacer())
+                GameState.ENDING -> listOf(getSpacer())
+            }
         }
 
         fun update() {

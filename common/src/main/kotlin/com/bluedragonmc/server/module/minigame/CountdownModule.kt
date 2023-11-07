@@ -30,6 +30,8 @@ class CountdownModule(
     private var secondsLeft: Int? = null
     private var countdownRunning: Boolean = false
 
+    fun getTimeLeft() = secondsLeft ?: countdownSeconds
+
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         eventNode.addListener(PlayerSpawnEvent::class.java) {
             if (parent.state == GameState.STARTING || parent.state == GameState.INGAME || parent.state == GameState.ENDING || countdownRunning) return@addListener
