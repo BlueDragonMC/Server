@@ -64,6 +64,15 @@ fun Component.clickEvent(action: ClickEvent.Action, value: String): Component {
             ALT_COLOR_1
         )
     }
+    if (action == ClickEvent.Action.OPEN_URL && hoverEvent() == null) {
+        return clickEvent(ClickEvent.clickEvent(action, value)).hoverEvent(
+            Component.translatable(
+                "command.click_to_open_url",
+                ALT_COLOR_1,
+                Component.text(value, NamedTextColor.GRAY)
+            )
+        )
+    }
     return clickEvent(ClickEvent.clickEvent(action, value))
 }
 
