@@ -5,6 +5,7 @@ import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.utils.clickEvent
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.event.ClickEvent
+import net.kyori.adventure.text.format.NamedTextColor
 import java.text.DateFormat
 import java.time.Duration
 
@@ -45,6 +46,9 @@ class VersionCommand(name: String, usageString: String, vararg aliases: String?)
                     duration.toSecondsPart()
                 )
             )
+            if (Environment.isDev) {
+                sender.sendMessage(Component.translatable("command.version.development_warning", NamedTextColor.RED))
+            }
         }
     }) {
     companion object {
