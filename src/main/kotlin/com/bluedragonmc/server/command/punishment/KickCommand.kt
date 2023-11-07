@@ -30,7 +30,7 @@ class KickCommand(name: String, usageString: String, vararg aliases: String) : B
             +("Reason: " withColor NamedTextColor.RED)
             +(reason withColor NamedTextColor.WHITE)
         })
-        sender.sendMessage(formatMessage("{} has been kicked for '{}'.", target.name, reason))
+        sender.sendMessage(formatMessageTranslated("command.kick.success", target.name, reason))
     }
 
 })
