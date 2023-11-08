@@ -30,6 +30,9 @@ object GlobalPunishments : Bootstrap() {
         +Component.translatable("punishment.field.expiry", Component.text(punishment.getTimeRemaining(), NamedTextColor.WHITE))
         +Component.newline()
         +Component.translatable("punishment.field.id", Component.text(punishment.id.toString().substringBefore('-'), NamedTextColor.WHITE))
+        // Kick messages with a word joiner (U+2060) will prevent the player from being immediately connected to another server
+        // This is a way of differentiating intentional vs. accidental kicks that remains invisible to the end user
+        +Component.text("\u2060")
     }
 
     fun getBanMessage(punishment: Punishment) = getPunishmentMessage("punishment.ban.title", punishment)
