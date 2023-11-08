@@ -2,6 +2,7 @@ package com.bluedragonmc.server.module.minigame
 
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.event.CountdownEvent
 import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.utils.GameState
@@ -115,6 +116,7 @@ class CountdownModule(
                             Title.Times.times(Duration.ZERO, Duration.ofSeconds(2), Duration.ZERO)
                         )
                     )
+                    parent.callEvent(CountdownEvent.CountdownTickEvent(parent, secondsLeft!!))
                     secondsLeft = secondsLeft!! - 1
                 } else {
                     parent.sendTitlePart(
@@ -130,6 +132,7 @@ class CountdownModule(
 
     private fun startCountdown(parent: Game) {
         cancelCountdown()
+        parent.callEvent(CountdownEvent.CountdownStartEvent(parent))
         if (!allowMoveDuringCountdown) parent.players.filter { it.isActive }.forEach { it.teleport(it.respawnPoint) }
         secondsLeft = countdownSeconds
         countdownRunning = true

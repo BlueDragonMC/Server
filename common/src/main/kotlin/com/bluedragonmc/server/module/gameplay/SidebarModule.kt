@@ -2,6 +2,9 @@ package com.bluedragonmc.server.module.gameplay
 
 import com.bluedragonmc.server.*
 import com.bluedragonmc.server.api.Environment
+import com.bluedragonmc.server.event.CountdownEvent
+import com.bluedragonmc.server.event.GameStartEvent
+import com.bluedragonmc.server.event.GameStateChangedEvent
 import com.bluedragonmc.server.event.PlayerLeaveGameEvent
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.minigame.CountdownModule
@@ -171,6 +174,11 @@ class SidebarModule(private val title: String) : GameModule() {
 
         init {
             update()
+
+            module.eventNode.addListener(GameStateChangedEvent::class.java) { _ -> update() }
+            module.eventNode.addListener(GameStartEvent::class.java) { _ -> update() }
+            module.eventNode.addListener(CountdownEvent.CountdownStartEvent::class.java) { _ -> update() }
+            module.eventNode.addListener(CountdownEvent.CountdownTickEvent::class.java) { _ -> update() }
         }
     }
 }
