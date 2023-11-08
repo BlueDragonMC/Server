@@ -29,9 +29,9 @@ class KickCommand(name: String, usageString: String, vararg aliases: String) : B
             +Component.newline()
             +("Reason: " withColor NamedTextColor.RED)
             +(reason withColor NamedTextColor.WHITE)
-            // Kick messages with a word joiner (U+2060) will prevent the player from being immediately connected to another server
+            // Kick messages with a non-breaking space (U+00A0) will prevent the player from being immediately connected to another server
             // This is a way of differentiating intentional vs. accidental kicks that remains invisible to the end user
-            +Component.text("\u2060")
+            +Component.text("\u00A0")
         })
         sender.sendMessage(formatMessageTranslated("command.kick.success", target.name, reason))
     }
