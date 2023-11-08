@@ -3,7 +3,6 @@ package com.bluedragonmc.testing.utils
 import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.api.DatabaseConnection
 import com.bluedragonmc.server.model.EventLog
-import com.bluedragonmc.server.model.MapData
 import com.bluedragonmc.server.model.PlayerDocument
 import net.minestom.server.entity.Player
 import java.util.*
@@ -21,10 +20,6 @@ class DatabaseConnectionStub : DatabaseConnection {
 
     override suspend fun getPlayerDocument(player: Player): PlayerDocument {
         error("Method not mocked")
-    }
-
-    override suspend fun getMapOrNull(mapName: String): MapData? {
-        return null
     }
 
     override suspend fun rankPlayersByStatistic(

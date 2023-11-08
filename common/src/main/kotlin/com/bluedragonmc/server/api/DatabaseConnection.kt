@@ -2,7 +2,6 @@ package com.bluedragonmc.server.api
 
 import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.model.EventLog
-import com.bluedragonmc.server.model.MapData
 import com.bluedragonmc.server.model.PlayerDocument
 import net.minestom.server.entity.Player
 import java.util.*
@@ -17,8 +16,6 @@ interface DatabaseConnection {
     suspend fun getPlayerDocument(uuid: UUID): PlayerDocument?
 
     suspend fun getPlayerDocument(player: Player): PlayerDocument
-
-    suspend fun getMapOrNull(mapName: String): MapData?
 
     suspend fun rankPlayersByStatistic(key: String, sortCriteria: String, limit: Int): List<PlayerDocument>
 

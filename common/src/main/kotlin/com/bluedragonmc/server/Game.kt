@@ -10,7 +10,6 @@ import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.event.GameStateChangedEvent
 import com.bluedragonmc.server.event.PlayerLeaveGameEvent
 import com.bluedragonmc.server.model.EventLog
-import com.bluedragonmc.server.model.MapData
 import com.bluedragonmc.server.model.Severity
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.instance.InstanceModule
@@ -71,8 +70,6 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
         }
 
     internal val players: MutableList<Player> = CopyOnWriteArrayList()
-
-    var mapData: MapData? = null
 
     protected val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
@@ -171,17 +168,6 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
 
         logger.debug("Initializing game with modules: ${modules.map { it::class.simpleName ?: it::class.jvmName }}")
         logger.debug(dependencyTree.toString())
-
-        // Set time of day according to the MapData
-        runBlocking {
-            val time = mapData?.time
-            if (time != null && time >= 0) {
-                getOwnedInstances().forEach { instance ->
-                    instance.timeRate = 0
-                    instance.time = time.toLong()
-                }
-            }
-        }
 
         // Let the queue system send players to the game
         games.add(this)
@@ -294,23 +280,11 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
         }
     }
 
-    /**
-     * Load map data from the database (or from cache)
-     */
-    protected open fun loadMapData() {
-        runBlocking {
-            mapData = Database.connection.getMapOrNull(mapName)
-            if (mapData == null) logger.warn("No map data found for $mapName!")
-        }
-    }
-
     init {
         state = GameState.SERVER_STARTING
 
         // Initialize mandatory modules for core functionality, like game state updates
         useMandatoryModules()
-
-        loadMapData()
 
         // Ensure the game was registered with `ready()` method
         MinecraftServer.getSchedulerManager().buildTask {

@@ -1,8 +1,11 @@
 package com.bluedragonmc.server.module.config
 
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.config.serializer.*
+import com.bluedragonmc.server.module.instance.InstanceModule
+import com.bluedragonmc.server.module.map.AnvilFileMapProviderModule
 import com.bluedragonmc.server.module.minigame.KitsModule
 import net.kyori.adventure.text.Component
 import net.minestom.server.color.Color
@@ -18,14 +21,22 @@ import net.minestom.server.item.Material
 import org.spongepowered.configurate.ConfigurationNode
 import org.spongepowered.configurate.ConfigurationOptions
 import org.spongepowered.configurate.yaml.YamlConfigurationLoader
+import java.io.BufferedReader
 import java.nio.file.Paths
+import kotlin.io.path.absolutePathString
 import kotlin.io.path.bufferedReader
 import kotlin.io.path.exists
+import kotlin.io.path.reader
 
+@DependsOn(InstanceModule::class)
 class ConfigModule(private val configFileName: String? = null) : GameModule() {
 
     private lateinit var root: ConfigurationNode
+    private lateinit var mapRoot: ConfigurationNode
+
     private lateinit var parent: Game
+
+    private var initialized = false
 
     /**
      * Files in this folder will be treated as overrides
@@ -39,14 +50,16 @@ class ConfigModule(private val configFileName: String? = null) : GameModule() {
      */
     private val internalFolder = "config/"
 
-    private fun loadFile(path: String): ConfigurationNode {
-
+    private fun getReader(path: String): BufferedReader {
         val overrideFile = Paths.get(externalFolder, path)
-        val reader = if (overrideFile.exists()) {
+        return if (overrideFile.exists()) {
             overrideFile.bufferedReader()
         } else {
             parent::class.java.classLoader.getResourceAsStream(internalFolder + path)!!.bufferedReader()
         }
+    }
+
+    private fun loadFile(reader: BufferedReader): ConfigurationNode {
 
         val loader = YamlConfigurationLoader.builder()
             .source { reader }
@@ -70,21 +83,49 @@ class ConfigModule(private val configFileName: String? = null) : GameModule() {
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         this.parent = parent
         if (configFileName != null) {
-            root = loadFile(configFileName)
+            logger.info("Loading game configuration from $configFileName")
+            root = loadFile(getReader(configFileName))
         }
+
+        if (parent.hasModule<AnvilFileMapProviderModule>()) {
+            val worldFolder = parent.getModule<AnvilFileMapProviderModule>().worldFolder
+            val file = worldFolder.resolve("config.yml")
+            if (file.exists()) {
+                logger.info("Loading map configuration from " + file.absolutePathString())
+                mapRoot = loadFile(file.reader(Charsets.UTF_8).buffered())
+            } else {
+                logger.info("No map configuration found at " + file.absolutePathString())
+            }
+        }
+
+        logger.info("Configuration successfully loaded.")
+        initialized = true
     }
 
     fun getConfig(): ConfigurationNode {
-        if (::root.isInitialized) {
-            return root
+
+        if (!initialized) {
+            throw IllegalStateException("Accessing ConfigModule before it was initialized.")
+        }
+
+        if (!::root.isInitialized) {
+            if (::mapRoot.isInitialized) {
+                return mapRoot
+            } else {
+                throw IllegalStateException("No game or map configuration found!")
+            }
+        }
+
+        if (::mapRoot.isInitialized) {
+            return root.mergeFrom(mapRoot)
         } else {
-            throw IllegalStateException("ConfigModule created with no default config file path!")
+            return root
         }
     }
 
     fun loadExtra(fileName: String): ConfigurationNode? {
         return runCatching {
-            loadFile(fileName)
+            loadFile(getReader(fileName))
         }.getOrNull()
     }
 }
