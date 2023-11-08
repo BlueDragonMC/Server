@@ -56,16 +56,7 @@ Each player has their own document in the `players` collection of the database w
 * `cosmetics`: A list of cosmetics which the player owns. Non-equipped cosmetics are included in the list.
   * `id`: A string identifier for the cosmetic
   * `equipped`: A boolean representing whether the player has the cosmetic equipped or not.
-### 3.3: Maps
-Each map has its own entry in the `maps` collection with the following fields:
-* `_id`: The friendly display name of the map (unlocalized).
-* `description`: A short description of the map, shown to every player at the start of the game.
-* `author`: A string with the names of the map's builders.
-* `spawnpoints`: A list of spawnpoints for the map.
-  * Each spawnpoint is an array of numbers with the format: [x, y, z, yaw, pitch]
-  * The numbers may be integers or doubles. It is the responsibility of the client to convert the numbers to the correct format (usually Double).
-* `additionalLocations`: Each map or game may define additional locations. This field is a list of lists of coordinates. The coordinates are in the same format as above.
-### 3.5: Database Behavior
+### 3.3: Database Behavior
 * Every time a player log in to a game server, their player document should be fetched using their UUID.
   * If their username does not match the name in the document, it should be updated to reflect the username change.
 * Map data should be lazily fetched for a map when it is loaded.
@@ -93,3 +84,14 @@ The directory structure looks something like this:
                                map_name_1/
                                other_map_name/
 ```
+### 4.5: World Configuration
+Each map can have a `config.yml` file inside the Anvil world folder with a few keys.
+All map-specific keys are namespaced under the `world` key.
+* `world`: (the parent key)
+  * `name`: A display name for the map
+  * `description`: A short description of the map, shown to every player at the start of the game.
+  * `author`: A string with the names of the map's builders.
+  * `spawnpoints`: A list of spawnpoints for the map.
+    * Each spawnpoint is an array of numbers with the format: [x, y, z, yaw, pitch]
+    * The numbers may be integers or doubles. It is the responsibility of the client to convert the numbers to the correct format (usually Double).
+  * `additionalLocations`: Each map or game may define additional locations. This field is a list of lists of coordinates. The coordinates are in the same format as above.

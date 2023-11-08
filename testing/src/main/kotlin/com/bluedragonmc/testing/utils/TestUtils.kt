@@ -93,10 +93,6 @@ object TestUtils {
         init {
             use(FlatInstanceModule(env))
         }
-
-        override fun loadMapData() {
-            // map data should not be loaded from anywhere
-        }
     }
 
     class FlatInstanceModule(private val env: Env) : InstanceModule() {

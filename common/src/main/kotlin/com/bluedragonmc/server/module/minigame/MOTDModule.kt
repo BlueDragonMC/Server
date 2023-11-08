@@ -3,8 +3,9 @@ package com.bluedragonmc.server.module.minigame
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
-import com.bluedragonmc.server.model.MapData
+import com.bluedragonmc.server.module.config.ConfigModule
 import com.bluedragonmc.server.utils.buildComponent
 import com.bluedragonmc.server.utils.noBold
 import com.bluedragonmc.server.utils.plus
@@ -20,10 +21,16 @@ import net.minestom.server.event.player.PlayerSpawnEvent
 /**
  * Displays a message to players when they join the game.
  */
+@DependsOn(ConfigModule::class)
 class MOTDModule(val motd: Component, val showMapName: Boolean = true) : GameModule() {
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
-        val mapData = parent.mapData ?: MapData(parent.mapName)
+        val node = parent.getModule<ConfigModule>().getConfig().node("world")
+
+        val name = node.node("name").string ?: "Untitled"
+        val description = node.node("description").string ?: "An awesome map!"
+        val author = node.node("author").string ?: "BlueDragon Build Team"
+
         eventNode.addListener(PlayerSpawnEvent::class.java) { event ->
             event.player.sendMessage(
                 buildComponent {
@@ -34,18 +41,25 @@ class MOTDModule(val motd: Component, val showMapName: Boolean = true) : GameMod
                         // MOTD
                         +motd.color(NamedTextColor.WHITE)
                         if (showMapName) +Component.newline()
-                        if (showMapName) +Component.translatable("module.motd.map",
+                        if (showMapName) +Component.translatable(
+                            "module.motd.map",
                             BRAND_COLOR_PRIMARY_2,
                             // Map name
-                            Component.text(parent.mapName, BRAND_COLOR_PRIMARY_1, TextDecoration.BOLD)
-                                .hoverEvent(HoverEvent.showText(
-                                    Component.text(parent.mapName,
-                                        BRAND_COLOR_PRIMARY_1,
-                                        TextDecoration.BOLD) + Component.newline() + Component.text(mapData.description,
-                                        NamedTextColor.GRAY).noBold()
-                                )),
+                            Component.text(name, BRAND_COLOR_PRIMARY_1, TextDecoration.BOLD)
+                                .hoverEvent(
+                                    HoverEvent.showText(
+                                        Component.text(
+                                            name,
+                                            BRAND_COLOR_PRIMARY_1,
+                                            TextDecoration.BOLD
+                                        ) + Component.newline() + Component.text(
+                                            description,
+                                            NamedTextColor.GRAY
+                                        ).noBold()
+                                    )
+                                ),
                             // Map builder
-                            Component.text(mapData.author, BRAND_COLOR_PRIMARY_1)
+                            Component.text(author, BRAND_COLOR_PRIMARY_1)
                         )
                     }.noBold()
                 }.surroundWithSeparators()

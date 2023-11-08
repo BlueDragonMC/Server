@@ -1,7 +1,9 @@
 package com.bluedragonmc.server.module.minigame
 
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
+import com.bluedragonmc.server.module.config.ConfigModule
 import com.bluedragonmc.server.utils.CircularList
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.Player
@@ -15,10 +17,11 @@ import net.minestom.server.event.player.PlayerSpawnEvent
  * A `SpawnpointProvider` is used to determine the spawn location for a specific player.
  * This module does not automatically teleport the player when they join the game. That is the queue's reponsibility.
  */
+@DependsOn(ConfigModule::class)
 class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule() {
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
-        if (spawnpointProvider is TeamDatabaseSpawnpointProvider && !parent.hasModule<TeamModule>()) {
+        if (spawnpointProvider is TeamConfigSpawnpointProvider && !parent.hasModule<TeamModule>()) {
             error("Team module not present! TeamDatabaseSpawnpointProvider cannot determine players' teams.")
         }
         spawnpointProvider.initialize(parent)
@@ -79,17 +82,24 @@ class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule(
     }
 
     /**
-     * Gets spawnpoints from the database.
+     * Gets spawnpoints from the configuration file.
      */
-    class DatabaseSpawnpointProvider(private val allowRandomOrder: Boolean = true) : SpawnpointProvider {
+    class ConfigSpawnpointProvider(private val allowRandomOrder: Boolean = true) : SpawnpointProvider {
 
         private val cachedSpawnpoints = hashMapOf<Player, Pos>()
         private lateinit var spawnpoints: CircularList<Pos>
         private var n = 0
 
         override fun initialize(game: Game) {
-            spawnpoints =
-                CircularList(if (allowRandomOrder) game.mapData!!.spawnpoints.shuffled() else game.mapData!!.spawnpoints)
+            val config = game.getModule<ConfigModule>().getConfig()
+            val spawnpointList =
+                config.node("world", "spawnpoints").getList(Pos::class.java)
+
+            if (spawnpointList.isNullOrEmpty()) {
+                throw IllegalStateException("No spawn points found!")
+            }
+
+            spawnpoints = CircularList(if (allowRandomOrder) spawnpointList.shuffled() else spawnpointList)
         }
 
         override fun getSpawnpoint(player: Player) = cachedSpawnpoints[player] ?: findSpawnpoint(player)
@@ -105,13 +115,13 @@ class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule(
     }
 
     /**
-     * Gets spawnpoints from the database.
+     * Gets spawnpoints from the configuration file.
      * Every team has one spawnpoint. All players spawn at the same location.
      * If a player's spawnpoint is requested, and they are not on a team yet, they are spawned at the first spawnpoint in the database.
      * If they are on a team, they will be given their team's spawnpoint.
      * Requires the [TeamModule] to work properly.
      */
-    class TeamDatabaseSpawnpointProvider(
+    class TeamConfigSpawnpointProvider(
         private val allowRandomOrder: Boolean = false,
     ) : SpawnpointProvider {
 
@@ -133,8 +143,16 @@ class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule(
 
         override fun initialize(game: Game) {
             this.teamModule = game.getModule()
-            spawnpoints =
-                CircularList(if (allowRandomOrder) game.mapData!!.spawnpoints.shuffled() else game.mapData!!.spawnpoints)
+
+            val config = game.getModule<ConfigModule>().getConfig()
+            val spawnpointList =
+                config.node("world", "spawnpoints").getList(Pos::class.java)
+
+            if (spawnpointList.isNullOrEmpty()) {
+                throw IllegalStateException("No spawn points found!")
+            }
+
+            spawnpoints = CircularList(if (allowRandomOrder) spawnpointList.shuffled() else spawnpointList)
         }
 
         private fun teamOf(player: Player) = teamModule.getTeam(player)

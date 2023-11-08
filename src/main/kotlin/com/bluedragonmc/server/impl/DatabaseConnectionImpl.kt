@@ -5,11 +5,8 @@ import com.bluedragonmc.server.api.DatabaseConnection
 import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.event.DataLoadedEvent
 import com.bluedragonmc.server.model.EventLog
-import com.bluedragonmc.server.model.MapData
 import com.bluedragonmc.server.model.PlayerDocument
 import com.bluedragonmc.server.model.Punishment
-import com.github.benmanes.caffeine.cache.Cache
-import com.github.benmanes.caffeine.cache.Caffeine
 import com.mongodb.ConnectionString
 import com.mongodb.MongoClientSettings
 import com.mongodb.client.model.Filters
@@ -31,17 +28,11 @@ import org.litote.kmongo.path
 import org.litote.kmongo.reactivestreams.KMongo
 import org.litote.kmongo.setValue
 import org.slf4j.LoggerFactory
-import java.time.Duration
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.reflect.KMutableProperty
 
 internal class DatabaseConnectionImpl(connectionString: String) : DatabaseConnection {
-
-    private val mapDataCache: Cache<String, MapData?> = Caffeine.newBuilder()
-        .maximumSize(100)
-        .expireAfterWrite(Duration.ofMinutes(10))
-        .build()
 
     private val logger = LoggerFactory.getLogger(this::class.java)
 
@@ -68,7 +59,6 @@ internal class DatabaseConnectionImpl(connectionString: String) : DatabaseConnec
     }
 
     private fun getPlayersCollection(): CoroutineCollection<PlayerDocument> = database.getCollection("players")
-    private fun getMapsCollection(): CoroutineCollection<MapData> = database.getCollection("maps")
     private fun getEventsCollection(): CoroutineCollection<Document> = database.getCollection("events")
 
     override suspend fun getPlayerDocument(username: String): PlayerDocument? {
@@ -130,14 +120,6 @@ internal class DatabaseConnectionImpl(connectionString: String) : DatabaseConnec
             player.data.update(PlayerDocument::lastJoinDate, System.currentTimeMillis())
             MinecraftServer.getGlobalEventHandler().call(DataLoadedEvent(player))
             logger.info("Loaded player data for ${player.username}")
-        }
-    }
-
-    override suspend fun getMapOrNull(mapName: String): MapData? {
-        return mapDataCache.getIfPresent(mapName) ?: run {
-            val doc = getMapsCollection().findOneById(mapName)
-            if (doc != null) mapDataCache.put(mapName, doc)
-            doc
         }
     }
 

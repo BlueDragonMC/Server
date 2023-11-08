@@ -3,12 +3,9 @@
 package com.bluedragonmc.server.model
 
 import com.bluedragonmc.server.api.Environment
-import com.bluedragonmc.server.model.*
 import com.bluedragonmc.server.service.Database
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.*
-import net.minestom.server.coordinate.Pos
-import org.bson.*
 import java.time.Duration
 import java.time.Instant
 import java.util.*
@@ -16,7 +13,7 @@ import kotlin.reflect.KMutableProperty
 import kotlin.reflect.KMutableProperty1
 
 @Serializable
-data class PlayerDocument constructor(
+data class PlayerDocument(
     @SerialName("_id") @Serializable(with = UUIDSerializer::class) val uuid: UUID,
     var username: String = "",
     @EncodeDefault var usernameLower: String = username.lowercase(),
@@ -80,19 +77,6 @@ data class Punishment(
 data class Achievement(
     val id: String,
     @Serializable(with = DateSerializer::class) val earnedAt: Date,
-)
-
-@Serializable
-data class MapData(
-    @SerialName("_id") val name: String,
-    val author: String = "BlueDragon Build Team",
-    val description: String = "An awesome map!",
-    val time: Int? = null,
-    val spawnpoints: List<@Serializable(with = PosSerializer::class) Pos> = emptyList(),
-    /**
-     * A list of lists of positions. Use this to store game-specific locations like loot generators or NPCs.
-     */
-    val additionalLocations: List<List<@Serializable(with = PosSerializer::class) Pos>> = emptyList(),
 )
 
 enum class Severity {
