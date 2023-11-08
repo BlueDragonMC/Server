@@ -19,9 +19,6 @@ import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.player.AsyncPlayerPreLoginEvent
 import net.minestom.server.event.player.PlayerLoginEvent
-import net.minestom.server.network.packet.client.login.LoginStartPacket
-import net.minestom.server.network.player.PlayerConnection
-import net.minestom.server.network.player.PlayerSocketConnection
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
@@ -37,7 +34,14 @@ object InitialInstanceRouter : Bootstrap(EnvType.PRODUCTION) {
 
     override fun hook(eventNode: EventNode<Event>) {
         MinecraftServer.getGlobalEventHandler()
-            .addListener(PlayerLoginEvent::class.java, ::handlePlayerLogin)
+            .addListener(PlayerLoginEvent::class.java) { event ->
+                try {
+                    handlePlayerLogin(event)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    event.player.kick(HANDSHAKE_FAILED)
+                }
+            }
         MinecraftServer.getGlobalEventHandler()
             .addListener(AsyncPlayerPreLoginEvent::class.java) { event ->
                 loadData(event.player as CustomPlayer)
