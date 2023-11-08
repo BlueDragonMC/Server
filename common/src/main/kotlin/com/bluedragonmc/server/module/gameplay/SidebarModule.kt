@@ -7,13 +7,13 @@ import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.event.GameStateChangedEvent
 import com.bluedragonmc.server.event.PlayerLeaveGameEvent
 import com.bluedragonmc.server.module.GameModule
-import com.bluedragonmc.server.module.minigame.CountdownModule
 import com.bluedragonmc.server.utils.GameState
 import com.bluedragonmc.server.utils.withGradient
 import kotlinx.coroutines.runBlocking
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.Component.text
-import net.kyori.adventure.text.format.NamedTextColor.*
+import net.kyori.adventure.text.format.NamedTextColor.DARK_GRAY
+import net.kyori.adventure.text.format.NamedTextColor.RED
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.translation.GlobalTranslator
 import net.minestom.server.entity.Player
@@ -82,35 +82,23 @@ class SidebarModule(private val title: String) : GameModule() {
             fun getStatusSection() = when (module.parent.state) {
                 GameState.SERVER_STARTING -> listOf(
                     getSpacer(),
-                    Component.translatable("module.sidebar.server_starting", YELLOW),
+                    Component.translatable("module.sidebar.server_starting", BRAND_COLOR_PRIMARY_2),
                     getSpacer()
                 )
 
                 GameState.WAITING -> listOf(
                     getSpacer(),
-                    Component.translatable("module.sidebar.waiting", YELLOW),
+                    Component.translatable("module.sidebar.waiting", BRAND_COLOR_PRIMARY_2),
                     getSpacer()
                 )
 
-                GameState.STARTING -> {
-                    val countdownTime = module.parent.getModuleOrNull<CountdownModule>()?.getTimeLeft()
-                    listOf(
-                        getSpacer(),
-                        if (countdownTime != null) {
-                            Component.translatable(
-                                "module.sidebar.starting",
-                                YELLOW,
-                                text(countdownTime)
-                            )
-                        } else {
-                            Component.translatable("module.sidebar.starting.indeterminant", YELLOW)
-                        },
-                        getSpacer()
-                    )
-                }
+                GameState.STARTING -> listOf(
+                    getSpacer(),
+                    Component.translatable("module.sidebar.starting", BRAND_COLOR_PRIMARY_2),
+                    getSpacer()
+                )
 
-                GameState.INGAME -> listOf(getSpacer())
-                GameState.ENDING -> listOf(getSpacer())
+                GameState.INGAME, GameState.ENDING -> listOf(getSpacer())
             }
         }
 
