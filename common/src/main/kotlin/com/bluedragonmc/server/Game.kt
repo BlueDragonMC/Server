@@ -50,7 +50,7 @@ import kotlin.concurrent.timer
 import kotlin.random.Random
 import kotlin.reflect.jvm.jvmName
 
-open class Game(val name: String, val mapName: String, val mode: String? = null) : ModuleHolder(),
+abstract class Game(val name: String, val mapName: String, val mode: String? = null) : ModuleHolder(),
     PacketGroupingAudience {
 
     val gameType: CommonTypes.GameType
@@ -163,17 +163,6 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
     private var playerHasJoined = false
     private val creationTime = System.currentTimeMillis()
 
-    open fun ready() {
-        checkUnmetDependencies()
-
-        logger.debug("Initializing game with modules: ${modules.map { it::class.simpleName ?: it::class.jvmName }}")
-        logger.debug(dependencyTree.toString())
-
-        // Let the queue system send players to the game
-        games.add(this)
-        state = GameState.WAITING
-    }
-
     open fun getOwnedInstances(): List<Instance> = MinecraftServer.getInstanceManager().instances.filter {
         ownsInstance(it)
     }
@@ -280,21 +269,21 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
         }
     }
 
-    init {
-        state = GameState.SERVER_STARTING
-
+    fun init() {
         // Initialize mandatory modules for core functionality, like game state updates
         useMandatoryModules()
 
-        // Ensure the game was registered with `ready()` method
-        MinecraftServer.getSchedulerManager().buildTask {
-            if (!games.contains(this) && !playerHasJoined) {
-                MinecraftServer.getExceptionManager()
-                    .handleException(IllegalStateException("Game was not registered after 25 seconds! (id: $id)"))
-                endGame(false)
-                games.remove(this)
-            }
-        }.delay(Duration.ofSeconds(25)).schedule()
+        // Run the game's initialization code
+        initialize()
+
+        // Make sure all module dependencies are resolved
+        checkUnmetDependencies()
+
+        logger.debug("Initializing game with modules: {}", modules.map { it::class.simpleName ?: it::class.jvmName })
+
+        // Let the queue system send players to the game
+        games.add(this)
+        state = GameState.WAITING
 
         // Allow the game to start receiving events
         MinecraftServer.getGlobalEventHandler().addChild(eventNode)
@@ -309,6 +298,8 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
             )
         }
     }
+
+    protected abstract fun initialize()
 
     override fun toString(): String {
         val modules = modules.joinToString { it::class.simpleName ?: it::class.jvmName }
@@ -329,7 +320,8 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
          * Instances must be inactive for at least 2 minutes
          * to be cleaned up (by default).
          */
-        private val CLEANUP_MIN_INACTIVE_TIME = System.getenv("SERVER_INSTANCE_MIN_INACTIVE_TIME")?.toLongOrNull() ?: 120_000L
+        private val CLEANUP_MIN_INACTIVE_TIME =
+            System.getenv("SERVER_INSTANCE_MIN_INACTIVE_TIME")?.toLongOrNull() ?: 120_000L
 
         fun findGame(player: Player): Game? =
             games.find { player in it.players || it.ownsInstance(player.instance ?: return@find false) }

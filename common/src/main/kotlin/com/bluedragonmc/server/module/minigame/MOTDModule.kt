@@ -3,8 +3,8 @@ package com.bluedragonmc.server.module.minigame
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.Game
-import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
+import com.bluedragonmc.server.module.SoftDependsOn
 import com.bluedragonmc.server.module.config.ConfigModule
 import com.bluedragonmc.server.utils.buildComponent
 import com.bluedragonmc.server.utils.noBold
@@ -21,15 +21,19 @@ import net.minestom.server.event.player.PlayerSpawnEvent
 /**
  * Displays a message to players when they join the game.
  */
-@DependsOn(ConfigModule::class)
-class MOTDModule(val motd: Component, val showMapName: Boolean = true) : GameModule() {
+@SoftDependsOn(ConfigModule::class)
+class MOTDModule(private val motd: Component, private var showMapName: Boolean = true) : GameModule() {
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
-        val node = parent.getModule<ConfigModule>().getConfig().node("world")
+        val node = parent.getModuleOrNull<ConfigModule>()?.getConfig()?.node("world")
 
-        val name = node.node("name").string ?: "Untitled"
-        val description = node.node("description").string ?: "An awesome map!"
-        val author = node.node("author").string ?: "BlueDragon Build Team"
+        if (!parent.hasModule<ConfigModule>()) {
+            showMapName = false
+        }
+
+        val name = node?.node("name")?.string ?: "Untitled"
+        val description = node?.node("description")?.string ?: "An awesome map!"
+        val author = node?.node("author")?.string ?: "BlueDragon Build Team"
 
         eventNode.addListener(PlayerSpawnEvent::class.java) { event ->
             event.player.sendMessage(

@@ -64,6 +64,6 @@ object GameLoader {
             1 -> ctor.call(mapName)
             2 -> ctor.call(mapName, mode)
             else -> error("Unexpected constructor format: $ctor")
-        }
+        }.apply { init() }
     }
 }
