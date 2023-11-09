@@ -17,7 +17,7 @@ import net.minestom.server.event.player.PlayerSpawnEvent
  * A `SpawnpointProvider` is used to determine the spawn location for a specific player.
  * This module does not automatically teleport the player when they join the game. That is the queue's reponsibility.
  */
-@SoftDependsOn(ConfigModule::class)
+@SoftDependsOn(ConfigModule::class, TeamModule::class)
 class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule() {
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
