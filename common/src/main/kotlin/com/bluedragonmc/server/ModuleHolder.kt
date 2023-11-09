@@ -59,8 +59,10 @@ abstract class ModuleHolder {
                 // If all dependencies have been filled, use this module
                 if (node.parent.value is FilledModuleDependency && canAddModule(module)) {
                     val parentValue = (node.parent.value as FilledModuleDependency<*>)
-                    logger.debug("Using module because its dependencies have been solved: ${parentValue.instance}")
-                    use(parentValue.instance, parentValue.eventFilter!!)
+                    if (!modules.contains(parentValue.instance)) {
+                        logger.debug("Using module because its dependencies have been solved: ${parentValue.instance}")
+                        use(parentValue.instance, false, parentValue.eventFilter!!)
+                    }
                 }
             }
         }
@@ -70,8 +72,11 @@ abstract class ModuleHolder {
      * Adds a module to the dependency tree for this instance.
      * The module may or not be registered immediately, depending
      * on if its dependencies have been filled.
+     *
+     * If `force` is true, the module will be immediately registered
+     * without waiting for its dependencies.
      */
-    fun <T : GameModule> use(module: T, filter: Predicate<Event> = Predicate { true }): T {
+    fun <T : GameModule> use(module: T, force: Boolean = false, filter: Predicate<Event> = Predicate { true }): T {
 
         logger.debug("Attempting to register module $module")
         // Ensure this module has not been registered already
@@ -88,7 +93,7 @@ abstract class ModuleHolder {
 
         // If not all the module's dependencies were found, delay the loading of
         // the module until after all of its dependencies have been registered.
-        if (canAddModule(module)) {
+        if (force || canAddModule(module)) {
             register(module, filter)
             modules.add(module)
             solveDependencies(module)
