@@ -4,7 +4,6 @@ import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.model.CosmeticEntry
 import com.bluedragonmc.server.model.PlayerDocument
-import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.config.ConfigModule
 import net.kyori.adventure.text.Component
@@ -20,7 +19,6 @@ import org.spongepowered.configurate.objectmapping.ConfigSerializable
 import java.util.function.Consumer
 import kotlin.reflect.KClass
 
-@DependsOn(ConfigModule::class)
 class CosmeticsModule : GameModule() {
 
     private lateinit var parent: Game
@@ -70,7 +68,7 @@ class CosmeticsModule : GameModule() {
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         this.parent = parent
         if (!isConfigLoaded()) {
-            config = parent.getModule<ConfigModule>().loadExtra("cosmetics.yml")
+            config = ConfigModule.loadExtra(parent, "cosmetics.yml")
                 ?: error("Failed to load cosmetics configuration.")
             categories = config.node("categories").getList(Category::class.java)!!
             cosmetics = categories.flatMap { it.groups }.flatMap { it.cosmetics }

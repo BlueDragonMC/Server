@@ -1,8 +1,8 @@
 package com.bluedragonmc.server.module.minigame
 
 import com.bluedragonmc.server.Game
-import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
+import com.bluedragonmc.server.module.SoftDependsOn
 import com.bluedragonmc.server.module.config.ConfigModule
 import com.bluedragonmc.server.utils.CircularList
 import net.minestom.server.coordinate.Pos
@@ -17,12 +17,15 @@ import net.minestom.server.event.player.PlayerSpawnEvent
  * A `SpawnpointProvider` is used to determine the spawn location for a specific player.
  * This module does not automatically teleport the player when they join the game. That is the queue's reponsibility.
  */
-@DependsOn(ConfigModule::class)
+@SoftDependsOn(ConfigModule::class)
 class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule() {
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         if (spawnpointProvider is TeamConfigSpawnpointProvider && !parent.hasModule<TeamModule>()) {
             error("Team module not present! TeamDatabaseSpawnpointProvider cannot determine players' teams.")
+        }
+        if ((spawnpointProvider is ConfigSpawnpointProvider || spawnpointProvider is TeamConfigSpawnpointProvider) && !parent.hasModule<ConfigModule>()) {
+            error("Config module not present! (Team)ConfigSpawnpointProvider cannot find any spawn points.")
         }
         spawnpointProvider.initialize(parent)
         logger.debug("Initialized spawnpoint provider: ${spawnpointProvider::class.simpleName}")

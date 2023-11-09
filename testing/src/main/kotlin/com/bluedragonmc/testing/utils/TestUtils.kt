@@ -46,7 +46,10 @@ object TestUtils {
 
     fun emptyGame(env: Env, vararg modules: GameModule): Game {
         val game = EmptyGame(env)
-        game.useModules(listOf(*modules))
+        for (module in modules) {
+            game.use(module)
+        }
+        game.checkUnmetDependencies()
         return game
     }
 
@@ -84,13 +87,13 @@ object TestUtils {
         return (game.getModule<InstanceModule>() as FlatInstanceModule).getInstance()
     }
 
-    private class EmptyGame(env: Env) : Game("empty", "empty", null) {
+    private class EmptyGame(private val env: Env) : Game("empty", "empty", null) {
 
         override fun useMandatoryModules() {
             // no mandatory modules should be registered
         }
 
-        init {
+        override fun initialize() {
             use(FlatInstanceModule(env))
         }
     }

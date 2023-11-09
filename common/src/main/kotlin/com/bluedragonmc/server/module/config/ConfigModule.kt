@@ -1,10 +1,9 @@
 package com.bluedragonmc.server.module.config
 
 import com.bluedragonmc.server.Game
-import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
+import com.bluedragonmc.server.module.SoftDependsOn
 import com.bluedragonmc.server.module.config.serializer.*
-import com.bluedragonmc.server.module.instance.InstanceModule
 import com.bluedragonmc.server.module.map.AnvilFileMapProviderModule
 import com.bluedragonmc.server.module.minigame.KitsModule
 import net.kyori.adventure.text.Component
@@ -28,7 +27,7 @@ import kotlin.io.path.bufferedReader
 import kotlin.io.path.exists
 import kotlin.io.path.reader
 
-@DependsOn(InstanceModule::class)
+@SoftDependsOn(AnvilFileMapProviderModule::class)
 class ConfigModule(private val configFileName: String? = null) : GameModule() {
 
     private lateinit var root: ConfigurationNode
@@ -38,53 +37,11 @@ class ConfigModule(private val configFileName: String? = null) : GameModule() {
 
     private var initialized = false
 
-    /**
-     * Files in this folder will be treated as overrides
-     * to config placed inside the compiled JAR.
-     */
-    private val externalFolder = "/etc/config/"
-
-    /**
-     *  JAR (zip) entries in this folder inside the compiled JAR will act as
-     *  fallbacks for any configuration that isn't in the external folder.
-     */
-    private val internalFolder = "config/"
-
-    private fun getReader(path: String): BufferedReader {
-        val overrideFile = Paths.get(externalFolder, path)
-        return if (overrideFile.exists()) {
-            overrideFile.bufferedReader()
-        } else {
-            parent::class.java.classLoader.getResourceAsStream(internalFolder + path)!!.bufferedReader()
-        }
-    }
-
-    private fun loadFile(reader: BufferedReader): ConfigurationNode {
-
-        val loader = YamlConfigurationLoader.builder()
-            .source { reader }
-            .build()
-
-        val config = ConfigurationOptions.defaults().serializers { builder ->
-            builder.register(Pos::class.java, PosSerializer())
-            builder.register(Color::class.java, ColorSerializer())
-            builder.register(Component::class.java, ComponentSerializer())
-            builder.register(EntityType::class.java, EntityTypeSerializer())
-            builder.register(Material::class.java, MaterialSerializer())
-            builder.register(Enchantment::class.java, EnchantmentSerializer())
-            builder.register(PlayerSkin::class.java, PlayerSkinSerializer())
-            builder.register(KitsModule.Kit::class.java, KitSerializer())
-            builder.register(ItemStack::class.java, ItemStackSerializer())
-            builder.register(Block::class.java, BlockSerializer())
-        }
-        return loader.load(config)
-    }
-
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         this.parent = parent
         if (configFileName != null) {
             logger.info("Loading game configuration from $configFileName")
-            root = loadFile(getReader(configFileName))
+            root = loadFile(getReader(parent, configFileName))
         }
 
         if (parent.hasModule<AnvilFileMapProviderModule>()) {
@@ -123,9 +80,54 @@ class ConfigModule(private val configFileName: String? = null) : GameModule() {
         }
     }
 
-    fun loadExtra(fileName: String): ConfigurationNode? {
-        return runCatching {
-            loadFile(getReader(fileName))
-        }.getOrNull()
+    companion object {
+
+        /**
+         * Files in this folder will be treated as overrides
+         * to config placed inside the compiled JAR.
+         */
+        private val externalFolder = "/etc/config/"
+
+        /**
+         *  JAR (zip) entries in this folder inside the compiled JAR will act as
+         *  fallbacks for any configuration that isn't in the external folder.
+         */
+        private val internalFolder = "config/"
+
+        private fun getReader(game: Game, path: String): BufferedReader {
+            val overrideFile = Paths.get(externalFolder, path)
+            return if (overrideFile.exists()) {
+                overrideFile.bufferedReader()
+            } else {
+                game::class.java.classLoader.getResourceAsStream(internalFolder + path)!!.bufferedReader()
+            }
+        }
+
+        private fun loadFile(reader: BufferedReader): ConfigurationNode {
+
+            val loader = YamlConfigurationLoader.builder()
+                .source { reader }
+                .build()
+
+            val config = ConfigurationOptions.defaults().serializers { builder ->
+                builder.register(Pos::class.java, PosSerializer())
+                builder.register(Color::class.java, ColorSerializer())
+                builder.register(Component::class.java, ComponentSerializer())
+                builder.register(EntityType::class.java, EntityTypeSerializer())
+                builder.register(Material::class.java, MaterialSerializer())
+                builder.register(Enchantment::class.java, EnchantmentSerializer())
+                builder.register(PlayerSkin::class.java, PlayerSkinSerializer())
+                builder.register(KitsModule.Kit::class.java, KitSerializer())
+                builder.register(ItemStack::class.java, ItemStackSerializer())
+                builder.register(Block::class.java, BlockSerializer())
+            }
+            return loader.load(config)
+        }
+
+        fun loadExtra(game: Game, fileName: String): ConfigurationNode? {
+            return runCatching {
+                loadFile(getReader(game, fileName))
+            }.getOrNull()
+        }
     }
 }
