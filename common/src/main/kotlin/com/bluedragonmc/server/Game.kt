@@ -174,7 +174,7 @@ open class Game(val name: String, val mapName: String, val mode: String? = null)
         state = GameState.WAITING
     }
 
-    protected open fun getOwnedInstances(): List<Instance> = MinecraftServer.getInstanceManager().instances.filter {
+    open fun getOwnedInstances(): List<Instance> = MinecraftServer.getInstanceManager().instances.filter {
         ownsInstance(it)
     }
 
