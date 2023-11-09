@@ -53,7 +53,7 @@ abstract class ModuleHolder {
             }
         }
 
-        logger.info("Registering ${module::class.simpleName}")
+        logger.debug("Registering ${module::class.simpleName}")
         register(module, filter)
         modules.add(module)
         callback.accept(module)
@@ -61,7 +61,7 @@ abstract class ModuleHolder {
         // If registering this dependency allows others to register, process those now
         for ((waitingModule, waitingFilter, waitingCallback) in ArrayList(waiting)) {
             if (dependenciesMet(waitingModule, true)) {
-                logger.info("${waitingModule::class.simpleName} is ready!")
+                logger.debug("${waitingModule::class.simpleName} is ready!")
                 use(waitingModule, waitingFilter, waitingCallback as Consumer<GameModule>)
             }
         }
@@ -91,7 +91,7 @@ abstract class ModuleHolder {
 
         for ((module, filter, callback) in ArrayList(waiting)) {
             if (waiting.any { it.module == module } && dependenciesMet(module, includeSoftDeps = false)) {
-                logger.info("Adding ${module::class.simpleName} without its soft dependencies")
+                logger.debug("Adding ${module::class.simpleName} without its soft dependencies")
                 add(module, filter, callback as Consumer<GameModule>)
             }
         }
