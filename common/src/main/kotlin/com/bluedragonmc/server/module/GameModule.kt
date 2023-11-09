@@ -20,6 +20,9 @@ abstract class GameModule {
         LoggerFactory.getLogger(javaClass)
     }
 
-    open fun getDependencies() = this::class.findAnnotation<DependsOn>()?.dependencies ?: emptyArray()
+    open fun getRequiredDependencies() = this::class.findAnnotation<DependsOn>()?.dependencies ?: emptyArray()
+    open fun getSoftDependencies() = this::class.findAnnotation<SoftDependsOn>()?.dependencies ?: emptyArray()
+
+    fun getDependencies() = arrayOf(*getRequiredDependencies(), *getSoftDependencies())
 
 }
