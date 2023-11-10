@@ -76,6 +76,11 @@ abstract class ModuleHolder {
         if (modules.contains(module)) {
             return
         }
+
+        // Ensure this module doesn't depend on itself
+        if (module.getDependencies().any { it.isInstance(module) })
+            throw IllegalStateException("Tried to register module which depends on itself: $module")
+
         waiting.removeIf { it.module == module }
         if (dependenciesMet(module, true)) {
             add(module, filter, callback)

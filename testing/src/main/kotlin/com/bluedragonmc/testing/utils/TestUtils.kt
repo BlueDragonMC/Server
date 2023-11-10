@@ -50,6 +50,7 @@ object TestUtils {
             game.use(module)
         }
         game.checkUnmetDependencies()
+        game.init()
         return game
     }
 

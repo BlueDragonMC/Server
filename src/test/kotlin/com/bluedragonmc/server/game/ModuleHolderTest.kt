@@ -4,6 +4,7 @@ import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.ModuleHolder
 import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
+import com.bluedragonmc.server.module.SoftDependsOn
 import io.mockk.spyk
 import io.mockk.unmockkAll
 import io.mockk.verify
@@ -11,11 +12,9 @@ import io.mockk.verifyOrder
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import org.junit.jupiter.api.*
+import org.junit.jupiter.api.Test
 import java.util.function.Predicate
-import kotlin.test.assertContains
-import kotlin.test.assertContentEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 class ModuleHolderTest {
 
@@ -36,6 +35,9 @@ class ModuleHolderTest {
 
     @DependsOn(SimpleGameModule::class)
     private class OtherSimpleDependent : GameModuleStub()
+
+    @SoftDependsOn(SimpleGameModule::class)
+    private class SimpleSoftDependent : GameModuleStub()
 
     @DependsOn(SimpleDependent::class)
     private class MultiLevelDependent : GameModuleStub()
@@ -76,6 +78,42 @@ class ModuleHolderTest {
         verifyOrder {
             // Make sure the two modules were registered, and in the correct order
             instance.register(module, any())
+            instance.register(dependent, any())
+        }
+    }
+
+    @Test
+    fun `Modules registered after soft dependencies`() {
+        val module = SimpleGameModule()
+        val dependent = SimpleSoftDependent()
+
+        instance.use(dependent)
+        assertTrue(instance.modules.isEmpty())
+        verify(inverse = true) {
+            instance.register(dependent, any()) // Make sure the dependent module was not registered too early
+        }
+        instance.use(module)
+        assertContentEquals(instance.modules, listOf(module, dependent))
+        verifyOrder {
+            // Make sure the two modules were registered, and in the correct order
+            instance.register(module, any())
+            instance.register(dependent, any())
+        }
+    }
+
+    @Test
+    fun `Modules registered even if soft dependencies are absent`() {
+        val dependent = SimpleSoftDependent()
+
+        instance.use(dependent)
+        assertTrue(instance.modules.isEmpty())
+        verify(inverse = true) {
+            instance.register(dependent, any()) // Make sure the dependent module was not registered too early
+        }
+        instance.checkUnmetDependencies()
+        assertContentEquals(instance.modules, listOf(dependent))
+        verify {
+            // Make sure the module was registered
             instance.register(dependent, any())
         }
     }
@@ -156,28 +194,14 @@ class ModuleHolderTest {
     }
 
     @Test
-    fun `Register module twice throws`() {
+    fun `Register module twice`() {
         val module = SimpleGameModule()
 
-        assertDoesNotThrow {
-            instance.use(module)
-        }
-        assertThrows<IllegalStateException> {
-            instance.use(module) // Register the same module twice
-        }
-    }
-
-    @Test
-    fun `Register modules of the same type throws`() {
-        val module = SimpleGameModule()
-        val module2 = SimpleGameModule()
-
-        assertDoesNotThrow {
-            instance.use(module)
-        }
-        assertThrows<IllegalStateException> {
-            instance.use(module2) // Register the same module twice
-        }
+        instance.use(module)
+        assertContentEquals(instance.modules, listOf(module))
+        instance.use(module)
+        assertContentEquals(instance.modules, listOf(module))
+        assertEquals(instance.modules.size, 1)
     }
 
     @Test
