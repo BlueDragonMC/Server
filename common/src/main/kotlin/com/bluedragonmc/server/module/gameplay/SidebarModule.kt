@@ -16,6 +16,7 @@ import net.kyori.adventure.text.format.NamedTextColor.DARK_GRAY
 import net.kyori.adventure.text.format.NamedTextColor.RED
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.translation.GlobalTranslator
+import net.minestom.server.MinecraftServer
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
@@ -163,8 +164,12 @@ class SidebarModule(private val title: String) : GameModule() {
         init {
             update()
 
-            module.eventNode.addListener(GameStateChangedEvent::class.java) { _ -> update() }
-            module.eventNode.addListener(GameStartEvent::class.java) { _ -> update() }
+            val updateNextTick = {
+                MinecraftServer.getSchedulerManager().scheduleNextTick(::update)
+            }
+
+            module.eventNode.addListener(GameStateChangedEvent::class.java) { _ -> updateNextTick() }
+            module.eventNode.addListener(GameStartEvent::class.java) { _ -> updateNextTick() }
             module.eventNode.addListener(CountdownEvent.CountdownStartEvent::class.java) { _ -> update() }
             module.eventNode.addListener(CountdownEvent.CountdownTickEvent::class.java) { _ -> update() }
         }
