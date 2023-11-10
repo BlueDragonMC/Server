@@ -9,6 +9,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Trigger Jitpack Build
         run: curl "https://jitpack.io/com/github/BlueDragonMC/Server/${GITHUB_SHA:0:10}/build.log"
