@@ -34,7 +34,10 @@ class FallDamageModule : GameModule() {
                 // Beds reduce fall damage by 50%
                 blockBelow.compare(Block.RED_BED, Block.Comparator.ID) -> 0.5
                 // Sweet berry bushes and cobwebs negate all fall damage
-                blockBelow.compare(Block.SWEET_BERRY_BUSH) || blockBelow.compare(Block.COBWEB) || (blockBelow.compare(Block.SLIME_BLOCK) && !player.isSneaking) -> 1.0
+                blockBelow.compare(Block.SWEET_BERRY_BUSH) || blockBelow.compare(Block.COBWEB) || (blockBelow.compare(
+                    Block.SLIME_BLOCK
+                ) && !player.isSneaking) -> 1.0
+
                 else -> 0.0
             }
             // Feather falling reduces fall damage by 12% per level
@@ -70,7 +73,7 @@ class FallDamageModule : GameModule() {
                 player.removeTag(FALL_START_TAG)
             }
 
-            if (player.isFlyingWithElytra && player.getTag(LAST_Y_TAG) - player.position.y <= 0.5) {
+            if (player.isFlyingWithElytra && player.hasTag(LAST_Y_TAG) && player.getTag(LAST_Y_TAG) - player.position.y <= 0.5) {
                 // Fall distance is reset to 1 block when a player is flying level,
                 // upwards, or downwards at a rate <= 0.5 blocks per tick.
                 player.setTag(FALL_START_TAG, event.player.position.y + 1.0)
