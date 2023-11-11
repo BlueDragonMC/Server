@@ -127,8 +127,7 @@ class CustomPlayer(uuid: UUID, username: String, playerConnection: PlayerConnect
          * Gets the XP level based on the total number of XP specified.
          */
         fun getXpLevel(experience: Int): Double {
-            return if (experience < 45000) (log(experience / 1000.0 + 1.0, 1.2) + 1)
-            else experience / 10000.0 + 18.0
+            return kotlin.math.sqrt(experience / 20.0)
         }
 
         /**
@@ -152,9 +151,7 @@ class CustomPlayer(uuid: UUID, username: String, playerConnection: PlayerConnect
          * Returns the total amount of XP needed to reach a certain level.
          */
         private fun getXpOfLevel(level: Int): Int {
-            val xp = (1000 * 1.2.pow(level - 1.0) - 1000).toInt()
-            if (xp < 45000) return xp
-            return 10000 * level - 180000
+            return 20 * level * level
         }
     }
 
