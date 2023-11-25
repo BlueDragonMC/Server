@@ -18,6 +18,9 @@ EXPOSE 25565
 EXPOSE 50051
 WORKDIR /server
 
+LABEL com.bluedragonmc.image=server
+LABEL com.bluedragonmc.environment=development
+
 # Copy config files and assets
 COPY favicon_64.png /server/favicon_64.png
 

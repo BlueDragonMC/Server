@@ -15,6 +15,9 @@ EXPOSE 25565
 EXPOSE 50051
 WORKDIR /server
 
+LABEL com.bluedragonmc.image=server
+LABEL com.bluedragonmc.environment=production
+
 COPY favicon_64.png /server/favicon_64.png
 
 # Copy the built JAR from the previous step
