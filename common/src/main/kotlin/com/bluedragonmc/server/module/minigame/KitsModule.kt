@@ -35,7 +35,7 @@ open class KitsModule(
 
     private lateinit var parent: Game
 
-    private val selectedKits = hashMapOf<Player, Kit>()
+    protected val selectedKits = hashMapOf<Player, Kit>()
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         this.parent = parent
         // todo add support for unlockable kits
@@ -94,7 +94,7 @@ open class KitsModule(
 
     fun hasAbility(player: Player, ability: String): Boolean = getSelectedKit(player).hasAbility(ability)
 
-    data class Kit(
+    open class Kit(
         val name: Component,
         val description: Component = Component.empty(),
         val icon: Material = Material.DIAMOND,
