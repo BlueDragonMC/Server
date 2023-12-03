@@ -84,14 +84,30 @@ class DoubleJumpModule(
         if (cooldownMillis > 0)
             eventNode.addListener(PlayerTickEvent::class.java) { event ->
                 val remainingMs = cooldownMillis - getTimeSinceLastJump(event.player)
-                if (remainingMs >= 0)
-                    event.player.sendActionBar(
+                if (remainingMs >= 0) {
+                    if (!parent.hasModule<ActionBarModule>()) {
+                        event.player.sendActionBar(
+                            abilityProgressBar(
+                                Component.translatable("global.ability.double_jump", ALT_COLOR_1, TextDecoration.BOLD),
+                                remainingMs.toInt(),
+                                cooldownMillis.toInt()
+                            )
+                        )
+                    }
+                }
+            }
+
+            eventNode.addListener(ActionBarModule.CollectActionBarEvent::class.java) { event ->
+                val remainingMs = cooldownMillis - getTimeSinceLastJump(event.player)
+                if (remainingMs >= 0) {
+                    event.addItem(
                         abilityProgressBar(
                             Component.translatable("global.ability.double_jump", ALT_COLOR_1, TextDecoration.BOLD),
                             remainingMs.toInt(),
                             cooldownMillis.toInt()
                         )
                     )
+                }
             }
     }
 
