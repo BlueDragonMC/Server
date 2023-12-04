@@ -32,6 +32,17 @@ This uses the `Dockerfile` in the current directory to build an image with the v
 
 Environment variables:
 * `PUFFIN_VELOCITY_SECRET` - Your Velocity proxy forwarding secret (optional). If not specified, Mojang authentication will be enabled.
+* `BLUEDRAGON_AGONES_HEALTHCHECK_INTERVAL_MS` - The amount of time in between Agones healthcheck pings, in milliseconds.
+* `BLUEDRAGON_AGONES_RESERVATION_TIME_MS` - The amount of time in between Agones server reservations, in milliseconds.
+* `BLUEDRAGON_AGONES_DISABLED` - Disables Agones integration if set to any value.
+* `BLUEDRAGON_ENV_TYPE` - Set to "DEV" to enable development mode.
+* `BLUEDRAGON_QUEUE_TYPE` - Set to "IPC" to use Puffin or "TEST" for the `TestQueue`. If not present, a default value is inferred.
+* `BLUEDRAGON_MONGO_HOSTNAME` - The hostname used to connect to MongoDB.
+* `BLUEDRAGON_PUFFIN_HOSTNAME` - The hostname used to connect to Puffin.
+* `BLUEDRAGON_LUCKPERMS_HOSTNAME` - The hostname used to connect to LuckPerms.
+* `HOSTNAME` - Used to determine the server name. Provided by default in Docker or Kubernetes environments.
+* `SERVER_INSTANCE_MIN_INACTIVE_TIME` - The amount of time that an instance must be inactive before it is cleaned up.
+* `SERVER_INSTANCE_CLEANUP_PERIOD` - The amount of time in between instance cleanup tasks.
 
 ## Implementation
 To learn how to integrate other server software with BlueDragon's systems, see the [Integration Guide](./INTEGRATION.md)

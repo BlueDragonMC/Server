@@ -24,10 +24,11 @@ object AgonesIntegration : Bootstrap(EnvType.PRODUCTION) {
     lateinit var stub: SDKGrpcKt.SDKCoroutineStub
 
     // The amount of milliseconds in between health check pings
-    private const val HEALTH_CHECK_INTERVAL = 10_000L
+    private val HEALTH_CHECK_INTERVAL = System.getenv("BLUEDRAGON_AGONES_HEALTHCHECK_INTERVAL_MS")?.toLongOrNull() ?: 10_000L
 
     // When players are online, keep the server reserved for twice the healthcheck interval.
-    private const val RESERVATION_TIME = HEALTH_CHECK_INTERVAL * 2L
+    private val RESERVATION_TIME =
+        System.getenv("BLUEDRAGON_AGONES_RESERVATION_TIME_MS")?.toLongOrNull() ?: (HEALTH_CHECK_INTERVAL * 2L)
 
     override fun hook(eventNode: EventNode<Event>) {
 
