@@ -13,6 +13,7 @@ import net.minestom.server.entity.damage.DamageType
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.entity.EntityAttackEvent
+import net.minestom.server.event.entity.EntityPotionAddEvent
 import net.minestom.server.event.entity.EntityTickEvent
 import net.minestom.server.event.player.PlayerEatEvent
 import net.minestom.server.event.player.PlayerSpawnEvent
@@ -79,14 +80,8 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
             if(event.entity is Player) {
                 val player = event.entity as Player
                 player.activeEffects.forEach {
-                    when(it.potion.effect) {
-                        PotionEffect.REGENERATION -> {
-                            player.health = (player.health + 1.0f / (50.0f / it.potion.amplifier)).coerceAtMost(player.maxHealth)
-                        }
-                        PotionEffect.ABSORPTION -> {
-                            player.additionalHearts = 4.0f * it.potion.amplifier
-                        }
-                        else -> {}
+                    if (it.potion.effect == PotionEffect.REGENERATION) {
+                        player.health = (player.health + 1.0f / (50.0f / it.potion.amplifier)).coerceAtMost(player.maxHealth)
                     }
                 }
                 if(player.activeEffects.none { it.potion.effect == PotionEffect.ABSORPTION })
@@ -128,6 +123,13 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
                 else -> return@addListener
             }
             event.player.setItemInHand(event.hand, event.itemStack.withAmount(event.itemStack.amount() - 1))
+        }
+
+        eventNode.addListener(EntityPotionAddEvent::class.java) { event ->
+            val entity = event.entity as? Player ?: return@addListener
+            if (event.potion.effect == PotionEffect.ABSORPTION) {
+                entity.additionalHearts = 4.0f * event.potion.amplifier
+            }
         }
 
         eventNode.addListener(EntityAttackEvent::class.java) { event ->
