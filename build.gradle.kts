@@ -12,15 +12,15 @@ group = "com.bluedragonmc"
 version = "1.0-SNAPSHOT"
 
 repositories {
-    mavenCentral()
     mavenLocal()
+    mavenCentral()
     maven(url = "https://jitpack.io")
 }
 
 subprojects {
     repositories {
-        mavenCentral()
         mavenLocal()
+        mavenCentral()
         maven(url = "https://jitpack.io")
     }
 }
