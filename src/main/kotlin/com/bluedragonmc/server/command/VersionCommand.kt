@@ -6,6 +6,7 @@ import com.bluedragonmc.server.utils.clickEvent
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.event.ClickEvent
 import net.kyori.adventure.text.format.NamedTextColor
+import net.minestom.server.Git
 import java.text.DateFormat
 import java.time.Duration
 
@@ -43,7 +44,11 @@ class VersionCommand(name: String, usageString: String, vararg aliases: String?)
                     // Uptime
                     duration.toHoursPart(),
                     duration.toMinutesPart(),
-                    duration.toSecondsPart()
+                    duration.toSecondsPart(),
+                    Git.group() ?: "?",
+                    Git.artifact() ?: "?",
+                    Git.commit() ?: "?",
+                    Git.branch() ?: "?"
                 )
             )
             if (Environment.isDev) {
