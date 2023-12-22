@@ -2,6 +2,7 @@ package com.bluedragonmc.server.api
 
 import com.bluedragonmc.api.grpc.CommonTypes.GameState
 import com.bluedragonmc.api.grpc.CommonTypes.GameType
+import com.bluedragonmc.api.grpc.JukeboxOuterClass.PlayerSongQueue
 import com.bluedragonmc.api.grpc.PartySvc.PartyListResponse
 import com.bluedragonmc.api.grpc.PlayerTrackerOuterClass.QueryPlayerResponse
 import com.bluedragonmc.server.Game
@@ -49,5 +50,12 @@ interface OutgoingRPCHandler {
     suspend fun warpParty(partyOwner: Player, instance: Instance)
     suspend fun transferParty(partyOwner: Player, newOwner: UUID)
     suspend fun listPartyMembers(member: UUID): PartyListResponse
+
+    // Jukebox controls
+    suspend fun getSongInfo(player: Player): PlayerSongQueue
+    suspend fun playSong(player: Player, songName: String, queuePosition: Int, startTimeInTicks: Int, tags: List<String>): Boolean
+    suspend fun removeSongByName(player: Player, songName: String)
+    suspend fun removeSongByTag(player: Player, matchTags: List<String>)
+    suspend fun stopSongAndClearQueue(player: Player)
 
 }

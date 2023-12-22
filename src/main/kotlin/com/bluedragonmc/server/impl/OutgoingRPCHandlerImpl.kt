@@ -15,6 +15,8 @@ import com.bluedragonmc.server.service.Messaging
 import com.bluedragonmc.server.utils.listen
 import com.bluedragonmc.server.utils.listenSuspend
 import com.bluedragonmc.server.utils.miniMessage
+import com.github.benmanes.caffeine.cache.Caffeine
+import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -28,6 +30,7 @@ import net.minestom.server.event.instance.AddEntityToInstanceEvent
 import net.minestom.server.event.player.PlayerDisconnectEvent
 import net.minestom.server.event.player.PlayerSpawnEvent
 import net.minestom.server.instance.Instance
+import java.time.Duration
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -110,6 +113,27 @@ class OutgoingRPCHandlerImpl(serverAddress: String) : OutgoingRPCHandler {
     private val playerTrackerStub = PlayerTrackerGrpcKt.PlayerTrackerCoroutineStub(channel)
     private val queueStub = QueueServiceGrpcKt.QueueServiceCoroutineStub(channel)
     private val partyStub = PartyServiceGrpcKt.PartyServiceCoroutineStub(channel)
+
+    private val proxyChannelCache = Caffeine
+        .newBuilder()
+        .expireAfterAccess(Duration.ofMinutes(10))
+        .evictionListener<String, ManagedChannel> { _, value, _ ->
+            value?.shutdown()?.awaitTermination(10, TimeUnit.SECONDS)
+        }
+        .build<String, ManagedChannel>()
+
+    private fun getChannelToProxyOf(player: Player): ManagedChannel {
+        val address = player.playerConnection.remoteAddress.toString()
+        return proxyChannelCache.get(address) { _ ->
+            ManagedChannelBuilder.forAddress(address, 50051)
+                .defaultLoadBalancingPolicy("round_robin")
+                .usePlaintext()
+                .enableRetry()
+                .build()
+        }
+    }
+
+    private fun getJukeboxStubOf(player: Player) = JukeboxGrpcKt.JukeboxCoroutineStub(getChannelToProxyOf(player))
 
     override fun isConnected(): Boolean {
         return !channel.isShutdown && !channel.isTerminated && ::serverName.isInitialized
@@ -298,5 +322,47 @@ class OutgoingRPCHandlerImpl(serverAddress: String) : OutgoingRPCHandler {
                 .setPlayerUuid(member.toString())
                 .build()
         )
+    }
+
+    override suspend fun getSongInfo(player: Player): JukeboxOuterClass.PlayerSongQueue {
+        return getJukeboxStubOf(player).getSongInfo(songInfoRequest {
+            playerUuid = player.uuid.toString()
+        })
+    }
+
+    override suspend fun playSong(
+        player: Player,
+        songName: String,
+        queuePosition: Int,
+        startTimeInTicks: Int,
+        tags: List<String>,
+    ): Boolean {
+        return getJukeboxStubOf(player).playSong(playSongRequest {
+            this.playerUuid = player.uuid.toString()
+            this.songName = songName
+            this.queuePosition = queuePosition
+            this.startTimeTicks = startTimeInTicks
+            tags.forEach { this.tags.add(it) }
+        }).startedPlaying
+    }
+
+    override suspend fun removeSongByName(player: Player, songName: String) {
+        getJukeboxStubOf(player).removeSong(songRemoveRequest {
+            this.playerUuid = player.uuid.toString()
+            this.songName = songName
+        })
+    }
+
+    override suspend fun removeSongByTag(player: Player, matchTags: List<String>) {
+        getJukeboxStubOf(player).removeSongs(batchSongRemoveRequest {
+            this.playerUuid = player.uuid.toString()
+            matchTags.forEach { this.matchTags.add(it) }
+        })
+    }
+
+    override suspend fun stopSongAndClearQueue(player: Player) {
+        getJukeboxStubOf(player).stopSong(stopSongRequest {
+            this.playerUuid = player.uuid.toString()
+        })
     }
 }

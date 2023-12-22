@@ -1,8 +1,6 @@
 package com.bluedragonmc.server.api
 
-import com.bluedragonmc.api.grpc.CommonTypes
-import com.bluedragonmc.api.grpc.PartySvc
-import com.bluedragonmc.api.grpc.PlayerTrackerOuterClass
+import com.bluedragonmc.api.grpc.*
 import com.bluedragonmc.server.Game
 import net.kyori.adventure.text.Component
 import net.minestom.server.command.CommandSender
@@ -100,4 +98,31 @@ class OutgoingRPCHandlerStub : OutgoingRPCHandler {
         return PartySvc.PartyListResponse.getDefaultInstance()
     }
 
+    override suspend fun getSongInfo(player: Player): JukeboxOuterClass.PlayerSongQueue {
+        return playerSongQueue {
+            isPlaying = false
+        }
+    }
+
+    override suspend fun playSong(
+        player: Player,
+        songName: String,
+        queuePosition: Int,
+        startTimeInTicks: Int,
+        tags: List<String>,
+    ): Boolean {
+        return false
+    }
+
+    override suspend fun removeSongByName(player: Player, songName: String) {
+
+    }
+
+    override suspend fun removeSongByTag(player: Player, matchTags: List<String>) {
+
+    }
+
+    override suspend fun stopSongAndClearQueue(player: Player) {
+
+    }
 }
