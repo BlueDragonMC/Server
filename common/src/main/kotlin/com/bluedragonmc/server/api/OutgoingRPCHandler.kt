@@ -46,6 +46,7 @@ interface OutgoingRPCHandler {
     suspend fun inviteToParty(partyOwner: UUID, invitee: UUID)
     suspend fun acceptPartyInvitation(partyOwner: UUID, invitee: UUID)
     suspend fun kickFromParty(partyOwner: UUID, player: UUID)
+    suspend fun leaveParty(player: UUID)
     suspend fun partyChat(message: String, sender: Player)
     suspend fun warpParty(partyOwner: Player, instance: Instance)
     suspend fun transferParty(partyOwner: Player, newOwner: UUID)

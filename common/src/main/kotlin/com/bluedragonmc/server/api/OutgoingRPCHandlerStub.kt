@@ -82,6 +82,10 @@ class OutgoingRPCHandlerStub : OutgoingRPCHandler {
 
     }
 
+    override suspend fun leaveParty(player: UUID) {
+
+    }
+
     override suspend fun partyChat(message: String, sender: Player) {
 
     }
