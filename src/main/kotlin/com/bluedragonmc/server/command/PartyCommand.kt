@@ -6,14 +6,17 @@ import com.bluedragonmc.server.utils.miniMessage
 import com.bluedragonmc.server.utils.plus
 import com.bluedragonmc.server.utils.surroundWithSeparators
 import net.kyori.adventure.text.Component
+import net.minestom.server.entity.Player
 
 class PartyCommand(name: String, usageString: String, vararg aliases: String) :
     BlueDragonCommand(name, aliases, block = {
         requirePlayers() // All subcommands require a player
         usage(usageString)
+
         /*
         invite <player>
         kick <player>
+        leave
         promote <player>
         warp
         chat <message>
@@ -43,14 +46,7 @@ class PartyCommand(name: String, usageString: String, vararg aliases: String) :
         subcommand("chat") {
             val messageArgument by StringArrayArgument
             suspendSyntax(messageArgument) {
-                val msg = if (Permissions.hasPermission(player.uuid, "chat.minimessage") != true) {
-                    // Escape the chat message to prevent players using MiniMessage tags in party chat messages
-                    miniMessage.escapeTags(get(messageArgument).joinToString(" "))
-                } else {
-                    // The player is allowed to use MiniMessage
-                    get(messageArgument).joinToString(" ")
-                }
-                Messaging.outgoing.partyChat(msg, player)
+                handlePartyChat(get(messageArgument).joinToString(" "), player)
             }
         }
 
@@ -94,4 +90,33 @@ class PartyCommand(name: String, usageString: String, vararg aliases: String) :
             }
         }
 
+        // If the player adds a player as the first argument instead of typing `invite <player>`
+        val playerArgument by PlayerArgument
+        suspendSyntax(playerArgument) {
+            Messaging.outgoing.inviteToParty(player.uuid, getFirstPlayer(playerArgument).uuid)
+        }
+
+    })
+
+suspend fun handlePartyChat(message: String, player: Player) {
+    val msg = if (Permissions.hasPermission(player.uuid, "chat.minimessage") != true) {
+        // Escape the chat message to prevent players using MiniMessage tags in party chat messages
+        miniMessage.escapeTags(message)
+    } else {
+        // The player is allowed to use MiniMessage
+        message
+    }
+    Messaging.outgoing.partyChat(msg, player)
+}
+
+class PartyChatShorthandCommand(name: String, usageString: String, vararg aliases: String) :
+    BlueDragonCommand(name, aliases, block = {
+
+        requirePlayers()
+        usage(usageString)
+
+        val messageArgument by StringArrayArgument
+        suspendSyntax(messageArgument) {
+            handlePartyChat(get(messageArgument).joinToString(" "), player)
+        }
     })
