@@ -12,6 +12,7 @@ abstract class Environment {
         val mongoHostname get() = current.mongoHostname
         val dbName get() = current.dbName
         val puffinHostname get() = current.puffinHostname
+        val defaultGameName get() = current.defaultGameName
         val gameClasses get() = current.gameClasses
         val versionInfo get() = current.versionInfo
         val isDev get() = current.isDev
@@ -31,6 +32,7 @@ abstract class Environment {
     abstract val gameClasses: Collection<String>
     abstract val versionInfo: VersionInfo
     abstract val isDev: Boolean
+    open val defaultGameName: String = "Lobby"
     open val dbName: String = "bluedragon"
 
     abstract suspend fun getServerName(): String

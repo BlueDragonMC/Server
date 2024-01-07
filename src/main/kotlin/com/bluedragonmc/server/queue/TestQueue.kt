@@ -2,6 +2,7 @@ package com.bluedragonmc.server.queue
 
 import com.bluedragonmc.api.grpc.CommonTypes
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.api.Queue
 import com.bluedragonmc.server.lobby
 import com.github.benmanes.caffeine.cache.Cache
@@ -34,7 +35,7 @@ class TestQueue : Queue() {
      * @param gameType The game type which the player wants to join.
      */
     override fun queue(player: Player, gameType: CommonTypes.GameType) {
-        if (gameType.name == "Lobby" && gameType.mapName.isEmpty() && gameType.mode.isEmpty()) {
+        if (gameType.name == Environment.defaultGameName && gameType.mapName.isEmpty() && gameType.mode.isEmpty()) {
             lobby.addPlayer(player)
             return
         }

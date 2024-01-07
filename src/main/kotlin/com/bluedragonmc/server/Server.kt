@@ -88,7 +88,7 @@ fun start() {
 
     // Create a Lobby instance
     lobby = try {
-        GameLoader.createNewGame("Lobby", null, null)
+        GameLoader.createNewGame(Environment.defaultGameName, null, null)
     } catch (e: Throwable) {
         logger.error("There was an error initializing the Lobby. Shutting down...")
         e.printStackTrace()

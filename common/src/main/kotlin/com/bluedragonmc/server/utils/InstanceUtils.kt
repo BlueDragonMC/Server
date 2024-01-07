@@ -55,7 +55,7 @@ object InstanceUtils {
             return CompletableFuture.completedFuture(null)
         } else {
             // If the instance is not empty, attempt to send all players to a lobby
-            val lobby = Game.games.find { it.name == "Lobby" }
+            val lobby = Game.games.find { it.name == Environment.defaultGameName }
             if (lobby != null) {
                 val lobbyInstanceOf = lobby.getModule<InstanceModule>()::getSpawningInstance
                 val spawnpointOf = lobby.getModule<SpawnpointModule>().spawnpointProvider::getSpawnpoint
@@ -72,7 +72,7 @@ object InstanceUtils {
                 val queueTask: Task = MinecraftServer.getSchedulerManager().buildTask {
                     instance.players.forEach {
                         Environment.queue.queue(it, gameType {
-                            name = "Lobby"
+                            name = Environment.defaultGameName
                             selectors += GameTypeFieldSelector.GAME_NAME
                         })
                     }

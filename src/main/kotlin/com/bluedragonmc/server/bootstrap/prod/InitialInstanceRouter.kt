@@ -2,6 +2,7 @@ package com.bluedragonmc.server.bootstrap.prod
 
 import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.bootstrap.Bootstrap
 import com.bluedragonmc.server.model.EventLog
 import com.bluedragonmc.server.model.Severity
@@ -82,7 +83,7 @@ object InitialInstanceRouter : Bootstrap(EnvType.PRODUCTION) {
         } else {
             logger.warn("Invalid destination ('$destination') supplied for player ${event.player.username}, sending to Lobby.")
             // If no destination was found, send the player to a lobby.
-            Game.games.find { it.name.lowercase() == "lobby" }
+            Game.games.find { it.name.equals(Environment.defaultGameName, ignoreCase = true) }
         }
         val instance = game?.getModule<InstanceModule>()?.getSpawningInstance(event.player)
         if (instance == null) {

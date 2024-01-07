@@ -4,6 +4,7 @@ import com.bluedragonmc.api.grpc.CommonTypes
 import com.bluedragonmc.api.grpc.GsClient
 import com.bluedragonmc.api.grpc.PlayerHolderOuterClass.SendPlayerRequest
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.api.Queue
 import com.bluedragonmc.server.lobby
 import com.bluedragonmc.server.model.EventLog
@@ -27,7 +28,7 @@ object IPCQueue : Queue() {
     private val queuedPlayers = mutableListOf<Player>()
 
     override fun queue(player: Player, gameType: CommonTypes.GameType) {
-        if (gameType.name == "Lobby" && gameType.mapName == null && gameType.mode == null) {
+        if (gameType.name == Environment.defaultGameName && gameType.mapName == null && gameType.mode == null) {
             lobby.addPlayer(player)
             return
         }

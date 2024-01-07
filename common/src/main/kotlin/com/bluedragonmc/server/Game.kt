@@ -196,7 +196,7 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
                     )
                 )
                 Environment.queue.queue(player, gameType {
-                    name = "Lobby"
+                    name = Environment.defaultGameName
                     selectors += GameTypeFieldSelector.GAME_NAME
                 })
             }

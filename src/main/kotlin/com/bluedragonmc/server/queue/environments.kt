@@ -36,6 +36,8 @@ class ConfiguredEnvironment : Environment() {
     override val versionInfo: VersionInfo = GitVersionInfo
     override val isDev: Boolean = isDev()
 
+    override val defaultGameName: String = System.getenv("BLUEDRAGON_DEFAULT_GAME") ?: super.defaultGameName
+
     private lateinit var serverName: String
     private val isAgonesEnabled get() = System.getenv("BLUEDRAGON_AGONES_DISABLED") == null
 
