@@ -21,8 +21,8 @@ import net.minestom.server.event.player.PlayerRespawnEvent
 class InstantRespawnModule : GameModule() {
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         eventNode.addListener(EntityDamageEvent::class.java) { event ->
-            if (event.entity is Player && event.damage >= (event.entity.health + (event.entity as Player).additionalHearts)) {
-                event.damage = 0.0f
+            if (event.entity is Player && event.damage.amount >= (event.entity.health + (event.entity as Player).additionalHearts)) {
+                event.damage.amount = 0.0f
 
                 (event.entity as CustomPlayer).apply {
                     refreshHealth()

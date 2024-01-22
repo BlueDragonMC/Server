@@ -9,7 +9,6 @@ import com.bluedragonmc.server.module.minigame.SpawnpointModule
 import net.kyori.adventure.text.Component
 import net.minestom.server.MinecraftServer
 import net.minestom.server.event.EventNode
-import net.minestom.server.event.player.PlayerLoginEvent
 import net.minestom.server.event.trait.PlayerEvent
 import net.minestom.server.instance.Instance
 import net.minestom.server.timer.Task
@@ -29,12 +28,6 @@ object InstanceUtils {
         eventNode.addListener(PlayerEvent::class.java) { event ->
             event.player.kick(Component.text("This instance is shutting down."))
             event.player.remove()
-        }
-        eventNode.addListener(PlayerLoginEvent::class.java) { event ->
-            if (event.spawningInstance == instance) {
-                event.player.kick(Component.text("This instance is shutting down."))
-                event.player.remove()
-            }
         }
         MinecraftServer.getGlobalEventHandler().addChild(eventNode)
         return vacateInstance(instance).thenRun {

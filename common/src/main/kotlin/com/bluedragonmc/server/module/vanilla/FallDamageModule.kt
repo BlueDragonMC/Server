@@ -88,7 +88,7 @@ class FallDamageModule : GameModule() {
                         player, fallStart - event.player.position.y - 3 - getJumpBoostLevel(player)
                     )
                     if (fallDamage > 0.0) {
-                        player.damage(DamageType.GRAVITY, fallDamage.toFloat())
+                        player.damage(DamageType.FALL, fallDamage.toFloat())
                     }
                 }
             } else {

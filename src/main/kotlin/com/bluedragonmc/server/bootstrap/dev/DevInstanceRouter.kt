@@ -10,18 +10,18 @@ import net.minestom.server.MinecraftServer
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.instance.InstanceTickEvent
+import net.minestom.server.event.player.AsyncPlayerConfigurationEvent
 import net.minestom.server.event.player.AsyncPlayerPreLoginEvent
-import net.minestom.server.event.player.PlayerLoginEvent
 
 object DevInstanceRouter : Bootstrap(EnvType.DEVELOPMENT) {
     override fun hook(eventNode: EventNode<Event>) {
         eventNode.addListener(AsyncPlayerPreLoginEvent::class.java) { event ->
             Database.connection.loadDataDocument(event.player as CustomPlayer)
         }
-        eventNode.addListener(PlayerLoginEvent::class.java) { event ->
+        eventNode.addListener(AsyncPlayerConfigurationEvent::class.java) { event ->
             if (isLobbyInitialized()) {
                 // Send the player to the lobby
-                event.setSpawningInstance(lobby.getInstance())
+                event.spawningInstance = lobby.getInstance()
                 lobby.players.add(event.player)
             } else {
                 // Send the player to a temporary "limbo" instance while the lobby is being loaded
@@ -35,7 +35,7 @@ object DevInstanceRouter : Bootstrap(EnvType.DEVELOPMENT) {
                         lobby.addPlayer(event.player)
                     }
                 }
-                event.setSpawningInstance(instance)
+                event.spawningInstance = instance
             }
         }
     }
