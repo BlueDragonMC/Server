@@ -41,8 +41,8 @@ class CustomDeathMessageModule : GameModule() {
                         Component.translatable("death.attack.generic", BRAND_COLOR_PRIMARY_2, player.name)
                     }
                 }
-                DamageType.VOID -> Component.translatable("death.attack.outOfWorld", BRAND_COLOR_PRIMARY_2, player.name)
-                DamageType.GRAVITY -> Component.translatable("death.attack.fall", BRAND_COLOR_PRIMARY_2, player.name)
+                DamageType.OUT_OF_WORLD -> Component.translatable("death.attack.outOfWorld", BRAND_COLOR_PRIMARY_2, player.name)
+                DamageType.FALL -> Component.translatable("death.attack.fall", BRAND_COLOR_PRIMARY_2, player.name)
                 else -> Component.translatable("death.attack.generic", BRAND_COLOR_PRIMARY_2, player.name)
             }
         }

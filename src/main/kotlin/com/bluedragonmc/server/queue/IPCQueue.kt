@@ -78,7 +78,7 @@ object IPCQueue : Queue() {
 
     override fun sendPlayer(request: SendPlayerRequest) {
         val gameId = request.instanceId
-        val player = MinecraftServer.getConnectionManager().getPlayer(UUID.fromString(request.playerUuid)) ?: return
+        val player = MinecraftServer.getConnectionManager().getOnlinePlayerByUuid(UUID.fromString(request.playerUuid)) ?: return
         val game = Game.findGame(gameId) ?: run {
             player.sendMessage(
                 Component.translatable(

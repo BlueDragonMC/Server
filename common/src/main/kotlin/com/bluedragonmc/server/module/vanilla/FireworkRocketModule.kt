@@ -7,7 +7,7 @@ import net.minestom.server.MinecraftServer
 import net.minestom.server.entity.Entity
 import net.minestom.server.entity.EntityType
 import net.minestom.server.entity.Player
-import net.minestom.server.entity.metadata.other.FireworkRocketMeta
+import net.minestom.server.entity.metadata.projectile.FireworkRocketMeta
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.player.PlayerUseItemEvent

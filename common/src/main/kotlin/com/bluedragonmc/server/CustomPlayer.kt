@@ -18,8 +18,6 @@ import net.minestom.server.potion.PotionEffect
 import net.minestom.server.utils.async.AsyncUtils
 import java.util.*
 import java.util.concurrent.CompletableFuture
-import kotlin.math.log
-import kotlin.math.pow
 
 class CustomPlayer(uuid: UUID, username: String, playerConnection: PlayerConnection) :
     Player(uuid, username, playerConnection) {
@@ -62,9 +60,10 @@ class CustomPlayer(uuid: UUID, username: String, playerConnection: PlayerConnect
         }
     }
 
-    override fun setGameMode(gameMode: GameMode) {
+    override fun setGameMode(gameMode: GameMode): Boolean {
         val prevGameMode = this.gameMode
-        super.setGameMode(gameMode)
+        val result = super.setGameMode(gameMode)
+        if (!result) return false
         // When a player stops spectating, send a camera packet to make sure they are not stuck.
         if (isSpectating && prevGameMode == GameMode.SPECTATOR && gameMode != GameMode.SPECTATOR) {
             stopSpectating()
@@ -76,6 +75,7 @@ class CustomPlayer(uuid: UUID, username: String, playerConnection: PlayerConnect
         if (prevGameMode == GameMode.SPECTATOR && gameMode != GameMode.SPECTATOR) { // Leaving spectator mode
             isInvisible = wasInvisible
         }
+        return true
     }
 
     public override fun refreshHealth() { // Overridden to increase visibility

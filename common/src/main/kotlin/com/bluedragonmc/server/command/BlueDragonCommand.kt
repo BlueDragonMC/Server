@@ -169,7 +169,7 @@ open class BlueDragonCommand(
 
         fun <T> get(argument: Argument<T>): T = ctx.get(argument)
         fun getPlayer(argument: Argument<PlayerDocument>): Player? =
-            MinecraftServer.getConnectionManager().getPlayer(get(argument).uuid)
+            MinecraftServer.getConnectionManager().getOnlinePlayerByUuid(get(argument).uuid)
 
         fun getFirstPlayer(argument: Argument<EntityFinder>): Player =
             ctx.get(argument).findFirstPlayer(sender) ?: run {

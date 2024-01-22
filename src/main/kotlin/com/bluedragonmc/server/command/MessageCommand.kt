@@ -16,7 +16,7 @@ class MessageCommand(name: String, vararg aliases: String) : BlueDragonCommand(n
 
     syntax(playerArgument, messageArgument) {
         val playerName = get(playerArgument)
-        val player = MinecraftServer.getConnectionManager().getPlayer(playerName)
+        val player = MinecraftServer.getConnectionManager().getOnlinePlayerByUsername(playerName)
         val message = Component.text(get(messageArgument).joinToString(" "), NamedTextColor.GRAY)
         val senderName = (sender as? Player)?.name ?: Component.translatable("command.msg.console")
         if (player != null) {

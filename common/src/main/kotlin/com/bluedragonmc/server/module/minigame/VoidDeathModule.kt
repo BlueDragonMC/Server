@@ -22,7 +22,7 @@ class VoidDeathModule(private val threshold: Double, private val respawnMode: Bo
                     event.player.teleport(event.player.respawnPoint)
                     parent.callEvent(PlayerDeathEvent(event.player, null, null))
                 } else {
-                    event.player.damage(DamageType.VOID, Float.MAX_VALUE)
+                    event.player.damage(DamageType.OUT_OF_WORLD, Float.MAX_VALUE)
                 }
             }
         }
