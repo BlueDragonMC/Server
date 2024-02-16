@@ -25,10 +25,13 @@ class WorldPermissionsModule(
     var allowBlockPlace: Boolean = false,
     var allowBlockInteract: Boolean = false,
     var allowBreakMap: Boolean = false,
-    val exceptions: List<Block> = listOf()
+    val exceptions: List<Block> = listOf(),
 ) : GameModule() {
 
     private val playerPlacedBlocks = mutableListOf<Point>()
+
+    override val eventPriority: Int
+        get() = -999 // Lower numbers run first; this module needs to have priority to cancel events early
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         eventNode.addListener(PlayerBlockBreakEvent::class.java) { event ->
@@ -96,6 +99,12 @@ class WorldPermissionsModule(
      * Called when a player breaks a non-player-placed block when they are not supposed to be allowed to.
      * If this event is cancelled, the player will be allowed to break the block.
      */
-    class PreventPlayerBreakMapEvent(player: Player, block: Block, resultBlock: Block, blockPosition: Point, blockFace: BlockFace) :
+    class PreventPlayerBreakMapEvent(
+        player: Player,
+        block: Block,
+        resultBlock: Block,
+        blockPosition: Point,
+        blockFace: BlockFace,
+    ) :
         PlayerBlockBreakEvent(player, block, resultBlock, blockPosition, blockFace)
 }
