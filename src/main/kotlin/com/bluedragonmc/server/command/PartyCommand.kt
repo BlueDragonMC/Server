@@ -6,6 +6,7 @@ import com.bluedragonmc.server.utils.miniMessage
 import com.bluedragonmc.server.utils.plus
 import com.bluedragonmc.server.utils.surroundWithSeparators
 import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.entity.Player
 
 class PartyCommand(name: String, usageString: String, vararg aliases: String) :
@@ -86,6 +87,8 @@ class PartyCommand(name: String, usageString: String, vararg aliases: String) :
                         *members.map { miniMessage.deserialize(it.username) }.toTypedArray()
                     )
                     sender.sendMessage((leaderText + Component.newline() + membersText).surroundWithSeparators())
+                } else {
+                    sender.sendMessage(Component.translatable("puffin.party.list.not_found", NamedTextColor.RED))
                 }
             }
         }
