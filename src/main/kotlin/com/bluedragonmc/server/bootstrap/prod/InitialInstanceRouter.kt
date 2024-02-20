@@ -92,13 +92,6 @@ object InitialInstanceRouter : Bootstrap(EnvType.PRODUCTION) {
                     game.getModule<SpawnpointModule>().spawnpointProvider.getSpawnpoint(event.player)
             }
 
-            event.player.sendMessage(
-                Component.translatable(
-                    "global.instance.placing",
-                    NamedTextColor.GRAY,
-                    Component.text(game.id + "/" + instance.uniqueId.toString())
-                )
-            )
             game.addPlayer(event.player, sendPlayer = false)
             Messaging.IO.launch {
                 Messaging.outgoing.playerTransfer(event.player, game.id)
