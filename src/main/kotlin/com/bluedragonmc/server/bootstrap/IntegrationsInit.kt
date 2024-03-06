@@ -30,7 +30,7 @@ object IntegrationsInit : Bootstrap() {
             }
         }
 
-        Database.initialize(DatabaseConnectionImpl("mongodb://${Environment.mongoHostname}"))
+        Database.initialize(DatabaseConnectionImpl(Environment.mongoConnectionString))
         Permissions.initialize(PermissionManagerImpl())
 
         if (Environment.current.isDev) {
@@ -48,7 +48,7 @@ object IntegrationsInit : Bootstrap() {
                 Database.connection.logEvent(
                     EventLog("game_server_started", Severity.DEBUG)
                         .withProperty("is_dev", Environment.isDev.toString())
-                        .withProperty("mongo_hostname", Environment.mongoHostname)
+                        .withProperty("mongo_hostname", Environment.mongoConnectionString)
                         .withProperty("puffin_hostname", Environment.puffinHostname)
                         .withProperty("luckperms_hostname", Environment.current.luckPermsHostname)
                         .withProperty("game_classes", Environment.current.gameClasses)

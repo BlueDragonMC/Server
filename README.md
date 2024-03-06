@@ -37,7 +37,7 @@ Environment variables:
 * `BLUEDRAGON_AGONES_DISABLED` - Disables Agones integration if set to any value.
 * `BLUEDRAGON_ENV_TYPE` - Set to "DEV" to enable development mode.
 * `BLUEDRAGON_QUEUE_TYPE` - Set to "IPC" to use Puffin or "TEST" for the `TestQueue`. If not present, a default value is inferred.
-* `BLUEDRAGON_MONGO_HOSTNAME` - The hostname used to connect to MongoDB.
+* `BLUEDRAGON_MONGO_CONNECTION_STRING` - The connection string used to connect to MongoDB.
 * `BLUEDRAGON_PUFFIN_HOSTNAME` - The hostname used to connect to Puffin.
 * `BLUEDRAGON_LUCKPERMS_HOSTNAME` - The hostname used to connect to LuckPerms.
 * `HOSTNAME` - Used to determine the server name. Provided by default in Docker or Kubernetes environments.
