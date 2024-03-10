@@ -48,7 +48,6 @@ fun start() {
         Commands,
         CustomPlayerProvider,
         DevInstanceRouter,
-        ExceptionHandler,
         GlobalBlockHandlers,
         GlobalChatFormat,
         GlobalPlayerNameFormat,

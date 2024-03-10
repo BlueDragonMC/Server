@@ -9,15 +9,21 @@ import com.bluedragonmc.server.event.GameEvent
 import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.event.GameStateChangedEvent
 import com.bluedragonmc.server.event.PlayerLeaveGameEvent
-import com.bluedragonmc.server.model.EventLog
-import com.bluedragonmc.server.model.Severity
+import com.bluedragonmc.server.model.GameDocument
+import com.bluedragonmc.server.model.InstanceRecord
+import com.bluedragonmc.server.model.PlayerRecord
+import com.bluedragonmc.server.model.TeamRecord
 import com.bluedragonmc.server.module.GameModule
+import com.bluedragonmc.server.module.database.StatisticsModule
 import com.bluedragonmc.server.module.instance.InstanceModule
 import com.bluedragonmc.server.module.minigame.SpawnpointModule
+import com.bluedragonmc.server.module.minigame.TeamModule
+import com.bluedragonmc.server.module.minigame.WinModule
 import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.service.Messaging
 import com.bluedragonmc.server.utils.GameState
 import com.bluedragonmc.server.utils.InstanceUtils
+import com.bluedragonmc.server.utils.toPlainText
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import net.kyori.adventure.text.Component
@@ -80,6 +86,9 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
         'a' + Random.nextInt(0, 26)
     }.joinToString("")
 
+    private lateinit var startTime: Date
+    private lateinit var winningTeam: TeamModule.Team
+
     open val maxPlayers = 8
 
     var state: GameState = GameState.SERVER_STARTING
@@ -124,14 +133,10 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
             }
         }
         onGameStart {
-            Database.IO.launch {
-                Database.connection.logEvent(
-                    EventLog("game_started", Severity.DEBUG)
-                        .withProperty("game_id", id)
-                        .withProperty("players", players.map { it.uuid.toString() })
-                        .withProperty("modules", modules.map { it.toString() })
-                )
-            }
+            startTime = Date()
+        }
+        handleEvent<WinModule.WinnerDeclaredEvent> { event ->
+            winningTeam = event.winningTeam
         }
     }
 
@@ -224,11 +229,65 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
     }
 
     open fun endGame(queueAllPlayers: Boolean = true) {
+
+        // Log some information about the game in the database
+
+        val statHistory = getModuleOrNull<StatisticsModule>()?.getHistory()
+        val teams = getModuleOrNull<TeamModule>()?.teams?.map { team ->
+            TeamRecord(
+                name = team.name.toPlainText(),
+                players = team.players.map { player ->
+                    PlayerRecord(
+                        uuid = player.uuid,
+                        username = player.username
+                    )
+                }
+            )
+        }
+        val winningTeamRecord = if (::winningTeam.isInitialized) {
+            TeamRecord(
+                name = winningTeam.name.toPlainText(),
+                players = winningTeam.players.map { player ->
+                    PlayerRecord(
+                        uuid = player.uuid,
+                        username = player.username
+                    )
+                })
+        } else null
+
+        val instanceRecords = getOwnedInstances().map { instance ->
+            InstanceRecord(
+                type = instance::class.jvmName,
+                uuid = instance.uniqueId
+            )
+        }
+
+        Database.IO.launch {
+            if (::startTime.isInitialized) {
+                Database.connection.logGame(
+                    GameDocument(
+                        gameId = id,
+                        serverId = Environment.getServerName(),
+                        gameType = name,
+                        mapName = mapName,
+                        mode = mode,
+                        statistics = statHistory,
+                        teams = teams,
+                        winningTeam = winningTeamRecord,
+                        startTime = startTime,
+                        endTime = Date(),
+                        instances = instanceRecords
+                    )
+                )
+            }
+        }
+
         state = GameState.ENDING
         games.remove(this)
+
         // the NotifyInstanceRemovedMessage is published when the MessagingModule is unregistered
         while (modules.isNotEmpty()) unregister(modules.first())
-        modules.forEach { it.deinitialize() }
+
         if (queueAllPlayers) {
             players.forEach {
                 it.sendMessage(Component.translatable("game.status.ending", NamedTextColor.GREEN))
@@ -242,12 +301,14 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
                 })
             }
         }
+
         MinecraftServer.getSchedulerManager().buildTask {
             MinecraftServer.getInstanceManager().instances.filter { this.ownsInstance(it) }.forEach { instance ->
                 logger.info("Forcefully unregistering instance ${instance.uniqueId}...")
                 InstanceUtils.forceUnregisterInstance(instance).join()
             }
         }.executionType(ExecutionType.ASYNC).delay(Duration.ofSeconds(10))
+
         players.clear()
     }
 
@@ -287,16 +348,6 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
 
         // Allow the game to start receiving events
         MinecraftServer.getGlobalEventHandler().addChild(eventNode)
-
-        Database.IO.launch {
-            Database.connection.logEvent(
-                EventLog("game_created", Severity.DEBUG)
-                    .withProperty("game_id", id)
-                    .withProperty("game_type", name)
-                    .withProperty("map_name", mapName)
-                    .withProperty("mode", mode)
-            )
-        }
     }
 
     protected abstract fun initialize()

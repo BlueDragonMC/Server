@@ -5,6 +5,8 @@ import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.DataLoadedEvent
 import com.bluedragonmc.server.event.PlayerLeaveGameEvent
 import com.bluedragonmc.server.model.PlayerDocument
+import com.bluedragonmc.server.model.PlayerRecord
+import com.bluedragonmc.server.model.StatisticRecord
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.database.StatisticsModule.StatisticRecorder
 import com.bluedragonmc.server.module.minigame.WinModule
@@ -32,7 +34,7 @@ import java.util.function.Predicate
  * It is recommended, however not required, to use a
  * [StatisticRecorder] to record statistics
  */
-class StatisticsModule(private vararg val recorders : StatisticRecorder) : GameModule() {
+class StatisticsModule(private vararg val recorders: StatisticRecorder) : GameModule() {
 
     companion object {
         // Caches should be static to reduce the number of DB queries
@@ -103,6 +105,25 @@ class StatisticsModule(private vararg val recorders : StatisticRecorder) : GameM
         }
     }
 
+    override fun deinitialize() {
+        history.clear()
+    }
+
+    private val history = mutableMapOf<Pair<Player, String>, Pair<Double?, Double>>()
+
+    fun getHistory(): List<StatisticRecord> {
+        return history.map { (playerAndKey, values) ->
+            val (player, key) = playerAndKey
+            val (oldValue, newValue) = values
+            StatisticRecord(
+                key = key,
+                player = PlayerRecord(uuid = player.uuid, username = player.username),
+                oldValue = oldValue,
+                newValue = newValue
+            )
+        }
+    }
+
     /**
      * Records a statistic for the [player] using the [key] and provided [value].
      * The operation may be delayed as statistic updates are batched.
@@ -110,8 +131,16 @@ class StatisticsModule(private vararg val recorders : StatisticRecorder) : GameM
     fun recordStatistic(player: Player, key: String, value: Double) {
         player as CustomPlayer
 
+        // Record the change in the game's statistic history for logging purposes
+        if (history.containsKey(player to key)) {
+            history[player to key] = history[player to key]?.first to value
+        } else {
+            history[player to key] = player.data.statistics[key] to value
+        }
+
         // Update the local player data to reflect the change
         player.data.statistics[key] = value
+
         // Queue a database update operation
         necessaryUpdates.getOrPut(player) { mutableSetOf() }.add(key)
     }
@@ -208,7 +237,10 @@ class StatisticsModule(private vararg val recorders : StatisticRecorder) : GameM
         return documents.associateWith { it.statistics[key]!! }
     }
 
-    class EventStatisticRecorder<T : Event>(private val eventType: Class<T>, val handler: suspend StatisticsModule.(Game, T) -> Unit) : StatisticRecorder() {
+    class EventStatisticRecorder<T : Event>(
+        private val eventType: Class<T>,
+        val handler: suspend StatisticsModule.(Game, T) -> Unit,
+    ) : StatisticRecorder() {
         override fun subscribe(module: StatisticsModule, game: Game, eventNode: EventNode<Event>) {
             eventNode.addListener(eventType) { event ->
                 Database.IO.launch { handler(module, game, event) }

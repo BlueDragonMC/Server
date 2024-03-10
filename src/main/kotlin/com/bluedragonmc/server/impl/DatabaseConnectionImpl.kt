@@ -4,7 +4,7 @@ import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.api.DatabaseConnection
 import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.event.DataLoadedEvent
-import com.bluedragonmc.server.model.EventLog
+import com.bluedragonmc.server.model.GameDocument
 import com.bluedragonmc.server.model.PlayerDocument
 import com.bluedragonmc.server.model.Punishment
 import com.mongodb.ConnectionString
@@ -17,7 +17,6 @@ import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.MinecraftServer
 import net.minestom.server.entity.Player
 import net.minestom.server.network.packet.server.login.LoginDisconnectPacket
-import org.bson.Document
 import org.litote.kmongo.coroutine.CoroutineClient
 import org.litote.kmongo.coroutine.CoroutineCollection
 import org.litote.kmongo.coroutine.CoroutineDatabase
@@ -59,7 +58,7 @@ internal class DatabaseConnectionImpl(connectionString: String) : DatabaseConnec
     }
 
     private fun getPlayersCollection(): CoroutineCollection<PlayerDocument> = database.getCollection("players")
-    private fun getEventsCollection(): CoroutineCollection<Document> = database.getCollection("events")
+    private fun getGamesCollection(): CoroutineCollection<GameDocument> = database.getCollection("games")
 
     override suspend fun getPlayerDocument(username: String): PlayerDocument? {
         MinecraftServer.getConnectionManager().getOnlinePlayerByUsername(username)?.let {
@@ -148,12 +147,7 @@ internal class DatabaseConnectionImpl(connectionString: String) : DatabaseConnec
         getPlayersCollection().updateOneById(playerUuid, setValue(field, value))
     }
 
-    override suspend fun logEvent(event: EventLog) {
-        val doc = Document()
-        doc["type"] = event.type
-        doc["node"] = event.node
-        doc["date"] = event.date
-        doc["properties"] = event.properties
-        getEventsCollection().insertOne(doc)
+    override suspend fun logGame(game: GameDocument) {
+        getGamesCollection().insertOne(game)
     }
 }
