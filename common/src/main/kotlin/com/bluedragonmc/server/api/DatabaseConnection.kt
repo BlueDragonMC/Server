@@ -1,7 +1,7 @@
 package com.bluedragonmc.server.api
 
 import com.bluedragonmc.server.CustomPlayer
-import com.bluedragonmc.server.model.EventLog
+import com.bluedragonmc.server.model.GameDocument
 import com.bluedragonmc.server.model.PlayerDocument
 import net.minestom.server.entity.Player
 import java.util.*
@@ -23,5 +23,5 @@ interface DatabaseConnection {
 
     suspend fun <T> updatePlayer(playerUuid: String, field: KMutableProperty<T>, value: T)
 
-    suspend fun logEvent(event: EventLog)
+    suspend fun logGame(game: GameDocument)
 }

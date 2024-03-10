@@ -2,7 +2,7 @@ package com.bluedragonmc.testing.utils
 
 import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.api.DatabaseConnection
-import com.bluedragonmc.server.model.EventLog
+import com.bluedragonmc.server.model.GameDocument
 import com.bluedragonmc.server.model.PlayerDocument
 import net.minestom.server.entity.Player
 import java.util.*
@@ -38,7 +38,7 @@ class DatabaseConnectionStub : DatabaseConnection {
 
     }
 
-    override suspend fun logEvent(event: EventLog) {
+    override suspend fun logGame(game: GameDocument) {
 
     }
 

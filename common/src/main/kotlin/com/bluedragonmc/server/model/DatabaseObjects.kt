@@ -2,10 +2,11 @@
 
 package com.bluedragonmc.server.model
 
-import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.service.Database
-import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.*
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import java.time.Duration
 import java.time.Instant
 import java.util.*
@@ -79,23 +80,43 @@ data class Achievement(
     @Serializable(with = DateSerializer::class) val earnedAt: Date,
 )
 
-enum class Severity {
-    TRACE, DEBUG, INFO, WARN, ERROR, FATAL
-}
+@Serializable
+data class PlayerRecord(
+    @SerialName("_id") @Serializable(with = UUIDSerializer::class) val uuid: UUID,
+    val username: String,
+)
 
-data class EventLog(
+@Serializable
+data class TeamRecord(
+    @SerialName("_id") val name: String,
+    val players: List<PlayerRecord>,
+)
+
+@Serializable
+data class StatisticRecord(
+    val key: String,
+    val player: PlayerRecord,
+    val oldValue: Double?,
+    val newValue: Double,
+)
+
+@Serializable
+data class InstanceRecord(
+    @SerialName("_id") @Serializable(with = UUIDSerializer::class) val uuid: UUID,
     val type: String,
-    val severity: Severity,
-) {
-    companion object {
-        private val serverName = runBlocking { Environment.getServerName() }
-    }
+)
 
-    val date: Long = System.currentTimeMillis()
-    val node: String = serverName
-    val properties = mutableMapOf<String, @Contextual Any?>()
-
-    fun withProperty(name: String, value: Any?) = apply {
-        properties[name] = value
-    }
-}
+@Serializable
+data class GameDocument(
+    val gameId: String,
+    val serverId: String,
+    val gameType: String,
+    val mode: String?,
+    val mapName: String,
+    @EncodeDefault val teams: List<TeamRecord>? = listOf(),
+    val winningTeam: TeamRecord?,
+    @EncodeDefault val statistics: List<StatisticRecord>? = listOf(),
+    @Serializable(with = DateSerializer::class) val startTime: Date?,
+    @Serializable(with = DateSerializer::class) val endTime: Date,
+    val instances: List<InstanceRecord>,
+)
