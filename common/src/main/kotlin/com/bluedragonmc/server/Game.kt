@@ -263,21 +263,23 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
         }
 
         Database.IO.launch {
-            Database.connection.logGame(
-                GameDocument(
-                    gameId = id,
-                    serverId = Environment.getServerName(),
-                    gameType = name,
-                    mapName = mapName,
-                    mode = mode,
-                    statistics = statHistory,
-                    teams = teams,
-                    winningTeam = winningTeamRecord,
-                    startTime = if (::startTime.isInitialized) startTime else null,
-                    endTime = Date(),
-                    instances = instanceRecords
+            if (::startTime.isInitialized) {
+                Database.connection.logGame(
+                    GameDocument(
+                        gameId = id,
+                        serverId = Environment.getServerName(),
+                        gameType = name,
+                        mapName = mapName,
+                        mode = mode,
+                        statistics = statHistory,
+                        teams = teams,
+                        winningTeam = winningTeamRecord,
+                        startTime = startTime,
+                        endTime = Date(),
+                        instances = instanceRecords
+                    )
                 )
-            )
+            }
         }
 
         state = GameState.ENDING
