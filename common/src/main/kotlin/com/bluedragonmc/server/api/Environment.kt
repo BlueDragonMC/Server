@@ -9,7 +9,7 @@ abstract class Environment {
         lateinit var current: Environment
 
         val queue get() = current.queue
-        val mongoHostname get() = current.mongoHostname
+        val mongoConnectionString get() = current.mongoConnectionString
         val dbName get() = current.dbName
         val puffinHostname get() = current.puffinHostname
         val defaultGameName get() = current.defaultGameName
@@ -26,7 +26,7 @@ abstract class Environment {
     }
 
     abstract val queue: Queue
-    abstract val mongoHostname: String
+    abstract val mongoConnectionString: String
     abstract val puffinHostname: String
     abstract val luckPermsHostname: String
     abstract val gameClasses: Collection<String>

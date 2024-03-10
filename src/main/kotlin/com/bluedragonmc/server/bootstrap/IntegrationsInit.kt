@@ -17,7 +17,7 @@ import java.net.InetAddress
 
 object IntegrationsInit : Bootstrap() {
     override fun hook(eventNode: EventNode<Event>) {
-        Database.initialize(DatabaseConnectionImpl("mongodb://${Environment.mongoHostname}"))
+        Database.initialize(DatabaseConnectionImpl(Environment.mongoConnectionString))
         Permissions.initialize(PermissionManagerImpl())
 
         if (Environment.current.isDev) {

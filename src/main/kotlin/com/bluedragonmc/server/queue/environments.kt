@@ -28,7 +28,7 @@ class ConfiguredEnvironment : Environment() {
         else -> defaultQueue()
     }
 
-    override val mongoHostname: String = System.getenv("BLUEDRAGON_MONGO_HOSTNAME") ?: defaultMongoHostname()
+    override val mongoConnectionString: String = System.getenv("BLUEDRAGON_MONGO_CONNECTION_STRING") ?: defaultMongoConnectionString()
     override val puffinHostname: String = System.getenv("BLUEDRAGON_PUFFIN_HOSTNAME") ?: defaultPuffinHostname()
     override val luckPermsHostname: String = System.getenv("BLUEDRAGON_LUCKPERMS_HOSTNAME") ?: defaultLuckPermsHostname()
 
@@ -63,10 +63,10 @@ private fun defaultQueue(): Queue {
     return if (isDev()) TestQueue() else IPCQueue
 }
 
-private fun defaultMongoHostname(): String {
+private fun defaultMongoConnectionString(): String {
     LoggerFactory.getLogger(Environment::class.java)
         .warn("No environment variable specified, using default MongoDB connection configuration.")
-    return if (isDev()) "localhost:27017" else "mongo:27017"
+    return if (isDev()) "mongodb://localhost:27017" else "mongodb://mongo:27017"
 }
 
 private fun defaultPuffinHostname(): String {
