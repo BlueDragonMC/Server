@@ -64,7 +64,7 @@ class IncomingRPCHandlerImpl : IncomingRPCHandler {
         override suspend fun sendChat(request: GsClient.SendChatRequest): Empty {
             val target = if (request.playerUuid == ZERO_UUID_STRING)
                 MinecraftServer.getCommandManager().consoleSender
-            else MinecraftServer.getConnectionManager().getPlayer(UUID.fromString(request.playerUuid))
+            else MinecraftServer.getConnectionManager().getOnlinePlayerByUuid(UUID.fromString(request.playerUuid))
                 ?: return Empty.getDefaultInstance()
 
             val msg = miniMessage.deserialize(request.message)

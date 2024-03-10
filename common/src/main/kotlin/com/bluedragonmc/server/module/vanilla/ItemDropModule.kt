@@ -24,6 +24,10 @@ import kotlin.random.Random
  * Also allows blocks be dropped when broken.
  */
 class ItemDropModule(var dropBlocksOnBreak: Boolean = true, var dropAllOnDeath: Boolean = false) : GameModule() {
+
+    override val eventPriority: Int
+        get() = 999 // Higher numbers run last; this module needs to receive events late to allow for cancellations from other modules
+
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         eventNode.addListener(ItemDropEvent::class.java) { event ->
             dropItemFromPlayer(event.itemStack, event.instance, event.player, false)

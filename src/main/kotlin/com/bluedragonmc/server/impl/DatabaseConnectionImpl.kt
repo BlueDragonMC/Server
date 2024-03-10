@@ -61,14 +61,14 @@ internal class DatabaseConnectionImpl(connectionString: String) : DatabaseConnec
     private fun getGamesCollection(): CoroutineCollection<GameDocument> = database.getCollection("games")
 
     override suspend fun getPlayerDocument(username: String): PlayerDocument? {
-        MinecraftServer.getConnectionManager().findPlayer(username)?.let {
+        MinecraftServer.getConnectionManager().getOnlinePlayerByUsername(username)?.let {
             return (it as CustomPlayer).data
         }
         return getPlayersCollection().findOne(PlayerDocument::usernameLower eq username.lowercase())
     }
 
     override suspend fun getPlayerDocument(uuid: UUID): PlayerDocument? {
-        MinecraftServer.getConnectionManager().getPlayer(uuid)?.let {
+        MinecraftServer.getConnectionManager().getOnlinePlayerByUuid(uuid)?.let {
             return (it as CustomPlayer).data
         }
         return getPlayersCollection().findOne(Filters.eq(PlayerDocument::uuid.path(), uuid.toString()))

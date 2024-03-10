@@ -9,6 +9,7 @@ import net.minestom.server.MinecraftServer
 import net.minestom.server.attribute.Attribute
 import net.minestom.server.coordinate.Vec
 import net.minestom.server.entity.*
+import net.minestom.server.entity.damage.Damage
 import net.minestom.server.entity.damage.DamageType
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
@@ -182,11 +183,11 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
                     if (damage > lastDamage) {
                         if ((damage - lastDamage) > target.health && target is Player && !target.isDead) {
                             parent.callCancellable(PlayerKillPlayerEvent(player, target)) {
-                                target.damage(DamageType.fromPlayer(player), damage - lastDamage)
+                                target.damage(Damage(DamageType.PLAYER_ATTACK, player, player, player.position, damage - lastDamage))
                                 target.setTag(LAST_DAMAGE, damage)
                             }
                         } else {
-                            target.damage(DamageType.fromPlayer(player), damage - lastDamage)
+                            target.damage(Damage(DamageType.PLAYER_ATTACK, player, player, player.position, damage - lastDamage))
                             target.setTag(LAST_DAMAGE, damage)
                         }
                     } else return@addListener
@@ -194,11 +195,11 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
                     // The target has not been hit in the past (by default) 10 ticks.
                     if (damage > target.health && target is Player && !target.isDead) {
                         parent.callCancellable(PlayerKillPlayerEvent(player, target)) {
-                            target.damage(DamageType.fromPlayer(player), damage)
+                            target.damage(Damage(DamageType.PLAYER_ATTACK, player, player, player.position, damage))
                             target.setTag(LAST_DAMAGE, damage)
                         }
                     } else {
-                        target.damage(DamageType.fromPlayer(player), damage)
+                        target.damage(Damage(DamageType.PLAYER_ATTACK, player, player, player.position, damage))
                         target.setTag(LAST_DAMAGE, damage)
                         target.setTag(HURT_RESISTANT_TIME, target.getTag(MAX_HURT_RESISTANT_TIME))
                     }
@@ -245,7 +246,7 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
                     val level = itemStack.meta().enchantmentMap[Enchantment.THORNS]?.toInt() ?: return@forEach
                     if (CombatUtils.shouldCauseThorns(level)) {
                         val thornsDamage = CombatUtils.getThornsDamage(level)
-                        player.damage(DamageType.fromPlayer(target), thornsDamage.toFloat())
+                        target.damage(Damage(DamageType.THORNS, player, event.entity, event.entity.position, thornsDamage.toFloat()))
                         target.inventory.setEquipment(slot, CombatUtils.damageItemStack(itemStack, 2))
                     }
                 }

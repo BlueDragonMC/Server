@@ -12,8 +12,9 @@ import net.minestom.server.coordinate.Point
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.*
 import net.minestom.server.entity.Player.Hand
+import net.minestom.server.entity.damage.Damage
 import net.minestom.server.entity.damage.DamageType
-import net.minestom.server.entity.metadata.arrow.ArrowMeta
+import net.minestom.server.entity.metadata.projectile.ArrowMeta
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.entity.projectile.ProjectileCollideWithBlockEvent
@@ -44,10 +45,6 @@ class ProjectileModule : GameModule() {
         private val CHARGE_START_TAG = Tag.Long("bow_charge_start").defaultValue(Long.MAX_VALUE)
         private val ARROW_DAMAGE_TAG = Tag.Short("entity_arrow_power").defaultValue(0) // the power enchantment level
         private val PUNCH_TAG = Tag.Short("entity_projectile_punch").defaultValue(0) // the punch enchantment level
-
-        private val SNOWBALL_DAMAGE_TYPE = DamageType("snowball")
-        private val EGG_DAMAGE_TYPE = DamageType("egg")
-
         private val PEARL_OWNER_TAG = Tag.UUID("ender_pearl_owner")
     }
 
@@ -144,7 +141,15 @@ class ProjectileModule : GameModule() {
                 shooter.sendPacket(ChangeGameStatePacket(ChangeGameStatePacket.Reason.ARROW_HIT_PLAYER, 0.0f))
             }
 
-            target.damage(DamageType.fromProjectile(projectile.shooter, projectile), damage)
+            target.damage(
+                Damage(
+                    DamageType.THROWN,
+                    projectile.shooter,
+                    projectile,
+                    projectile.shooter?.position,
+                    damage
+                )
+            )
             target.arrowCount++
             projectile.remove()
             (target as? Player)?.resetInvincibilityPeriod()
@@ -188,7 +193,7 @@ class ProjectileModule : GameModule() {
             if ((target as? Player)?.isInvincible() == true) return@addListener
 
             OldCombatModule.takeKnockback(-projectile.velocity.x, -projectile.velocity.z, target, 0.0)
-            target.damage(SNOWBALL_DAMAGE_TYPE, 0.0f)
+            target.damage(Damage(DamageType.THROWN, projectile, projectile.shooter, projectile.shooter?.position, 0.0f))
             projectile.remove()
             (target as? Player)?.resetInvincibilityPeriod()
         }
@@ -254,7 +259,15 @@ class ProjectileModule : GameModule() {
             val mult = radius - entity.position.distance(center)
             OldCombatModule.takeKnockback(projectile.velocity.x, projectile.velocity.z, entity, mult)
             if (entity is LivingEntity) {
-                entity.damage(DamageType.fromProjectile(projectile.shooter, projectile), mult.toFloat())
+                entity.damage(
+                    Damage(
+                        DamageType.FIREBALL,
+                        projectile.shooter,
+                        projectile,
+                        projectile.shooter?.position,
+                        mult.toFloat()
+                    )
+                )
             }
         }
     }
@@ -264,7 +277,7 @@ class ProjectileModule : GameModule() {
         centerY: Float,
         centerZ: Float,
         strength: Float,
-        projectile: EntityProjectile
+        projectile: EntityProjectile,
     ) = object : Explosion(centerX, centerY, centerZ, strength) {
 
         override fun prepare(instance: Instance): List<Point> {
@@ -315,7 +328,7 @@ class ProjectileModule : GameModule() {
             if ((target as? Player)?.isInvincible() == true) return@addListener
 
             OldCombatModule.takeKnockback(-projectile.velocity.x, -projectile.velocity.z, target, 0.0)
-            target.damage(EGG_DAMAGE_TYPE, 0.0f)
+            target.damage(Damage(DamageType.THROWN, projectile, projectile.shooter, projectile.shooter?.position, 0.0f))
             projectile.remove()
             (target as? Player)?.resetInvincibilityPeriod()
         }
@@ -377,7 +390,15 @@ class ProjectileModule : GameModule() {
             if (event.entity.entityType == EntityType.ENDER_PEARL) {
                 event.entity.instance?.players?.firstOrNull { it.uuid == event.entity.getTag(PEARL_OWNER_TAG) }?.apply {
                     teleport(event.entity.position.add(0.0, 1.0, 0.0))
-                    damage(DamageType.GRAVITY, 5.0f)
+                    damage(
+                        Damage(
+                            DamageType.THROWN,
+                            event.entity,
+                            this,
+                            event.entity.position.add(0.0, 1.0, 0.0),
+                            5.0f
+                        )
+                    )
                     event.entity.instance?.playSound(
                         Sound.sound(
                             SoundEvent.ENTITY_ENDERMAN_TELEPORT,
