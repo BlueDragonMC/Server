@@ -99,13 +99,19 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
         }
 
     protected val eventNode = EventNode.event("$name-$mapName-$mode", EventFilter.ALL) { event ->
-        when (event) {
-            is InstanceEvent -> ownsInstance(event.instance)
-            is GameEvent -> event.game === this
-            is PlayerSpawnEvent -> ownsInstance(event.spawnInstance) // Workaround for PlayerSpawnEvent not being an InstanceEvent
-            is PlayerEvent -> event.player.isActive && ownsInstance(event.player.instance ?: return@event false)
-            is ServerTickMonitorEvent -> true
-            else -> false
+        try {
+            when (event) {
+                is InstanceEvent -> ownsInstance(event.instance)
+                is GameEvent -> event.game === this
+                is PlayerSpawnEvent -> ownsInstance(event.spawnInstance) // Workaround for PlayerSpawnEvent not being an InstanceEvent
+                is PlayerEvent -> event.player.isActive && ownsInstance(event.player.instance ?: return@event false)
+                is ServerTickMonitorEvent -> true
+                else -> false
+            }
+        } catch (e: Exception) {
+            logger.error("Error while filtering event $event")
+            e.printStackTrace()
+            return@event false
         }
     }
 
