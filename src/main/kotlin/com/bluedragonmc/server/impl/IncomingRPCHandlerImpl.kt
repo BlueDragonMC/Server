@@ -12,9 +12,9 @@ import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.TimeUnit
 
-class IncomingRPCHandlerImpl : IncomingRPCHandler {
+class IncomingRPCHandlerImpl(serverPort: Int) : IncomingRPCHandler {
 
-    private val server = ServerBuilder.forPort(50051)
+    private val server = ServerBuilder.forPort(serverPort)
         .addService(GameClientService())
         .addService(PlayerHolderService())
         .build()
@@ -23,7 +23,7 @@ class IncomingRPCHandlerImpl : IncomingRPCHandler {
 
     init {
         server.start()
-        logger.info("gRPC server started on port 50051")
+        logger.info("gRPC server started on port $serverPort")
     }
 
     override fun isConnected() = !server.isShutdown && !server.isTerminated

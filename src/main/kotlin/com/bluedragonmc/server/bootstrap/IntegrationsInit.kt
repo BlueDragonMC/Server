@@ -26,8 +26,8 @@ object IntegrationsInit : Bootstrap() {
             Messaging.initializeOutgoing(OutgoingRPCHandlerStub())
         } else {
             logger.info("Attempting to connect to messaging at address ${InetAddress.getByName(Environment.puffinHostname).hostAddress}")
-            Messaging.initializeIncoming(IncomingRPCHandlerImpl())
-            Messaging.initializeOutgoing(OutgoingRPCHandlerImpl(Environment.puffinHostname))
+            Messaging.initializeIncoming(IncomingRPCHandlerImpl(Environment.grpcServerPort))
+            Messaging.initializeOutgoing(OutgoingRPCHandlerImpl(Environment.puffinHostname, Environment.puffinPort))
             runBlocking {
                 Messaging.outgoing.initGameServer(Environment.getServerName())
             }

@@ -28,12 +28,12 @@ import net.minestom.server.instance.Instance
 import java.util.*
 import java.util.concurrent.TimeUnit
 
-class OutgoingRPCHandlerImpl(serverAddress: String) : OutgoingRPCHandler {
+class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingRPCHandler {
 
     private lateinit var serverName: String
 
     private val channel =
-        ManagedChannelBuilder.forAddress(serverAddress, 50051)
+        ManagedChannelBuilder.forAddress(serverAddress, serverPort)
             .defaultLoadBalancingPolicy("round_robin")
             .usePlaintext()
             .enableRetry()

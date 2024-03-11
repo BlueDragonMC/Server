@@ -30,6 +30,8 @@ class ConfiguredEnvironment : Environment() {
 
     override val mongoConnectionString: String = System.getenv("BLUEDRAGON_MONGO_CONNECTION_STRING") ?: defaultMongoConnectionString()
     override val puffinHostname: String = System.getenv("BLUEDRAGON_PUFFIN_HOSTNAME") ?: defaultPuffinHostname()
+    override val puffinPort: Int = System.getenv("BLUEDRAGON_PUFFIN_PORT")?.toIntOrNull() ?: 50051
+    override val grpcServerPort: Int = System.getenv("BLUEDRAGON_GRPC_SERVER_PORT")?.toIntOrNull() ?: 50051
     override val luckPermsHostname: String = System.getenv("BLUEDRAGON_LUCKPERMS_HOSTNAME") ?: defaultLuckPermsHostname()
 
     override val gameClasses: Collection<String> = GameLoader.gameNames
