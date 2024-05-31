@@ -3,9 +3,10 @@ package com.bluedragonmc.server.module.gameplay
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.ProjectileBreakBlockEvent
 import com.bluedragonmc.server.module.GameModule
-import com.bluedragonmc.server.utils.toVec
+import com.bluedragonmc.server.utils.toBlockVec
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
+import net.minestom.server.coordinate.BlockVec
 import net.minestom.server.coordinate.Point
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
@@ -64,8 +65,8 @@ class WorldPermissionsModule(
             event.isCancelled = !allowBlockBreak
 
             if (allowBlockBreak && !allowBreakMap) {
-                // This position must be converted to a Vec to compare to other elements in the list
-                val vec = event.blockPosition.toVec()
+                // This position must be converted to a BlockVec to compare to other elements in the list
+                val vec = event.blockPosition.toBlockVec()
                 if (playerPlacedBlocks.contains(vec)) {
                     playerPlacedBlocks.remove(vec)
                 } else parent.callCancellable(
@@ -73,7 +74,7 @@ class WorldPermissionsModule(
                         event.player,
                         event.block,
                         event.block,
-                        event.blockPosition,
+                        vec,
                         BlockFace.TOP
                     )
                 ) {
@@ -103,7 +104,7 @@ class WorldPermissionsModule(
         player: Player,
         block: Block,
         resultBlock: Block,
-        blockPosition: Point,
+        blockPosition: BlockVec,
         blockFace: BlockFace,
     ) :
         PlayerBlockBreakEvent(player, block, resultBlock, blockPosition, blockFace)

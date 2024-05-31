@@ -4,7 +4,7 @@
 # for the Dockerfile that is run on our CI/CD pipeline, see production.Dockerfile
 
 # Build the project into an executable JAR
-FROM gradle:jdk17 as build
+FROM gradle:jdk21 as build
 # Copy build files and source code
 COPY . /work
 WORKDIR /work
@@ -13,7 +13,7 @@ RUN --mount=target=/home/gradle/.gradle,type=cache \
     /usr/bin/gradle --console=plain --info --stacktrace --no-daemon -x test --build-cache build
 
 # Run the built JAR and expose port 25565
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:21-jre-alpine
 EXPOSE 25565
 EXPOSE 50051
 WORKDIR /server
