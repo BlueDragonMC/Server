@@ -48,9 +48,9 @@ sourceSets {
             val gitCommitDate = getOutputOf("git log -1 --format=%ct")
 
             kotlinSources {
-                property("git.commit", gitCommit)
-                property("git.branch", gitBranch)
-                property("git.commitDate", gitCommitDate)
+                property("gitCommit", gitCommit)
+                property("gitBranch", gitBranch)
+                property("gitCommitDate", gitCommitDate)
             }
         }
     }

@@ -7,8 +7,8 @@ package com.bluedragonmc.server
  */
 object GitVersionInfo : VersionInfo {
 
-    override val COMMIT: String? = "{{ git.commit | default("Unknown") }}"
-    override val BRANCH: String? = "{{ git.branch | default("Unknown") }}"
-    override val COMMIT_DATE: String? = "{{ git.commitDate | default("Unknown") }}"
+    override val COMMIT: String? = "{{ gitCommit | default("Unknown") }}"
+    override val BRANCH: String? = "{{ gitBranch | default("Unknown") }}"
+    override val COMMIT_DATE: String? = "{{ gitCommitDate | default("Unknown") }}"
 
 }
