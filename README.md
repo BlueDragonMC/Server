@@ -25,7 +25,7 @@ available [here](https://wiki.minestom.net).
 ## Usage
 
 Build with `./gradlew build` and run the JAR created at `build/libs/Server-x.x.x-all.jar`.
-Requires Java 17 or higher.
+Requires Java 21 or higher.
 
 ## Development
 

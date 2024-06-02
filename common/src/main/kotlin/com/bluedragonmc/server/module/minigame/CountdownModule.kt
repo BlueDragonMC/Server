@@ -6,13 +6,13 @@ import com.bluedragonmc.server.event.CountdownEvent
 import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.utils.GameState
-import com.bluedragonmc.server.utils.packet.PacketUtils
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.title.Title
 import net.kyori.adventure.title.TitlePart
 import net.minestom.server.entity.Player
+import net.minestom.server.entity.RelativeFlags
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventFilter
 import net.minestom.server.event.EventNode
@@ -72,18 +72,13 @@ class CountdownModule(
         }
         eventNode.addListener(PlayerMoveEvent::class.java) { event ->
             if (countdownRunning && !allowMoveDuringCountdown) {
-                parent.getModuleOrNull<SpawnpointModule>()?.spawnpointProvider?.getSpawnpoint(event.player)?.let { sp ->
-                    if (event.newPosition.distanceSquared(sp) > 4.0) {
-                        event.isCancelled = true
-                        event.player.teleport(sp)
-                        return@addListener
-                    }
+                val spawnpoint = parent.getModuleOrNull<SpawnpointModule>()?.spawnpointProvider?.getSpawnpoint(event.player)
+                if (spawnpoint == null) {
+                    event.isCancelled = true
+                    return@addListener
                 }
                 // Revert the player's position without forcing the player's facing direction
-                event.newPosition = event.player.position
-                event.player.sendPacket(
-                    PacketUtils.getRelativePosLookPacket(event.player, event.player.position)
-                )
+                event.player.teleport(spawnpoint.withView(0f, 0f), null, RelativeFlags.VIEW)
             }
         }
 
@@ -91,7 +86,7 @@ class CountdownModule(
             cancelCountdown()
             parent.state = GameState.INGAME
             parent.players.forEach { player ->
-                player.askSynchronization()
+                player.synchronizeNextTick()
             }
         }
 

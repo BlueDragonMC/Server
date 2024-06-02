@@ -1,10 +1,8 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
     id("server.common-conventions")
     id("com.github.johnrengelman.shadow") version "7.1.0"
     kotlin("plugin.serialization") version "1.6.21"
-    id("net.kyori.blossom") version "1.3.1"
+    id("net.kyori.blossom") version "2.1.0"
     `maven-publish`
 }
 
@@ -42,14 +40,20 @@ dependencies {
     implementation(project(":common"))
 }
 
-blossom {
-    val gitCommit = getOutputOf("git rev-parse --verify --short HEAD")
-    val gitBranch = getOutputOf("git rev-parse --abbrev-ref HEAD")
-    val gitCommitDate = getOutputOf("git log -1 --format=%ct")
+sourceSets {
+    main {
+        blossom {
+            val gitCommit = getOutputOf("git rev-parse --verify --short HEAD")
+            val gitBranch = getOutputOf("git rev-parse --abbrev-ref HEAD")
+            val gitCommitDate = getOutputOf("git log -1 --format=%ct")
 
-    replaceToken("\"%%GIT_COMMIT%%\"", if (gitCommit == null) "null" else "\"${gitCommit}\"")
-    replaceToken("\"%%GIT_BRANCH%%\"", if (gitBranch == null) "null" else "\"${gitBranch}\"")
-    replaceToken("\"%%GIT_COMMIT_DATE%%\"", if (gitCommitDate == null) "null" else "\"${gitCommitDate}\"")
+            kotlinSources {
+                property("gitCommit", gitCommit)
+                property("gitBranch", gitBranch)
+                property("gitCommitDate", gitCommitDate)
+            }
+        }
+    }
 }
 
 fun getOutputOf(command: String): String? {
@@ -77,12 +81,14 @@ publishing {
     }
 }
 
-tasks.test {
-    useJUnitPlatform()
+kotlin {
+    jvmToolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
 }
 
-tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "17"
+tasks.test {
+    useJUnitPlatform()
 }
 
 tasks.shadowJar {
