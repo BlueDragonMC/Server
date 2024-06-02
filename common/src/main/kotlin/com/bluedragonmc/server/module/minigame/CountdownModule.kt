@@ -72,16 +72,13 @@ class CountdownModule(
         }
         eventNode.addListener(PlayerMoveEvent::class.java) { event ->
             if (countdownRunning && !allowMoveDuringCountdown) {
-                parent.getModuleOrNull<SpawnpointModule>()?.spawnpointProvider?.getSpawnpoint(event.player)?.let { sp ->
-                    if (event.newPosition.distanceSquared(sp) > 4.0) {
-                        event.isCancelled = true
-                        event.player.teleport(sp)
-                        return@addListener
-                    }
+                val spawnpoint = parent.getModuleOrNull<SpawnpointModule>()?.spawnpointProvider?.getSpawnpoint(event.player)
+                if (spawnpoint == null) {
+                    event.isCancelled = true
+                    return@addListener
                 }
                 // Revert the player's position without forcing the player's facing direction
-                event.newPosition = event.player.position
-                event.player.teleport(event.player.position.withView(0f, 0f), null, RelativeFlags.VIEW)
+                event.player.teleport(spawnpoint.withView(0f, 0f), null, RelativeFlags.VIEW)
             }
         }
 
