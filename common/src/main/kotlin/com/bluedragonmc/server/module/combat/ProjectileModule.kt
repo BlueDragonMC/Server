@@ -21,6 +21,7 @@ import net.minestom.server.event.entity.projectile.ProjectileCollideWithBlockEve
 import net.minestom.server.event.entity.projectile.ProjectileCollideWithEntityEvent
 import net.minestom.server.event.item.ItemUpdateStateEvent
 import net.minestom.server.event.player.PlayerItemAnimationEvent
+import net.minestom.server.event.player.PlayerSpawnEvent
 import net.minestom.server.event.player.PlayerUseItemEvent
 import net.minestom.server.event.player.PlayerUseItemOnBlockEvent
 import net.minestom.server.instance.EntityTracker
@@ -34,10 +35,17 @@ import net.minestom.server.network.packet.server.play.ChangeGameStatePacket
 import net.minestom.server.sound.SoundEvent
 import net.minestom.server.tag.Tag
 import java.time.Duration
+import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.random.Random
 
+
 class ProjectileModule : GameModule() {
+
+    /**
+     * A subclass of [PlayerProjectile] that exposes the [shooter] publicly
+     */
+    class Projectile(val shooter: Entity?, type: EntityType?) : PlayerProjectile(shooter, type)
 
     private lateinit var parent: Game
 
@@ -46,6 +54,7 @@ class ProjectileModule : GameModule() {
         private val ARROW_DAMAGE_TAG = Tag.Short("entity_arrow_power").defaultValue(0) // the power enchantment level
         private val PUNCH_TAG = Tag.Short("entity_projectile_punch").defaultValue(0) // the punch enchantment level
         private val PEARL_OWNER_TAG = Tag.UUID("ender_pearl_owner")
+        private val LAST_PROJECTILE_THROW_TAG = Tag.Long("last_projectile_throw").defaultValue(0)
     }
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
@@ -56,6 +65,10 @@ class ProjectileModule : GameModule() {
         hookEggEvents(eventNode)
         hookFireballEvents(eventNode)
         hookEnderPearlEvents(eventNode)
+
+        eventNode.addListener(PlayerSpawnEvent::class.java) { event ->
+            event.player.removeTag(LAST_PROJECTILE_THROW_TAG)
+        }
     }
 
     /**
@@ -81,7 +94,7 @@ class ProjectileModule : GameModule() {
             val power = ((secondsCharged * secondsCharged + 2 * secondsCharged) / 2.0).coerceIn(0.0, 1.0)
 
             if (power > 0.2) {
-                val projectile = EntityProjectile(event.player, EntityType.ARROW)
+                val projectile = Projectile(event.player, EntityType.ARROW)
                 if (power > 0.9) (projectile.entityMeta as ArrowMeta).isCritical = true
                 projectile.scheduleRemove(Duration.ofSeconds(30))
                 val eyePos = getEyePos(event.player)
@@ -102,7 +115,7 @@ class ProjectileModule : GameModule() {
         }
         eventNode.addListener(ProjectileCollideWithEntityEvent::class.java) { event ->
             val target = event.target as? LivingEntity ?: return@addListener
-            val projectile = event.entity as EntityProjectile
+            val projectile = event.entity as Projectile
 
             if (projectile.entityType != EntityType.ARROW) return@addListener
 
@@ -164,13 +177,14 @@ class ProjectileModule : GameModule() {
         eventNode.addListener(PlayerUseItemEvent::class.java) { event ->
             val itemStack = event.player.getItemInHand(event.hand)
             if (itemStack.material() == Material.SNOWBALL) {
+                if (event.player.isOnCooldown()) return@addListener
 
                 if (event.player.gameMode != GameMode.CREATIVE) {
                     event.player.inventory.setItemInHand(event.hand, itemStack.withAmount(itemStack.amount() - 1))
                 }
 
                 // Shoot a snowball from the player's position
-                val snowball = EntityProjectile(event.player, EntityType.SNOWBALL)
+                val snowball = Projectile(event.player, EntityType.SNOWBALL)
                 snowball.setInstance(event.instance, getEyePos(event.player))
                 snowball.shoot(getLaunchPos(event.player), 3.0, 1.0)
                 event.player.instance?.playSound(
@@ -186,7 +200,7 @@ class ProjectileModule : GameModule() {
         }
         eventNode.addListener(ProjectileCollideWithEntityEvent::class.java) { event ->
             val target = event.target as? LivingEntity ?: return@addListener
-            val projectile = event.entity as EntityProjectile
+            val projectile = event.entity as Projectile
 
             if (projectile.entityType != EntityType.SNOWBALL) return@addListener
 
@@ -226,13 +240,14 @@ class ProjectileModule : GameModule() {
     private fun shootFireball(player: Player, hand: Hand, instance: Instance) {
         val itemStack = player.getItemInHand(hand)
         if (itemStack.material() == Material.FIRE_CHARGE) {
+            if (player.isOnCooldown()) return
 
             if (player.gameMode != GameMode.CREATIVE) {
                 player.inventory.setItemInHand(hand, itemStack.withAmount(itemStack.amount() - 1))
             }
 
             // Shoot a snowball from the player's position
-            val snowball = EntityProjectile(player, EntityType.FIREBALL)
+            val snowball = Projectile(player, EntityType.FIREBALL)
             snowball.setInstance(instance, getEyePos(player))
             snowball.shoot(getLaunchPos(player), 3.0, 1.0)
             player.instance?.playSound(
@@ -244,7 +259,7 @@ class ProjectileModule : GameModule() {
     }
 
     private fun explodeFireball(projectile: Entity) {
-        projectile as EntityProjectile
+        projectile as Projectile
         projectile.remove()
         val pos = projectile.position
 
@@ -277,7 +292,7 @@ class ProjectileModule : GameModule() {
         centerY: Float,
         centerZ: Float,
         strength: Float,
-        projectile: EntityProjectile,
+        projectile: Projectile,
     ) = object : Explosion(centerX, centerY, centerZ, strength) {
 
         override fun prepare(instance: Instance): List<Point> {
@@ -321,7 +336,7 @@ class ProjectileModule : GameModule() {
         }
         eventNode.addListener(ProjectileCollideWithEntityEvent::class.java) { event ->
             val target = event.target as? LivingEntity ?: return@addListener
-            val projectile = event.entity as EntityProjectile
+            val projectile = event.entity as Projectile
 
             if (projectile.entityType != EntityType.EGG) return@addListener
 
@@ -342,13 +357,14 @@ class ProjectileModule : GameModule() {
     private fun throwEgg(player: Player, hand: Hand, instance: Instance) {
         val itemStack = player.getItemInHand(hand)
         if (itemStack.material() == Material.EGG) {
+            if (player.isOnCooldown()) return
 
             if (player.gameMode != GameMode.CREATIVE) {
                 player.inventory.setItemInHand(hand, itemStack.withAmount(itemStack.amount() - 1))
             }
 
             // Shoot a snowball from the player's position
-            val egg = EntityProjectile(player, EntityType.EGG)
+            val egg = Projectile(player, EntityType.EGG)
             egg.setInstance(instance, getEyePos(player))
             egg.shoot(getLaunchPos(player), 3.0, 1.0)
             instance.playSound(
@@ -370,7 +386,8 @@ class ProjectileModule : GameModule() {
         eventNode.addListener(PlayerUseItemEvent::class.java) { event ->
             val itemStack = event.player.getItemInHand(event.hand)
             if (itemStack.material() == Material.ENDER_PEARL) {
-                val pearl = EntityProjectile(event.player, EntityType.ENDER_PEARL)
+                if (event.player.isOnCooldown()) return@addListener
+                val pearl = Projectile(event.player, EntityType.ENDER_PEARL)
                 pearl.setTag(PEARL_OWNER_TAG, event.player.uuid)
                 pearl.setInstance(event.instance, getEyePos(event.player))
                 pearl.shoot(getLaunchPos(event.player), 2.5, 1.0)
@@ -419,6 +436,13 @@ class ProjectileModule : GameModule() {
 
     private fun Player.resetInvincibilityPeriod() {
         setTag(OldCombatModule.HURT_RESISTANT_TIME, getTag(OldCombatModule.MAX_HURT_RESISTANT_TIME))
+    }
+
+    private fun Player.isOnCooldown(): Boolean {
+        val timeSinceLastThrow = aliveTicks - getTag(LAST_PROJECTILE_THROW_TAG)
+        if (abs(timeSinceLastThrow) <= 1) return true
+        setTag(LAST_PROJECTILE_THROW_TAG, aliveTicks)
+        return false
     }
 
     private fun getLaunchPos(player: Player): Pos {
