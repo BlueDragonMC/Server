@@ -6,30 +6,44 @@ import com.bluedragonmc.server.utils.InstanceUtils
 import net.minestom.server.MinecraftServer
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
-import net.minestom.server.instance.AnvilLoader
-import net.minestom.server.instance.Instance
-import net.minestom.server.instance.InstanceContainer
-import net.minestom.server.instance.SharedInstance
+import net.minestom.server.instance.*
 import net.minestom.server.tag.Tag
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
 import kotlin.io.path.absolutePathString
 
+/**
+ * Supplies an [InstanceContainer] to the [com.bluedragonmc.server.module.instance.InstanceContainerModule].
+ *
+ * **Note**: By default, [lighting](https://wiki.minestom.net/world/chunk-management/lightloader) is enabled by setting the chunk supplier to the [LightingChunk] constructor.
+ * To disable this, you can revert it back to [DynamicChunk] like so:
+ * ```kotlin
+ * use(AnvilFileMapProviderModule(path)) { module ->
+ *   module.getInstance().setChunkSupplier(::DynamicChunk)
+ * }
+ * ```
+ * 
+ * [See Documentation](https://developer.bluedragonmc.com/modules/anvilfilemapprovidermodule/)
+ */
 class AnvilFileMapProviderModule(val worldFolder: Path) : GameModule() {
 
     lateinit var instanceContainer: InstanceContainer
         private set
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
+        // If this world has already been loaded, use its existing InstanceContainer
         if (loadedMaps.containsKey(worldFolder)) {
             instanceContainer = loadedMaps[worldFolder]!!
             return
         }
-        instanceContainer = MinecraftServer.getInstanceManager().createInstanceContainer().apply {
-            chunkLoader = AnvilLoader(worldFolder)
-            loadedMaps[worldFolder] = this
-            setTag(MAP_NAME_TAG, worldFolder.absolutePathString())
-        }
+
+        // If not, create a new InstanceContainer
+        instanceContainer = MinecraftServer.getInstanceManager().createInstanceContainer()
+        instanceContainer.chunkLoader = AnvilLoader(worldFolder)
+        instanceContainer.setChunkSupplier(::LightingChunk)
+        instanceContainer.setTag(MAP_NAME_TAG, worldFolder.absolutePathString())
+
+        loadedMaps[worldFolder] = instanceContainer
     }
 
     companion object {
