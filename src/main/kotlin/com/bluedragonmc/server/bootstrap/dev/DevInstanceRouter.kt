@@ -4,6 +4,7 @@ import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.bootstrap.Bootstrap
 import com.bluedragonmc.server.isLobbyInitialized
 import com.bluedragonmc.server.lobby
+import com.bluedragonmc.server.module.minigame.SpawnpointModule
 import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.utils.listen
 import net.minestom.server.MinecraftServer
@@ -23,6 +24,11 @@ object DevInstanceRouter : Bootstrap(EnvType.DEVELOPMENT) {
                 // Send the player to the lobby
                 event.spawningInstance = lobby.getInstance()
                 lobby.players.add(event.player)
+                val spawnpoint =
+                    lobby.getModuleOrNull<SpawnpointModule>()?.spawnpointProvider?.getSpawnpoint(event.player)
+                if (spawnpoint != null) {
+                    event.player.respawnPoint = spawnpoint
+                }
             } else {
                 // Send the player to a temporary "limbo" instance while the lobby is being loaded
                 val instance = MinecraftServer.getInstanceManager().createInstanceContainer()
