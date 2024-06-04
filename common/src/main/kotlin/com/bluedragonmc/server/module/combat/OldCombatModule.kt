@@ -157,8 +157,8 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
             // Extra damage provided by enchants like sharpness or smite
             val damageModifier = CombatUtils.getDamageModifier(heldEnchantments, target)
 
-            val knockback = if (allowKnockback) (heldEnchantments[Enchantment.KNOCKBACK]
-                ?: 0) + if (player.isSprinting) 1 else 0 else 0
+            val knockback = (heldEnchantments[Enchantment.KNOCKBACK]
+                ?: 0) + if (player.isSprinting) 1 else 0
 
             if (dmgAttribute <= 0.0f && damageModifier <= 0.0f) return@addListener
 
@@ -213,7 +213,7 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
             }
 
             // Standard knockback that is unaffected by modifiers
-            if (target is LivingEntity) {
+            if (target is LivingEntity && allowKnockback) {
                 takeKnockback(
                     player.position.x - target.getPosition().x,
                     player.position.z - target.getPosition().z,
