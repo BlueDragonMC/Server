@@ -87,7 +87,7 @@ class FallDamageModule : GameModule() {
                     val fallDamage = getReducedDamage(
                         player, fallStart - event.player.position.y - 3 - getJumpBoostLevel(player)
                     )
-                    if (fallDamage > 0.0) {
+                    if (fallDamage >= 0.5) {
                         player.damage(DamageType.FALL, fallDamage.toFloat())
                     }
                 }
