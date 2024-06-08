@@ -13,6 +13,7 @@ import net.minestom.server.event.EventFilter
 import net.minestom.server.event.EventNode
 import net.minestom.server.inventory.InventoryType
 import net.minestom.server.inventory.TransactionOption
+import net.minestom.server.item.ItemComponent
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 
@@ -78,12 +79,10 @@ class ShopModule : GuiModule() {
                 { player ->
                     val itemStack = itemStackProvider(player)
                     if (virtualItem != null) {
-                        displayName(virtualItem.name.noItalic())
+                        set(ItemComponent.ITEM_NAME, virtualItem.name.noItalic()) // todo - is noItalic necessary?
                     } else {
-                        displayName(
-                            itemStack.material().displayName(NamedTextColor.WHITE)
-                                .noItalic() + Component.text(" x${itemStack.amount()}", NamedTextColor.GRAY).noItalic()
-                        )
+                        set(ItemComponent.ITEM_NAME, itemStack.material().displayName(NamedTextColor.WHITE)
+                            .noItalic() + Component.text(" x${itemStack.amount()}", NamedTextColor.GRAY).noItalic())
                     }
 
                     val info = listOf(
@@ -107,16 +106,14 @@ class ShopModule : GuiModule() {
 
                     if (virtualItem != null) {
                         // Display team upgrade descriptions if applicable
-                        lore(splitAndFormatLore(virtualItem.description, ALT_COLOR_1, player) + info)
+                        set(ItemComponent.LORE, splitAndFormatLore(virtualItem.description, ALT_COLOR_1, player) + info)
 
                         if (virtualItem.eventNode.parent == null) {
                             module.eventNode.addChild(virtualItem.eventNode)
                         }
-                    } else lore(info)
+                    } else set(ItemComponent.LORE, info)
 
-                    meta { metaBuilder ->
-                        metaBuilder.enchantments(itemStack.meta().enchantmentMap)
-                    }
+                    set(ItemComponent.ENCHANTMENTS, itemStack.get(ItemComponent.ENCHANTMENTS))
                 }) {
                 if (virtualItem != null) {
                     buyVirtualItem(this.player, virtualItem, price, currency)

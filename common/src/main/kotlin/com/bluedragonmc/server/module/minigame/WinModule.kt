@@ -21,9 +21,8 @@ import net.minestom.server.color.Color
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
-import net.minestom.server.item.firework.FireworkEffect
-import net.minestom.server.item.firework.FireworkEffectType
-import net.minestom.server.item.metadata.FireworkMeta
+import net.minestom.server.item.component.FireworkExplosion
+import net.minestom.server.item.component.FireworkList
 import java.time.Duration
 
 class WinModule(
@@ -75,14 +74,22 @@ class WinModule(
             isWinnerDeclared = true
             // Normal message
             parent.players.forEach {
-                it.sendMessage(Component.translatable("module.win.team_won", BRAND_COLOR_PRIMARY_2, team.name)
-                    .surroundWithSeparators())
+                it.sendMessage(
+                    Component.translatable("module.win.team_won", BRAND_COLOR_PRIMARY_2, team.name)
+                        .surroundWithSeparators()
+                )
             }
             for (p in parent.players) {
                 if (team.players.contains(p)) {
-                    p.showTitle(Title.title(Component.translatable("module.win.title.won",
-                        NamedTextColor.GOLD,
-                        TextDecoration.BOLD), Component.empty()))
+                    p.showTitle(
+                        Title.title(
+                            Component.translatable(
+                                "module.win.title.won",
+                                NamedTextColor.GOLD,
+                                TextDecoration.BOLD
+                            ), Component.empty()
+                        )
+                    )
                     scheduleWinFireworks(p)
                 } else p.showTitle(
                     Title.title(
@@ -112,17 +119,17 @@ class WinModule(
         val instance = player.instance ?: return
         val availablePositions = parent.getModule<SpawnpointModule>().spawnpointProvider.getAllSpawnpoints()
         val fireworkMeta = colors.map {
-            FireworkMeta.Builder().effects(
+            FireworkList(
+                1.toByte(),
                 listOf(
-                    FireworkEffect(
-                        true,
-                        true,
-                        FireworkEffectType.SMALL_BALL,
+                    FireworkExplosion(
+                        FireworkExplosion.Shape.SMALL_BALL,
                         listOf(Color(it.red(), it.green(), it.blue())),
-                        listOf(Color(it.red(), it.green(), it.blue()))
+                        listOf(Color(it.red(), it.green(), it.blue())),
+                        true, true
                     )
                 )
-            ).build()
+            )
         }
         val circular = CircularList(fireworkMeta)
         var delay = 0L

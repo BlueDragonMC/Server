@@ -7,9 +7,9 @@ import net.minestom.server.MinecraftServer
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
-import net.minestom.server.instance.AnvilLoader
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.InstanceContainer
+import net.minestom.server.instance.anvil.AnvilLoader
 
 @DependsOn(AnvilFileMapProviderModule::class)
 class InstanceContainerModule : InstanceModule() {

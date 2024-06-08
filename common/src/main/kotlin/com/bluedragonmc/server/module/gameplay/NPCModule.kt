@@ -23,6 +23,7 @@ import net.minestom.server.instance.Instance
 import net.minestom.server.network.packet.server.play.EntityHeadLookPacket
 import net.minestom.server.network.packet.server.play.EntityRotationPacket
 import net.minestom.server.network.packet.server.play.PlayerInfoUpdatePacket
+import net.minestom.server.registry.DynamicRegistry
 import java.util.*
 import java.util.function.Consumer
 
@@ -106,8 +107,8 @@ class NPCModule : GameModule() {
         enableFullSkin: Boolean = true,
     ) : LivingEntity(entityType, UUID.randomUUID()) {
 
-        override fun isImmune(type: DamageType) = true
-        override fun damage(type: DamageType, value: Float) = false
+        override fun isImmune(type: DynamicRegistry.Key<DamageType>) = true
+        override fun damage(type: DynamicRegistry.Key<DamageType>, value: Float) = false
         override fun hasVelocity() = false
         override fun hasNoGravity() = false
 

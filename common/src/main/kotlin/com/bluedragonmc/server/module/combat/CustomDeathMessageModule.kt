@@ -28,15 +28,15 @@ class CustomDeathMessageModule : GameModule() {
                     if (playerName != null) {
                         Component.translatable("death.attack.player", BRAND_COLOR_PRIMARY_2, player.name, playerName)
                     } else {
-                        Component.translatable("death.attack.mob", BRAND_COLOR_PRIMARY_2, player.name, Component.translatable(src.source.entityType.registry().translationKey))
+                        Component.translatable("death.attack.mob", BRAND_COLOR_PRIMARY_2, player.name, Component.translatable(src.source.entityType.registry().translationKey()))
                     }
                 }
                 is EntityProjectileDamage -> {
                     val playerName = (src.shooter as? Player)?.name
                     if (playerName != null) {
                         Component.translatable("death.attack.arrow", BRAND_COLOR_PRIMARY_2, player.name, playerName)
-                    } else if(src.shooter != null) {
-                        Component.translatable("death.attack.arrow", BRAND_COLOR_PRIMARY_2, player.name, Component.translatable(src.shooter!!.entityType.registry().translationKey))
+                    } else if (src.shooter != null) {
+                        Component.translatable("death.attack.arrow", BRAND_COLOR_PRIMARY_2, player.name, Component.translatable(src.shooter!!.entityType.registry().translationKey()))
                     } else {
                         Component.translatable("death.attack.generic", BRAND_COLOR_PRIMARY_2, player.name)
                     }

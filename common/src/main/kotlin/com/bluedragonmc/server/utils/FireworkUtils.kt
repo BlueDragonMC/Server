@@ -7,17 +7,18 @@ import net.minestom.server.entity.Entity
 import net.minestom.server.entity.EntityType
 import net.minestom.server.entity.metadata.projectile.FireworkRocketMeta
 import net.minestom.server.instance.Instance
-import net.minestom.server.item.ItemMeta
+import net.minestom.server.item.ItemComponent
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
+import net.minestom.server.item.component.FireworkList
 import net.minestom.server.network.packet.server.play.EntityStatusPacket
 import net.minestom.server.sound.SoundEvent
 import java.time.Duration
 
 object FireworkUtils {
 
-    fun spawnFirework(instance: Instance, position: Pos, millisBeforeDetonate: Long, fireworkMeta: ItemMeta) {
-        val fireworkItem = ItemStack.builder(Material.FIREWORK_ROCKET).meta(fireworkMeta).build()
+    fun spawnFirework(instance: Instance, position: Pos, millisBeforeDetonate: Long, fireworkMeta: FireworkList) {
+        val fireworkItem = ItemStack.builder(Material.FIREWORK_ROCKET).set(ItemComponent.FIREWORKS, fireworkMeta).build()
         val firework = Entity(EntityType.FIREWORK_ROCKET)
         (firework.entityMeta as FireworkRocketMeta).fireworkInfo = fireworkItem
         firework.setNoGravity(true)

@@ -36,8 +36,7 @@ class InstantRespawnModule : GameModule() {
                     )
 
                     isDead = true
-                    setFireForDuration(0)
-                    isOnFire = false
+                    fireTicks = 0
                     pose = Entity.Pose.STANDING
                     velocity = Vec.ZERO
 

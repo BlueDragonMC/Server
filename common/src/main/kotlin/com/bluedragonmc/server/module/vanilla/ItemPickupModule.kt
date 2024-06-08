@@ -16,7 +16,7 @@ class ItemPickupModule : GameModule() {
         eventNode.addListener(PickupItemEvent::class.java) { event ->
             val entity = event.entity
             if (entity !is Player) return@addListener
-            if(entity.gameMode == GameMode.SPECTATOR) {
+            if (entity.gameMode == GameMode.SPECTATOR) {
                 event.isCancelled = true
                 return@addListener
             }
