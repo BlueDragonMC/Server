@@ -11,8 +11,6 @@ import com.bluedragonmc.server.bootstrap.prod.VelocityForwarding
 import com.bluedragonmc.server.queue.GameLoader
 import com.bluedragonmc.server.queue.createEnvironment
 import net.minestom.server.MinecraftServer
-import net.minestom.server.utils.NamespaceID
-import net.minestom.server.world.DimensionType
 import org.slf4j.LoggerFactory
 import java.text.DateFormat
 import kotlin.system.exitProcess
@@ -73,11 +71,6 @@ fun start() {
     }
 
     logger.info("Initialized ${services.size} services in environment ${Environment.current::class.simpleName}.")
-
-    // Register custom dimension types
-    MinecraftServer.getDimensionTypeManager()
-        .addDimension(DimensionType.builder(NamespaceID.from("$NAMESPACE:fullbright_dimension")).ambientLight(1.0F)
-            .build())
 
     // Start the queue, allowing players to queue for and join games
     Environment.queue.start()

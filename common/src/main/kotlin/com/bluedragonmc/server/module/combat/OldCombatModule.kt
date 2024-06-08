@@ -6,9 +6,10 @@ import com.bluedragonmc.server.event.PlayerKillPlayerEvent
 import com.bluedragonmc.server.event.PlayerLeaveGameEvent
 import com.bluedragonmc.server.module.GameModule
 import net.minestom.server.MinecraftServer
-import net.minestom.server.attribute.Attribute
+import net.minestom.server.ServerFlag
 import net.minestom.server.coordinate.Vec
 import net.minestom.server.entity.*
+import net.minestom.server.entity.attribute.Attribute
 import net.minestom.server.entity.damage.Damage
 import net.minestom.server.entity.damage.DamageType
 import net.minestom.server.event.Event
@@ -21,8 +22,9 @@ import net.minestom.server.event.player.PlayerSpawnEvent
 import net.minestom.server.event.trait.CancellableEvent
 import net.minestom.server.event.trait.PlayerInstanceEvent
 import net.minestom.server.instance.Instance
-import net.minestom.server.item.Enchantment
+import net.minestom.server.item.ItemComponent
 import net.minestom.server.item.Material
+import net.minestom.server.item.enchant.Enchantment
 import net.minestom.server.network.packet.server.play.EntityAnimationPacket
 import net.minestom.server.network.packet.server.play.EntityAnimationPacket.Animation
 import net.minestom.server.potion.Potion
@@ -53,9 +55,9 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
 
             // see https://github.com/TogAr2/MinestomPvP/blob/4b2aa1e05b7a877ffe62183ed9b0b09088a7ca88/src/main/java/io/github/bloepiloepi/pvp/legacy/LegacyKnockbackSettings.java#L10
             // for more info on these constants
-            val horizontal = MinecraftServer.TICK_PER_SECOND * 0.8 * 0.4
-            val vertical = (0.4 - 0.04) * MinecraftServer.TICK_PER_SECOND
-            val verticalLimit = 0.4 * MinecraftServer.TICK_PER_SECOND
+            val horizontal = ServerFlag.SERVER_TICKS_PER_SECOND * 0.8 * 0.4
+            val vertical = (0.4 - 0.04) * ServerFlag.SERVER_TICKS_PER_SECOND
+            val verticalLimit = 0.4 * ServerFlag.SERVER_TICKS_PER_SECOND
             val extra = multiplier + 1.0
 
             target.velocity = target.velocity.apply { x, y, z ->
@@ -78,28 +80,29 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
                     livingEntity.setTag(HURT_RESISTANT_TIME, value - 1)
                 }
             }
-            if(event.entity is Player) {
+            if (event.entity is Player) {
                 val player = event.entity as Player
                 player.activeEffects.forEach {
                     if (it.potion.effect == PotionEffect.REGENERATION) {
-                        player.health = (player.health + 1.0f / (50.0f / it.potion.amplifier)).coerceAtMost(player.maxHealth)
+                        player.health += 1.0f / (50.0f / it.potion.amplifier)
                     }
                 }
-                if(player.activeEffects.none { it.potion.effect == PotionEffect.ABSORPTION })
+                if (player.activeEffects.none { it.potion.effect == PotionEffect.ABSORPTION }) {
                     player.additionalHearts = 0.0f
+                }
             }
         }
 
         eventNode.addListener(PlayerSpawnEvent::class.java) { event ->
             // Hint to client that there is no attack cooldown
-            event.player.getAttribute(Attribute.ATTACK_SPEED).baseValue = 100f
-            event.player.getAttribute(Attribute.ATTACK_DAMAGE).baseValue = 1.0f
+            event.player.getAttribute(Attribute.GENERIC_ATTACK_SPEED).baseValue = 100.0
+            event.player.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE).baseValue = 1.0
         }
 
         eventNode.addListener(PlayerLeaveGameEvent::class.java) { event ->
             // Reset attributes to default
-            event.player.getAttribute(Attribute.ATTACK_SPEED).baseValue = event.player.getAttribute(Attribute.ATTACK_SPEED).attribute.defaultValue
-            event.player.getAttribute(Attribute.ATTACK_DAMAGE).baseValue = event.player.getAttribute(Attribute.ATTACK_DAMAGE).attribute.defaultValue
+            event.player.getAttribute(Attribute.GENERIC_ATTACK_SPEED).baseValue = event.player.getAttribute(Attribute.GENERIC_ATTACK_SPEED).attribute.defaultValue()
+            event.player.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE).baseValue = event.player.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE).attribute.defaultValue()
             event.player.additionalHearts = 0.0f
         }
 
@@ -151,9 +154,9 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
 
             // The player's base attack damage
             var dmgAttribute =
-                player.getAttributeValue(Attribute.ATTACK_DAMAGE) + EnumItemDamage.ItemDamage.getAttackDamage(player.itemInMainHand.material())
+                player.getAttributeValue(Attribute.GENERIC_ATTACK_DAMAGE) + EnumItemDamage.ItemDamage.getAttackDamage(player.itemInMainHand.material())
 
-            val heldEnchantments = player.inventory.itemInMainHand.meta().enchantmentMap
+            val heldEnchantments = player.inventory.itemInMainHand.get(ItemComponent.ENCHANTMENTS)?.enchantments ?: emptyMap<Enchantment, Int>()
             // Extra damage provided by enchants like sharpness or smite
             val damageModifier = CombatUtils.getDamageModifier(heldEnchantments, target)
 
@@ -168,8 +171,8 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
                 dmgAttribute *= 1.5f
             }
 
-            var damage = if (allowDamage) dmgAttribute + damageModifier else 0.0f
-            if (target is Player) damage = EnumArmorToughness.ArmorToughness.getReducedDamage(damage, target)
+            var damage = if (allowDamage) (dmgAttribute + damageModifier).toFloat() else 0.0f
+            if (target is Player) damage = EnumArmorToughness.ArmorToughness.getReducedDamage(damage.toDouble(), target).toFloat()
 
             target.entityMeta.setNotifyAboutChanges(false)
             (player as Entity).entityMeta.setNotifyAboutChanges(false)
@@ -208,8 +211,8 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
 
             // Process fire aspect
             if (target is LivingEntity && (heldEnchantments[Enchantment.FIRE_ASPECT] ?: 0) > 0 && !target.isOnFire) {
-//                target.isOnFire = true
-                target.setFireForDuration(heldEnchantments[Enchantment.FIRE_ASPECT]!! * 4)
+                // Add 80 fire ticks per enchantment level - https://minecraft.wiki/w/Fire_Aspect#Usage
+                target.fireTicks = heldEnchantments[Enchantment.FIRE_ASPECT]!! * 4 * ServerFlag.SERVER_TICKS_PER_SECOND
             }
 
             // Standard knockback that is unaffected by modifiers
@@ -243,7 +246,7 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
                     EquipmentSlot.BOOTS to target.inventory.boots
                 )
                 armor.forEach { (slot, itemStack) ->
-                    val level = itemStack.meta().enchantmentMap[Enchantment.THORNS]?.toInt() ?: return@forEach
+                    val level = itemStack.get(ItemComponent.ENCHANTMENTS)?.enchantments?.get(Enchantment.THORNS) ?: return@forEach
                     if (CombatUtils.shouldCauseThorns(level)) {
                         val thornsDamage = CombatUtils.getThornsDamage(level)
                         target.damage(Damage(DamageType.THORNS, player, event.entity, event.entity.position, thornsDamage.toFloat()))

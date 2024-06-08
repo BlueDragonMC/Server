@@ -14,6 +14,7 @@ import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.player.PlayerSpawnEvent
 import net.minestom.server.inventory.InventoryType
+import net.minestom.server.item.ItemComponent
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 
@@ -58,8 +59,8 @@ open class KitsModule(
             for (selectableKit in selectableKits) {
                 val index = selectableKits.indexOf(selectableKit)
                 slot(index, selectableKit.icon, { player ->
-                    displayName(selectableKit.name)
-                    lore(splitAndFormatLore(selectableKit.description, NamedTextColor.GRAY, player))
+                    set(ItemComponent.ITEM_NAME, selectableKit.name)
+                    set(ItemComponent.LORE, splitAndFormatLore(selectableKit.description, NamedTextColor.GRAY, player))
                 }) {
                     selectedKits[this.player] = selectableKit
                     this.player.sendMessage(Component.translatable("module.kit.selected", NamedTextColor.GREEN, selectableKit.name))

@@ -87,7 +87,7 @@ open class GuiModule : GameModule() {
                 items.forEach { item ->
                     setItemStack(
                         item.index,
-                        item.itemStackBuilder(ItemStack.builder(item.material(player)), player).build()
+                        item.itemStackBuilder(player)
                     )
                     if (item.action == null) return@forEach
                     this.inventoryConditions.add(InventoryCondition { player, slot, clickType, result ->
@@ -98,7 +98,7 @@ open class GuiModule : GameModule() {
                             // If the click was cancelled, re-render the slot
                             if (item.cancelClicks) setItemStack(
                                 item.index,
-                                item.itemStackBuilder(ItemStack.builder(item.material(player)), player).build()
+                                item.itemStackBuilder(player)
                             )
                         }
                     })
@@ -201,7 +201,14 @@ open class GuiModule : GameModule() {
             itemStackBuilder: ItemStack.Builder.(player: Player) -> ItemStack.Builder,
             action: (SlotClickEvent.() -> Unit)? = null,
         ) {
-            items.add(Slot(slotNumber, material, itemStackBuilder, true, action))
+            items.add(
+                Slot(
+                    slotNumber,
+                    { player -> itemStackBuilder(ItemStack.builder(material), player).build() },
+                    true,
+                    action
+                )
+            )
         }
 
         fun slot(
@@ -210,7 +217,26 @@ open class GuiModule : GameModule() {
             itemStackBuilder: ItemStack.Builder.(player: Player) -> ItemStack.Builder,
             action: (SlotClickEvent.() -> Unit)? = null,
         ) {
-            items.add(Slot(slotNumber, material, itemStackBuilder, true, action))
+            items.add(
+                Slot(
+                    slotNumber,
+                    { player -> itemStackBuilder(ItemStack.builder(material(player)), player).build() },
+                    true,
+                    action
+                )
+            )
+        }
+
+        fun slotFromItemStack(
+            slotNumber: Int,
+            itemStackBuilder: (player: Player) -> ItemStack,
+            action: (SlotClickEvent.() -> Unit)? = null,
+        ) {
+            items.add(Slot(slotNumber, itemStackBuilder, true, action))
+        }
+
+        fun rawSlot(slot: Slot) {
+            items.add(slot)
         }
 
         /**
@@ -223,7 +249,14 @@ open class GuiModule : GameModule() {
             itemStackBuilder: ItemStack.Builder.(player: Player) -> ItemStack.Builder,
             action: (SlotClickEvent.() -> Unit)? = null,
         ) {
-            items.add(Slot(slotNumber, material, itemStackBuilder, false, action))
+            items.add(
+                Slot(
+                    slotNumber,
+                    { player -> itemStackBuilder(ItemStack.builder(material), player).build() },
+                    false,
+                    action
+                )
+            )
         }
 
         // When the inventory is built, the items are made immutable.
@@ -234,16 +267,8 @@ open class GuiModule : GameModule() {
 
     data class Slot(
         val index: Int,
-        val material: (Player) -> Material,
-        val itemStackBuilder: ItemStack.Builder.(player: Player) -> ItemStack.Builder,
+        val itemStackBuilder: (player: Player) -> ItemStack,
         val cancelClicks: Boolean = true,
         val action: (SlotClickEvent.() -> Unit)?,
-    ) {
-        constructor(
-            index: Int, material: Material, itemStackBuilder: ItemStack.Builder.(player: Player) -> ItemStack.Builder,
-            cancelClicks: Boolean = true,
-            action: (SlotClickEvent.() -> Unit)?,
-        ) : this(index, { material }, itemStackBuilder, cancelClicks, action)
-    }
-
+    )
 }

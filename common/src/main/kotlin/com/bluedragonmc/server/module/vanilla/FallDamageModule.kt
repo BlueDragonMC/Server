@@ -11,7 +11,8 @@ import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.player.PlayerTickEvent
 import net.minestom.server.instance.block.Block
-import net.minestom.server.item.Enchantment
+import net.minestom.server.item.ItemComponent
+import net.minestom.server.item.enchant.Enchantment
 import net.minestom.server.potion.PotionEffect
 import net.minestom.server.tag.Tag
 import kotlin.math.floor
@@ -41,9 +42,11 @@ class FallDamageModule : GameModule() {
                 else -> 0.0
             }
             // Feather falling reduces fall damage by 12% per level
-            val featherFallingLevel = player.boots.meta().enchantmentMap[Enchantment.FEATHER_FALLING] ?: 0
+            val featherFallingLevel =
+                player.boots.get(ItemComponent.ENCHANTMENTS)?.enchantments?.get(Enchantment.FEATHER_FALLING) ?: 0
             // Protection reduces damage by 4% per level
-            val protLevel = player.getArmor().sumOf { it.meta().enchantmentMap[Enchantment.PROTECTION]?.toInt() ?: 0 }
+            val protLevel = player.getArmor()
+                .sumOf { it.get(ItemComponent.ENCHANTMENTS)?.enchantments?.get(Enchantment.PROTECTION) ?: 0 }
             val protectionPercentage = ((0.04 * protLevel) + (0.12 * featherFallingLevel)).coerceAtMost(0.8)
             return originalDamage * (1.0 - protectionPercentage) * (1.0 - blockBelowReduction)
         }

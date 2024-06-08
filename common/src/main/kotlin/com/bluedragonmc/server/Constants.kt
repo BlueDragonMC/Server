@@ -4,7 +4,6 @@ import com.bluedragonmc.server.utils.withGradient
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextColor
-import org.apache.commons.net.util.Base64
 import java.io.File
 import java.nio.charset.Charset
 import java.util.*
@@ -55,5 +54,5 @@ val SERVER_NAME_GRADIENT = Component.text("BlueDragon").withGradient(BRAND_COLOR
  * A base64-encoded PNG image of the server's favicon shown on clients' server lists.
  */
 val FAVICON = "data:image/png;base64," + runCatching {
-    String(Base64.encodeBase64(File("favicon_64.png").readBytes()), Charset.forName("UTF-8"))
+    String(Base64.getEncoder().encode(File("favicon_64.png").readBytes()), Charset.forName("UTF-8"))
 }.getOrElse { "" }
