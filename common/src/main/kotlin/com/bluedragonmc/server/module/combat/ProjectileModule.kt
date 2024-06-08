@@ -6,7 +6,6 @@ import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.vanilla.ItemDropModule
 import com.bluedragonmc.server.utils.CoordinateUtils
 import net.kyori.adventure.sound.Sound
-import net.minestom.server.MinecraftServer
 import net.minestom.server.ServerFlag
 import net.minestom.server.coordinate.Point
 import net.minestom.server.coordinate.Pos
@@ -92,7 +91,7 @@ class ProjectileModule : GameModule() {
             }
 
             val secondsCharged =
-                (event.player.instance!!.worldAge - event.player.getTag(CHARGE_START_TAG)).toFloat() / MinecraftServer.TICK_PER_SECOND
+                (event.player.instance!!.worldAge - event.player.getTag(CHARGE_START_TAG)).toFloat() / ServerFlag.SERVER_TICKS_PER_SECOND
             val power = ((secondsCharged * secondsCharged + 2 * secondsCharged) / 2.0).coerceIn(0.0, 1.0)
 
             if (power > 0.2) {
