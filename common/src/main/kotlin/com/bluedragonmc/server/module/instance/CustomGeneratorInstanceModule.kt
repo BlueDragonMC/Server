@@ -8,11 +8,13 @@ import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.generator.Generator
+import net.minestom.server.registry.DynamicRegistry
 import net.minestom.server.utils.NamespaceID
 import net.minestom.server.world.DimensionType
 
 class CustomGeneratorInstanceModule(
-    private val dimensionType: DimensionType = DimensionType.OVERWORLD, private val generator: Generator,
+    private val dimensionType: DynamicRegistry.Key<DimensionType> = DimensionType.OVERWORLD,
+    private val generator: Generator,
 ) : InstanceModule() {
     private lateinit var instance: Instance
 
@@ -30,8 +32,17 @@ class CustomGeneratorInstanceModule(
     fun getInstance() = instance
 
     companion object {
-        fun getFullbrightDimension() = MinecraftServer.getDimensionTypeManager().getDimension(
-            NamespaceID.from("$NAMESPACE:fullbright_dimension")
-        )!!
+
+        init {
+            val id = NamespaceID.from("$NAMESPACE:fullbright_dimension")
+            if (MinecraftServer.getDimensionTypeRegistry().get(id) == null) {
+                MinecraftServer.getDimensionTypeRegistry().register(
+                    DimensionType.builder(id).ambientLight(1.0F).build()
+                )
+            }
+        }
+
+        fun getFullbrightDimension(): DynamicRegistry.Key<DimensionType> =
+            DynamicRegistry.Key.of(NamespaceID.from("$NAMESPACE:fullbright_dimension"))
     }
 }

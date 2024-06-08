@@ -31,7 +31,7 @@ object GlowingEntityUtils {
             TeamsPacket(team.teamName, TeamsPacket.AddEntitiesToTeamAction(listOf(entity.uuid.toString())))
         )
         viewers.forEach { viewer ->
-            if(!viewer.hasTag(SEEN_TEAMS_TAG)) {
+            if (!viewer.hasTag(SEEN_TEAMS_TAG)) {
                 viewer.setTag(SEEN_TEAMS_TAG, listOf(team.teamName))
             } else {
                 viewer.setTag(SEEN_TEAMS_TAG, viewer.getTag(SEEN_TEAMS_TAG) + team.teamName)

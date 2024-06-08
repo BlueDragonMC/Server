@@ -55,7 +55,7 @@ class ItemDropModule(var dropBlocksOnBreak: Boolean = true, var dropAllOnDeath: 
         val itemEntity = ItemEntity(item)
         itemEntity.setInstance(instance, player.position.add(0.0, player.eyeHeight - 0.3, 0.0))
         itemEntity.setPickupDelay(2, ChronoUnit.SECONDS)
-        if(throwRandomly) {
+        if (throwRandomly) {
             val multiplier = Random.nextFloat() * 4f
             val angle = Random.nextFloat() * Math.PI * 2f
             itemEntity.velocity = Vec(-sin(angle) * multiplier, 0.2, cos(angle) * multiplier)

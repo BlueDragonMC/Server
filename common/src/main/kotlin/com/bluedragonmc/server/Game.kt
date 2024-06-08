@@ -103,7 +103,6 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
             when (event) {
                 is InstanceEvent -> ownsInstance(event.instance)
                 is GameEvent -> event.game === this
-                is PlayerSpawnEvent -> ownsInstance(event.spawnInstance) // Workaround for PlayerSpawnEvent not being an InstanceEvent
                 is PlayerEvent -> event.player.isActive && ownsInstance(event.player.instance ?: return@event false)
                 is ServerTickMonitorEvent -> true
                 else -> false
@@ -164,7 +163,7 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
     }
 
     fun unregister(module: GameModule) {
-        logger.debug("Unregistering module $module")
+        logger.debug("Unregistering module {}", module)
         module.deinitialize()
         modules.remove(module)
         val node = module.eventNode
@@ -313,7 +312,7 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
                 logger.info("Forcefully unregistering instance ${instance.uniqueId}...")
                 InstanceUtils.forceUnregisterInstance(instance).join()
             }
-        }.executionType(ExecutionType.ASYNC).delay(Duration.ofSeconds(10))
+        }.executionType(ExecutionType.TICK_START).delay(Duration.ofSeconds(10))
 
         players.clear()
     }

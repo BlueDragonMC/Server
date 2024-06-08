@@ -7,6 +7,7 @@ import net.minestom.server.MinecraftServer
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.instance.*
+import net.minestom.server.instance.anvil.AnvilLoader
 import net.minestom.server.tag.Tag
 import org.slf4j.LoggerFactory
 import java.nio.file.Path

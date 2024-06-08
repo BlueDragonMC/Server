@@ -7,11 +7,12 @@ import com.bluedragonmc.server.module.vanilla.ItemDropModule
 import com.bluedragonmc.server.utils.CoordinateUtils
 import net.kyori.adventure.sound.Sound
 import net.minestom.server.MinecraftServer
-import net.minestom.server.attribute.Attribute
+import net.minestom.server.ServerFlag
 import net.minestom.server.coordinate.Point
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.*
 import net.minestom.server.entity.Player.Hand
+import net.minestom.server.entity.attribute.Attribute
 import net.minestom.server.entity.damage.Damage
 import net.minestom.server.entity.damage.DamageType
 import net.minestom.server.entity.metadata.projectile.ArrowMeta
@@ -28,9 +29,10 @@ import net.minestom.server.instance.EntityTracker
 import net.minestom.server.instance.Explosion
 import net.minestom.server.instance.Instance
 import net.minestom.server.inventory.TransactionOption
-import net.minestom.server.item.Enchantment
+import net.minestom.server.item.ItemComponent
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
+import net.minestom.server.item.enchant.Enchantment
 import net.minestom.server.network.packet.server.play.ChangeGameStatePacket
 import net.minestom.server.sound.SoundEvent
 import net.minestom.server.tag.Tag
@@ -51,8 +53,8 @@ class ProjectileModule : GameModule() {
 
     companion object {
         private val CHARGE_START_TAG = Tag.Long("bow_charge_start").defaultValue(Long.MAX_VALUE)
-        private val ARROW_DAMAGE_TAG = Tag.Short("entity_arrow_power").defaultValue(0) // the power enchantment level
-        private val PUNCH_TAG = Tag.Short("entity_projectile_punch").defaultValue(0) // the punch enchantment level
+        private val ARROW_DAMAGE_TAG = Tag.Integer("entity_arrow_power").defaultValue(0) // the power enchantment level
+        private val PUNCH_TAG = Tag.Integer("entity_projectile_punch").defaultValue(0) // the punch enchantment level
         private val PEARL_OWNER_TAG = Tag.UUID("ender_pearl_owner")
         private val LAST_PROJECTILE_THROW_TAG = Tag.Long("last_projectile_throw").defaultValue(0)
     }
@@ -109,8 +111,9 @@ class ProjectileModule : GameModule() {
                         1.0f
                     ), event.player.position
                 )
-                projectile.setTag(PUNCH_TAG, event.itemStack.meta().enchantmentMap[Enchantment.PUNCH] ?: 0)
-                projectile.setTag(ARROW_DAMAGE_TAG, event.itemStack.meta().enchantmentMap[Enchantment.POWER] ?: 0)
+                val enchantments = event.itemStack.get(ItemComponent.ENCHANTMENTS)?.enchantments
+                projectile.setTag(PUNCH_TAG, enchantments?.get(Enchantment.PUNCH) ?: 0)
+                projectile.setTag(ARROW_DAMAGE_TAG, enchantments?.get(Enchantment.POWER) ?: 0)
             }
         }
         eventNode.addListener(ProjectileCollideWithEntityEvent::class.java) { event ->
@@ -136,7 +139,7 @@ class ProjectileModule : GameModule() {
             )
 
             val damageModifier =
-                (projectile.shooter as? LivingEntity)?.getAttribute(Attribute.ATTACK_DAMAGE)?.value ?: 1.0f
+                (projectile.shooter as? LivingEntity)?.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE)?.value ?: 1.0
 
             var originalDamage = damageModifier * 2.0f + Random.nextFloat() * 0.25 + 0.15f
             if (projectile.getTag(ARROW_DAMAGE_TAG) > 0) {
@@ -144,7 +147,7 @@ class ProjectileModule : GameModule() {
             }
 
             val baseDamage =
-                ceil(projectile.velocity.length() / MinecraftServer.TICK_PER_SECOND * originalDamage).toFloat()
+                ceil(projectile.velocity.length() / ServerFlag.SERVER_TICKS_PER_SECOND * originalDamage).toFloat()
                     .coerceAtLeast(0.0f)
 
             val damage = if (arrowMeta.isCritical) baseDamage + Random.nextInt((baseDamage / 2.0 + 2.0).toInt())

@@ -66,7 +66,7 @@ class SpectatorModule(var spectateOnDeath: Boolean, var spectateOnLeave: Boolean
      */
     fun removeSpectator(player: Player) {
         spectators.remove(player)
-        if(player is CustomPlayer && player.isSpectating) player.stopSpectating()
+        if (player is CustomPlayer && player.isSpectating) player.stopSpectating()
         if (parent.hasModule<PlayerResetModule>()) player.gameMode = parent.getModule<PlayerResetModule>().defaultGameMode
         parent.callEvent(StopSpectatingEvent(parent, player))
     }
