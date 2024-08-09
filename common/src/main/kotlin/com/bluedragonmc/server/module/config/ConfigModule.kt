@@ -16,7 +16,7 @@ import net.minestom.server.event.EventNode
 import net.minestom.server.instance.block.Block
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
-import net.minestom.server.item.enchant.Enchantment
+import net.minestom.server.item.component.EnchantmentList
 import org.spongepowered.configurate.ConfigurationNode
 import org.spongepowered.configurate.ConfigurationOptions
 import org.spongepowered.configurate.yaml.YamlConfigurationLoader
@@ -115,7 +115,7 @@ class ConfigModule(private val configFileName: String? = null) : GameModule() {
                 builder.register(Component::class.java, ComponentSerializer())
                 builder.register(EntityType::class.java, EntityTypeSerializer())
                 builder.register(Material::class.java, MaterialSerializer())
-                builder.register(Enchantment::class.java, EnchantmentSerializer())
+                builder.register(EnchantmentList::class.java, EnchantmentListSerializer())
                 builder.register(PlayerSkin::class.java, PlayerSkinSerializer())
                 builder.register(KitsModule.Kit::class.java, KitSerializer())
                 builder.register(ItemStack::class.java, ItemStackSerializer())
