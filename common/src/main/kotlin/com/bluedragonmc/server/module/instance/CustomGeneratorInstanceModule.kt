@@ -37,7 +37,8 @@ class CustomGeneratorInstanceModule(
             val id = NamespaceID.from("$NAMESPACE:fullbright_dimension")
             if (MinecraftServer.getDimensionTypeRegistry().get(id) == null) {
                 MinecraftServer.getDimensionTypeRegistry().register(
-                    DimensionType.builder(id).ambientLight(1.0F).build()
+                    id,
+                    DimensionType.builder().ambientLight(1.0F).build()
                 )
             }
         }
