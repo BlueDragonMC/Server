@@ -46,7 +46,7 @@ class PermissionManagerImpl : PermissionManager {
 
     override fun hasPermission(player: UUID, node: String): Boolean? {
         val request = Request.Builder()
-            .url("$baseUrl/user/$player/permissionCheck?permission=$node")
+            .url("$baseUrl/user/$player/permission-check?permission=$node")
             .get()
             .build()
         val reply = client.newCall(request).execute()
