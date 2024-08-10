@@ -19,7 +19,7 @@ import net.minestom.server.utils.async.AsyncUtils
 import java.util.*
 import java.util.concurrent.CompletableFuture
 
-class CustomPlayer(uuid: UUID, username: String, playerConnection: PlayerConnection) :
+open class CustomPlayer(uuid: UUID, username: String, playerConnection: PlayerConnection) :
     Player(uuid, username, playerConnection) {
 
     internal var isSpectating = false
