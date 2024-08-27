@@ -37,7 +37,7 @@ class SpectatorModule(var spectateOnDeath: Boolean, var spectateOnLeave: Boolean
         }
 
         eventNode.addListener(PlayerLeaveGameEvent::class.java) { event ->
-            if (spectateOnLeave) {
+            if (spectateOnLeave && parent.state == GameState.INGAME) {
                 parent.players.forEach { it.sendMessage(Component.translatable("module.spectator.disconnect", BRAND_COLOR_PRIMARY_2, event.player.name)) }
                 addSpectator(event.player)
             }
