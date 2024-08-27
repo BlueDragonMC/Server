@@ -5,7 +5,6 @@ import net.kyori.adventure.text.format.TextColor
 import java.util.*
 
 interface PermissionManager {
-    fun onPlayerLogin(player: UUID) {}
     fun getMetadata(player: UUID): PlayerMeta
     fun hasPermission(player: UUID, node: String): Boolean?
 }

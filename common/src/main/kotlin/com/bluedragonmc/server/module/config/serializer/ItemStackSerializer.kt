@@ -18,8 +18,6 @@ class ItemStackSerializer : TypeSerializer<ItemStack> {
     override fun deserialize(type: Type?, node: ConfigurationNode): ItemStack {
         val material = node.node("material").get<Material>() ?: error("No material present")
         val amount = node.node("amount").getInt(1)
-        println(material.registry().namespace())
-        println(node.node("enchants").toString())
         node.hasChild("enchants")
 
         val enchantments = node.node("enchants").get<EnchantmentList>()
