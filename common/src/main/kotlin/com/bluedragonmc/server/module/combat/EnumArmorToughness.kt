@@ -4,7 +4,6 @@ import net.minestom.server.entity.Player
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import kotlin.math.max
-import kotlin.math.min
 
 enum class EnumArmorToughness(val armorToughness: Int, val defensePoints: Int, val material: Material) {
 
@@ -55,12 +54,15 @@ enum class EnumArmorToughness(val armorToughness: Int, val defensePoints: Int, v
         }
 
         /**
-         * https://minecraft.fandom.com/wiki/Armor#Defense_points
+         * https://minecraft.wiki/w/Armor#Damage_reduction
          */
         private fun getReducedDamage(incomingDamage: Double, armorDefense: Int, armorToughness: Int): Double {
-            return incomingDamage * (1.0 - min(
-                20.0, max(armorDefense / 5.0, armorDefense - incomingDamage / (2.0 + armorToughness / 4.0))
-            ) / 25.0)
+            val percentDamageReduction = max(
+                    armorDefense / 5.0,
+                    armorDefense - ((4.0 * incomingDamage) / (armorToughness.toDouble().coerceAtMost(20.0) + 8.0))
+            ).coerceAtMost(20.0) / 25.0
+
+            return incomingDamage * (1.0 - percentDamageReduction)
         }
     }
 }

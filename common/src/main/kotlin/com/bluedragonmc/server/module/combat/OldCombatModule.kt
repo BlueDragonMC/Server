@@ -153,9 +153,8 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
             // Spectators can't attack, and spectators and players in creative mode can't take damage
             if (player.gameMode == GameMode.SPECTATOR || (target is Player && (target.gameMode == GameMode.SPECTATOR || target.gameMode == GameMode.CREATIVE))) return@addListener
 
-            // The player's base attack damage
-            var dmgAttribute =
-                player.getAttributeValue(Attribute.GENERIC_ATTACK_DAMAGE) + EnumItemDamage.ItemDamage.getAttackDamage(player.itemInMainHand.material())
+            // The base attack damage according to the item they're holding
+            var dmgAttribute = player.getAttributeValue(Attribute.GENERIC_ATTACK_DAMAGE)
 
             val heldEnchantments = player.inventory.itemInMainHand.get(ItemComponent.ENCHANTMENTS)?.enchantments ?: emptyMap<DynamicRegistry.Key<Enchantment>, Int>()
             // Extra damage provided by enchants like sharpness or smite
