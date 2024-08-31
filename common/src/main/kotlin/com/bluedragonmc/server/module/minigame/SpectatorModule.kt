@@ -37,7 +37,7 @@ class SpectatorModule(var spectateOnDeath: Boolean, var spectateOnLeave: Boolean
         }
 
         eventNode.addListener(PlayerLeaveGameEvent::class.java) { event ->
-            if (spectateOnLeave) {
+            if (spectateOnLeave && parent.state == GameState.INGAME) {
                 parent.players.forEach { it.sendMessage(Component.translatable("module.spectator.disconnect", BRAND_COLOR_PRIMARY_2, event.player.name)) }
                 addSpectator(event.player)
             }
@@ -66,7 +66,7 @@ class SpectatorModule(var spectateOnDeath: Boolean, var spectateOnLeave: Boolean
      */
     fun removeSpectator(player: Player) {
         spectators.remove(player)
-        if(player is CustomPlayer && player.isSpectating) player.stopSpectating()
+        if (player is CustomPlayer && player.isSpectating) player.stopSpectating()
         if (parent.hasModule<PlayerResetModule>()) player.gameMode = parent.getModule<PlayerResetModule>().defaultGameMode
         parent.callEvent(StopSpectatingEvent(parent, player))
     }

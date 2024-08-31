@@ -32,7 +32,15 @@ class DoorsModule : GameModule() {
         Block.MANGROVE_DOOR,
         Block.SPRUCE_DOOR,
         Block.WARPED_DOOR,
-        Block.OAK_DOOR
+        Block.OAK_DOOR,
+        Block.COPPER_DOOR,
+        Block.EXPOSED_COPPER_DOOR,
+        Block.WEATHERED_COPPER_DOOR,
+        Block.OXIDIZED_COPPER_DOOR,
+        Block.WAXED_COPPER_DOOR,
+        Block.WAXED_EXPOSED_COPPER_DOOR,
+        Block.WAXED_WEATHERED_COPPER_DOOR,
+        Block.WAXED_OXIDIZED_COPPER,
     )
 
     private fun isDoor(block: Block) = woodDoors.any { it.compare(block, Block.Comparator.ID) }

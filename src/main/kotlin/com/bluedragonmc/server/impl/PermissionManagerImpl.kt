@@ -34,19 +34,9 @@ class PermissionManagerImpl : PermissionManager {
 
     private val gson = Gson()
 
-    override fun onPlayerLogin(player: UUID) {
-        val request = Request.Builder()
-            .url("$baseUrl/user/$player/meta")
-            .build()
-
-        val reply = client.newCall(request).execute()
-        val str = reply.body.toString()
-        println(str)
-    }
-
     override fun hasPermission(player: UUID, node: String): Boolean? {
         val request = Request.Builder()
-            .url("$baseUrl/user/$player/permissionCheck?permission=$node")
+            .url("$baseUrl/user/$player/permission-check?permission=$node")
             .get()
             .build()
         val reply = client.newCall(request).execute()

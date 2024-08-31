@@ -7,7 +7,10 @@ import net.minestom.server.MinecraftServer
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.instance.*
+import net.minestom.server.instance.anvil.AnvilLoader
+import net.minestom.server.registry.DynamicRegistry
 import net.minestom.server.tag.Tag
+import net.minestom.server.world.DimensionType
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
 import kotlin.io.path.absolutePathString
@@ -25,7 +28,7 @@ import kotlin.io.path.absolutePathString
  * 
  * [See Documentation](https://developer.bluedragonmc.com/modules/anvilfilemapprovidermodule/)
  */
-class AnvilFileMapProviderModule(val worldFolder: Path) : GameModule() {
+class AnvilFileMapProviderModule(val worldFolder: Path, private val dimensionType: DynamicRegistry.Key<DimensionType> = DimensionType.OVERWORLD) : GameModule() {
 
     lateinit var instanceContainer: InstanceContainer
         private set
@@ -38,7 +41,7 @@ class AnvilFileMapProviderModule(val worldFolder: Path) : GameModule() {
         }
 
         // If not, create a new InstanceContainer
-        instanceContainer = MinecraftServer.getInstanceManager().createInstanceContainer()
+        instanceContainer = MinecraftServer.getInstanceManager().createInstanceContainer(dimensionType)
         instanceContainer.chunkLoader = AnvilLoader(worldFolder)
         instanceContainer.setChunkSupplier(::LightingChunk)
         instanceContainer.setTag(MAP_NAME_TAG, worldFolder.absolutePathString())

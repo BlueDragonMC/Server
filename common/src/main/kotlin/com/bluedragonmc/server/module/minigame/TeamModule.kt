@@ -161,11 +161,13 @@ class TeamModule(
     data class Team(
         val name: Component = Component.empty(),
         val players: MutableList<Player> = mutableListOf(),
-        val allowFriendlyFire: Boolean = false
+        val allowFriendlyFire: Boolean = false,
+        val nameTagVisible: Boolean = true,
     ) : PacketGroupingAudience {
         val uuid: UUID = UUID.randomUUID()
 
-        private lateinit var scoreboardTeam: net.minestom.server.scoreboard.Team
+        lateinit var scoreboardTeam: net.minestom.server.scoreboard.Team
+            private set
 
         override fun getPlayers(): MutableCollection<Player> = players
 

@@ -4,7 +4,6 @@ import net.minestom.server.entity.Player
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import kotlin.math.max
-import kotlin.math.min
 
 enum class EnumArmorToughness(val armorToughness: Int, val defensePoints: Int, val material: Material) {
 
@@ -39,7 +38,7 @@ enum class EnumArmorToughness(val armorToughness: Int, val defensePoints: Int, v
 
     object ArmorToughness {
 
-        private val armorDataMap = values().associate {
+        private val armorDataMap = entries.associate {
             it.material to (it.armorToughness to it.defensePoints)
         }
 
@@ -47,7 +46,7 @@ enum class EnumArmorToughness(val armorToughness: Int, val defensePoints: Int, v
         private fun ItemStack.getArmorToughness() = armorDataMap[this.material()]?.first ?: 0
         private fun ItemStack.getDefensePoints() = armorDataMap[this.material()]?.second ?: 0
 
-        fun getReducedDamage(incomingDamage: Float, target: Player): Float {
+        fun getReducedDamage(incomingDamage: Double, target: Player): Double {
             val armor = target.getArmor()
             val armorDefense = armor.sumOf { it.getDefensePoints() }
             val armorToughness = armor.sumOf { it.getArmorToughness() }
@@ -55,12 +54,15 @@ enum class EnumArmorToughness(val armorToughness: Int, val defensePoints: Int, v
         }
 
         /**
-         * https://minecraft.fandom.com/wiki/Armor#Defense_points
+         * https://minecraft.wiki/w/Armor#Damage_reduction
          */
-        private fun getReducedDamage(incomingDamage: Float, armorDefense: Int, armorToughness: Int): Float {
-            return incomingDamage * (1f - min(
-                20f, max(armorDefense / 5f, armorDefense - incomingDamage / (2f + armorToughness / 4f))
-            ) / 25f)
+        private fun getReducedDamage(incomingDamage: Double, armorDefense: Int, armorToughness: Int): Double {
+            val percentDamageReduction = max(
+                    armorDefense / 5.0,
+                    armorDefense - ((4.0 * incomingDamage) / (armorToughness.toDouble().coerceAtMost(20.0) + 8.0))
+            ).coerceAtMost(20.0) / 25.0
+
+            return incomingDamage * (1.0 - percentDamageReduction)
         }
     }
 }

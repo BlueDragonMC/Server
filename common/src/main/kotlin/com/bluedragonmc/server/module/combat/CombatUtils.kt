@@ -2,18 +2,18 @@ package com.bluedragonmc.server.module.combat
 
 import net.minestom.server.entity.Entity
 import net.minestom.server.entity.EntityType
-import net.minestom.server.item.Enchantment
+import net.minestom.server.item.ItemComponent
 import net.minestom.server.item.ItemStack
+import net.minestom.server.item.enchant.Enchantment
+import net.minestom.server.registry.DynamicRegistry
 import kotlin.random.Random
 
 object CombatUtils {
     fun damageItemStack(itemStack: ItemStack, amount: Int): ItemStack {
-        val unbreakingLevel = itemStack.meta().enchantmentMap[Enchantment.UNBREAKING]?.toInt() ?: 0
+        val unbreakingLevel = itemStack.get(ItemComponent.ENCHANTMENTS)?.enchantments?.get(Enchantment.UNBREAKING) ?: 0
         val processedAmount = (0 until amount).count { !shouldRestoreDurability(itemStack, unbreakingLevel) }
-
-        return itemStack.withMeta { meta ->
-            meta.damage(itemStack.meta().damage - processedAmount)
-        }
+        // todo - if the damage increases beyond the max damage (durability), do we need to manually delete the item?
+        return itemStack.with(ItemComponent.DAMAGE, (itemStack.get(ItemComponent.DAMAGE) ?: 0) + processedAmount)
     }
 
     private fun shouldRestoreDurability(itemStack: ItemStack, unbreakingLevel: Int): Boolean {
@@ -30,7 +30,7 @@ object CombatUtils {
 
     fun getThornsDamage(level: Int): Int = if (level > 10) 10 - level else 1 + Random.nextInt(4)
 
-    fun getDamageModifier(enchants: Map<Enchantment, Short>, targetEntity: Entity): Float =
+    fun getDamageModifier(enchants: Map<DynamicRegistry.Key<Enchantment>, Int>, targetEntity: Entity): Float =
         if (enchants.containsKey(Enchantment.SHARPNESS)) {
             enchants[Enchantment.SHARPNESS]!! * 1.25f
         } else if (enchants.containsKey(Enchantment.SMITE) && isUndead(targetEntity)) {
@@ -39,7 +39,7 @@ object CombatUtils {
             enchants[Enchantment.BANE_OF_ARTHROPODS]!! * 2.5f
         } else 0.0f
 
-    fun getArrowDamageModifier(enchants: Map<Enchantment, Short>, targetEntity: Entity): Float =
+    fun getArrowDamageModifier(enchants: Map<DynamicRegistry.Key<Enchantment>, Int>, targetEntity: Entity): Float =
         if (enchants.containsKey(Enchantment.POWER))
             0.5f + enchants[Enchantment.POWER]!! * 0.5f
         else 0.0f
@@ -59,6 +59,7 @@ object CombatUtils {
         EntityType.ZOMBIE_VILLAGER,
         EntityType.ZOMBIFIED_PIGLIN,
     )
+
     private fun isUndead(entity: Entity) = UNDEAD_MOBS.contains(entity.entityType)
 
     private fun isArthropod(entity: Entity) =

@@ -88,7 +88,7 @@ class ChestModule : GameModule() {
         fun open(player: Player) {
             viewers.add(player)
             getMenu(player).open(player)
-            if(!isOpen) {
+            if (!isOpen) {
                 isOpen = true
                 SoundUtils.playSoundInWorld(openSound, instance, position)
             }
@@ -97,7 +97,7 @@ class ChestModule : GameModule() {
 
         fun onClosed(player: Player) {
             viewers.remove(player)
-            if(viewers.isEmpty()) {
+            if (viewers.isEmpty()) {
                 isOpen = false
                 SoundUtils.playSoundInWorld(closeSound, instance, position)
                 updateState()
@@ -113,7 +113,7 @@ class ChestModule : GameModule() {
 //        init {
 //            // This task mimicks the vanilla server's behavior, even though it is inefficient
 //            MinecraftServer.getSchedulerManager().buildTask {
-//                if(viewers.isNotEmpty()) instance.sendBlockAction(position, 0x1, viewers.size.toByte())
+//                if (viewers.isNotEmpty()) instance.sendBlockAction(position, 0x1, viewers.size.toByte())
 //            }.repeat(Duration.ofMillis(500)).schedule()
 //        }
     }
