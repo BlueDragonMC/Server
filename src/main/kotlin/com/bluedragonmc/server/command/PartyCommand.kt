@@ -25,16 +25,16 @@ class PartyCommand(name: String, usageString: String, vararg aliases: String) :
          */
 
         subcommand("invite") {
-            val playerArgument by PlayerArgument
+            val playerArgument by OfflinePlayerArgument
             suspendSyntax(playerArgument) {
-                Messaging.outgoing.inviteToParty(player.uuid, getFirstPlayer(playerArgument).uuid)
+                Messaging.outgoing.inviteToParty(player.uuid, get(playerArgument).uuid)
             }
         }
 
         subcommand("kick") {
-            val playerArgument by PlayerArgument
+            val playerArgument by OfflinePlayerArgument
             suspendSyntax(playerArgument) {
-                Messaging.outgoing.kickFromParty(player.uuid, getFirstPlayer(playerArgument).uuid)
+                Messaging.outgoing.kickFromParty(player.uuid, get(playerArgument).uuid)
             }
         }
 
@@ -52,9 +52,9 @@ class PartyCommand(name: String, usageString: String, vararg aliases: String) :
         }
 
         subcommand("accept") {
-            val playerArgument by PlayerArgument
+            val playerArgument by OfflinePlayerArgument
             suspendSyntax(playerArgument) {
-                Messaging.outgoing.acceptPartyInvitation(getFirstPlayer(playerArgument).uuid, player.uuid)
+                Messaging.outgoing.acceptPartyInvitation(get(playerArgument).uuid, player.uuid)
             }
         }
 
@@ -65,9 +65,9 @@ class PartyCommand(name: String, usageString: String, vararg aliases: String) :
         }
 
         subcommand("transfer") {
-            val playerArgument by PlayerArgument
+            val playerArgument by OfflinePlayerArgument
             suspendSyntax(playerArgument) {
-                Messaging.outgoing.transferParty(player, getFirstPlayer(playerArgument).uuid)
+                Messaging.outgoing.transferParty(player, get(playerArgument).uuid)
             }
         }
 
@@ -94,9 +94,9 @@ class PartyCommand(name: String, usageString: String, vararg aliases: String) :
         }
 
         // If the player adds a player as the first argument instead of typing `invite <player>`
-        val playerArgument by PlayerArgument
+        val playerArgument by OfflinePlayerArgument
         suspendSyntax(playerArgument) {
-            Messaging.outgoing.inviteToParty(player.uuid, getFirstPlayer(playerArgument).uuid)
+            Messaging.outgoing.inviteToParty(player.uuid, get(playerArgument).uuid)
         }
 
     })
