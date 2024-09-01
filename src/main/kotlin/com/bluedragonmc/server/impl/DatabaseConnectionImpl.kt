@@ -93,6 +93,19 @@ internal class DatabaseConnectionImpl(connectionString: String) : DatabaseConnec
         runBlocking {
             try {
                 player.data = getPlayerDocument(player)
+
+                if (player.username != player.data.username || player.data.username.isBlank()) {
+                    // Keep an up-to-date record of player usernames
+                    player.data.update(PlayerDocument::username, player.username)
+                    player.data.update(PlayerDocument::usernameLower, player.username.lowercase())
+                    logger.info("Updated username for ${player.uuid}: ${player.data.username} -> ${player.username}")
+                }
+                if (player.data.usernameLower != player.username.lowercase()) {
+                    player.data.update(PlayerDocument::usernameLower, player.username.lowercase())
+                }
+                player.data.update(PlayerDocument::lastJoinDate, System.currentTimeMillis())
+                MinecraftServer.getGlobalEventHandler().call(DataLoadedEvent(player))
+                logger.info("Loaded player data for ${player.username}")
             } catch (e: Throwable) {
                 logger.error("Player data for ${player.username} failed to load.")
                 MinecraftServer.getExceptionManager().handleException(e)
@@ -105,20 +118,7 @@ internal class DatabaseConnectionImpl(connectionString: String) : DatabaseConnec
                     )
                 )
                 player.playerConnection.disconnect()
-                return@runBlocking
             }
-            if (player.username != player.data.username || player.data.username.isBlank()) {
-                // Keep an up-to-date record of player usernames
-                player.data.update(PlayerDocument::username, player.username)
-                player.data.update(PlayerDocument::usernameLower, player.username.lowercase())
-                logger.info("Updated username for ${player.uuid}: ${player.data.username} -> ${player.username}")
-            }
-            if (player.data.usernameLower != player.username.lowercase()) {
-                player.data.update(PlayerDocument::usernameLower, player.username.lowercase())
-            }
-            player.data.update(PlayerDocument::lastJoinDate, System.currentTimeMillis())
-            MinecraftServer.getGlobalEventHandler().call(DataLoadedEvent(player))
-            logger.info("Loaded player data for ${player.username}")
         }
     }
 

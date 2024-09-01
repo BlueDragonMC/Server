@@ -5,7 +5,7 @@ import net.minestom.server.event.trait.PlayerEvent
 
 /**
  * Called when a player's data document has been fetched from the database.
- * Will always be called after AsyncPlayerPreLoginEvent, and the [player]
+ * Will always be called after AsyncPlayerConfigurationEvent, and the [player]
  * will always be an instance of `CustomPlayer` with an initialized `data` field.
  */
 class DataLoadedEvent(private val player: Player) : PlayerEvent {
