@@ -12,6 +12,7 @@ import net.minestom.server.event.item.ItemDropEvent
 import net.minestom.server.event.player.PlayerBlockBreakEvent
 import net.minestom.server.event.player.PlayerDeathEvent
 import net.minestom.server.instance.Instance
+import net.minestom.server.instance.block.Block
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import java.time.temporal.ChronoUnit
@@ -28,6 +29,14 @@ class ItemDropModule(var dropBlocksOnBreak: Boolean = true, var dropAllOnDeath: 
     override val eventPriority: Int
         get() = 999 // Higher numbers run last; this module needs to receive events late to allow for cancellations from other modules
 
+    private val excludedBlocks = listOf<Block>(
+        *Block.values().filter { it.name().contains("bed") || it.name().contains("leaves") }.toTypedArray(),
+        Block.SHORT_GRASS,
+        Block.TALL_GRASS,
+        Block.VINE,
+        Block.COBWEB
+    )
+
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         eventNode.addListener(ItemDropEvent::class.java) { event ->
             dropItemFromPlayer(event.itemStack, event.instance, event.player, false)
@@ -41,7 +50,7 @@ class ItemDropModule(var dropBlocksOnBreak: Boolean = true, var dropAllOnDeath: 
             }
         }
         eventNode.addListener(PlayerBlockBreakEvent::class.java) { event ->
-            if (dropBlocksOnBreak && !event.isCancelled && !event.block.name().contains("bed")) {
+            if (dropBlocksOnBreak && !event.isCancelled && !excludedBlocks.contains(event.block)) {
                 dropItem(
                     ItemStack.of(event.block.registry().material() ?: Material.AIR, 1),
                     event.instance,
