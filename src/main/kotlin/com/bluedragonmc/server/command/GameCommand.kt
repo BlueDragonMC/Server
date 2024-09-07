@@ -54,6 +54,10 @@ class GameCommand(name: String, usageString: String, vararg aliases: String?) : 
     subcommand("start") {
 
         fun start(sender: CommandSender, game: Game) {
+            if (game.state == GameState.INGAME) {
+                sender.sendMessage(formatErrorTranslated("command.game.start.already_started"))
+                return
+            }
             game.showTitle(
                 Title.title(
                     text("GO!", NamedTextColor.GREEN).decorate(TextDecoration.BOLD),
