@@ -2,6 +2,7 @@ package com.bluedragonmc.server.module.vanilla
 
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.GameModule
+import net.minestom.server.coordinate.BlockVec
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.coordinate.Vec
 import net.minestom.server.entity.ItemEntity
@@ -11,6 +12,9 @@ import net.minestom.server.event.EventNode
 import net.minestom.server.event.item.ItemDropEvent
 import net.minestom.server.event.player.PlayerBlockBreakEvent
 import net.minestom.server.event.player.PlayerDeathEvent
+import net.minestom.server.event.trait.BlockEvent
+import net.minestom.server.event.trait.CancellableEvent
+import net.minestom.server.event.trait.InstanceEvent
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
 import net.minestom.server.item.ItemStack
@@ -29,6 +33,29 @@ class ItemDropModule(var dropBlocksOnBreak: Boolean = true, var dropAllOnDeath: 
     override val eventPriority: Int
         get() = 999 // Higher numbers run last; this module needs to receive events late to allow for cancellations from other modules
 
+    /**
+     * Called when a block is broken before it is dropped in item form in the world.
+     * Can be used to change the ItemStack or
+     */
+    data class BlockItemDropEvent(private val instance: Instance, private val block: Block, private var blockPosition: BlockVec, var itemStack: ItemStack) :
+        BlockEvent, InstanceEvent, CancellableEvent {
+        override fun getBlock() = block
+        override fun getBlockPosition() = blockPosition
+
+        fun setBlockPosition(pos: BlockVec) {
+            this.blockPosition = pos
+        }
+
+        override fun getInstance() = instance
+
+        private var isCancelled = false
+
+        override fun isCancelled() = isCancelled
+        override fun setCancelled(cancel: Boolean) {
+            this.isCancelled = cancel
+        }
+    }
+
     private val excludedBlocks = listOf<Block>(
         *Block.values().filter { it.name().contains("bed") || it.name().contains("leaves") }.toTypedArray(),
         Block.SHORT_GRASS,
@@ -37,7 +64,10 @@ class ItemDropModule(var dropBlocksOnBreak: Boolean = true, var dropAllOnDeath: 
         Block.COBWEB
     )
 
+    private lateinit var parent: Game
+
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
+        this.parent = parent
         eventNode.addListener(ItemDropEvent::class.java) { event ->
             dropItemFromPlayer(event.itemStack, event.instance, event.player, false)
         }
@@ -51,11 +81,15 @@ class ItemDropModule(var dropBlocksOnBreak: Boolean = true, var dropAllOnDeath: 
         }
         eventNode.addListener(PlayerBlockBreakEvent::class.java) { event ->
             if (dropBlocksOnBreak && !event.isCancelled && !excludedBlocks.contains(event.block)) {
-                dropItem(
-                    ItemStack.of(event.block.registry().material() ?: Material.AIR, 1),
-                    event.instance,
-                    Pos(event.blockPosition.x(), event.blockPosition.y(), event.blockPosition.z())
-                )
+                val itemStack = ItemStack.of(event.block.registry().material() ?: Material.AIR, 1)
+                val dropEvent = BlockItemDropEvent(event.instance, event.block, event.blockPosition, itemStack)
+                parent.callCancellable(dropEvent) {
+                    dropItem(
+                        dropEvent.itemStack,
+                        dropEvent.instance,
+                        Pos(dropEvent.blockPosition.x(), dropEvent.blockPosition.y(), dropEvent.blockPosition.z())
+                    )
+                }
             }
         }
     }
