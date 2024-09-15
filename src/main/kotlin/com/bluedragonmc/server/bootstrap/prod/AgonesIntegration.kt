@@ -16,6 +16,7 @@ import kotlinx.coroutines.runBlocking
 import net.minestom.server.MinecraftServer
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
+import net.minestom.server.event.server.ServerTickMonitorEvent
 import java.util.concurrent.TimeUnit
 
 object AgonesIntegration : Bootstrap(EnvType.PRODUCTION) {
@@ -30,7 +31,13 @@ object AgonesIntegration : Bootstrap(EnvType.PRODUCTION) {
     private val RESERVATION_TIME =
         System.getenv("BLUEDRAGON_AGONES_RESERVATION_TIME_MS")?.toLongOrNull() ?: (HEALTH_CHECK_INTERVAL * 2L)
 
+    private var lastTick: Long = 0
+
     override fun hook(eventNode: EventNode<Event>) {
+
+        MinecraftServer.getGlobalEventHandler().addListener(ServerTickMonitorEvent::class.java) { event ->
+            lastTick = System.currentTimeMillis()
+        }
 
         if (System.getenv("BLUEDRAGON_AGONES_DISABLED") != null) {
             logger.warn("Agones integration disabled by environment variable.")
@@ -83,6 +90,8 @@ object AgonesIntegration : Bootstrap(EnvType.PRODUCTION) {
         if (Game.games.isEmpty()) return false
         // Verify that the local gRPC server is running
         if (!Messaging.isConnected()) return false
+        // Verify that the server is ticking (the tick thread isn't blocked)
+        if (System.currentTimeMillis() - lastTick > 1_000) return false
 
         return true
     }
