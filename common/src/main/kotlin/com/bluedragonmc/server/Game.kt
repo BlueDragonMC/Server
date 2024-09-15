@@ -115,7 +115,7 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
     }
 
     open fun ownsInstance(instance: Instance): Boolean {
-        return getModuleOrNull<InstanceModule>()?.ownsInstance(instance) ?: false
+        return getModuleOrNull<InstanceModule>()?.ownsInstance(instance) == true
     }
 
     override fun <T : GameModule> register(module: T, filter: Predicate<Event>) {
@@ -290,6 +290,8 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
         state = GameState.ENDING
         games.remove(this)
 
+        val instancesToRemove = MinecraftServer.getInstanceManager().instances.filter { this.ownsInstance(it) }
+
         // the NotifyInstanceRemovedMessage is published when the MessagingModule is unregistered
         while (modules.isNotEmpty()) unregister(modules.first())
 
@@ -308,9 +310,9 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
         }
 
         MinecraftServer.getSchedulerManager().buildTask {
-            MinecraftServer.getInstanceManager().instances.filter { this.ownsInstance(it) }.forEach { instance ->
+            instancesToRemove.forEach { instance ->
                 logger.info("Forcefully unregistering instance ${instance.uniqueId}...")
-                InstanceUtils.forceUnregisterInstance(instance).join()
+                InstanceUtils.forceUnregisterInstance(instance)
             }
         }.executionType(ExecutionType.TICK_START).delay(Duration.ofSeconds(10))
 
