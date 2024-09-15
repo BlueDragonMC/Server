@@ -21,6 +21,7 @@ import net.minestom.server.item.ItemStack
 import net.minestom.server.utils.binary.BinaryWriter
 import net.minestom.server.utils.entity.EntityFinder
 import net.minestom.server.utils.location.RelativeVec
+import java.util.UUID
 import kotlin.reflect.KFunction
 import kotlin.reflect.KProperty
 
@@ -109,7 +110,12 @@ class ArgumentOfflinePlayer(id: String) : Argument<PlayerDocument>(id) {
     override fun parse(sender: CommandSender, input: String): PlayerDocument {
         val doc: PlayerDocument?
         runBlocking {
-            doc = Database.connection.getPlayerDocument(input)
+            doc = try {
+                // If the input is a UUID, use that to look up the player. If not, consider the input a username.
+                Database.connection.getPlayerDocument(UUID.fromString(input))
+            } catch (_: IllegalArgumentException) {
+                Database.connection.getPlayerDocument(input)
+            }
         }
         if (doc == null) throw ArgumentSyntaxException("Offline player not found", input, -1)
         return doc
