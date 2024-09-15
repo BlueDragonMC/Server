@@ -1,6 +1,8 @@
 package com.bluedragonmc.server.utils
 
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.event.GameEvent
+import com.bluedragonmc.server.event.GameStateChangedEvent
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.minigame.WinModule
 import net.minestom.server.event.Event
@@ -20,10 +22,13 @@ fun <T : Event> Task.cancelOn(game: Game, eventType: Class<out T>, condition: Pr
             eventNode.addListener(eventType) { event ->
                 if (condition.test(event)) {
                     logger.debug("Canceling task with id ${this@cancelOn.id()} because event of type ${eventType.simpleName} was triggered.")
-                    this@cancelOn.cancel()
-                    game.unregister(module)
+                    game.unregister(module) // `unregister` triggers `deinitialize`, which cancels the task
                 }
             }
+        }
+
+        override fun deinitialize() {
+            this@cancelOn.cancel()
         }
     }
     game.register(module) { true }
@@ -32,7 +37,13 @@ fun <T : Event> Task.cancelOn(game: Game, eventType: Class<out T>, condition: Pr
 }
 
 /**
- * Cancels the task when a [WinModule.WinnerDeclaredEvent] is received.
+ * Cancels the task when the game state is set to ENDING, a winner is declared, or game modules are uninitialized, whichever comes first.
  * @return The task, for method chaining
  */
-fun Task.manage(game: Game): Task = cancelOn(game, WinModule.WinnerDeclaredEvent::class.java)
+fun Task.manage(game: Game): Task = cancelOn(game, GameEvent::class.java) { event ->
+    when (event) {
+        is GameStateChangedEvent -> event.newState == GameState.ENDING
+        is WinModule.WinnerDeclaredEvent -> true
+        else -> !Game.games.contains(game)
+    }
+}
