@@ -13,7 +13,6 @@ import com.bluedragonmc.server.utils.listen
 import com.bluedragonmc.server.utils.listenAsync
 import com.bluedragonmc.server.utils.miniMessage
 import io.grpc.ManagedChannelBuilder
-import io.grpc.kotlin.AbstractCoroutineStub
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import net.kyori.adventure.text.Component
@@ -89,24 +88,21 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
         }
     }
 
-    private val instanceSvcStub = InstanceServiceGrpcKt.InstanceServiceCoroutineStub(channel).configure()
-    private val gameStateSvcStub = GameStateServiceGrpcKt.GameStateServiceCoroutineStub(channel).configure()
+    private val instanceSvcStub = InstanceServiceGrpcKt.InstanceServiceCoroutineStub(channel)
+    private val gameStateSvcStub = GameStateServiceGrpcKt.GameStateServiceCoroutineStub(channel)
     private val privateMessageStub =
-        VelocityMessageServiceGrpcKt.VelocityMessageServiceCoroutineStub(channel).configure()
-    private val playerTrackerStub = PlayerTrackerGrpcKt.PlayerTrackerCoroutineStub(channel).configure()
-    private val queueStub = QueueServiceGrpcKt.QueueServiceCoroutineStub(channel).configure()
-    private val partyStub = PartyServiceGrpcKt.PartyServiceCoroutineStub(channel).configure()
-    private val jukeboxStub = JukeboxGrpcKt.JukeboxCoroutineStub(channel).configure()
-
-    private fun <T : AbstractCoroutineStub<T>> AbstractCoroutineStub<T>.configure() =
-        this.withDeadlineAfter(5, TimeUnit.SECONDS)
+        VelocityMessageServiceGrpcKt.VelocityMessageServiceCoroutineStub(channel)
+    private val playerTrackerStub = PlayerTrackerGrpcKt.PlayerTrackerCoroutineStub(channel)
+    private val queueStub = QueueServiceGrpcKt.QueueServiceCoroutineStub(channel)
+    private val partyStub = PartyServiceGrpcKt.PartyServiceCoroutineStub(channel)
+    private val jukeboxStub = JukeboxGrpcKt.JukeboxCoroutineStub(channel)
 
     override fun isConnected(): Boolean {
         return !channel.isShutdown && !channel.isTerminated && ::serverName.isInitialized
     }
 
     override suspend fun initGameServer(serverName: String) {
-        instanceSvcStub.initGameServer(
+        instanceSvcStub.withDeadlineAfter(5, TimeUnit.SECONDS).initGameServer(
             ServerTracking.InitGameServerRequest.newBuilder()
                 .setServerName(serverName)
                 .build()
@@ -119,7 +115,7 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
     }
 
     override suspend fun initGame(id: String, gameType: CommonTypes.GameType) {
-        instanceSvcStub.createInstance(
+        instanceSvcStub.withDeadlineAfter(5, TimeUnit.SECONDS).createInstance(
             ServerTracking.InstanceCreatedRequest.newBuilder()
                 .setInstanceUuid(id)
                 .setGameType(gameType)
@@ -129,7 +125,7 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
     }
 
     override suspend fun updateGameState(id: String, gameState: CommonTypes.GameState) {
-        gameStateSvcStub.updateGameState(
+        gameStateSvcStub.withDeadlineAfter(5, TimeUnit.SECONDS).updateGameState(
             ServerTracking.GameStateUpdateRequest.newBuilder()
                 .setServerName(serverName)
                 .setInstanceUuid(id)
@@ -139,7 +135,7 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
     }
 
     override suspend fun notifyInstanceRemoved(gameId: String) {
-        instanceSvcStub.removeInstance(
+        instanceSvcStub.withDeadlineAfter(5, TimeUnit.SECONDS).removeInstance(
             ServerTracking.InstanceRemovedRequest.newBuilder()
                 .setServerName(serverName)
                 .setInstanceUuid(gameId)
@@ -148,7 +144,7 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
     }
 
     override suspend fun checkRemoveInstance(gameId: String): Boolean {
-        return instanceSvcStub.checkRemoveInstance(
+        return instanceSvcStub.withDeadlineAfter(5, TimeUnit.SECONDS).checkRemoveInstance(
             ServerTracking.InstanceRemovedRequest.newBuilder()
                 .setServerName(serverName)
                 .setInstanceUuid(gameId)
@@ -157,7 +153,7 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
     }
 
     override suspend fun recordInstanceChange(player: Player, newGame: String) {
-        playerTrackerStub.playerInstanceChange(
+        playerTrackerStub.withDeadlineAfter(5, TimeUnit.SECONDS).playerInstanceChange(
             PlayerTrackerOuterClass.PlayerInstanceChangeRequest.newBuilder()
                 .setServerName(serverName)
                 .setUuid(player.uuid.toString())
@@ -167,7 +163,7 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
     }
 
     override suspend fun playerTransfer(player: Player, newGame: String?) {
-        playerTrackerStub.playerTransfer(
+        playerTrackerStub.withDeadlineAfter(5, TimeUnit.SECONDS).playerTransfer(
             PlayerTrackerOuterClass.PlayerTransferRequest.newBuilder()
                 .setUuid(player.uuid.toString())
                 .setNewServerName(serverName)
@@ -181,7 +177,7 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
     }
 
     override suspend fun queryPlayer(username: String?, uuid: UUID?): PlayerTrackerOuterClass.QueryPlayerResponse {
-        return playerTrackerStub.queryPlayer(
+        return playerTrackerStub.withDeadlineAfter(5, TimeUnit.SECONDS).queryPlayer(
             PlayerTrackerOuterClass.PlayerQueryRequest.newBuilder()
                 .apply {
                     if (username != null) setUsername(username)
@@ -192,7 +188,7 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
     }
 
     override suspend fun addToQueue(player: Player, gameType: CommonTypes.GameType) {
-        queueStub.addToQueue(
+        queueStub.withDeadlineAfter(5, TimeUnit.SECONDS).addToQueue(
             Queue.AddToQueueRequest.newBuilder()
                 .setPlayerUuid(player.uuid.toString())
                 .setGameType(gameType)
@@ -201,7 +197,7 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
     }
 
     override suspend fun removeFromQueue(player: Player) {
-        queueStub.removeFromQueue(
+        queueStub.withDeadlineAfter(5, TimeUnit.SECONDS).removeFromQueue(
             Queue.RemoveFromQueueRequest.newBuilder()
                 .setPlayerUuid(player.uuid.toString())
                 .build()
@@ -209,7 +205,7 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
     }
 
     override suspend fun getDestination(player: UUID): String? {
-        return queueStub.getDestinationGame(
+        return queueStub.withDeadlineAfter(5, TimeUnit.SECONDS).getDestinationGame(
             Queue.GetDestinationRequest.newBuilder()
                 .setPlayerUuid(player.toString())
                 .build()
@@ -217,7 +213,7 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
     }
 
     override suspend fun sendPrivateMessage(message: Component, sender: CommandSender, recipient: UUID) {
-        privateMessageStub.sendMessage(
+        privateMessageStub.withDeadlineAfter(5, TimeUnit.SECONDS).sendMessage(
             VelocityMessage.PrivateMessageRequest.newBuilder()
                 .setMessage(miniMessage.serialize(message))
                 .setRecipientUuid(recipient.toString())
@@ -228,7 +224,7 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
     }
 
     override suspend fun inviteToParty(partyOwner: UUID, invitee: UUID) {
-        partyStub.inviteToParty(
+        partyStub.withDeadlineAfter(5, TimeUnit.SECONDS).inviteToParty(
             PartySvc.PartyInviteRequest.newBuilder()
                 .setPlayerUuid(invitee.toString())
                 .setPartyOwnerUuid(partyOwner.toString())
@@ -237,7 +233,7 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
     }
 
     override suspend fun acceptPartyInvitation(partyOwner: UUID, invitee: UUID) {
-        partyStub.acceptInvitation(
+        partyStub.withDeadlineAfter(5, TimeUnit.SECONDS).acceptInvitation(
             PartySvc.PartyAcceptInviteRequest.newBuilder()
                 .setPlayerUuid(invitee.toString())
                 .setPartyOwnerUuid(partyOwner.toString())
@@ -246,7 +242,7 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
     }
 
     override suspend fun kickFromParty(partyOwner: UUID, player: UUID) {
-        partyStub.removeFromParty(
+        partyStub.withDeadlineAfter(5, TimeUnit.SECONDS).removeFromParty(
             PartySvc.PartyRemoveRequest.newBuilder()
                 .setPlayerUuid(player.toString())
                 .setPartyOwnerUuid(partyOwner.toString())
@@ -255,7 +251,7 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
     }
 
     override suspend fun leaveParty(player: UUID) {
-        partyStub.leaveParty(
+        partyStub.withDeadlineAfter(5, TimeUnit.SECONDS).leaveParty(
             PartySvc.PartyLeaveRequest.newBuilder()
                 .setPlayerUuid(player.toString())
                 .build()
@@ -263,7 +259,7 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
     }
 
     override suspend fun partyChat(message: String, sender: Player) {
-        partyStub.partyChat(
+        partyStub.withDeadlineAfter(5, TimeUnit.SECONDS).partyChat(
             PartySvc.PartyChatRequest.newBuilder()
                 .setPlayerUuid(sender.uuid.toString())
                 .setMessage(message)
@@ -272,7 +268,7 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
     }
 
     override suspend fun warpParty(partyOwner: Player, instance: Instance) {
-        partyStub.warpParty(
+        partyStub.withDeadlineAfter(5, TimeUnit.SECONDS).warpParty(
             PartySvc.PartyWarpRequest.newBuilder()
                 .setPartyOwnerUuid(partyOwner.uuid.toString())
                 .setInstanceUuid(instance.uniqueId.toString())
@@ -282,7 +278,7 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
     }
 
     override suspend fun transferParty(partyOwner: Player, newOwner: UUID) {
-        partyStub.transferParty(
+        partyStub.withDeadlineAfter(5, TimeUnit.SECONDS).transferParty(
             PartySvc.PartyTransferRequest.newBuilder()
                 .setPlayerUuid(partyOwner.uuid.toString())
                 .setNewOwnerUuid(newOwner.toString())
@@ -291,7 +287,7 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
     }
 
     override suspend fun listPartyMembers(member: UUID): PartySvc.PartyListResponse {
-        return partyStub.partyList(
+        return partyStub.withDeadlineAfter(5, TimeUnit.SECONDS).partyList(
             PartySvc.PartyListRequest.newBuilder()
                 .setPlayerUuid(member.toString())
                 .build()
@@ -299,7 +295,7 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
     }
 
     override suspend fun getSongInfo(player: Player): JukeboxOuterClass.PlayerSongQueue {
-        return jukeboxStub.getSongInfo(songInfoRequest {
+        return jukeboxStub.withDeadlineAfter(5, TimeUnit.SECONDS).getSongInfo(songInfoRequest {
             playerUuid = player.uuid.toString()
         })
     }
@@ -311,7 +307,7 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
         startTimeInTicks: Int,
         tags: List<String>,
     ): Boolean {
-        return jukeboxStub.playSong(playSongRequest {
+        return jukeboxStub.withDeadlineAfter(5, TimeUnit.SECONDS).playSong(playSongRequest {
             this.playerUuid = player.uuid.toString()
             this.songName = songName
             this.queuePosition = queuePosition
@@ -321,21 +317,21 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
     }
 
     override suspend fun removeSongByName(player: Player, songName: String) {
-        jukeboxStub.removeSong(songRemoveRequest {
+        jukeboxStub.withDeadlineAfter(5, TimeUnit.SECONDS).removeSong(songRemoveRequest {
             this.playerUuid = player.uuid.toString()
             this.songName = songName
         })
     }
 
     override suspend fun removeSongByTag(player: Player, matchTags: List<String>) {
-        jukeboxStub.removeSongs(batchSongRemoveRequest {
+        jukeboxStub.withDeadlineAfter(5, TimeUnit.SECONDS).removeSongs(batchSongRemoveRequest {
             this.playerUuid = player.uuid.toString()
             matchTags.forEach { this.matchTags.add(it) }
         })
     }
 
     override suspend fun stopSongAndClearQueue(player: Player) {
-        jukeboxStub.stopSong(stopSongRequest {
+        jukeboxStub.withDeadlineAfter(5, TimeUnit.SECONDS).stopSong(stopSongRequest {
             this.playerUuid = player.uuid.toString()
         })
     }
