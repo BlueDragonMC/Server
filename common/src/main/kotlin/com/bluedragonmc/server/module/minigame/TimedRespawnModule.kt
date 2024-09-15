@@ -3,6 +3,7 @@ package com.bluedragonmc.server.module.minigame
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.GameEvent
 import com.bluedragonmc.server.module.GameModule
+import com.bluedragonmc.server.utils.manage
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.title.Title
@@ -34,8 +35,8 @@ class TimedRespawnModule(private val seconds: Int = 5) : GameModule() {
                         if (mode != null) event.player.gameMode = mode
                     }
                     event.player.teleport(event.player.respawnPoint)
-                }.delay(Duration.ofSeconds(seconds.toLong())).schedule()
-            }.delay(Duration.ofMillis(20)).schedule()
+                }.delay(Duration.ofSeconds(seconds.toLong())).schedule().manage(parent)
+            }.delay(Duration.ofMillis(20)).schedule().manage(parent)
         }
     }
 
