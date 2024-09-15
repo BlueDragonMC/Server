@@ -23,6 +23,7 @@ import net.minestom.server.event.EventNode
 import net.minestom.server.event.player.PlayerDisconnectEvent
 import org.slf4j.LoggerFactory
 import java.time.Duration
+import java.util.concurrent.ConcurrentHashMap
 import java.util.function.BiPredicate
 import java.util.function.Function
 import java.util.function.Predicate
@@ -43,7 +44,7 @@ class StatisticsModule(private vararg val recorders: StatisticRecorder) : GameMo
 
         private lateinit var mostRecentInstance: StatisticsModule
 
-        private val necessaryUpdates = mutableMapOf<CustomPlayer, MutableSet<String>>()
+        private val necessaryUpdates = ConcurrentHashMap<CustomPlayer, MutableSet<String>>()
 
         private val logger = LoggerFactory.getLogger(Companion::class.java)
 
@@ -58,22 +59,16 @@ class StatisticsModule(private vararg val recorders: StatisticRecorder) : GameMo
             }
         }
 
-        private suspend fun commitAll() {
-            // Commit all queued updates
-            ArrayList(necessaryUpdates.entries).forEach { (player, _) ->
-                Database.IO.launch {
-                    commit(player)
-                }
-            }
-        }
-
         init {
             MinecraftServer.getGlobalEventHandler().listenAsync<DataLoadedEvent> { event ->
                 mostRecentInstance.incrementStatistic(event.player, "times_data_loaded")
             }
             MinecraftServer.getSchedulerManager().buildTask {
+                // Commit all queued updates
                 Database.IO.launch {
-                    commitAll()
+                    ArrayList(necessaryUpdates.keys).forEach { player ->
+                        commit(player)
+                    }
                 }
             }.repeat(Duration.ofMinutes(5)).schedule()
             MinecraftServer.getGlobalEventHandler().addListener(PlayerDisconnectEvent::class.java) { event ->
