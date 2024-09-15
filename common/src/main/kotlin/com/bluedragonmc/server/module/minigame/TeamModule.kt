@@ -18,6 +18,7 @@ import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import java.util.*
+import java.util.concurrent.CopyOnWriteArrayList
 
 /**
  * A module that provides team support.
@@ -160,7 +161,7 @@ class TeamModule(
 
     data class Team(
         val name: Component = Component.empty(),
-        val players: MutableList<Player> = mutableListOf(),
+        val players: MutableList<Player> = CopyOnWriteArrayList(),
         val allowFriendlyFire: Boolean = false,
         val nameTagVisible: Boolean = true,
     ) : PacketGroupingAudience {

@@ -83,8 +83,10 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
             }
         }
 
-        override fun deinitialize(): Unit = runBlocking {
-            Messaging.outgoing.notifyInstanceRemoved(parent.id)
+        override fun deinitialize() {
+            Messaging.IO.launch {
+                Messaging.outgoing.notifyInstanceRemoved(parent.id)
+            }
         }
     }
 

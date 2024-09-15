@@ -248,15 +248,15 @@ class ProjectileModule : GameModule() {
                 player.inventory.setItemInHand(hand, itemStack.withAmount(itemStack.amount() - 1))
             }
 
-            // Shoot a snowball from the player's position
-            val snowball = Projectile(player, EntityType.FIREBALL)
-            snowball.setInstance(instance, getEyePos(player))
-            snowball.shoot(getLaunchPos(player), 3.0, 1.0)
+            // Shoot a fireball from the player's position
+            val fireball = Projectile(player, EntityType.FIREBALL)
+            fireball.setInstance(instance, getEyePos(player))
+            fireball.shoot(getLaunchPos(player), 3.0, 1.0)
             player.instance?.playSound(
                 Sound.sound(SoundEvent.ITEM_FIRECHARGE_USE, Sound.Source.MASTER, 1.0f, 1.0f),
                 player.position
             )
-            snowball.scheduleRemove(Duration.ofSeconds(30))
+            fireball.scheduleRemove(Duration.ofSeconds(30))
         }
     }
 
@@ -365,7 +365,7 @@ class ProjectileModule : GameModule() {
                 player.inventory.setItemInHand(hand, itemStack.withAmount(itemStack.amount() - 1))
             }
 
-            // Shoot a snowball from the player's position
+            // Shoot an egg from the player's position
             val egg = Projectile(player, EntityType.EGG)
             egg.setInstance(instance, getEyePos(player))
             egg.shoot(getLaunchPos(player), 3.0, 1.0)
