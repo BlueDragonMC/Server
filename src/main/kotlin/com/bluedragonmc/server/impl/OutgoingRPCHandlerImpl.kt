@@ -10,9 +10,10 @@ import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.instance.InstanceModule
 import com.bluedragonmc.server.service.Messaging
 import com.bluedragonmc.server.utils.listen
-import com.bluedragonmc.server.utils.listenSuspend
+import com.bluedragonmc.server.utils.listenAsync
 import com.bluedragonmc.server.utils.miniMessage
 import io.grpc.ManagedChannelBuilder
+import io.grpc.kotlin.AbstractCoroutineStub
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import net.kyori.adventure.text.Component
@@ -55,14 +56,14 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
             this@MessagingModule.parent = parent
             Messaging.outgoing.initGame(parent.id, parent.gameType)
 
-            eventNode.listenSuspend<GameStateChangedEvent> { event ->
+            eventNode.listenAsync<GameStateChangedEvent> { event ->
                 Messaging.outgoing.updateGameState(parent.id, event.rpcGameState)
             }
 
-            eventNode.listenSuspend<AddEntityToInstanceEvent> { event ->
+            eventNode.listenAsync<AddEntityToInstanceEvent> { event ->
                 val gameId = Game.findGame(event.instance.uniqueId)?.id
                 if (gameId != null) {
-                    Messaging.outgoing.recordInstanceChange(event.entity as? Player ?: return@listenSuspend, gameId)
+                    Messaging.outgoing.recordInstanceChange(event.entity as? Player ?: return@listenAsync, gameId)
                 }
             }
 
@@ -88,13 +89,17 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
         }
     }
 
-    private val instanceSvcStub = InstanceServiceGrpcKt.InstanceServiceCoroutineStub(channel)
-    private val gameStateSvcStub = GameStateServiceGrpcKt.GameStateServiceCoroutineStub(channel)
-    private val privateMessageStub = VelocityMessageServiceGrpcKt.VelocityMessageServiceCoroutineStub(channel)
-    private val playerTrackerStub = PlayerTrackerGrpcKt.PlayerTrackerCoroutineStub(channel)
-    private val queueStub = QueueServiceGrpcKt.QueueServiceCoroutineStub(channel)
-    private val partyStub = PartyServiceGrpcKt.PartyServiceCoroutineStub(channel)
-    private val jukeboxStub = JukeboxGrpcKt.JukeboxCoroutineStub(channel)
+    private val instanceSvcStub = InstanceServiceGrpcKt.InstanceServiceCoroutineStub(channel).configure()
+    private val gameStateSvcStub = GameStateServiceGrpcKt.GameStateServiceCoroutineStub(channel).configure()
+    private val privateMessageStub =
+        VelocityMessageServiceGrpcKt.VelocityMessageServiceCoroutineStub(channel).configure()
+    private val playerTrackerStub = PlayerTrackerGrpcKt.PlayerTrackerCoroutineStub(channel).configure()
+    private val queueStub = QueueServiceGrpcKt.QueueServiceCoroutineStub(channel).configure()
+    private val partyStub = PartyServiceGrpcKt.PartyServiceCoroutineStub(channel).configure()
+    private val jukeboxStub = JukeboxGrpcKt.JukeboxCoroutineStub(channel).configure()
+
+    private fun <T : AbstractCoroutineStub<T>> AbstractCoroutineStub<T>.configure() =
+        this.withDeadlineAfter(5, TimeUnit.SECONDS)
 
     override fun isConnected(): Boolean {
         return !channel.isShutdown && !channel.isTerminated && ::serverName.isInitialized

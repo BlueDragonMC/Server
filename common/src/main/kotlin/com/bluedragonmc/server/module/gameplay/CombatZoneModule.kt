@@ -4,6 +4,7 @@ import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.combat.OldCombatModule
+import com.bluedragonmc.server.utils.manage
 import com.bluedragonmc.server.utils.withColor
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.MinecraftServer
@@ -58,7 +59,7 @@ class CombatZonesModule(
                 for (s in combatStatus) {
                     combatStatus[s.key] = combatStatus.getOrDefault(s.key, 1000) + 1
                 }
-            }.repeat(Duration.ofSeconds(1)).schedule()
+            }.repeat(Duration.ofSeconds(1)).schedule().manage(parent)
     }
 
     fun addCombatZone(zone: MapZonesModule.MapZone) {
