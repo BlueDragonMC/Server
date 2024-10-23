@@ -8,12 +8,15 @@ group = "com.bluedragonmc.server"
 version = "1.0-SNAPSHOT"
 
 repositories {
+    mavenLocal()
     mavenCentral()
     maven(url = "https://jitpack.io")
+    maven("https://reposilite.worldseed.online/public")
 }
 
 dependencies {
     implementation(libs.minestom)
+    implementation(libs.atlas.projectiles)
     implementation(libs.kmongo)
     implementation(libs.caffeine)
     implementation(libs.minimessage)

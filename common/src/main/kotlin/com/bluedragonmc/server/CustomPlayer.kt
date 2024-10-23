@@ -13,14 +13,14 @@ import net.minestom.server.entity.Player
 import net.minestom.server.entity.metadata.PlayerMeta
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
+import net.minestom.server.network.player.GameProfile
 import net.minestom.server.network.player.PlayerConnection
 import net.minestom.server.potion.PotionEffect
 import net.minestom.server.utils.async.AsyncUtils
-import java.util.*
 import java.util.concurrent.CompletableFuture
 
-open class CustomPlayer(uuid: UUID, username: String, playerConnection: PlayerConnection) :
-    Player(uuid, username, playerConnection) {
+open class CustomPlayer(playerConnection: PlayerConnection, gameProfile: GameProfile) :
+    Player(playerConnection, gameProfile) {
 
     internal var isSpectating = false
     internal var lastNPCInteractionTime = 0L
@@ -106,7 +106,7 @@ open class CustomPlayer(uuid: UUID, username: String, playerConnection: PlayerCo
 
     override fun getAdditionalHearts(): Float {
         return if (entityMeta !is PlayerMeta) 0f
-        else super.getAdditionalHearts()
+        else super.additionalHearts
     }
 
     fun isOnLadder() = listOf(

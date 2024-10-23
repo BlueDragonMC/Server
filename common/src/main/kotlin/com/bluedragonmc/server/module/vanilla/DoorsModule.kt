@@ -12,7 +12,7 @@ import net.minestom.server.instance.EntityTracker
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
 import net.minestom.server.network.packet.server.play.EffectPacket
-import net.minestom.server.utils.PacketUtils
+import net.minestom.server.utils.PacketSendingUtils
 
 /**
  * Adapted from BasicRedstone by TogAr2 under the MIT License
@@ -78,7 +78,7 @@ class DoorsModule : GameModule() {
                     player
                 )
             }
-            PacketUtils.sendGroupedPacket(
+            PacketSendingUtils.sendGroupedPacket(
                 audience, EffectPacket(effect.id, position, 0, false)
             ) { player -> player != source }
         }

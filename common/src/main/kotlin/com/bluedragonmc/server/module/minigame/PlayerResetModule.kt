@@ -34,11 +34,11 @@ class PlayerResetModule(val defaultGameMode: GameMode? = null) : GameModule() {
         player.gameMode = gameMode ?: player.gameMode
         player.inventory.clear()
         Attribute.values().forEach { attribute ->
-            player.getAttribute(attribute).modifiers.forEach { modifier ->
+            player.getAttribute(attribute).modifiers().forEach { modifier ->
                 player.getAttribute(attribute).removeModifier(modifier)
             }
         }
-        player.health = player.getAttribute(Attribute.GENERIC_MAX_HEALTH).value.toFloat()
+        player.health = player.getAttribute(Attribute.MAX_HEALTH).value.toFloat()
         player.food = 20
         player.clearEffects()
         player.fireTicks = 0
