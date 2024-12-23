@@ -53,7 +53,7 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
 
         override fun initialize(parent: Game, eventNode: EventNode<Event>): Unit = runBlocking {
             this@MessagingModule.parent = parent
-            Messaging.outgoing.initGame(parent.id, parent.gameType)
+            Messaging.outgoing.initGame(parent.id, parent.gameType, parent.rpcGameState)
 
             eventNode.listenAsync<GameStateChangedEvent> { event ->
                 Messaging.outgoing.updateGameState(parent.id, event.rpcGameState)
@@ -116,12 +116,13 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
         game.use(MessagingModule())
     }
 
-    override suspend fun initGame(id: String, gameType: CommonTypes.GameType) {
+    override suspend fun initGame(id: String, gameType: CommonTypes.GameType, gameState: CommonTypes.GameState) {
         instanceSvcStub.withDeadlineAfter(5, TimeUnit.SECONDS).createInstance(
             ServerTracking.InstanceCreatedRequest.newBuilder()
                 .setInstanceUuid(id)
                 .setGameType(gameType)
                 .setServerName(serverName)
+                .setGameState(gameState)
                 .build()
         )
     }

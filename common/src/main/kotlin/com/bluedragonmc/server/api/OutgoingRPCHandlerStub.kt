@@ -26,7 +26,7 @@ class OutgoingRPCHandlerStub : OutgoingRPCHandler {
 
     }
 
-    override suspend fun initGame(id: String, gameType: CommonTypes.GameType) {
+    override suspend fun initGame(id: String, gameType: CommonTypes.GameType, gameState: CommonTypes.GameState) {
 
     }
 
