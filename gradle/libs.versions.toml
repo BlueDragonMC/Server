@@ -11,7 +11,7 @@ okhttp = "4.10.0"
 serialization = "1.5.0-RC"
 tinylog = "2.6.2"
 # Auto-generated GRPC/Protobuf messaging code
-rpc = "fb16ef4cc5"
+rpc = "e06867b34a"
 # Agones SDK and its necessary runtime dependencies
 agones-kt = "0.1.2"
 grpc = "1.50.2"

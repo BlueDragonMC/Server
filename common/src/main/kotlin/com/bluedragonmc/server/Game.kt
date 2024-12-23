@@ -73,6 +73,7 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
             gameState = state.mapToRpcState()
             openSlots = maxPlayers - players.size
             joinable = state.canPlayersJoin
+            maxSlots = maxPlayers
         }
 
     internal val players: MutableList<Player> = CopyOnWriteArrayList()
