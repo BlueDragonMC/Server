@@ -102,6 +102,22 @@ class OutgoingRPCHandlerStub : OutgoingRPCHandler {
         return PartySvc.PartyListResponse.getDefaultInstance()
     }
 
+    override suspend fun startMarathon(player: UUID, durationMs: Int) {
+
+    }
+
+    override suspend fun endMarathon(player: UUID) {
+
+    }
+
+    override suspend fun getMarathonLeaderboard(players: Collection<UUID>, silent: Boolean) {
+
+    }
+
+    override suspend fun recordCoinAward(player: UUID, coins: Int, gameId: String) {
+
+    }
+
     override suspend fun getSongInfo(player: Player): JukeboxOuterClass.PlayerSongQueue {
         return playerSongQueue {
             isPlaying = false

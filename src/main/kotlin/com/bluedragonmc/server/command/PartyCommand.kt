@@ -22,6 +22,9 @@ class PartyCommand(name: String, usageString: String, vararg aliases: String) :
         warp
         chat <message>
         list
+        marathon start <minutes>
+        marathon end
+        marathon leaderboard
          */
 
         subcommand("invite") {
@@ -89,6 +92,35 @@ class PartyCommand(name: String, usageString: String, vararg aliases: String) :
                     sender.sendMessage((leaderText + Component.newline() + membersText).surroundWithSeparators())
                 } else {
                     sender.sendMessage(Component.translatable("puffin.party.list.not_found", NamedTextColor.RED))
+                }
+            }
+        }
+
+        subcommand("marathon") {
+            usage("/party marathon <start|end|leaderboard> [...]")
+
+            subcommand("start") {
+                usage("/party marathon start [minutes]")
+                val minutesArgument by IntArgument
+                suspendSyntax(minutesArgument) {
+                    val minutes = get(minutesArgument)
+                    if (minutes in 5..300) {
+                        Messaging.outgoing.startMarathon(player.uuid, get(minutesArgument) * 60 * 1_000)
+                    } else {
+                        sender.sendMessage(Component.translatable("puffin.party.marathon.invalid_time", NamedTextColor.RED))
+                    }
+                }
+            }
+
+            subcommand("end") {
+                suspendSyntax {
+                    Messaging.outgoing.endMarathon(player.uuid)
+                }
+            }
+
+            subcommand("leaderboard") {
+                suspendSyntax {
+                    Messaging.outgoing.getMarathonLeaderboard(setOf(player.uuid), false)
                 }
             }
         }

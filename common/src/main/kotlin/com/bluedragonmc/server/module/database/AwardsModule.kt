@@ -4,6 +4,7 @@ import com.bluedragonmc.server.*
 import com.bluedragonmc.server.model.PlayerDocument
 import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.module.GameModule
+import com.bluedragonmc.server.service.Messaging
 import com.bluedragonmc.server.utils.*
 import kotlinx.coroutines.launch
 import net.kyori.adventure.sound.Sound
@@ -19,7 +20,11 @@ import java.time.Duration
 
 class AwardsModule : GameModule() {
 
-    override fun initialize(parent: Game, eventNode: EventNode<Event>) {}
+    private lateinit var parent: Game
+
+    override fun initialize(parent: Game, eventNode: EventNode<Event>) {
+        this.parent = parent
+    }
 
     fun awardCoins(player: Player, amount: Int, reason: Component) {
         player as CustomPlayer
@@ -28,6 +33,7 @@ class AwardsModule : GameModule() {
         Database.IO.launch {
             player.data.compute(PlayerDocument::coins) { it + amount }
             player.data.compute(PlayerDocument::experience) { it + amount }
+            Messaging.outgoing.recordCoinAward(player.uuid, amount, parent.id)
             val newLevel = CustomPlayer.getXpLevel(player.data.experience).toInt()
             if (newLevel > oldLevel)
                 MinecraftServer.getSchedulerManager().buildTask { notifyLevelUp(player, oldLevel, newLevel) }

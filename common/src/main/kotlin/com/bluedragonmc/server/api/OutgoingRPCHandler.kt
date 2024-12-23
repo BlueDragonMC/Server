@@ -52,6 +52,12 @@ interface OutgoingRPCHandler {
     suspend fun transferParty(partyOwner: Player, newOwner: UUID)
     suspend fun listPartyMembers(member: UUID): PartyListResponse
 
+    // Party Marathons
+    suspend fun startMarathon(player: UUID, durationMs: Int)
+    suspend fun endMarathon(player: UUID)
+    suspend fun getMarathonLeaderboard(players: Collection<UUID>, silent: Boolean)
+    suspend fun recordCoinAward(player: UUID, coins: Int, gameId: String)
+
     // Jukebox controls
     suspend fun getSongInfo(player: Player): PlayerSongQueue
     suspend fun playSong(player: Player, songName: String, queuePosition: Int, startTimeInTicks: Int, tags: List<String>): Boolean

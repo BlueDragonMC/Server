@@ -102,7 +102,7 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
     protected val eventNode = EventNode.event("$name-$mapName-$mode", EventFilter.ALL) { event ->
         try {
             when (event) {
-                is InstanceEvent -> ownsInstance(event.instance)
+                is InstanceEvent -> ownsInstance(event.instance ?: return@event false)
                 is GameEvent -> event.game === this
                 is PlayerEvent -> event.player.isActive && ownsInstance(event.player.instance ?: return@event false)
                 is ServerTickMonitorEvent -> true

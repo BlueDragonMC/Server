@@ -9,6 +9,7 @@ import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.instance.InstanceModule
 import com.bluedragonmc.server.service.Messaging
+import com.bluedragonmc.server.utils.GameState
 import com.bluedragonmc.server.utils.listen
 import com.bluedragonmc.server.utils.listenAsync
 import com.bluedragonmc.server.utils.miniMessage
@@ -25,6 +26,7 @@ import net.minestom.server.event.instance.AddEntityToInstanceEvent
 import net.minestom.server.event.player.PlayerDisconnectEvent
 import net.minestom.server.event.player.PlayerSpawnEvent
 import net.minestom.server.instance.Instance
+import java.time.Duration
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -57,6 +59,14 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
 
             eventNode.listenAsync<GameStateChangedEvent> { event ->
                 Messaging.outgoing.updateGameState(parent.id, event.game.rpcGameState)
+
+                if (event.newState == GameState.ENDING) {
+                    MinecraftServer.getSchedulerManager().buildTask {
+                        Messaging.IO.launch {
+                            Messaging.outgoing.getMarathonLeaderboard(event.game.players.map { it.uuid }, true)
+                        }
+                    }.delay(Duration.ofSeconds(2)).schedule()
+                }
             }
 
             eventNode.listenAsync<AddEntityToInstanceEvent> { event ->
@@ -293,6 +303,42 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
         return partyStub.withDeadlineAfter(5, TimeUnit.SECONDS).partyList(
             PartySvc.PartyListRequest.newBuilder()
                 .setPlayerUuid(member.toString())
+                .build()
+        )
+    }
+
+    override suspend fun startMarathon(player: UUID, durationMs: Int) {
+        partyStub.withDeadlineAfter(5, TimeUnit.SECONDS).startMarathon(
+            PartySvc.StartMarathonRequest.newBuilder()
+                .setPlayerUuid(player.toString())
+                .setDurationMs(durationMs)
+                .build()
+        )
+    }
+
+    override suspend fun endMarathon(player: UUID) {
+        partyStub.withDeadlineAfter(5, TimeUnit.SECONDS).stopMarathon(
+            PartySvc.StopMarathonRequest.newBuilder()
+                .setPlayerUuid(player.toString())
+                .build()
+        )
+    }
+
+    override suspend fun getMarathonLeaderboard(players: Collection<UUID>, silent: Boolean) {
+        partyStub.withDeadlineAfter(5, TimeUnit.SECONDS).getMarathonLeaderboard(
+            PartySvc.MarathonLeaderboardRequest.newBuilder()
+                .addAllPlayerUuids(players.map { it.toString() })
+                .setSilent(silent)
+                .build()
+        )
+    }
+
+    override suspend fun recordCoinAward(player: UUID, coins: Int, gameId: String) {
+        partyStub.withDeadlineAfter(5, TimeUnit.SECONDS).recordCoinAward(
+            PartySvc.RecordCoinAwardRequest.newBuilder()
+                .setPlayerUuid(player.toString())
+                .setCoins(coins)
+                .setGameId(gameId)
                 .build()
         )
     }

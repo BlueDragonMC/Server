@@ -11,7 +11,7 @@ okhttp = "4.10.0"
 serialization = "1.5.0-RC"
 tinylog = "2.6.2"
 # Auto-generated GRPC/Protobuf messaging code
-rpc = "53da6cbfed"
+rpc = "18b740c038"
 # Agones SDK and its necessary runtime dependencies
 agones-kt = "0.1.2"
 grpc = "1.50.2"
@@ -32,6 +32,7 @@ serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serializ
 caffeine = { group = "com.github.ben-manes.caffeine", name = "caffeine", version.ref = "caffeine" }
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
 rpc = { group = "com.github.bluedragonmc", name = "rpc", version.ref = "rpc" }
+#rpc = { group = "com.bluedragonmc", name = "rpc", version = "1.0" }
 grpc-protobuf = { group = "io.grpc", name = "grpc-protobuf", version.ref = "grpc" }
 grpc-netty = { group = "io.grpc", name = "grpc-netty", version.ref = "grpc" }
 grpc-kotlin-stub = { group = "io.grpc", name = "grpc-kotlin-stub", version.ref = "grpc-kotlin-stub" }

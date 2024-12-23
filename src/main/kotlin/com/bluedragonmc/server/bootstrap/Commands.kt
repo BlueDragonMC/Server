@@ -29,7 +29,7 @@ object Commands : Bootstrap() {
             MessageCommand("msg", "message", "w", "tell"),
             MindecraftesCommand("mindecraftes", "/mindecraftes"),
             PardonCommand("pardon", "/pardon <player|ban ID>", "unban", "unmute"),
-            PartyCommand("party", "/party <invite|kick|promote|warp|chat|list> ...", "p"),
+            PartyCommand("party", "/party <invite|kick|promote|warp|chat|list|marathon> ...", "p"),
             PartyChatShorthandCommand("pchat", "/pc <message>", "pc", "partychat"),
             PingCommand("ping", "/ping", "latency"),
             PlaysoundCommand("playsound", "/playsound <sound> <source> <target> [position] [volume] [pitch]", "ps"),
