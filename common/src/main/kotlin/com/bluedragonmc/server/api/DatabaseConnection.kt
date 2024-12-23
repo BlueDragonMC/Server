@@ -9,7 +9,7 @@ import kotlin.reflect.KMutableProperty
 
 interface DatabaseConnection {
 
-    fun loadDataDocument(player: CustomPlayer)
+    suspend fun loadDataDocument(player: CustomPlayer)
 
     suspend fun getPlayerDocument(username: String): PlayerDocument?
 

@@ -51,12 +51,12 @@ object GlobalChatFormat : Bootstrap() {
                 +player.name
                 +Component.text(": ", NamedTextColor.DARK_GRAY)
                 if (Permissions.hasPermission(player.uuid, "chat.minimessage") == true)
-                    +miniMessage.deserialize(event.message)
-                else +Component.text(event.message, NamedTextColor.WHITE)
+                    +miniMessage.deserialize(event.rawMessage)
+                else +Component.text(event.rawMessage, NamedTextColor.WHITE)
             }
 
             // Currently, setting the chat format does not allow for translation with GlobalTranslator
-            // because it always sends a GroupedPacket.
+            // because it always sends a GroupedPacket. Instead, we cancel the event and send the messages individually.
             event.recipients.forEach { it.sendMessage(component) }
         }
     }

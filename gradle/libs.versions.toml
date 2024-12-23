@@ -2,7 +2,7 @@ metadata.format.version = "1.1"
 
 [versions]
 kotlin = "2.0.0"
-minestom = "461c56e749"
+minestom = "1_21_2-ee6a7180b4"
 configurate = "4.1.2"
 minimessage = "4.11.0"
 kmongo = "4.6.1"
@@ -10,6 +10,7 @@ caffeine = "3.1.1"
 okhttp = "4.10.0"
 serialization = "1.5.0-RC"
 tinylog = "2.6.2"
+atlas-projectiles = "2.0.0"
 # Auto-generated GRPC/Protobuf messaging code
 rpc = "fb16ef4cc5"
 # Agones SDK and its necessary runtime dependencies
@@ -27,6 +28,7 @@ minestom = { group = "net.minestom", name = "minestom-snapshots", version.ref = 
 configurate = { group = "org.spongepowered", name = "configurate-yaml", version.ref = "configurate" }
 configurate-extra-kotlin = { group = "org.spongepowered", name = "configurate-extra-kotlin", version.ref = "configurate" }
 minimessage = { group = "net.kyori", name = "adventure-text-minimessage", version.ref = "minimessage" }
+atlas-projectiles = { group = "ca.atlasengine", name = "atlas-projectiles", version.ref = "atlas-projectiles" }
 kmongo = { group = "org.litote.kmongo", name = "kmongo-coroutine-serialization", version.ref = "kmongo" }
 serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "serialization" }
 caffeine = { group = "com.github.ben-manes.caffeine", name = "caffeine", version.ref = "caffeine" }

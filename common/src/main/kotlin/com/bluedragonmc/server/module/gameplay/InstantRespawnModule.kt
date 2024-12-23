@@ -5,7 +5,7 @@ import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.GameModule
 import net.minestom.server.MinecraftServer
 import net.minestom.server.coordinate.Vec
-import net.minestom.server.entity.Entity
+import net.minestom.server.entity.EntityPose
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventDispatcher
@@ -37,7 +37,7 @@ class InstantRespawnModule : GameModule() {
 
                     isDead = true
                     fireTicks = 0
-                    pose = Entity.Pose.STANDING
+                    pose = EntityPose.STANDING
                     velocity = Vec.ZERO
 
                     val respawnEvent = PlayerRespawnEvent(this)

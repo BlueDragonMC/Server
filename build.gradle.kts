@@ -13,14 +13,7 @@ repositories {
     mavenLocal()
     mavenCentral()
     maven(url = "https://jitpack.io")
-}
-
-subprojects {
-    repositories {
-        mavenLocal()
-        mavenCentral()
-        maven(url = "https://jitpack.io")
-    }
+    maven("https://reposilite.worldseed.online/public")
 }
 
 dependencies {
