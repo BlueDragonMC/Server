@@ -1,6 +1,7 @@
 package com.bluedragonmc.server.module
 
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.event.PlayerLeaveGameEvent
 import net.kyori.adventure.text.Component
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
@@ -40,7 +41,15 @@ open class GuiModule : GameModule() {
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         eventNode.addListener(InventoryCloseEvent::class.java) { event ->
-            inventories[event.inventory?.windowId]?.let {
+            inventories.remove(event.inventory?.windowId)?.let {
+                it.destroy(event.player)
+                it.onClosedAction?.invoke(event.player)
+                inventories.remove(event.inventory?.windowId)
+            }
+        }
+        eventNode.addListener(PlayerLeaveGameEvent::class.java) { event ->
+            val openInv = event.player.openInventory?.windowId ?: return@addListener
+            inventories.remove(openInv)?.let {
                 it.destroy(event.player)
                 it.onClosedAction?.invoke(event.player)
             }
