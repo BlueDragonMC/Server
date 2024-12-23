@@ -56,7 +56,7 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
             Messaging.outgoing.initGame(parent.id, parent.gameType, parent.rpcGameState)
 
             eventNode.listenAsync<GameStateChangedEvent> { event ->
-                Messaging.outgoing.updateGameState(parent.id, event.rpcGameState)
+                Messaging.outgoing.updateGameState(parent.id, event.game.rpcGameState)
             }
 
             eventNode.listenAsync<AddEntityToInstanceEvent> { event ->
