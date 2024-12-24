@@ -9,7 +9,6 @@ import com.bluedragonmc.server.Game
 import net.kyori.adventure.text.Component
 import net.minestom.server.command.CommandSender
 import net.minestom.server.entity.Player
-import net.minestom.server.instance.Instance
 import java.util.*
 
 /**
@@ -48,7 +47,7 @@ interface OutgoingRPCHandler {
     suspend fun kickFromParty(partyOwner: UUID, player: UUID)
     suspend fun leaveParty(player: UUID)
     suspend fun partyChat(message: String, sender: Player)
-    suspend fun warpParty(partyOwner: Player, instance: Instance)
+    suspend fun warpParty(partyOwner: Player, gameId: String)
     suspend fun transferParty(partyOwner: Player, newOwner: UUID)
     suspend fun listPartyMembers(member: UUID): PartyListResponse
 

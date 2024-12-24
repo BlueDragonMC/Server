@@ -5,7 +5,6 @@ import com.bluedragonmc.server.Game
 import net.kyori.adventure.text.Component
 import net.minestom.server.command.CommandSender
 import net.minestom.server.entity.Player
-import net.minestom.server.instance.Instance
 import java.util.*
 
 /**
@@ -90,7 +89,7 @@ class OutgoingRPCHandlerStub : OutgoingRPCHandler {
 
     }
 
-    override suspend fun warpParty(partyOwner: Player, instance: Instance) {
+    override suspend fun warpParty(partyOwner: Player, gameId: String) {
 
     }
 

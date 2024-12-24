@@ -25,7 +25,6 @@ import net.minestom.server.event.EventNode
 import net.minestom.server.event.instance.AddEntityToInstanceEvent
 import net.minestom.server.event.player.PlayerDisconnectEvent
 import net.minestom.server.event.player.PlayerSpawnEvent
-import net.minestom.server.instance.Instance
 import java.time.Duration
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -280,11 +279,11 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
         )
     }
 
-    override suspend fun warpParty(partyOwner: Player, instance: Instance) {
+    override suspend fun warpParty(partyOwner: Player, gameId: String) {
         partyStub.withDeadlineAfter(5, TimeUnit.SECONDS).warpParty(
             PartySvc.PartyWarpRequest.newBuilder()
                 .setPartyOwnerUuid(partyOwner.uuid.toString())
-                .setInstanceUuid(instance.uniqueId.toString())
+                .setInstanceUuid(gameId)
                 .setServerName(serverName)
                 .build()
         )
