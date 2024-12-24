@@ -7,7 +7,10 @@ import com.bluedragonmc.server.api.IncomingRPCHandler
 import com.bluedragonmc.server.utils.miniMessage
 import com.google.protobuf.Empty
 import io.grpc.ServerBuilder
+import net.kyori.adventure.sound.Sound
+import net.kyori.adventure.sound.SoundStop
 import net.minestom.server.MinecraftServer
+import net.minestom.server.utils.NamespaceID
 import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -53,6 +56,7 @@ class IncomingRPCHandlerImpl(serverPort: Int) : IncomingRPCHandler {
                 gameState = CommonTypes.EnumGameState.ERROR
                 joinable = false
                 openSlots = 0
+                maxSlots = 0
             }
             return createInstanceResponse {
                 this.gameState = state
@@ -76,6 +80,26 @@ class IncomingRPCHandlerImpl(serverPort: Int) : IncomingRPCHandler {
             return Empty.getDefaultInstance()
         }
 
+        override suspend fun playSound(request: GsClient.PlaySoundRequest): Empty {
+            val target =
+                MinecraftServer.getConnectionManager().getOnlinePlayerByUuid(UUID.fromString(request.playerUuid))
+            ?: return Empty.getDefaultInstance()
+
+            target.playSound(Sound.sound(NamespaceID.from(request.soundId), Sound.Source.valueOf(request.category), request.volume, request.pitch))
+
+            return Empty.getDefaultInstance()
+        }
+
+        override suspend fun stopSound(request: GsClient.StopSoundRequest): Empty {
+            val target =
+                MinecraftServer.getConnectionManager().getOnlinePlayerByUuid(UUID.fromString(request.playerUuid))
+                    ?: return Empty.getDefaultInstance()
+
+            target.stopSound(SoundStop.namedOnSource(NamespaceID.from(request.soundId), Sound.Source.valueOf(request.category)))
+
+            return Empty.getDefaultInstance()
+        }
+
         override suspend fun getInstances(request: Empty): GsClient.GetInstancesResponse {
             return getInstancesResponse {
                 Game.games.forEach { game ->
@@ -89,6 +113,12 @@ class IncomingRPCHandlerImpl(serverPort: Int) : IncomingRPCHandler {
                     }
                 }
             }
+        }
+
+        override suspend fun endGame(request: GsClient.EndGameRequest): Empty {
+            val game = Game.findGame(request.gameId)
+            game?.endGame(request.queuePlayersForLobby)
+            return Empty.getDefaultInstance()
         }
     }
 

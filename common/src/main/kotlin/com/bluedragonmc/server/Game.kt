@@ -41,7 +41,6 @@ import net.minestom.server.event.server.ServerTickMonitorEvent
 import net.minestom.server.event.trait.InstanceEvent
 import net.minestom.server.event.trait.PlayerEvent
 import net.minestom.server.instance.Instance
-import net.minestom.server.tag.Tag
 import net.minestom.server.timer.ExecutionType
 import net.minestom.server.utils.async.AsyncUtils
 import org.slf4j.Logger
@@ -234,9 +233,8 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
         }.delay(delay).schedule()
     }
 
-    open fun endGame(queueAllPlayers: Boolean = true) {
-
-        // Log some information about the game in the database
+    private fun logGameInfo() {
+        if (!::startTime.isInitialized) return
 
         val statHistory = getModuleOrNull<StatisticsModule>()?.getHistory()
         val teams = getModuleOrNull<TeamModule>()?.teams?.map { team ->
@@ -269,24 +267,27 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
         }
 
         Database.IO.launch {
-            if (::startTime.isInitialized) {
-                Database.connection.logGame(
-                    GameDocument(
-                        gameId = id,
-                        serverId = Environment.getServerName(),
-                        gameType = name,
-                        mapName = mapName,
-                        mode = mode,
-                        statistics = statHistory,
-                        teams = teams,
-                        winningTeam = winningTeamRecord,
-                        startTime = startTime,
-                        endTime = Date(),
-                        instances = instanceRecords
-                    )
+            Database.connection.logGame(
+                GameDocument(
+                    gameId = id,
+                    serverId = Environment.getServerName(),
+                    gameType = name,
+                    mapName = mapName,
+                    mode = mode,
+                    statistics = statHistory,
+                    teams = teams,
+                    winningTeam = winningTeamRecord,
+                    startTime = startTime,
+                    endTime = Date(),
+                    instances = instanceRecords
                 )
-            }
+            )
         }
+    }
+
+    open fun endGame(queueAllPlayers: Boolean = true) {
+
+        logGameInfo()
 
         state = GameState.ENDING
         games.remove(this)
@@ -312,8 +313,10 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
 
         MinecraftServer.getSchedulerManager().buildTask {
             instancesToRemove.forEach { instance ->
-                logger.info("Forcefully unregistering instance ${instance.uniqueId}...")
-                InstanceUtils.forceUnregisterInstance(instance)
+                if (instance.isRegistered) {
+                    logger.info("Forcefully unregistering instance ${instance.uniqueId}...")
+                    InstanceUtils.forceUnregisterInstance(instance)
+                }
             }
         }.executionType(ExecutionType.TICK_START).delay(Duration.ofSeconds(10))
 
@@ -375,13 +378,6 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
          */
         private val INSTANCE_CLEANUP_PERIOD = System.getenv("SERVER_INSTANCE_CLEANUP_PERIOD")?.toLongOrNull() ?: 10_000L
 
-        /**
-         * Instances must be inactive for at least 2 minutes
-         * to be cleaned up (by default).
-         */
-        private val CLEANUP_MIN_INACTIVE_TIME =
-            System.getenv("SERVER_INSTANCE_MIN_INACTIVE_TIME")?.toLongOrNull() ?: 120_000L
-
         fun findGame(player: Player): Game? =
             games.find { player in it.players || it.ownsInstance(player.instance ?: return@find false) }
 
@@ -392,8 +388,6 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
 
         fun findGame(gameId: String): Game? = games.find { it.id == gameId }
 
-        private val INACTIVE_SINCE_TAG = Tag.Long("instance_inactive_since")
-
         init {
             MinecraftServer.getSchedulerManager().buildShutdownTask {
                 ArrayList(games).forEach { game ->
@@ -403,35 +397,19 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
 
             timer("Cleanup", daemon = true, period = INSTANCE_CLEANUP_PERIOD) {
                 val instances = MinecraftServer.getInstanceManager().instances
-                val games = ArrayList(games) // Copy to avoid CME
 
-                instances.forEach { instance ->
-                    val owner = findGame(instance.uniqueId)
-                    // Remove empty instances which are not owned by a game OR are owned by an inactive game.
-                    if ((owner == null || owner.isInactive()) && instance.players.isEmpty()) {
-                        // Only instances that are not required by any game should be removed.
-                        if (games.none { it.getRequiredInstances().contains(instance) }) {
-                            val inactiveSince = instance.getTag(INACTIVE_SINCE_TAG)
-                            if (inactiveSince == null) {
-                                // The instance has recently turned inactive.
-                                instance.setTag(INACTIVE_SINCE_TAG, System.currentTimeMillis())
-                            } else {
-                                val duration = System.currentTimeMillis() - inactiveSince
-                                if (duration >= CLEANUP_MIN_INACTIVE_TIME) {
-                                    // Instances inactive for more than the minimum inactive time should be removed.
-                                    logger.info("Removing inactive instance ${instance.uniqueId}")
-                                    InstanceUtils.forceUnregisterInstance(instance)
-                                }
-                            }
-                        }
-                    } else instance.removeTag(INACTIVE_SINCE_TAG)
+                games.forEach { game ->
+                    if (game.isInactive()) {
+                        logger.info("Ending inactive game ${game.id} (${game.name}/${game.mapName}/${game.mode})")
+                        game.endGame(false)
+                    }
                 }
 
-                // End all inactive games with no owned instances
-                games.forEach { game ->
-                    if (game.isInactive() && game.getOwnedInstances().isEmpty()) {
-                        logger.info("Removing inactive game ${game.id} (${game.name}/${game.mapName}/${game.mode})")
-                        game.endGame(false)
+                instances.forEach { instance ->
+                    val owner = games.find { it.ownsInstance(instance) }
+                    if (owner == null && games.none { it.getRequiredInstances().contains(instance) }) {
+                        logger.info("Removing orphan instance ${instance.uniqueId} (${instance})")
+                        InstanceUtils.forceUnregisterInstance(instance)
                     }
                 }
             }

@@ -24,10 +24,12 @@ object InstanceUtils {
      * @return a CompletableFuture when all players are removed and the instance is unregistered.
      */
     fun forceUnregisterInstance(instance: Instance): CompletableFuture<Void> {
-        val eventNode = EventNode.all("temp-${UUID.randomUUID()}")
+        val eventNode = EventNode.all("temp-vacate-${UUID.randomUUID()}")
         eventNode.addListener(PlayerEvent::class.java) { event ->
-            event.player.kick(Component.text("This instance is shutting down."))
-            event.player.remove()
+            if (event.player.instance == instance) {
+                event.player.kick(Component.text("This instance is shutting down."))
+                event.player.remove()
+            }
         }
         MinecraftServer.getGlobalEventHandler().addChild(eventNode)
         return vacateInstance(instance).thenRun {

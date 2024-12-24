@@ -22,6 +22,8 @@ object InitialInstanceRouter : Bootstrap(EnvType.PRODUCTION) {
 
     private val INVALID_WORLD =
         Component.text("Couldn't find which world to put you in! (Invalid world name)", NamedTextColor.RED)
+    private val INSTANCE_NOT_REGISTERED =
+        Component.text("Couldn't find which world to put you in! (Destination not ready)", NamedTextColor.RED)
     private val HANDSHAKE_FAILED =
         Component.text("Couldn't find which world to put you in! (Handshake failed)", NamedTextColor.RED)
     private val DATA_LOAD_FAILED =
@@ -78,6 +80,12 @@ object InitialInstanceRouter : Bootstrap(EnvType.PRODUCTION) {
                 // If the instance was not set or doesn't exist, disconnect the player.
                 logger.warn("No instance found for ${event.player.username} to join!")
                 event.player.kick(INVALID_WORLD)
+                return@listenSuspend
+            }
+
+            if (!instance.isRegistered) {
+                logger.warn("Tried to send ${event.player.username} to an unregistered instance!")
+                event.player.kick(INSTANCE_NOT_REGISTERED)
                 return@listenSuspend
             }
 
