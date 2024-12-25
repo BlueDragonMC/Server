@@ -41,6 +41,7 @@ import net.minestom.server.event.server.ServerTickMonitorEvent
 import net.minestom.server.event.trait.InstanceEvent
 import net.minestom.server.event.trait.PlayerEvent
 import net.minestom.server.instance.Instance
+import net.minestom.server.tag.Tag
 import net.minestom.server.timer.ExecutionType
 import net.minestom.server.utils.async.AsyncUtils
 import org.slf4j.Logger
@@ -378,6 +379,16 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
          */
         private val INSTANCE_CLEANUP_PERIOD = System.getenv("SERVER_INSTANCE_CLEANUP_PERIOD")?.toLongOrNull() ?: 10_000L
 
+        /**
+         * Instances must be inactive for at least 2 minutes
+         * to be cleaned up (by default).
+         */
+        private val CLEANUP_MIN_INACTIVE_TIME =
+            System.getenv("SERVER_INSTANCE_MIN_INACTIVE_TIME")?.toLongOrNull() ?: 120_000L
+
+        private val INACTIVE_SINCE_TAG = Tag.Long("instance_inactive_since")
+
+
         fun findGame(player: Player): Game? =
             games.find { player in it.players || it.ownsInstance(player.instance ?: return@find false) }
 
@@ -407,10 +418,18 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
 
                 instances.forEach { instance ->
                     val owner = games.find { it.ownsInstance(instance) }
-                    if (owner == null && games.none { it.getRequiredInstances().contains(instance) }) {
-                        logger.info("Removing orphan instance ${instance.uniqueId} (${instance})")
-                        InstanceUtils.forceUnregisterInstance(instance)
+                    if (owner != null || games.any { instance in it.getRequiredInstances() }) {
+                        return@forEach
                     }
+                    if (!instance.hasTag(INACTIVE_SINCE_TAG)) {
+                        instance.setTag(INACTIVE_SINCE_TAG, System.currentTimeMillis())
+                        return@forEach
+                    }
+                    if (System.currentTimeMillis() - instance.getTag(INACTIVE_SINCE_TAG) <= CLEANUP_MIN_INACTIVE_TIME) {
+                        return@forEach
+                    }
+                    logger.info("Removing orphan instance ${instance.uniqueId} (${instance})")
+                    InstanceUtils.forceUnregisterInstance(instance)
                 }
             }
         }

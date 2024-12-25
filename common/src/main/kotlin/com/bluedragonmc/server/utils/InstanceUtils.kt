@@ -4,8 +4,6 @@ import com.bluedragonmc.api.grpc.CommonTypes.GameType.GameTypeFieldSelector
 import com.bluedragonmc.api.grpc.gameType
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.api.Environment
-import com.bluedragonmc.server.module.instance.InstanceModule
-import com.bluedragonmc.server.module.minigame.SpawnpointModule
 import net.kyori.adventure.text.Component
 import net.minestom.server.MinecraftServer
 import net.minestom.server.event.EventNode
@@ -52,12 +50,10 @@ object InstanceUtils {
             // If the instance is not empty, attempt to send all players to a lobby
             val lobby = Game.games.find { it.name == Environment.defaultGameName }
             if (lobby != null) {
-                val lobbyInstanceOf = lobby.getModule<InstanceModule>()::getSpawningInstance
-                val spawnpointOf = lobby.getModule<SpawnpointModule>().spawnpointProvider::getSpawnpoint
                 return CompletableFuture.allOf(
-                    *instance.players
-                        .map { it.setInstance(lobbyInstanceOf(it), spawnpointOf(it)) }
-                        .toTypedArray()
+                    *instance.players.map {
+                        lobby.addPlayer(it, sendPlayer = true)
+                    }.toTypedArray()
                 )
             } else {
                 // If there's no lobby, repeatedly queue players for a lobby on another server
