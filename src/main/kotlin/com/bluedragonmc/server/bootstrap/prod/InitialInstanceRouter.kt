@@ -11,6 +11,7 @@ import com.bluedragonmc.server.service.Messaging
 import com.bluedragonmc.server.utils.listenSuspend
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.MinecraftServer
@@ -26,7 +27,7 @@ object InitialInstanceRouter : Bootstrap(EnvType.PRODUCTION) {
         Component.text("Couldn't find which world to put you in! (Destination not ready)", NamedTextColor.RED)
     private val HANDSHAKE_FAILED =
         Component.text("Couldn't find which world to put you in! (Handshake failed)", NamedTextColor.RED)
-    private val DATA_LOAD_FAILED =
+    internal val DATA_LOAD_FAILED =
         Component.text("Failed to load your player data!", NamedTextColor.RED)
 
     override fun hook(eventNode: EventNode<Event>) {
@@ -38,12 +39,16 @@ object InitialInstanceRouter : Bootstrap(EnvType.PRODUCTION) {
 
             val dataLoadJob = Database.IO.async {
                 // Load player data from the database
-                Database.connection.loadDataDocument(event.player as CustomPlayer)
+                withTimeout(5000) {
+                    Database.connection.loadDataDocument(event.player as CustomPlayer)
+                }
             }
 
             val getDestinationJob = Messaging.IO.async {
                 // Find the game that the player requested to join
-                Messaging.outgoing.getDestination(event.player.uuid)
+                withTimeout(5000) {
+                    Messaging.outgoing.getDestination(event.player.uuid)
+                }
             }
 
             // After starting both jobs, wait for them to complete
@@ -53,6 +58,7 @@ object InitialInstanceRouter : Bootstrap(EnvType.PRODUCTION) {
             } catch (e: Exception) {
                 e.printStackTrace()
                 event.player.kick(DATA_LOAD_FAILED)
+                return@listenSuspend
             }
 
             val destination = try {

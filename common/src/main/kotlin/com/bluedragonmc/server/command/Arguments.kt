@@ -18,7 +18,7 @@ import net.minestom.server.command.builder.suggestion.SuggestionEntry
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
 import net.minestom.server.item.ItemStack
-import net.minestom.server.utils.binary.BinaryWriter
+import net.minestom.server.network.NetworkBuffer
 import net.minestom.server.utils.entity.EntityFinder
 import net.minestom.server.utils.location.RelativeVec
 import java.util.UUID
@@ -92,8 +92,8 @@ class ArgumentGameId(id: String) : Argument<Game>(id) {
     }
 
     override fun nodeProperties(): ByteArray {
-        return BinaryWriter.makeArray { packetWriter: BinaryWriter ->
-            packetWriter.writeVarInt(0) // Single word
+        return NetworkBuffer.makeArray { packetWriter: NetworkBuffer ->
+            packetWriter.write(NetworkBuffer.VAR_INT, 0) // Single word
         }
     }
 
@@ -132,8 +132,8 @@ class ArgumentOfflinePlayer(id: String) : Argument<PlayerDocument>(id) {
     }
 
     override fun nodeProperties(): ByteArray {
-        return BinaryWriter.makeArray { packetWriter: BinaryWriter ->
-            packetWriter.writeVarInt(0) // Single word
+        return NetworkBuffer.makeArray { packetWriter: NetworkBuffer ->
+            packetWriter.write(NetworkBuffer.VAR_INT, 0) // Single word
         }
     }
 }
@@ -159,8 +159,8 @@ class ArgumentOptionalPlayer(id: String) : Argument<String>(id) {
     }
 
     override fun nodeProperties(): ByteArray {
-        return BinaryWriter.makeArray { packetWriter: BinaryWriter ->
-            packetWriter.writeVarInt(0) // Single word
+        return NetworkBuffer.makeArray { packetWriter: NetworkBuffer ->
+            packetWriter.write(NetworkBuffer.VAR_INT, 0) // Single word
         }
     }
 }
