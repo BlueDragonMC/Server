@@ -1,6 +1,7 @@
 package com.bluedragonmc.server.queue
 
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.bootstrap.GlobalTranslation
 import org.slf4j.LoggerFactory
 import java.io.BufferedInputStream
 import java.nio.file.Path
@@ -30,14 +31,14 @@ object GameLoader {
         gamesList.forEach { (path, props) ->
             val name = props.getProperty("name")
             val mainClass = props.getProperty("main-class")
-            // Preload the game's main class
+            // Load the game's main class and translation keys
             val ms = measureTimeMillis {
                 val classLoader = GameClassLoader(arrayOf(path.toUri().toURL()))
-                GameClassLoader.loaders.add(classLoader)
+                GlobalTranslation.addSource(name.lowercase().replace(Regex("[^a-zA-Z0-9]"), "_"), classLoader)
                 val clazz = classLoader.loadClass(mainClass)
                 classes[name] = clazz as Class<out Game>
             }
-            logger.info("Initialized plugin '${props.getProperty("name")}' (${path.name}) in ${ms}ms")
+            logger.info("Initialized plugin '$name' (${path.name}) in ${ms}ms")
         }
     }
 
