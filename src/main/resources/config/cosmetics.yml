@@ -241,3 +241,37 @@ categories:
             description: <lang:cosmetic.infinijump.blocks.jungle.desc>
             material: minecraft:flowering_azalea_leaves
             cost: 2500
+  - id: huehunters
+    name: HueHunters
+    material: minecraft:magenta_concrete_powder
+    groups:
+      - id: xraysound
+        name: <lang:cosmetic.huehunters.xraysound>
+        material: minecraft:spyglass
+        description: <lang:cosmetic.huehunters.xraysound.desc>
+        cosmetics:
+          - id: huehunters_xraysound_amethyst
+            name: <lang:item.minecraft.amethyst_shard>
+            description: <lang:cosmetic.huehunters.xraysound.amethyst.desc>
+            material: minecraft:amethyst_block
+            cost: 1500
+          - id: huehunters_xraysound_azalea
+            name: <lang:block.minecraft.azalea>
+            description: <lang:cosmetic.huehunters.xraysound.azalea.desc>
+            material: minecraft:flowering_azalea
+            cost: 1500
+          - id: huehunters_xraysound_bamboo
+            name: <lang:block.minecraft.bamboo>
+            description: <lang:cosmetic.huehunters.xraysound.bamboo.desc>
+            material: minecraft:bamboo_block
+            cost: 1500
+          - id: huehunters_xraysound_beehive
+            name: <lang:block.minecraft.beehive>
+            description: <lang:cosmetic.huehunters.xraysound.beehive.desc>
+            material: minecraft:beehive
+            cost: 1500
+          - id: huehunters_xraysound_xylophone
+            name: <lang:cosmetic.huehunters.xraysound.xylophone>
+            description: <lang:cosmetic.huehunters.xraysound.xylophone.desc>
+            material: minecraft:note_block
+            cost: 1500
