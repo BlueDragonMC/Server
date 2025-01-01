@@ -1,5 +1,6 @@
 package com.bluedragonmc.server.command
 
+import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.service.Messaging
 import com.bluedragonmc.server.service.Permissions
@@ -7,6 +8,7 @@ import com.bluedragonmc.server.utils.miniMessage
 import com.bluedragonmc.server.utils.plus
 import com.bluedragonmc.server.utils.surroundWithSeparators
 import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.JoinConfiguration
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.entity.Player
 
@@ -93,7 +95,9 @@ class PartyCommand(name: String, usageString: String, vararg aliases: String) :
                     val membersText = formatMessageTranslated(
                         "puffin.party.list.members",
                         members.size,
-                        *members.map { miniMessage.deserialize(it.username) }.toTypedArray()
+                        Component.join(
+                            JoinConfiguration.separator(Component.text(", ", BRAND_COLOR_PRIMARY_2)),
+                            members.map { miniMessage.deserialize(it.username) })
                     )
                     sender.sendMessage((leaderText + Component.newline() + membersText).surroundWithSeparators())
                 } else {
@@ -113,7 +117,12 @@ class PartyCommand(name: String, usageString: String, vararg aliases: String) :
                     if (minutes in 5..300) {
                         Messaging.outgoing.startMarathon(player.uuid, get(minutesArgument) * 60 * 1_000)
                     } else {
-                        sender.sendMessage(Component.translatable("puffin.party.marathon.invalid_time", NamedTextColor.RED))
+                        sender.sendMessage(
+                            Component.translatable(
+                                "puffin.party.marathon.invalid_time",
+                                NamedTextColor.RED
+                            )
+                        )
                     }
                 }
             }
