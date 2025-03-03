@@ -5,6 +5,7 @@ import com.bluedragonmc.server.model.PlayerDocument
 import com.bluedragonmc.server.service.Database
 import kotlinx.coroutines.runBlocking
 import net.minestom.server.MinecraftServer
+import net.minestom.server.command.ArgumentParserType
 import net.minestom.server.command.CommandSender
 import net.minestom.server.command.builder.arguments.*
 import net.minestom.server.command.builder.arguments.minecraft.ArgumentBlockState
@@ -56,7 +57,7 @@ class ArgumentInstance(id: String) : Argument<Instance>(id) {
     init {
         setSuggestionCallback { _, _, suggestion ->
             suggestion.entries.addAll(MinecraftServer.getInstanceManager().instances.map {
-                SuggestionEntry(it.uniqueId.toString())
+                SuggestionEntry(it.uuid.toString())
             }.filter { it.entry.startsWith(suggestion.input) })
         }
     }
@@ -67,7 +68,7 @@ class ArgumentInstance(id: String) : Argument<Instance>(id) {
             ?: throw ArgumentSyntaxException("Instance not found", uuid.toString(), INVALID_INSTANCE)
     }
 
-    override fun parser(): String = backingArgument.parser()
+    override fun parser(): ArgumentParserType = backingArgument.parser()
 }
 
 class ArgumentGameId(id: String) : Argument<Game>(id) {
@@ -97,7 +98,7 @@ class ArgumentGameId(id: String) : Argument<Game>(id) {
         }
     }
 
-    override fun parser(): String = backingArgument.parser()
+    override fun parser(): ArgumentParserType = backingArgument.parser()
 }
 
 /**
@@ -121,7 +122,7 @@ class ArgumentOfflinePlayer(id: String) : Argument<PlayerDocument>(id) {
         return doc
     }
 
-    override fun parser(): String = "brigadier:string"
+    override fun parser(): ArgumentParserType = ArgumentParserType.STRING
 
     init {
         setSuggestionCallback { _, _, suggestion ->
@@ -148,7 +149,7 @@ class ArgumentOptionalPlayer(id: String) : Argument<String>(id) {
 
     override fun parse(sender: CommandSender, input: String) = backingArgument.parse(sender, input)
 
-    override fun parser(): String = "brigadier:string"
+    override fun parser(): ArgumentParserType = ArgumentParserType.STRING
 
     init {
         setSuggestionCallback { _, _, suggestion ->

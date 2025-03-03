@@ -21,8 +21,8 @@ import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.entity.projectile.ProjectileCollideWithBlockEvent
 import net.minestom.server.event.entity.projectile.ProjectileCollideWithEntityEvent
-import net.minestom.server.event.item.ItemUpdateStateEvent
-import net.minestom.server.event.player.PlayerItemAnimationEvent
+import net.minestom.server.event.item.PlayerBeginItemUseEvent
+import net.minestom.server.event.item.PlayerFinishItemUseEvent
 import net.minestom.server.event.player.PlayerSpawnEvent
 import net.minestom.server.event.player.PlayerUseItemEvent
 import net.minestom.server.event.player.PlayerUseItemOnBlockEvent
@@ -30,6 +30,7 @@ import net.minestom.server.instance.EntityTracker
 import net.minestom.server.instance.Explosion
 import net.minestom.server.instance.Instance
 import net.minestom.server.inventory.TransactionOption
+import net.minestom.server.item.ItemAnimation
 import net.minestom.server.item.ItemComponent
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
@@ -78,12 +79,12 @@ class ProjectileModule : GameModule() {
      * https://github.com/Minestom/Arena/blob/master/src/main/java/net/minestom/arena/feature/BowFeature.java
      */
     private fun hookBowEvents(eventNode: EventNode<Event>) {
-        eventNode.addListener(PlayerItemAnimationEvent::class.java) { event ->
-            if (event.itemAnimationType == PlayerItemAnimationEvent.ItemAnimationType.BOW) {
+        eventNode.addListener(PlayerBeginItemUseEvent::class.java) { event ->
+            if (event.animation == ItemAnimation.BOW) {
                 event.player.setTag(CHARGE_START_TAG, event.player.instance!!.worldAge)
             }
         }
-        eventNode.addListener(ItemUpdateStateEvent::class.java) { event ->
+        eventNode.addListener(PlayerFinishItemUseEvent::class.java) { event ->
             if (event.itemStack.material() != Material.BOW) return@addListener
 
             if (event.player.gameMode != GameMode.CREATIVE) {
@@ -180,7 +181,7 @@ class ProjectileModule : GameModule() {
                 if (event.player.isOnCooldown()) return@addListener
 
                 if (event.player.gameMode != GameMode.CREATIVE) {
-                    event.player.inventory.setItemInHand(event.hand, itemStack.withAmount(itemStack.amount() - 1))
+                    event.player.setItemInHand(event.hand, itemStack.withAmount(itemStack.amount() - 1))
                 }
 
                 // Shoot a snowball from the player's position
@@ -243,7 +244,7 @@ class ProjectileModule : GameModule() {
             if (player.isOnCooldown()) return
 
             if (player.gameMode != GameMode.CREATIVE) {
-                player.inventory.setItemInHand(hand, itemStack.withAmount(itemStack.amount() - 1))
+                player.setItemInHand(hand, itemStack.withAmount(itemStack.amount() - 1))
             }
 
             // Shoot a fireball from the player's position
@@ -360,7 +361,7 @@ class ProjectileModule : GameModule() {
             if (player.isOnCooldown()) return
 
             if (player.gameMode != GameMode.CREATIVE) {
-                player.inventory.setItemInHand(hand, itemStack.withAmount(itemStack.amount() - 1))
+                player.setItemInHand(hand, itemStack.withAmount(itemStack.amount() - 1))
             }
 
             // Shoot an egg from the player's position

@@ -17,7 +17,7 @@ import net.minestom.server.event.EventNode
 import net.minestom.server.event.entity.EntityAttackEvent
 import net.minestom.server.event.entity.EntityPotionAddEvent
 import net.minestom.server.event.entity.EntityTickEvent
-import net.minestom.server.event.player.PlayerEatEvent
+import net.minestom.server.event.item.PlayerFinishItemUseEvent
 import net.minestom.server.event.player.PlayerSpawnEvent
 import net.minestom.server.event.trait.CancellableEvent
 import net.minestom.server.event.trait.PlayerInstanceEvent
@@ -107,7 +107,7 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
             event.player.additionalHearts = 0.0f
         }
 
-        eventNode.addListener(PlayerEatEvent::class.java) { event ->
+        eventNode.addListener(PlayerFinishItemUseEvent::class.java) { event ->
             when(event.itemStack.material()) {
                 Material.GOLDEN_APPLE -> {
                     event.player.addEffect(Potion(
@@ -156,7 +156,7 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
             // The base attack damage according to the item they're holding
             var dmgAttribute = player.getAttributeValue(Attribute.ATTACK_DAMAGE)
 
-            val heldEnchantments = player.inventory.itemInMainHand.get(ItemComponent.ENCHANTMENTS)?.enchantments ?: emptyMap<DynamicRegistry.Key<Enchantment>, Int>()
+            val heldEnchantments = player.itemInMainHand.get(ItemComponent.ENCHANTMENTS)?.enchantments ?: emptyMap<DynamicRegistry.Key<Enchantment>, Int>()
             // Extra damage provided by enchants like sharpness or smite
             val damageModifier = CombatUtils.getDamageModifier(heldEnchantments, target)
 
@@ -239,18 +239,13 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
             )
 
             if (target is Player) {
-                val armor = listOf(
-                    EquipmentSlot.HELMET to target.inventory.helmet,
-                    EquipmentSlot.CHESTPLATE to target.inventory.chestplate,
-                    EquipmentSlot.LEGGINGS to target.inventory.leggings,
-                    EquipmentSlot.BOOTS to target.inventory.boots
-                )
-                armor.forEach { (slot, itemStack) ->
+                EquipmentSlot.armors().forEach { slot: EquipmentSlot ->
+                    val itemStack = target.getEquipment(slot)
                     val level = itemStack.get(ItemComponent.ENCHANTMENTS)?.enchantments?.get(Enchantment.THORNS) ?: return@forEach
                     if (CombatUtils.shouldCauseThorns(level)) {
                         val thornsDamage = CombatUtils.getThornsDamage(level)
                         target.damage(Damage(DamageType.THORNS, player, event.entity, event.entity.position, thornsDamage.toFloat()))
-                        target.inventory.setEquipment(slot, CombatUtils.damageItemStack(itemStack, 2))
+                        target.inventory.setEquipment(slot, player.heldSlot, CombatUtils.damageItemStack(itemStack, 2))
                     }
                 }
             }
