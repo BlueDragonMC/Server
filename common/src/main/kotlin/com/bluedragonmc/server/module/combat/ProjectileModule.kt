@@ -22,7 +22,7 @@ import net.minestom.server.event.EventNode
 import net.minestom.server.event.entity.projectile.ProjectileCollideWithBlockEvent
 import net.minestom.server.event.entity.projectile.ProjectileCollideWithEntityEvent
 import net.minestom.server.event.item.PlayerBeginItemUseEvent
-import net.minestom.server.event.item.PlayerFinishItemUseEvent
+import net.minestom.server.event.item.PlayerCancelItemUseEvent
 import net.minestom.server.event.player.PlayerSpawnEvent
 import net.minestom.server.event.player.PlayerUseItemEvent
 import net.minestom.server.event.player.PlayerUseItemOnBlockEvent
@@ -30,7 +30,6 @@ import net.minestom.server.instance.EntityTracker
 import net.minestom.server.instance.Explosion
 import net.minestom.server.instance.Instance
 import net.minestom.server.inventory.TransactionOption
-import net.minestom.server.item.ItemAnimation
 import net.minestom.server.item.ItemComponent
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
@@ -62,7 +61,6 @@ class ProjectileModule : GameModule() {
     private lateinit var parent: Game
 
     companion object {
-        private val CHARGE_START_TAG = Tag.Long("bow_charge_start").defaultValue(Long.MAX_VALUE)
         private val ARROW_DAMAGE_TAG = Tag.Integer("entity_arrow_power").defaultValue(0) // the power enchantment level
         private val PUNCH_TAG = Tag.Integer("entity_projectile_punch").defaultValue(0) // the punch enchantment level
         private val PEARL_OWNER_TAG = Tag.UUID("ender_pearl_owner")
@@ -90,22 +88,22 @@ class ProjectileModule : GameModule() {
      */
     private fun hookBowEvents(eventNode: EventNode<Event>) {
         eventNode.addListener(PlayerBeginItemUseEvent::class.java) { event ->
-            if (event.animation == ItemAnimation.BOW) {
-                event.player.setTag(CHARGE_START_TAG, event.player.instance!!.worldAge)
+            // Don't allow charging the bow if you have no arrows
+            if (!event.player.inventory.itemStacks.any { it.material() == Material.ARROW }) {
+                event.isCancelled = true
+                return@addListener
             }
         }
-        eventNode.addListener(PlayerFinishItemUseEvent::class.java) { event ->
+        eventNode.addListener(PlayerCancelItemUseEvent::class.java) { event ->
             if (event.itemStack.material() != Material.BOW) return@addListener
 
-            if (event.player.gameMode != GameMode.CREATIVE) {
-                if (!takeArrow(event.player)) return@addListener
-            }
-
-            val secondsCharged =
-                (event.player.instance!!.worldAge - event.player.getTag(CHARGE_START_TAG)).toFloat() / ServerFlag.SERVER_TICKS_PER_SECOND
+            val secondsCharged: Double = event.useDuration.toDouble() / ServerFlag.SERVER_TICKS_PER_SECOND
             val power = ((secondsCharged * secondsCharged + 2 * secondsCharged) / 2.0).coerceIn(0.0, 1.0)
 
             if (power > 0.2) {
+                if (event.player.gameMode != GameMode.CREATIVE) {
+                    if (!takeArrow(event.player)) return@addListener
+                }
                 val projectile = CustomArrowProjectile(event.player, EntityType.ARROW)
                 if (power > 0.9) (projectile.entityMeta as ArrowMeta).isCritical = true
                 projectile.scheduleRemove(Duration.ofSeconds(30))
