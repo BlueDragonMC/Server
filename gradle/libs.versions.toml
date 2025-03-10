@@ -10,7 +10,7 @@ caffeine = "3.1.1"
 okhttp = "4.10.0"
 serialization = "1.5.0-RC"
 tinylog = "2.6.2"
-atlas-projectiles = "2.0.0"
+atlas-projectiles = "2.1.1"
 # Auto-generated GRPC/Protobuf messaging code
 rpc = "fb16ef4cc5"
 # Agones SDK and its necessary runtime dependencies
