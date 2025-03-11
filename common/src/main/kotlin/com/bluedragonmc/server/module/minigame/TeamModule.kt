@@ -17,6 +17,7 @@ import net.minestom.server.adventure.audience.PacketGroupingAudience
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
+import net.minestom.server.network.packet.server.play.TeamsPacket.NameTagVisibility
 import java.util.*
 import java.util.concurrent.CopyOnWriteArrayList
 
@@ -163,7 +164,7 @@ class TeamModule(
         val name: Component = Component.empty(),
         val players: MutableList<Player> = CopyOnWriteArrayList(),
         val allowFriendlyFire: Boolean = false,
-        val nameTagVisible: Boolean = true,
+        val nameTagVisibility: NameTagVisibility = NameTagVisibility.ALWAYS,
     ) : PacketGroupingAudience {
         val uuid: UUID = UUID.randomUUID()
 
@@ -201,6 +202,7 @@ class TeamModule(
                     name.color() ?: NamedTextColor.WHITE, // The team name's text color
                     TextDecoration.BOLD
                 ))
+                .nameTagVisibility(nameTagVisibility)
                 .teamColor(NamedTextColor.nearestTo(
                     name.color() ?: NamedTextColor.WHITE
                 )) // Used for coloring player usernames
