@@ -58,6 +58,7 @@ fun start() {
         OpenToLAN,
         PerInstanceChat,
         PerInstanceTabList,
+        PickItemHandler,
         ServerListPingHandler,
         TabListFormat,
         VelocityForwarding
