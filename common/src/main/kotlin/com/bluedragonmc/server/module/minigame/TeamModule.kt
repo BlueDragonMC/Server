@@ -41,9 +41,10 @@ class TeamModule(
                     AutoTeamMode.PLAYER_COUNT -> {
                         var teamNumber = 0
                         teams.addAll(parent.players.chunked(autoTeamCount) { players ->
-                            Team(teamNumToName(teamNumber++), players.toMutableList(), allowFriendlyFire)
+                            val team = Team(teamNumToName(teamNumber++), players.toMutableList(), allowFriendlyFire)
+                            players.forEach { player -> parent.callEvent(TeamAssignedEvent(parent, player, team)) }
+                            team
                         })
-                        parent.players.forEach { player -> parent.callEvent(TeamAssignedEvent(parent, player)) }
                         logger.info("Created ${teams.size} teams with $autoTeamCount players per team.")
                     }
                     AutoTeamMode.TEAM_COUNT -> {
@@ -63,8 +64,9 @@ class TeamModule(
                             }
                             rollingIndex = rollingIndex.coerceAtMost(parent.players.size)
                             val players = parent.players.subList(startIndex, rollingIndex)
-                            teams.add(Team(teamNumToName(i), players, allowFriendlyFire))
-                            players.forEach { player -> parent.callEvent(TeamAssignedEvent(parent, player)) }
+                            val team = Team(teamNumToName(i), players, allowFriendlyFire)
+                            teams.add(team)
+                            players.forEach { player -> parent.callEvent(TeamAssignedEvent(parent, player, team)) }
                         }
                         logger.info("Created ${teams.size} teams with $playersPerTeam players per team.")
                     }
