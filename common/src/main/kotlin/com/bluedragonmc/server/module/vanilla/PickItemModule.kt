@@ -33,11 +33,11 @@ class PickItemModule : GameModule() {
     }
 
     sealed class PickItemEvent {
-        data class Block(val player: Player, val pos: Point, val includeData: Boolean) : PickItemEvent(), PlayerInstanceEvent {
+        data class Block(private val player: Player, val pos: Point, val includeData: Boolean) : PickItemEvent(), PlayerInstanceEvent {
             override fun getPlayer() = this.player
         }
 
-        data class Entity(val player: Player, val target: net.minestom.server.entity.Entity?, val includeData: Boolean) : PickItemEvent(), PlayerInstanceEvent {
+        data class Entity(private val player: Player, val target: net.minestom.server.entity.Entity?, val includeData: Boolean) : PickItemEvent(), PlayerInstanceEvent {
             override fun getPlayer() = this.player
         }
     }
