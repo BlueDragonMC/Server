@@ -120,7 +120,7 @@ class WinModule(
         val availablePositions = parent.getModule<SpawnpointModule>().spawnpointProvider.getAllSpawnpoints()
         val fireworkMeta = colors.map {
             FireworkList(
-                1.toByte(),
+                1,
                 listOf(
                     FireworkExplosion(
                         FireworkExplosion.Shape.SMALL_BALL,
@@ -136,7 +136,7 @@ class WinModule(
         for (i in 1..3) {
             availablePositions.forEachIndexed { index, fireworkPosition ->
                 MinecraftServer.getSchedulerManager().buildTask {
-                    if (player.instance?.uniqueId != instance.uniqueId) return@buildTask
+                    if (player.instance?.uuid != instance.uuid) return@buildTask
                     FireworkUtils.spawnFirework(
                         player.instance!!,
                         fireworkPosition.add(0.0, 0.0, 0.0),

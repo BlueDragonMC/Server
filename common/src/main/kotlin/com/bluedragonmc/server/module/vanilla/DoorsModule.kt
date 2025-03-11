@@ -3,16 +3,12 @@ package com.bluedragonmc.server.module.vanilla
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.GameModule
 import net.minestom.server.coordinate.Point
-import net.minestom.server.effects.Effects
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.player.PlayerBlockInteractEvent
-import net.minestom.server.instance.EntityTracker
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
-import net.minestom.server.network.packet.server.play.EffectPacket
-import net.minestom.server.utils.PacketUtils
 
 /**
  * Adapted from BasicRedstone by TogAr2 under the MIT License
@@ -65,23 +61,24 @@ class DoorsModule : GameModule() {
             otherHalfPos, instance.getBlock(otherHalfPos).withProperty("open", open.toString())
         )
 
-        // Play effect only if state changed
-        val shouldPlayEffect = playEffect && (block.getProperty("open").equals("true")) != open
-
-        if (shouldPlayEffect) {
-            // Play an effect to nearby players
-            val effect = if (open) Effects.WOODEN_DOOR_OPENED else Effects.WOODEN_DOOR_CLOSED
-
-            val audience = mutableListOf<Player>()
-            instance.entityTracker.nearbyEntities(position, 64.0, EntityTracker.Target.PLAYERS) { player ->
-                audience.add(
-                    player
-                )
-            }
-            PacketUtils.sendGroupedPacket(
-                audience, EffectPacket(effect.id, position, 0, false)
-            ) { player -> player != source }
-        }
+        // TODO Play effect only if state changed
+        // MC 1.21.4 replaced EffectPacket with WorldEventPacket, but opening a door is not a world event...
+//        val shouldPlayEffect = playEffect && (block.getProperty("open").equals("true")) != open
+//
+//        if (shouldPlayEffect) {
+//            // Play an effect to nearby players
+//            val effect = if (open) Effects.WOODEN_DOOR_OPENED else Effects.WOODEN_DOOR_CLOSED
+//
+//            val audience = mutableListOf<Player>()
+//            instance.entityTracker.nearbyEntities(position, 64.0, EntityTracker.Target.PLAYERS) { player ->
+//                audience.add(
+//                    player
+//                )
+//            }
+//            PacketSendingUtils.sendGroupedPacket(
+//                audience, EffectPacket(effect.id, position, 0, false)
+//            ) { player -> player != source }
+//        }
     }
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {

@@ -11,7 +11,6 @@ import com.mongodb.ConnectionString
 import com.mongodb.MongoClientSettings
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Sorts
-import kotlinx.coroutines.runBlocking
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.MinecraftServer
@@ -87,38 +86,36 @@ internal class DatabaseConnectionImpl(connectionString: String) : DatabaseConnec
         }
     }
 
-    override fun loadDataDocument(player: CustomPlayer) {
+    override suspend fun loadDataDocument(player: CustomPlayer) {
         // Load players' data from the database when they spawn
         if (player.isDataInitialized()) return
-        runBlocking {
-            try {
-                player.data = getPlayerDocument(player)
+        try {
+            player.data = getPlayerDocument(player)
 
-                if (player.username != player.data.username || player.data.username.isBlank()) {
-                    // Keep an up-to-date record of player usernames
-                    player.data.update(PlayerDocument::username, player.username)
-                    player.data.update(PlayerDocument::usernameLower, player.username.lowercase())
-                    logger.info("Updated username for ${player.uuid}: ${player.data.username} -> ${player.username}")
-                }
-                if (player.data.usernameLower != player.username.lowercase()) {
-                    player.data.update(PlayerDocument::usernameLower, player.username.lowercase())
-                }
-                player.data.update(PlayerDocument::lastJoinDate, System.currentTimeMillis())
-                MinecraftServer.getGlobalEventHandler().call(DataLoadedEvent(player))
-                logger.info("Loaded player data for ${player.username}")
-            } catch (e: Throwable) {
-                logger.error("Player data for ${player.username} failed to load.")
-                MinecraftServer.getExceptionManager().handleException(e)
-                player.sendPacket(
-                    LoginDisconnectPacket(
-                        Component.translatable(
-                            "module.database.data_load_fail",
-                            NamedTextColor.RED
-                        )
+            if (player.username != player.data.username || player.data.username.isBlank()) {
+                // Keep an up-to-date record of player usernames
+                player.data.update(PlayerDocument::username, player.username)
+                player.data.update(PlayerDocument::usernameLower, player.username.lowercase())
+                logger.info("Updated username for ${player.uuid}: ${player.data.username} -> ${player.username}")
+            }
+            if (player.data.usernameLower != player.username.lowercase()) {
+                player.data.update(PlayerDocument::usernameLower, player.username.lowercase())
+            }
+            player.data.update(PlayerDocument::lastJoinDate, System.currentTimeMillis())
+            MinecraftServer.getGlobalEventHandler().call(DataLoadedEvent(player))
+            logger.info("Loaded player data for ${player.username}")
+        } catch (e: Throwable) {
+            logger.error("Player data for ${player.username} failed to load.")
+            MinecraftServer.getExceptionManager().handleException(e)
+            player.sendPacket(
+                LoginDisconnectPacket(
+                    Component.translatable(
+                        "module.database.data_load_fail",
+                        NamedTextColor.RED
                     )
                 )
-                player.playerConnection.disconnect()
-            }
+            )
+            player.playerConnection.disconnect()
         }
     }
 

@@ -1,5 +1,8 @@
 package com.bluedragonmc.server.module.combat
 
+import ca.atlasengine.projectiles.entities.ArrowProjectile
+import ca.atlasengine.projectiles.entities.FireballProjectile
+import ca.atlasengine.projectiles.entities.ThrownItemProjectile
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.ProjectileBreakBlockEvent
 import com.bluedragonmc.server.module.GameModule
@@ -10,7 +13,6 @@ import net.minestom.server.ServerFlag
 import net.minestom.server.coordinate.Point
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.*
-import net.minestom.server.entity.Player.Hand
 import net.minestom.server.entity.attribute.Attribute
 import net.minestom.server.entity.damage.Damage
 import net.minestom.server.entity.damage.DamageType
@@ -19,8 +21,8 @@ import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.entity.projectile.ProjectileCollideWithBlockEvent
 import net.minestom.server.event.entity.projectile.ProjectileCollideWithEntityEvent
-import net.minestom.server.event.item.ItemUpdateStateEvent
-import net.minestom.server.event.player.PlayerItemAnimationEvent
+import net.minestom.server.event.item.PlayerBeginItemUseEvent
+import net.minestom.server.event.item.PlayerCancelItemUseEvent
 import net.minestom.server.event.player.PlayerSpawnEvent
 import net.minestom.server.event.player.PlayerUseItemEvent
 import net.minestom.server.event.player.PlayerUseItemOnBlockEvent
@@ -40,18 +42,25 @@ import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.random.Random
 
-
 class ProjectileModule : GameModule() {
 
-    /**
-     * A subclass of [PlayerProjectile] that exposes the [shooter] publicly
-     */
-    class Projectile(val shooter: Entity?, type: EntityType?) : PlayerProjectile(shooter, type)
+    class CustomArrowProjectile(val shooter: Entity?, entityType: EntityType) : ArrowProjectile(entityType, shooter)
+    class CustomItemProjectile(val shooter: Entity?, entityType: EntityType) : ThrownItemProjectile(entityType, shooter) {
+        override fun callEntityCollision(): Boolean {
+            val result = super.callEntityCollision()
+            if (!result) {
+                // TODO: ThrownItemProjectile doesn't check block collision by default.
+                // TODO: We can remove this method override after https://github.com/AtlasEngineCa/AtlasProjectiles/pull/6 is merged.
+                this.callBlockCollision()
+            }
+            return result
+        }
+    }
+    class CustomFireballProjectile(val shooter: Entity?, entityType: EntityType) : FireballProjectile(entityType, shooter)
 
     private lateinit var parent: Game
 
     companion object {
-        private val CHARGE_START_TAG = Tag.Long("bow_charge_start").defaultValue(Long.MAX_VALUE)
         private val ARROW_DAMAGE_TAG = Tag.Integer("entity_arrow_power").defaultValue(0) // the power enchantment level
         private val PUNCH_TAG = Tag.Integer("entity_projectile_punch").defaultValue(0) // the punch enchantment level
         private val PEARL_OWNER_TAG = Tag.UUID("ender_pearl_owner")
@@ -78,24 +87,24 @@ class ProjectileModule : GameModule() {
      * https://github.com/Minestom/Arena/blob/master/src/main/java/net/minestom/arena/feature/BowFeature.java
      */
     private fun hookBowEvents(eventNode: EventNode<Event>) {
-        eventNode.addListener(PlayerItemAnimationEvent::class.java) { event ->
-            if (event.itemAnimationType == PlayerItemAnimationEvent.ItemAnimationType.BOW) {
-                event.player.setTag(CHARGE_START_TAG, event.player.instance!!.worldAge)
+        eventNode.addListener(PlayerBeginItemUseEvent::class.java) { event ->
+            // Don't allow charging the bow if you have no arrows
+            if (!event.player.inventory.itemStacks.any { it.material() == Material.ARROW }) {
+                event.isCancelled = true
+                return@addListener
             }
         }
-        eventNode.addListener(ItemUpdateStateEvent::class.java) { event ->
+        eventNode.addListener(PlayerCancelItemUseEvent::class.java) { event ->
             if (event.itemStack.material() != Material.BOW) return@addListener
 
-            if (event.player.gameMode != GameMode.CREATIVE) {
-                if (!takeArrow(event.player)) return@addListener
-            }
-
-            val secondsCharged =
-                (event.player.instance!!.worldAge - event.player.getTag(CHARGE_START_TAG)).toFloat() / ServerFlag.SERVER_TICKS_PER_SECOND
+            val secondsCharged: Double = event.useDuration.toDouble() / ServerFlag.SERVER_TICKS_PER_SECOND
             val power = ((secondsCharged * secondsCharged + 2 * secondsCharged) / 2.0).coerceIn(0.0, 1.0)
 
             if (power > 0.2) {
-                val projectile = Projectile(event.player, EntityType.ARROW)
+                if (event.player.gameMode != GameMode.CREATIVE) {
+                    if (!takeArrow(event.player)) return@addListener
+                }
+                val projectile = CustomArrowProjectile(event.player, EntityType.ARROW)
                 if (power > 0.9) (projectile.entityMeta as ArrowMeta).isCritical = true
                 projectile.scheduleRemove(Duration.ofSeconds(30))
                 val eyePos = getEyePos(event.player)
@@ -117,9 +126,7 @@ class ProjectileModule : GameModule() {
         }
         eventNode.addListener(ProjectileCollideWithEntityEvent::class.java) { event ->
             val target = event.target as? LivingEntity ?: return@addListener
-            val projectile = event.entity as Projectile
-
-            if (projectile.entityType != EntityType.ARROW) return@addListener
+            val projectile = event.entity as? CustomArrowProjectile ?: return@addListener
 
             val arrowMeta = projectile.entityMeta as? ArrowMeta ?: return@addListener
             val shooter = projectile.shooter
@@ -138,7 +145,7 @@ class ProjectileModule : GameModule() {
             )
 
             val damageModifier =
-                (projectile.shooter as? LivingEntity)?.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE)?.value ?: 1.0
+                (projectile.shooter as? LivingEntity)?.getAttribute(Attribute.ATTACK_DAMAGE)?.value ?: 1.0
 
             var originalDamage = damageModifier * 2.0f + Random.nextFloat() * 0.25 + 0.15f
             if (projectile.getTag(ARROW_DAMAGE_TAG) > 0) {
@@ -182,11 +189,11 @@ class ProjectileModule : GameModule() {
                 if (event.player.isOnCooldown()) return@addListener
 
                 if (event.player.gameMode != GameMode.CREATIVE) {
-                    event.player.inventory.setItemInHand(event.hand, itemStack.withAmount(itemStack.amount() - 1))
+                    event.player.setItemInHand(event.hand, itemStack.withAmount(itemStack.amount() - 1))
                 }
 
                 // Shoot a snowball from the player's position
-                val snowball = Projectile(event.player, EntityType.SNOWBALL)
+                val snowball = CustomItemProjectile(event.player, EntityType.SNOWBALL)
                 snowball.setInstance(event.instance, getEyePos(event.player))
                 snowball.shoot(getLaunchPos(event.player), 3.0, 1.0)
                 event.player.instance?.playSound(
@@ -202,7 +209,7 @@ class ProjectileModule : GameModule() {
         }
         eventNode.addListener(ProjectileCollideWithEntityEvent::class.java) { event ->
             val target = event.target as? LivingEntity ?: return@addListener
-            val projectile = event.entity as Projectile
+            val projectile = event.entity as? CustomItemProjectile ?: return@addListener
 
             if (projectile.entityType != EntityType.SNOWBALL) return@addListener
 
@@ -239,17 +246,17 @@ class ProjectileModule : GameModule() {
         }
     }
 
-    private fun shootFireball(player: Player, hand: Hand, instance: Instance) {
+    private fun shootFireball(player: Player, hand: PlayerHand, instance: Instance) {
         val itemStack = player.getItemInHand(hand)
         if (itemStack.material() == Material.FIRE_CHARGE) {
             if (player.isOnCooldown()) return
 
             if (player.gameMode != GameMode.CREATIVE) {
-                player.inventory.setItemInHand(hand, itemStack.withAmount(itemStack.amount() - 1))
+                player.setItemInHand(hand, itemStack.withAmount(itemStack.amount() - 1))
             }
 
             // Shoot a fireball from the player's position
-            val fireball = Projectile(player, EntityType.FIREBALL)
+            val fireball = CustomFireballProjectile(player, EntityType.FIREBALL)
             fireball.setInstance(instance, getEyePos(player))
             fireball.shoot(getLaunchPos(player), 3.0, 1.0)
             player.instance?.playSound(
@@ -261,7 +268,7 @@ class ProjectileModule : GameModule() {
     }
 
     private fun explodeFireball(projectile: Entity) {
-        projectile as Projectile
+        projectile as? CustomFireballProjectile ?: return
         projectile.remove()
         val pos = projectile.position
 
@@ -294,7 +301,7 @@ class ProjectileModule : GameModule() {
         centerY: Float,
         centerZ: Float,
         strength: Float,
-        projectile: Projectile,
+        projectile: CustomFireballProjectile,
     ) = object : Explosion(centerX, centerY, centerZ, strength) {
 
         override fun prepare(instance: Instance): List<Point> {
@@ -338,7 +345,7 @@ class ProjectileModule : GameModule() {
         }
         eventNode.addListener(ProjectileCollideWithEntityEvent::class.java) { event ->
             val target = event.target as? LivingEntity ?: return@addListener
-            val projectile = event.entity as Projectile
+            val projectile = event.entity as? CustomItemProjectile ?: return@addListener
 
             if (projectile.entityType != EntityType.EGG) return@addListener
 
@@ -356,17 +363,17 @@ class ProjectileModule : GameModule() {
         }
     }
 
-    private fun throwEgg(player: Player, hand: Hand, instance: Instance) {
+    private fun throwEgg(player: Player, hand: PlayerHand, instance: Instance) {
         val itemStack = player.getItemInHand(hand)
         if (itemStack.material() == Material.EGG) {
             if (player.isOnCooldown()) return
 
             if (player.gameMode != GameMode.CREATIVE) {
-                player.inventory.setItemInHand(hand, itemStack.withAmount(itemStack.amount() - 1))
+                player.setItemInHand(hand, itemStack.withAmount(itemStack.amount() - 1))
             }
 
             // Shoot an egg from the player's position
-            val egg = Projectile(player, EntityType.EGG)
+            val egg = CustomItemProjectile(player, EntityType.EGG)
             egg.setInstance(instance, getEyePos(player))
             egg.shoot(getLaunchPos(player), 3.0, 1.0)
             instance.playSound(
@@ -389,7 +396,7 @@ class ProjectileModule : GameModule() {
             val itemStack = event.player.getItemInHand(event.hand)
             if (itemStack.material() == Material.ENDER_PEARL) {
                 if (event.player.isOnCooldown()) return@addListener
-                val pearl = Projectile(event.player, EntityType.ENDER_PEARL)
+                val pearl = CustomItemProjectile(event.player, EntityType.ENDER_PEARL)
                 pearl.setTag(PEARL_OWNER_TAG, event.player.uuid)
                 pearl.setInstance(event.instance, getEyePos(event.player))
                 pearl.shoot(getLaunchPos(event.player), 2.5, 1.0)

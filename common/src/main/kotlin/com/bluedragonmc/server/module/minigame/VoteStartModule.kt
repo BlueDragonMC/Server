@@ -16,6 +16,7 @@ import net.kyori.adventure.title.Title
 import net.kyori.adventure.title.TitlePart
 import net.minestom.server.MinecraftServer
 import net.minestom.server.entity.Player
+import net.minestom.server.entity.PlayerHand
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.player.PlayerSpawnEvent
@@ -53,7 +54,7 @@ class VoteStartModule(
             fill(event.player, voteStartItem)
         }
         eventNode.addListener(PlayerUseItemEvent::class.java) { event ->
-            if (event.hand != Player.Hand.MAIN) return@addListener
+            if (event.hand != PlayerHand.MAIN) return@addListener
 
             when (event.itemStack) {
                 voteStartItem -> {

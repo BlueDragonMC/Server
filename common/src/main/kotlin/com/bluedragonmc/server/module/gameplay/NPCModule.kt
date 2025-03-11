@@ -130,7 +130,8 @@ class NPCModule : GameModule() {
                 0,
                 GameMode.CREATIVE,
                 Component.text("[NPC] $randomName", NamedTextColor.DARK_GRAY, TextDecoration.ITALIC),
-                null
+                null,
+                0
             )
         )
 

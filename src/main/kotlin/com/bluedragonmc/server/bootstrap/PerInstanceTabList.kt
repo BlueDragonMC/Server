@@ -7,7 +7,7 @@ import net.minestom.server.event.instance.AddEntityToInstanceEvent
 import net.minestom.server.event.instance.RemoveEntityFromInstanceEvent
 import net.minestom.server.network.packet.server.play.PlayerInfoRemovePacket
 import net.minestom.server.network.packet.server.play.PlayerInfoUpdatePacket
-import net.minestom.server.utils.PacketUtils
+import net.minestom.server.utils.PacketSendingUtils
 import java.util.*
 
 object PerInstanceTabList : Bootstrap() {
@@ -26,7 +26,7 @@ object PerInstanceTabList : Bootstrap() {
                 getAddPlayerPacket(newInstance.players)
             )
             // Send a packet to all players in the instance to add this new player
-            PacketUtils.sendGroupedPacket(
+            PacketSendingUtils.sendGroupedPacket(
                 newInstance.players + player,
                 getAddPlayerPacket(player)
             )
@@ -35,7 +35,7 @@ object PerInstanceTabList : Bootstrap() {
             if (event.entity !is Player) return@addListener
             val player = event.entity as Player
             // Remove this player from everyone's tablist
-            PacketUtils.sendGroupedPacket(
+            PacketSendingUtils.sendGroupedPacket(
                 event.instance.players - player,
                 getRemovePlayerPacket(setOf(player))
             )
@@ -78,6 +78,7 @@ object PerInstanceTabList : Bootstrap() {
         player.latency,
         player.gameMode,
         player.name,
-        null
+        null,
+        1024
     )
 }
