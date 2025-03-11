@@ -1,6 +1,7 @@
 package com.bluedragonmc.server.module.vanilla
 
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.event.PickItemEvent
 import com.bluedragonmc.server.module.GameModule
 import net.minestom.server.coordinate.Point
 import net.minestom.server.entity.Player
@@ -29,16 +30,6 @@ class PickItemModule : GameModule() {
                     return@addListener
                 }
             }
-        }
-    }
-
-    sealed class PickItemEvent {
-        data class Block(private val player: Player, val pos: Point, val includeData: Boolean) : PickItemEvent(), PlayerInstanceEvent {
-            override fun getPlayer() = this.player
-        }
-
-        data class Entity(private val player: Player, val target: net.minestom.server.entity.Entity?, val includeData: Boolean) : PickItemEvent(), PlayerInstanceEvent {
-            override fun getPlayer() = this.player
         }
     }
 }
