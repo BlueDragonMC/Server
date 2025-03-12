@@ -18,7 +18,7 @@ class ListCommand(name: String, vararg aliases: String) : BlueDragonCommand(name
                 MinecraftServer.getConnectionManager().onlinePlayers.size)
             val all = Component.join(JoinConfiguration.newlines(),
                 MinecraftServer.getInstanceManager().instances.filter { it.players.isNotEmpty() }.map { instance ->
-                    Component.text(instance.uniqueId.toString(), BRAND_COLOR_PRIMARY_1) + Component.text(": ",
+                    Component.text(instance.uuid.toString(), BRAND_COLOR_PRIMARY_1) + Component.text(": ",
                         BRAND_COLOR_PRIMARY_2) + getInstancePlayerList(instance)
                 })
             sender.sendMessage(firstLine + Component.newline() + all)

@@ -263,7 +263,7 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
         val instanceRecords = getOwnedInstances().map { instance ->
             InstanceRecord(
                 type = instance::class.jvmName,
-                uuid = instance.uniqueId
+                uuid = instance.uuid
             )
         }
 
@@ -315,7 +315,7 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
         MinecraftServer.getSchedulerManager().buildTask {
             instancesToRemove.forEach { instance ->
                 if (instance.isRegistered) {
-                    logger.info("Forcefully unregistering instance ${instance.uniqueId}...")
+                    logger.info("Forcefully unregistering instance ${instance.uuid}...")
                     InstanceUtils.forceUnregisterInstance(instance)
                 }
             }
@@ -429,7 +429,7 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
                     if (System.currentTimeMillis() - instance.getTag(INACTIVE_SINCE_TAG) <= CLEANUP_MIN_INACTIVE_TIME) {
                         return@forEach
                     }
-                    logger.info("Removing orphan instance ${instance.uniqueId} (${instance})")
+                    logger.info("Removing orphan instance ${instance.uuid} (${instance})")
                     InstanceUtils.forceUnregisterInstance(instance)
                 }
             }

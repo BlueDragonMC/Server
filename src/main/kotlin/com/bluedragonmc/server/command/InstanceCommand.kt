@@ -33,14 +33,14 @@ class InstanceCommand(name: String, usageString: String, vararg aliases: String?
                 for (instance in MinecraftServer.getInstanceManager().instances) {
                     +newline()
                     // Instance ID
-                    +text(instance.uniqueId.toString(), NamedTextColor.DARK_GRAY)
-                        .clickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, instance.uniqueId.toString())
+                    +text(instance.uuid.toString(), NamedTextColor.DARK_GRAY)
+                        .clickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, instance.uuid.toString())
                     +text(" · ", NamedTextColor.GRAY)
                     // Instance class name
                     +text(instance::class.simpleName.toString(), NamedTextColor.AQUA)
                     +newline()
                     +text(" → ", NamedTextColor.GRAY)
-                    val game = Game.findGame(instance.uniqueId)
+                    val game = Game.findGame(instance.uuid)
                     if (instance.hasTag(MAP_NAME_TAG)) {
                         +translatable(
                             "command.instance.instance_container", NamedTextColor.GRAY,
@@ -73,7 +73,7 @@ class InstanceCommand(name: String, usageString: String, vararg aliases: String?
                             if (sender is Player && player.instance != instance) NamedTextColor.YELLOW else NamedTextColor.GRAY
                         +translatable("command.instance.action.connect", connectButtonColor)
                             .hoverEventTranslatable("command.instance.action.connect.hover", NamedTextColor.YELLOW)
-                            .clickEvent("/instance join ${instance.uniqueId}")
+                            .clickEvent("/instance join ${instance.uuid}")
                     }
                     val requiredBy = Game.games.filter { it.getRequiredInstances().contains(instance) }
                     if (requiredBy.isNotEmpty()) requiredBy.forEach { game ->
@@ -103,9 +103,9 @@ class InstanceCommand(name: String, usageString: String, vararg aliases: String?
     subcommand("join") {
         syntax(instanceArgument) {
             val instance = get(instanceArgument)
-            player.sendMessage(formatMessageTranslated("queue.sending", instance.uniqueId))
+            player.sendMessage(formatMessageTranslated("queue.sending", instance.uuid))
             try {
-                val spawnpoint = Game.findGame(instance.uniqueId)
+                val spawnpoint = Game.findGame(instance.uuid)
                     ?.getModuleOrNull<SpawnpointModule>()
                     ?.spawnpointProvider
                     ?.getSpawnpoint(player)
@@ -122,7 +122,7 @@ class InstanceCommand(name: String, usageString: String, vararg aliases: String?
                         player.sendMessage(
                             formatErrorTranslated(
                                 "command.instance.join.fail.generic",
-                                instance.uniqueId
+                                instance.uuid
                             )
                         )
                     }
@@ -141,7 +141,7 @@ class InstanceCommand(name: String, usageString: String, vararg aliases: String?
                 player.sendMessage(formatErrorTranslated("command.instance.remove.waiting", instance.players.size))
             }
             InstanceUtils.forceUnregisterInstance(instance).thenAccept {
-                player.sendMessage(formatMessageTranslated("command.instance.remove.success", instance.uniqueId))
+                player.sendMessage(formatMessageTranslated("command.instance.remove.success", instance.uuid))
             }
         }
     }

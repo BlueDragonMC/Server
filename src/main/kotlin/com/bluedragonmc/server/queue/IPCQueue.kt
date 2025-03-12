@@ -88,10 +88,10 @@ object IPCQueue : Queue() {
             Component.translatable(
                 "queue.sending",
                 NamedTextColor.DARK_GRAY,
-                Component.text(gameId + "/" + instance.uniqueId.toString())
+                Component.text(gameId + "/" + instance.uuid.toString())
             )
         )
-        logger.info("Sending player ${player.username} to game '$gameId' and instance '${instance.uniqueId}'. (current instance: ${player.instance?.uniqueId})")
+        logger.info("Sending player ${player.username} to game '$gameId' and instance '${instance.uuid}'. (current instance: ${player.instance?.uuid})")
 
         game.addPlayer(player)
     }

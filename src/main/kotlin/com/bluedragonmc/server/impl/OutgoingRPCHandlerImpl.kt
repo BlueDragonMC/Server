@@ -69,7 +69,7 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
             }
 
             eventNode.listenAsync<AddEntityToInstanceEvent> { event ->
-                val gameId = Game.findGame(event.instance.uniqueId)?.id
+                val gameId = Game.findGame(event.instance.uuid)?.id
                 if (gameId != null) {
                     Messaging.outgoing.recordInstanceChange(event.entity as? Player ?: return@listenAsync, gameId)
                 }

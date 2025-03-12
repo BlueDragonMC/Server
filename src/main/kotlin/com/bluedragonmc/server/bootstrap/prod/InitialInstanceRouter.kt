@@ -95,7 +95,7 @@ object InitialInstanceRouter : Bootstrap(EnvType.PRODUCTION) {
                 return@listenSuspend
             }
 
-            logger.info("Spawning player ${event.player.username} in game '${game.id}' and instance '${instance.uniqueId}'")
+            logger.info("Spawning player ${event.player.username} in game '${game.id}' and instance '${instance.uuid}'")
             event.spawningInstance = instance
 
             if (game.hasModule<SpawnpointModule>()) {
