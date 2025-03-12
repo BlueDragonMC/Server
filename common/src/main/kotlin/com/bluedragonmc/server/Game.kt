@@ -414,6 +414,7 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
                         logger.info("Ending inactive game ${game.id} (${game.name}/${game.mapName}/${game.mode})")
                         game.endGame(false)
                     }
+                    game.players.removeIf { player -> !player.isOnline }
                 }
 
                 instances.forEach { instance ->
