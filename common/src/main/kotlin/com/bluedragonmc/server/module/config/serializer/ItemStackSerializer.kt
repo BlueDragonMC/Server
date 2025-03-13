@@ -38,7 +38,9 @@ class ItemStackSerializer : TypeSerializer<ItemStack> {
                 set(ItemComponent.LORE, lore)
             }
 
-            set(ItemComponent.ENCHANTMENTS, enchantments)
+            if (enchantments != null && enchantments.enchantments().isNotEmpty()) {
+                set(ItemComponent.ENCHANTMENTS, enchantments)
+            }
 
             build()
         }
