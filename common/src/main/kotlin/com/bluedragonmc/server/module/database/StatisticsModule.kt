@@ -8,13 +8,11 @@ import com.bluedragonmc.server.model.PlayerDocument
 import com.bluedragonmc.server.model.PlayerRecord
 import com.bluedragonmc.server.model.StatisticRecord
 import com.bluedragonmc.server.module.GameModule
-import com.bluedragonmc.server.module.database.StatisticsModule.StatisticRecorder
 import com.bluedragonmc.server.module.minigame.WinModule
 import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.utils.listenAsync
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
-import com.mongodb.internal.operation.OrderBy
 import kotlinx.coroutines.launch
 import net.minestom.server.MinecraftServer
 import net.minestom.server.entity.Player
@@ -216,6 +214,10 @@ class StatisticsModule(private vararg val recorders: StatisticRecorder) : GameMo
             if (record) successCallback?.run()
             record
         }
+
+    enum class OrderBy {
+        ASC, DESC
+    }
 
     suspend fun rankPlayersByStatistic(
         key: String,

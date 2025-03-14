@@ -1,6 +1,6 @@
 plugins {
     id("server.common-conventions")
-    kotlin("plugin.serialization") version "1.6.21"
+    kotlin("plugin.serialization") version "2.1.10"
     `maven-publish`
 }
 

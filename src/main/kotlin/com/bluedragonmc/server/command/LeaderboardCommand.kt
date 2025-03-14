@@ -5,10 +5,10 @@ import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.lobby
 import com.bluedragonmc.server.module.database.StatisticsModule
+import com.bluedragonmc.server.module.database.StatisticsModule.OrderBy
 import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.service.Permissions
 import com.bluedragonmc.server.utils.plus
-import com.mongodb.internal.operation.OrderBy
 import kotlinx.coroutines.launch
 import net.kyori.adventure.text.Component
 import net.minestom.server.entity.Player

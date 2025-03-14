@@ -124,7 +124,7 @@ internal class DatabaseConnectionImpl(connectionString: String) : DatabaseConnec
         val sort = when (sortCriteria) {
             "ASC" -> Sorts.ascending("statistics.$key")
             "DESC" -> Sorts.descending("statistics.$key")
-            else -> error("Invalid sort order")
+            else -> error("Invalid sort order; expected \"ASC\" or \"DESC\".")
         }
 
         return getPlayersCollection()
