@@ -15,9 +15,12 @@ import kotlinx.coroutines.withTimeout
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.MinecraftServer
+import net.minestom.server.ServerFlag
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.player.AsyncPlayerConfigurationEvent
+import net.minestom.server.network.ConnectionState
+import net.minestom.server.timer.TaskSchedule
 
 object InitialInstanceRouter : Bootstrap(EnvType.PRODUCTION) {
 
@@ -27,6 +30,8 @@ object InitialInstanceRouter : Bootstrap(EnvType.PRODUCTION) {
         Component.text("Couldn't find which world to put you in! (Destination not ready)", NamedTextColor.RED)
     private val HANDSHAKE_FAILED =
         Component.text("Couldn't find which world to put you in! (Handshake failed)", NamedTextColor.RED)
+    private val LOAD_TIMED_OUT =
+        Component.text("There was a problem joining the server! (Configuration timed out)", NamedTextColor.RED)
     internal val DATA_LOAD_FAILED =
         Component.text("Failed to load your player data!", NamedTextColor.RED)
 
@@ -104,8 +109,21 @@ object InitialInstanceRouter : Bootstrap(EnvType.PRODUCTION) {
                     game.getModule<SpawnpointModule>().spawnpointProvider.getSpawnpoint(event.player)
             }
 
-            MinecraftServer.getSchedulerManager().scheduleNextTick {
-                game.addPlayer(event.player, sendPlayer = false)
+
+            var ticks = 0
+
+            // Wait up to 10 seconds for the player to enter the PLAY phase and then add them to the game.
+            MinecraftServer.getSchedulerManager().submitTask {
+                ticks ++
+                if (event.player.playerConnection.connectionState == ConnectionState.PLAY) {
+                    game.addPlayer(event.player, sendPlayer = false)
+                    return@submitTask TaskSchedule.stop()
+                } else if (ticks < ServerFlag.SERVER_TICKS_PER_SECOND * 10) {
+                    return@submitTask TaskSchedule.nextTick()
+                } else {
+                    event.player.kick(LOAD_TIMED_OUT)
+                    return@submitTask TaskSchedule.stop()
+                }
             }
 
             Messaging.IO.launch {
