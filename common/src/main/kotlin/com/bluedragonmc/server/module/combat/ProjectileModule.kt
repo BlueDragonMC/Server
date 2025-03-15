@@ -159,6 +159,8 @@ class ProjectileModule : GameModule() {
             val damage = if (arrowMeta.isCritical) baseDamage + Random.nextInt((baseDamage / 2.0 + 2.0).toInt())
             else baseDamage
 
+            val reducedDamage = EnumArmorToughness.ArmorToughness.getReducedDamage(damage.toDouble(), target)
+
             if (shooter is Player && target is Player && !arrowMeta.isSilent) {
                 shooter.sendPacket(ChangeGameStatePacket(ChangeGameStatePacket.Reason.ARROW_HIT_PLAYER, 0.0f))
             }
@@ -169,7 +171,7 @@ class ProjectileModule : GameModule() {
                     projectile.shooter,
                     projectile,
                     projectile.shooter?.position,
-                    damage
+                    reducedDamage.toFloat()
                 )
             )
             target.arrowCount++

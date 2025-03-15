@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.module.combat
 
-import net.minestom.server.entity.Player
+import net.minestom.server.entity.LivingEntity
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import kotlin.math.max
@@ -42,11 +42,11 @@ enum class EnumArmorToughness(val armorToughness: Int, val defensePoints: Int, v
             it.material to (it.armorToughness to it.defensePoints)
         }
 
-        fun Player.getArmor() = listOf(helmet, chestplate, leggings, boots)
+        fun LivingEntity.getArmor() = listOf(helmet, chestplate, leggings, boots)
         private fun ItemStack.getArmorToughness() = armorDataMap[this.material()]?.first ?: 0
         private fun ItemStack.getDefensePoints() = armorDataMap[this.material()]?.second ?: 0
 
-        fun getReducedDamage(incomingDamage: Double, target: Player): Double {
+        fun getReducedDamage(incomingDamage: Double, target: LivingEntity): Double {
             val armor = target.getArmor()
             val armorDefense = armor.sumOf { it.getDefensePoints() }
             val armorToughness = armor.sumOf { it.getArmorToughness() }
