@@ -10,6 +10,7 @@ import com.bluedragonmc.server.model.StatisticRecord
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.minigame.WinModule
 import com.bluedragonmc.server.service.Database
+import com.bluedragonmc.server.utils.GameState
 import com.bluedragonmc.server.utils.listenAsync
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
@@ -17,6 +18,7 @@ import kotlinx.coroutines.launch
 import net.minestom.server.MinecraftServer
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
+import net.minestom.server.event.EventFilter
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.player.PlayerDisconnectEvent
 import org.slf4j.LoggerFactory
@@ -80,8 +82,11 @@ class StatisticsModule(private vararg val recorders: StatisticRecorder) : GameMo
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         mostRecentInstance = this
 
+        val ingameOnlyEventNode = EventNode.event("$this-ingame", EventFilter.ALL) { event: Event -> parent.state == GameState.INGAME }
+        eventNode.addChild(ingameOnlyEventNode)
+
         recorders.forEach {
-            it.subscribe(this, parent, eventNode)
+            it.subscribe(this, parent, ingameOnlyEventNode)
         }
 
         eventNode.addListener(PlayerLeaveGameEvent::class.java) { event ->
