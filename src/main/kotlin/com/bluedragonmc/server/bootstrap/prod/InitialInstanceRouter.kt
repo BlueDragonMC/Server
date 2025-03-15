@@ -104,7 +104,10 @@ object InitialInstanceRouter : Bootstrap(EnvType.PRODUCTION) {
                     game.getModule<SpawnpointModule>().spawnpointProvider.getSpawnpoint(event.player)
             }
 
-            game.addPlayer(event.player, sendPlayer = false)
+            MinecraftServer.getSchedulerManager().scheduleNextTick {
+                game.addPlayer(event.player, sendPlayer = false)
+            }
+
             Messaging.IO.launch {
                 Messaging.outgoing.playerTransfer(event.player, game.id)
             }
