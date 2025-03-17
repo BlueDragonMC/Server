@@ -52,7 +52,6 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.function.Consumer
 import java.util.function.Predicate
-import kotlin.concurrent.timer
 import kotlin.random.Random
 import kotlin.reflect.jvm.jvmName
 
@@ -406,37 +405,33 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
                 }
             }
 
-            timer("Cleanup", daemon = true, period = INSTANCE_CLEANUP_PERIOD) {
-                try {
-                    val instances = MinecraftServer.getInstanceManager().instances
+            MinecraftServer.getSchedulerManager().buildTask {
+                val instances = MinecraftServer.getInstanceManager().instances
 
-                    games.forEach { game ->
-                        if (game.isInactive()) {
-                            logger.info("Ending inactive game ${game.id} (${game.name}/${game.mapName}/${game.mode})")
-                            game.endGame(false)
-                        }
-                        game.players.removeIf { player -> !player.isOnline }
+                games.forEach { game ->
+                    if (game.isInactive()) {
+                        logger.info("Ending inactive game ${game.id} (${game.name}/${game.mapName}/${game.mode})")
+                        game.endGame(false)
                     }
-
-                    instances.forEach { instance ->
-                        val owner = games.find { it.ownsInstance(instance) }
-                        if (owner != null || games.any { instance in it.getRequiredInstances() }) {
-                            return@forEach
-                        }
-                        if (!instance.hasTag(INACTIVE_SINCE_TAG)) {
-                            instance.setTag(INACTIVE_SINCE_TAG, System.currentTimeMillis())
-                            return@forEach
-                        }
-                        if (System.currentTimeMillis() - instance.getTag(INACTIVE_SINCE_TAG) <= CLEANUP_MIN_INACTIVE_TIME) {
-                            return@forEach
-                        }
-                        logger.info("Removing orphan instance ${instance.uuid} (${instance})")
-                        InstanceUtils.forceUnregisterInstance(instance)
-                    }
-                } catch (e: Exception) {
-                    MinecraftServer.getExceptionManager().handleException(e)
+                    game.players.removeIf { player -> !player.isOnline }
                 }
-            }
+
+                instances.forEach { instance ->
+                    val owner = games.find { it.ownsInstance(instance) }
+                    if (owner != null || games.any { instance in it.getRequiredInstances() }) {
+                        return@forEach
+                    }
+                    if (!instance.hasTag(INACTIVE_SINCE_TAG)) {
+                        instance.setTag(INACTIVE_SINCE_TAG, System.currentTimeMillis())
+                        return@forEach
+                    }
+                    if (System.currentTimeMillis() - instance.getTag(INACTIVE_SINCE_TAG) <= CLEANUP_MIN_INACTIVE_TIME) {
+                        return@forEach
+                    }
+                    logger.info("Removing orphan instance ${instance.uuid} (${instance})")
+                    InstanceUtils.forceUnregisterInstance(instance)
+                }
+            }.repeat(Duration.ofMillis(INSTANCE_CLEANUP_PERIOD)).schedule()
         }
     }
 }
