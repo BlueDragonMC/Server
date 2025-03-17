@@ -407,30 +407,34 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
             }
 
             timer("Cleanup", daemon = true, period = INSTANCE_CLEANUP_PERIOD) {
-                val instances = MinecraftServer.getInstanceManager().instances
+                try {
+                    val instances = MinecraftServer.getInstanceManager().instances
 
-                games.forEach { game ->
-                    if (game.isInactive()) {
-                        logger.info("Ending inactive game ${game.id} (${game.name}/${game.mapName}/${game.mode})")
-                        game.endGame(false)
+                    games.forEach { game ->
+                        if (game.isInactive()) {
+                            logger.info("Ending inactive game ${game.id} (${game.name}/${game.mapName}/${game.mode})")
+                            game.endGame(false)
+                        }
+                        game.players.removeIf { player -> !player.isOnline }
                     }
-                    game.players.removeIf { player -> !player.isOnline }
-                }
 
-                instances.forEach { instance ->
-                    val owner = games.find { it.ownsInstance(instance) }
-                    if (owner != null || games.any { instance in it.getRequiredInstances() }) {
-                        return@forEach
+                    instances.forEach { instance ->
+                        val owner = games.find { it.ownsInstance(instance) }
+                        if (owner != null || games.any { instance in it.getRequiredInstances() }) {
+                            return@forEach
+                        }
+                        if (!instance.hasTag(INACTIVE_SINCE_TAG)) {
+                            instance.setTag(INACTIVE_SINCE_TAG, System.currentTimeMillis())
+                            return@forEach
+                        }
+                        if (System.currentTimeMillis() - instance.getTag(INACTIVE_SINCE_TAG) <= CLEANUP_MIN_INACTIVE_TIME) {
+                            return@forEach
+                        }
+                        logger.info("Removing orphan instance ${instance.uuid} (${instance})")
+                        InstanceUtils.forceUnregisterInstance(instance)
                     }
-                    if (!instance.hasTag(INACTIVE_SINCE_TAG)) {
-                        instance.setTag(INACTIVE_SINCE_TAG, System.currentTimeMillis())
-                        return@forEach
-                    }
-                    if (System.currentTimeMillis() - instance.getTag(INACTIVE_SINCE_TAG) <= CLEANUP_MIN_INACTIVE_TIME) {
-                        return@forEach
-                    }
-                    logger.info("Removing orphan instance ${instance.uuid} (${instance})")
-                    InstanceUtils.forceUnregisterInstance(instance)
+                } catch (e: Exception) {
+                    MinecraftServer.getExceptionManager().handleException(e)
                 }
             }
         }
