@@ -15,7 +15,6 @@ import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.MinecraftServer
 import net.minestom.server.entity.Player
-import net.minestom.server.network.packet.server.login.LoginDisconnectPacket
 import org.litote.kmongo.coroutine.CoroutineClient
 import org.litote.kmongo.coroutine.CoroutineCollection
 import org.litote.kmongo.coroutine.CoroutineDatabase
@@ -107,15 +106,12 @@ internal class DatabaseConnectionImpl(connectionString: String) : DatabaseConnec
         } catch (e: Throwable) {
             logger.error("Player data for ${player.username} failed to load.")
             MinecraftServer.getExceptionManager().handleException(e)
-            player.sendPacket(
-                LoginDisconnectPacket(
-                    Component.translatable(
-                        "module.database.data_load_fail",
-                        NamedTextColor.RED
-                    )
+            player.kick(
+                Component.translatable(
+                    "module.database.data_load_fail",
+                    NamedTextColor.RED
                 )
             )
-            player.playerConnection.disconnect()
         }
     }
 

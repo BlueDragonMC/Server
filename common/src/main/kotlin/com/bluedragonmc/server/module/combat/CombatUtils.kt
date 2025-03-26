@@ -1,8 +1,8 @@
 package com.bluedragonmc.server.module.combat
 
+import net.minestom.server.component.DataComponents
 import net.minestom.server.entity.Entity
 import net.minestom.server.entity.EntityType
-import net.minestom.server.item.ItemComponent
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.enchant.Enchantment
 import net.minestom.server.registry.DynamicRegistry
@@ -10,10 +10,10 @@ import kotlin.random.Random
 
 object CombatUtils {
     fun damageItemStack(itemStack: ItemStack, amount: Int): ItemStack {
-        val unbreakingLevel = itemStack.get(ItemComponent.ENCHANTMENTS)?.enchantments?.get(Enchantment.UNBREAKING) ?: 0
+        val unbreakingLevel = itemStack.get(DataComponents.ENCHANTMENTS)?.enchantments?.get(Enchantment.UNBREAKING) ?: 0
         val processedAmount = (0 until amount).count { !shouldRestoreDurability(itemStack, unbreakingLevel) }
         // todo - if the damage increases beyond the max damage (durability), do we need to manually delete the item?
-        return itemStack.with(ItemComponent.DAMAGE, (itemStack.get(ItemComponent.DAMAGE) ?: 0) + processedAmount)
+        return itemStack.with(DataComponents.DAMAGE, (itemStack.get(DataComponents.DAMAGE) ?: 0) + processedAmount)
     }
 
     private fun shouldRestoreDurability(itemStack: ItemStack, unbreakingLevel: Int): Boolean {

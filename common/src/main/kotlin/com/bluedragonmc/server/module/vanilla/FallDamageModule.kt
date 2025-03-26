@@ -5,6 +5,7 @@ import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.combat.EnumArmorToughness.ArmorToughness.getArmor
 import net.minestom.server.collision.BoundingBox
+import net.minestom.server.component.DataComponents
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.coordinate.Vec
 import net.minestom.server.entity.Player
@@ -13,7 +14,6 @@ import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.player.PlayerTickEvent
 import net.minestom.server.instance.block.Block
-import net.minestom.server.item.ItemComponent
 import net.minestom.server.item.enchant.Enchantment
 import net.minestom.server.potion.PotionEffect
 import net.minestom.server.tag.Tag
@@ -45,10 +45,10 @@ class FallDamageModule : GameModule() {
             }
             // Feather falling reduces fall damage by 12% per level
             val featherFallingLevel =
-                player.boots.get(ItemComponent.ENCHANTMENTS)?.enchantments?.get(Enchantment.FEATHER_FALLING) ?: 0
+                player.boots.get(DataComponents.ENCHANTMENTS)?.enchantments?.get(Enchantment.FEATHER_FALLING) ?: 0
             // Protection reduces damage by 4% per level
             val protLevel = player.getArmor()
-                .sumOf { it.get(ItemComponent.ENCHANTMENTS)?.enchantments?.get(Enchantment.PROTECTION) ?: 0 }
+                .sumOf { it.get(DataComponents.ENCHANTMENTS)?.enchantments?.get(Enchantment.PROTECTION) ?: 0 }
             val protectionPercentage = ((0.04 * protLevel) + (0.12 * featherFallingLevel)).coerceAtMost(0.8)
             return originalDamage * (1.0 - protectionPercentage) * (1.0 - blockBelowReduction)
         }

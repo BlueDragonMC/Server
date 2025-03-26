@@ -5,7 +5,6 @@ import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.JoinConfiguration
 import net.kyori.adventure.text.TranslatableComponent
 import net.kyori.adventure.text.event.ClickEvent
-import net.kyori.adventure.text.event.HoverEvent
 import net.kyori.adventure.text.flattener.ComponentFlattener
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextColor
@@ -47,9 +46,6 @@ fun Component?.surroundWithSeparators(): Component {
 
 fun Component.toPlainText() = PlainTextComponentSerializer.plainText().serialize(this)
 operator fun Component.plus(component: Component) = append(component)
-
-fun Component.hoverEvent(text: Component) =
-    hoverEvent(HoverEvent.hoverEvent(HoverEvent.Action.SHOW_TEXT, text))
 
 fun Component.hoverEventTranslatable(key: String, color: TextColor): Component =
     hoverEvent(Component.translatable(key, color))
