@@ -7,10 +7,10 @@ import com.bluedragonmc.server.api.IncomingRPCHandler
 import com.bluedragonmc.server.utils.miniMessage
 import com.google.protobuf.Empty
 import io.grpc.ServerBuilder
+import net.kyori.adventure.key.Key
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.sound.SoundStop
 import net.minestom.server.MinecraftServer
-import net.minestom.server.utils.NamespaceID
 import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -85,7 +85,7 @@ class IncomingRPCHandlerImpl(serverPort: Int) : IncomingRPCHandler {
                 MinecraftServer.getConnectionManager().getOnlinePlayerByUuid(UUID.fromString(request.playerUuid))
             ?: return Empty.getDefaultInstance()
 
-            target.playSound(Sound.sound(NamespaceID.from(request.soundId), Sound.Source.valueOf(request.category), request.volume, request.pitch))
+            target.playSound(Sound.sound(Key.key(request.soundId), Sound.Source.valueOf(request.category), request.volume, request.pitch))
 
             return Empty.getDefaultInstance()
         }
@@ -95,7 +95,7 @@ class IncomingRPCHandlerImpl(serverPort: Int) : IncomingRPCHandler {
                 MinecraftServer.getConnectionManager().getOnlinePlayerByUuid(UUID.fromString(request.playerUuid))
                     ?: return Empty.getDefaultInstance()
 
-            target.stopSound(SoundStop.namedOnSource(NamespaceID.from(request.soundId), Sound.Source.valueOf(request.category)))
+            target.stopSound(SoundStop.namedOnSource(Key.key(request.soundId), Sound.Source.valueOf(request.category)))
 
             return Empty.getDefaultInstance()
         }

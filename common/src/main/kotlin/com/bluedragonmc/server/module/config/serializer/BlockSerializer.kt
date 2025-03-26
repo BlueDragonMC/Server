@@ -8,10 +8,10 @@ import java.util.function.Predicate
 class BlockSerializer : ScalarSerializer<Block>(Block::class.java) {
     override fun deserialize(type: Type?, obj: Any?): Block? {
         val string = obj.toString()
-        return Block.fromNamespaceId(string)
+        return Block.fromKey(string)
     }
 
     override fun serialize(item: Block?, typeSupported: Predicate<Class<*>>?): Any? {
-        return item?.namespace()?.asString()
+        return item?.key()?.asString()
     }
 }

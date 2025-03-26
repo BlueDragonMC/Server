@@ -162,11 +162,11 @@ class SidebarModule(private val title: String) : GameModule() {
         }
 
         init {
-            update()
-
             val updateNextTick = {
                 MinecraftServer.getSchedulerManager().scheduleNextTick(::update)
             }
+
+            updateNextTick()
 
             module.eventNode.addListener(GameStateChangedEvent::class.java) { _ -> updateNextTick() }
             module.eventNode.addListener(GameStartEvent::class.java) { _ -> updateNextTick() }

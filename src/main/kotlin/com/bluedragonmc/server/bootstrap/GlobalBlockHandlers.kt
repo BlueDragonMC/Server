@@ -1,12 +1,11 @@
 package com.bluedragonmc.server.bootstrap
 
+import net.kyori.adventure.key.Key
 import net.minestom.server.MinecraftServer
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.instance.block.BlockHandler
 import net.minestom.server.tag.Tag
-import net.minestom.server.tag.TagSerializer
-import net.minestom.server.utils.NamespaceID
 
 object GlobalBlockHandlers : Bootstrap() {
     override fun hook(eventNode: EventNode<Event>) {
@@ -77,7 +76,7 @@ object GlobalBlockHandlers : Bootstrap() {
         }
 
     private fun createHandler(registryName: String, blockEntityTags: List<Tag<*>>) = object : BlockHandler {
-        override fun getNamespaceId() = NamespaceID.from(registryName)
+        override fun getKey() = Key.key(registryName)
         override fun getBlockEntityTags() = blockEntityTags
     }
 }

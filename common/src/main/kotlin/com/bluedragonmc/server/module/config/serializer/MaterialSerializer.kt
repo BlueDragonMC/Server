@@ -8,10 +8,10 @@ import java.util.function.Predicate
 class MaterialSerializer : ScalarSerializer<Material>(Material::class.java) {
     override fun deserialize(type: Type?, obj: Any?): Material? {
         val string = obj.toString()
-        return Material.fromNamespaceId(string)
+        return Material.fromKey(string)
     }
 
     override fun serialize(item: Material?, typeSupported: Predicate<Class<*>>?): Any? {
-        return item?.namespace()?.asString()
+        return item?.key()?.asString()
     }
 }

@@ -2,6 +2,7 @@ package com.bluedragonmc.server.module.instance
 
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.NAMESPACE
+import net.kyori.adventure.key.Key
 import net.minestom.server.MinecraftServer
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
@@ -9,7 +10,6 @@ import net.minestom.server.event.EventNode
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.generator.Generator
 import net.minestom.server.registry.DynamicRegistry
-import net.minestom.server.utils.NamespaceID
 import net.minestom.server.world.DimensionType
 
 class CustomGeneratorInstanceModule(
@@ -34,7 +34,7 @@ class CustomGeneratorInstanceModule(
     companion object {
 
         init {
-            val id = NamespaceID.from("$NAMESPACE:fullbright_dimension")
+            val id = Key.key("$NAMESPACE:fullbright_dimension")
             if (MinecraftServer.getDimensionTypeRegistry().get(id) == null) {
                 MinecraftServer.getDimensionTypeRegistry().register(
                     id,
@@ -44,6 +44,6 @@ class CustomGeneratorInstanceModule(
         }
 
         fun getFullbrightDimension(): DynamicRegistry.Key<DimensionType> =
-            DynamicRegistry.Key.of(NamespaceID.from("$NAMESPACE:fullbright_dimension"))
+            DynamicRegistry.Key.of(Key.key("$NAMESPACE:fullbright_dimension"))
     }
 }
