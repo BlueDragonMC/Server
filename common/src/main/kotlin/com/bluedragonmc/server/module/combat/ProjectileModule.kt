@@ -10,6 +10,7 @@ import com.bluedragonmc.server.module.vanilla.ItemDropModule
 import com.bluedragonmc.server.utils.CoordinateUtils
 import net.kyori.adventure.sound.Sound
 import net.minestom.server.ServerFlag
+import net.minestom.server.component.DataComponents
 import net.minestom.server.coordinate.Point
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.*
@@ -30,7 +31,6 @@ import net.minestom.server.instance.EntityTracker
 import net.minestom.server.instance.Explosion
 import net.minestom.server.instance.Instance
 import net.minestom.server.inventory.TransactionOption
-import net.minestom.server.item.ItemComponent
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import net.minestom.server.item.enchant.Enchantment
@@ -119,7 +119,7 @@ class ProjectileModule : GameModule() {
                         1.0f
                     ), event.player.position
                 )
-                val enchantments = event.itemStack.get(ItemComponent.ENCHANTMENTS)?.enchantments
+                val enchantments = event.itemStack.get(DataComponents.ENCHANTMENTS)?.enchantments
                 projectile.setTag(PUNCH_TAG, enchantments?.get(Enchantment.PUNCH) ?: 0)
                 projectile.setTag(ARROW_DAMAGE_TAG, enchantments?.get(Enchantment.POWER) ?: 0)
             }

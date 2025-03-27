@@ -3,10 +3,9 @@ package com.bluedragonmc.server.module.config.serializer
 import com.bluedragonmc.server.utils.noItalic
 import net.kyori.adventure.text.Component
 import net.minestom.server.color.Color
-import net.minestom.server.item.ItemComponent
+import net.minestom.server.component.DataComponents
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
-import net.minestom.server.item.component.DyedItemColor
 import net.minestom.server.item.component.EnchantmentList
 import org.spongepowered.configurate.ConfigurationNode
 import org.spongepowered.configurate.kotlin.extensions.get
@@ -31,22 +30,22 @@ class ItemStackSerializer : TypeSerializer<ItemStack> {
             amount(amount)
 
             if (name != null) {
-                set(ItemComponent.ITEM_NAME, name)
+                set(DataComponents.ITEM_NAME, name)
             }
 
             if (lore != null) {
-                set(ItemComponent.LORE, lore)
+                set(DataComponents.LORE, lore)
             }
 
             if (enchantments != null && enchantments.enchantments().isNotEmpty()) {
-                set(ItemComponent.ENCHANTMENTS, enchantments)
+                set(DataComponents.ENCHANTMENTS, enchantments)
             }
 
             build()
         }
 
         if (dye != null) {
-            return itemStack.with(ItemComponent.DYED_COLOR, DyedItemColor(dye))
+            return itemStack.with(DataComponents.DYED_COLOR, dye)
         }
 
         return itemStack
@@ -55,8 +54,8 @@ class ItemStackSerializer : TypeSerializer<ItemStack> {
     override fun serialize(type: Type?, obj: ItemStack?, node: ConfigurationNode?) {
         node?.node("material")?.set(obj?.material())
         node?.node("amount")?.set(obj?.amount())
-        node?.node("enchants")?.set(obj?.get(ItemComponent.ENCHANTMENTS)?.enchantments)
-        node?.node("name")?.set(obj?.get(ItemComponent.ITEM_NAME))
-        node?.node("lore")?.set(obj?.get(ItemComponent.LORE))
+        node?.node("enchants")?.set(obj?.get(DataComponents.ENCHANTMENTS)?.enchantments)
+        node?.node("name")?.set(obj?.get(DataComponents.ITEM_NAME))
+        node?.node("lore")?.set(obj?.get(DataComponents.LORE))
     }
 }

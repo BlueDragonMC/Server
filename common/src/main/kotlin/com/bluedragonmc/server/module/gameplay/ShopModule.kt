@@ -7,13 +7,13 @@ import com.bluedragonmc.server.module.GuiModule
 import com.bluedragonmc.server.utils.*
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
+import net.minestom.server.component.DataComponents
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventFilter
 import net.minestom.server.event.EventNode
 import net.minestom.server.inventory.InventoryType
 import net.minestom.server.inventory.TransactionOption
-import net.minestom.server.item.ItemComponent
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 
@@ -79,9 +79,9 @@ class ShopModule : GuiModule() {
                 { player ->
                     val itemStack = itemStackProvider(player)
                     if (virtualItem != null) {
-                        set(ItemComponent.ITEM_NAME, virtualItem.name.noItalic()) // todo - is noItalic necessary?
+                        set(DataComponents.ITEM_NAME, virtualItem.name.noItalic()) // todo - is noItalic necessary?
                     } else {
-                        set(ItemComponent.ITEM_NAME, itemStack.material().displayName(NamedTextColor.WHITE)
+                        set(DataComponents.ITEM_NAME, itemStack.material().displayName(NamedTextColor.WHITE)
                             .noItalic() + Component.text(" x${itemStack.amount()}", NamedTextColor.GRAY).noItalic())
                     }
 
@@ -106,14 +106,14 @@ class ShopModule : GuiModule() {
 
                     if (virtualItem != null) {
                         // Display team upgrade descriptions if applicable
-                        set(ItemComponent.LORE, splitAndFormatLore(virtualItem.description, ALT_COLOR_1, player) + info)
+                        set(DataComponents.LORE, splitAndFormatLore(virtualItem.description, ALT_COLOR_1, player) + info)
 
                         if (virtualItem.eventNode.parent == null) {
                             module.eventNode.addChild(virtualItem.eventNode)
                         }
-                    } else set(ItemComponent.LORE, info)
+                    } else set(DataComponents.LORE, info)
 
-                    set(ItemComponent.ENCHANTMENTS, itemStack.get(ItemComponent.ENCHANTMENTS))
+                    set(DataComponents.ENCHANTMENTS, itemStack.get(DataComponents.ENCHANTMENTS))
                 }) {
                 if (virtualItem != null) {
                     buyVirtualItem(this.player, virtualItem, price, currency)

@@ -15,13 +15,13 @@ import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.title.Title
 import net.kyori.adventure.title.TitlePart
 import net.minestom.server.MinecraftServer
+import net.minestom.server.component.DataComponents
 import net.minestom.server.entity.Player
 import net.minestom.server.entity.PlayerHand
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.player.PlayerSpawnEvent
 import net.minestom.server.event.player.PlayerUseItemEvent
-import net.minestom.server.item.ItemComponent
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import java.time.Duration
@@ -36,11 +36,11 @@ class VoteStartModule(
 ) : GameModule() {
 
     private val voteStartItem = ItemStack.of(Material.GREEN_CONCRETE).with(
-        ItemComponent.ITEM_NAME,
+        DataComponents.ITEM_NAME,
         Component.translatable("module.votestart.item.vote.name", NamedTextColor.GREEN, Component.keybind("key.use", NamedTextColor.GRAY))
     )
     private val cancelVoteItem = ItemStack.of(Material.RED_CONCRETE).with(
-        ItemComponent.ITEM_NAME,
+        DataComponents.ITEM_NAME,
         Component.translatable("module.votestart.item.cancel.name", NamedTextColor.RED, Component.keybind("key.use", NamedTextColor.GRAY))
     )
 
