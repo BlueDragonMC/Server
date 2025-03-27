@@ -36,16 +36,14 @@ class CustomGeneratorInstanceModule(
         init {
             val id = Key.key("$NAMESPACE:fullbright_dimension")
             if (MinecraftServer.getDimensionTypeRegistry().get(id) == null) {
-//                MinecraftServer.getDimensionTypeRegistry().register(
-//                    id,
-//                    MinecraftServer.getDimensionTypeRegistry().get(DimensionType.OVERWORLD)!!
-//                )
+                MinecraftServer.getDimensionTypeRegistry().register(
+                    id,
+                    DimensionType.builder().ambientLight(1.0F).build()
+                )
             }
         }
 
         fun getFullbrightDimension(): DynamicRegistry.Key<DimensionType> =
-//            DynamicRegistry.Key.of(Key.key("$NAMESPACE:fullbright_dimension"))
-            // TODO: registering the fullbright dimension causes the client to disconnect on join with a Network Protocol Error
-            DimensionType.OVERWORLD
+            DynamicRegistry.Key.of(Key.key("$NAMESPACE:fullbright_dimension"))
     }
 }
