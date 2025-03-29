@@ -45,17 +45,7 @@ import kotlin.random.Random
 class ProjectileModule : GameModule() {
 
     class CustomArrowProjectile(val shooter: Entity?, entityType: EntityType) : ArrowProjectile(entityType, shooter)
-    class CustomItemProjectile(val shooter: Entity?, entityType: EntityType) : ThrownItemProjectile(entityType, shooter) {
-        override fun callEntityCollision(): Boolean {
-            val result = super.callEntityCollision()
-            if (!result) {
-                // TODO: ThrownItemProjectile doesn't check block collision by default.
-                // TODO: We can remove this method override after https://github.com/AtlasEngineCa/AtlasProjectiles/pull/6 is merged.
-                this.callBlockCollision()
-            }
-            return result
-        }
-    }
+    class CustomItemProjectile(val shooter: Entity?, entityType: EntityType) : ThrownItemProjectile(entityType, shooter)
     class CustomFireballProjectile(val shooter: Entity?, entityType: EntityType) : FireballProjectile(entityType, shooter)
 
     private lateinit var parent: Game
