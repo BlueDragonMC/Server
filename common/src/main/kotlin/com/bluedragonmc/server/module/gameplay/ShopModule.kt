@@ -3,7 +3,11 @@ package com.bluedragonmc.server.module.gameplay
 import com.bluedragonmc.server.ALT_COLOR_1
 import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.module.DependsOn
+import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.GuiModule
+import com.bluedragonmc.server.module.GuiModule.ItemsBuilder
+import com.bluedragonmc.server.module.GuiModule.Menu
 import com.bluedragonmc.server.utils.*
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -17,7 +21,8 @@ import net.minestom.server.inventory.TransactionOption
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 
-class ShopModule : GuiModule() {
+@DependsOn(GuiModule::class)
+class ShopModule : GameModule() {
 
     private lateinit var parent: Game
 
@@ -26,7 +31,7 @@ class ShopModule : GuiModule() {
     }
 
     fun createShop(title: Component, shopItemsBuilder: ShopItemsBuilder.() -> Unit): Shop {
-        val menu = createMenu(title, InventoryType.CHEST_6_ROW, true) {
+        val menu = parent.getModule<GuiModule>().createMenu(title, InventoryType.CHEST_6_ROW, true) {
             shopItemsBuilder(ShopItemsBuilder(this@ShopModule, this@createMenu))
         }
         menu.onOpened { player -> menu.rerender(player) }
