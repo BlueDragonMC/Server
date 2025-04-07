@@ -89,6 +89,7 @@ class GameCommand(name: String, usageString: String, vararg aliases: String?) : 
                     +text(it.mapName, BRAND_COLOR_PRIMARY_1)
                     +text(" · ", NamedTextColor.GRAY)
                     +text(it.players.size, BRAND_COLOR_PRIMARY_1)
+                        .hoverEvent(text(it.players.joinToString { it.username }))
                     +text("/", NamedTextColor.DARK_GRAY)
                     +text(it.maxPlayers, BRAND_COLOR_PRIMARY_1)
                 }

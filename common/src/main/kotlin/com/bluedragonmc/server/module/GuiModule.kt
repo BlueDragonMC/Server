@@ -8,11 +8,13 @@ import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.inventory.InventoryCloseEvent
+import net.minestom.server.event.inventory.InventoryPreClickEvent
 import net.minestom.server.event.player.PlayerTickEvent
+import net.minestom.server.inventory.AbstractInventory
 import net.minestom.server.inventory.Inventory
 import net.minestom.server.inventory.InventoryType
-import net.minestom.server.inventory.click.ClickType
-import net.minestom.server.inventory.condition.InventoryCondition
+import net.minestom.server.inventory.PlayerInventory
+import net.minestom.server.inventory.click.Click
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 
@@ -41,10 +43,10 @@ open class GuiModule : GameModule() {
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         eventNode.addListener(InventoryCloseEvent::class.java) { event ->
-            inventories.remove(event.inventory?.windowId)?.let {
+            inventories.remove(event.inventory.windowId)?.let {
                 it.destroy(event.player)
                 it.onClosedAction?.invoke(event.player)
-                inventories.remove(event.inventory?.windowId)
+                inventories.remove(event.inventory.windowId)
             }
         }
         eventNode.addListener(PlayerLeaveGameEvent::class.java) { event ->
@@ -56,9 +58,11 @@ open class GuiModule : GameModule() {
         }
         eventNode.addListener(PlayerTickEvent::class.java) { event ->
             val openInv = event.player.openInventory?.windowId ?: return@addListener
-            inventories[openInv]?.let {
-                it.onTickAction?.invoke(event.player)
-            }
+            inventories[openInv]?.onTickAction?.invoke(event.player)
+        }
+        eventNode.addListener(InventoryPreClickEvent::class.java) { event ->
+            if (event.inventory is PlayerInventory) return@addListener
+            inventories[event.inventory.windowId]?.onPreClick(event)
         }
     }
 
@@ -89,34 +93,45 @@ open class GuiModule : GameModule() {
         internal var onTickAction: ((Player) -> Unit)? = null
         internal var onClosedAction: ((Player) -> Unit)? = null
 
+        internal fun onPreClick(event: InventoryPreClickEvent) {
+            if (!allowSpectatorClicks && event.player.gameMode == GameMode.SPECTATOR) {
+                event.isCancelled = true
+                return
+            }
+            for (item in items) {
+                if (event.slot == item.index) {
+                    event.isCancelled = item.cancelClicks
+
+                    item.action?.invoke(SlotClickEvent(event.player, this, item, event.inventory, event.click))
+
+                    // If the click was cancelled, re-render the slot
+                    if (item.cancelClicks) event.inventory.setItemStack(
+                        item.index,
+                        item.itemStackBuilder(event.player)
+                    )
+                }
+            }
+        }
+
         private fun getInventory(player: Player): Inventory {
             if (!isPerPlayer && this::cachedInventory.isInitialized) return cachedInventory
             if (isPerPlayer && cachedInventories.containsKey(player)) return cachedInventories[player]!!
-            return Inventory(inventoryType, title).apply {
-                items.forEach { item ->
-                    setItemStack(
-                        item.index,
-                        item.itemStackBuilder(player)
-                    )
-                    if (item.action == null) return@forEach
-                    this.inventoryConditions.add(InventoryCondition { player, slot, clickType, result ->
-                        if (slot == item.index && (allowSpectatorClicks || player.gameMode != GameMode.SPECTATOR)) {
-                            item.action.invoke(SlotClickEvent(player, this@Menu, item, clickType))
-                            result.isCancel = item.cancelClicks
 
-                            // If the click was cancelled, re-render the slot
-                            if (item.cancelClicks) setItemStack(
-                                item.index,
-                                item.itemStackBuilder(player)
-                            )
-                        }
-                    })
-                }
-                inventories[windowId] = this@Menu
-            }.also { inventory ->
-                if (!isPerPlayer) cachedInventory = inventory
-                else cachedInventories[player] = inventory
+            val inventory = Inventory(inventoryType, title)
+
+            items.forEach { item ->
+                inventory.setItemStack(
+                    item.index,
+                    item.itemStackBuilder(player)
+                )
             }
+
+            inventories[inventory.windowId] = this
+
+            if (!isPerPlayer) cachedInventory = inventory
+            else cachedInventories[player] = inventory
+
+            return inventory
         }
 
         fun open(player: Player) {
@@ -272,7 +287,13 @@ open class GuiModule : GameModule() {
         fun build() = items.toList()
     }
 
-    data class SlotClickEvent(val player: Player, val menu: Menu, val slot: Slot, val clickType: ClickType)
+    data class SlotClickEvent(
+        private val player: Player,
+        val menu: Menu,
+        val slot: Slot,
+        private val inventory: AbstractInventory,
+        private val click: Click
+    ) : InventoryPreClickEvent(inventory, player, click)
 
     data class Slot(
         val index: Int,

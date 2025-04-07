@@ -43,8 +43,9 @@ class WinModule(
                 val remainingTeams = parent.getModule<TeamModule>().teams.filter { team ->
                     team.players.any { player -> !spectatorModule.isSpectating(player) }
                 }
-                if (remainingTeams.size == 1) {
-                    declareWinner(remainingTeams.first())
+                when (remainingTeams.size) {
+                    1 -> declareWinner(remainingTeams.first())
+                    0 -> parent.endGameLater(Duration.ofSeconds(3)) // Should never happen outside of testing
                 }
             } else if (winCondition == WinCondition.LAST_PLAYER_ALIVE && parent.players.size - spectatorModule.spectatorCount() <= 1) {
                 parent.players.firstOrNull { player -> !spectatorModule.isSpectating(player) }
