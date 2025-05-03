@@ -18,6 +18,7 @@ import net.minestom.server.entity.damage.Damage
 import net.minestom.server.entity.damage.DamageType
 import net.minestom.server.entity.metadata.projectile.ArrowMeta
 import net.minestom.server.event.Event
+import net.minestom.server.event.EventDispatcher
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.entity.projectile.ProjectileCollideWithBlockEvent
 import net.minestom.server.event.entity.projectile.ProjectileCollideWithEntityEvent
@@ -131,6 +132,12 @@ class ProjectileModule : GameModule() {
                 if (target.isInvincible()) return@addListener
             }
 
+            if (shooter is Player) {
+                val event = OldCombatModule.PlayerAttackEvent(event.instance, shooter, target)
+                EventDispatcher.call(event)
+                if (event.isCancelled) return@addListener
+            }
+
             OldCombatModule.takeKnockback(
                 -projectile.velocity.x,
                 -projectile.velocity.z,
@@ -223,6 +230,12 @@ class ProjectileModule : GameModule() {
 
             if ((target as? Player)?.isInvincible() == true) return@addListener
 
+            if (projectile.shooter is Player) {
+                val event = OldCombatModule.PlayerAttackEvent(event.instance, projectile.shooter, target)
+                EventDispatcher.call(event)
+                if (event.isCancelled) return@addListener
+            }
+
             OldCombatModule.takeKnockback(-projectile.velocity.x, -projectile.velocity.z, target, 0.0)
             target.damage(Damage(DamageType.THROWN, projectile, projectile.shooter, projectile.shooter?.position, 0.0f))
             projectile.remove()
@@ -289,6 +302,11 @@ class ProjectileModule : GameModule() {
             center, radius.toDouble(), EntityTracker.Target.ENTITIES
         ) { entity ->
             val mult = radius - entity.position.distance(center)
+            if (projectile.shooter is Player) {
+                val event = OldCombatModule.PlayerAttackEvent(projectile.instance, projectile.shooter, entity)
+                EventDispatcher.call(event)
+                if (event.isCancelled) return@nearbyEntities
+            }
             OldCombatModule.takeKnockback(projectile.velocity.x, projectile.velocity.z, entity, mult)
             if (entity is LivingEntity) {
                 entity.damage(
@@ -358,6 +376,12 @@ class ProjectileModule : GameModule() {
             if (projectile.entityType != EntityType.EGG) return@addListener
 
             if ((target as? Player)?.isInvincible() == true) return@addListener
+
+            if (projectile.shooter is Player) {
+                val event = OldCombatModule.PlayerAttackEvent(event.instance, projectile.shooter, target)
+                EventDispatcher.call(event)
+                if (event.isCancelled) return@addListener
+            }
 
             OldCombatModule.takeKnockback(-projectile.velocity.x, -projectile.velocity.z, target, 0.0)
             target.damage(Damage(DamageType.THROWN, projectile, projectile.shooter, projectile.shooter?.position, 0.0f))
