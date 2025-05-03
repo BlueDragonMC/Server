@@ -51,8 +51,8 @@ class ProjectileModule : GameModule() {
     private lateinit var parent: Game
 
     companion object {
-        private val ARROW_DAMAGE_TAG = Tag.Integer("entity_arrow_power").defaultValue(0) // the power enchantment level
-        private val PUNCH_TAG = Tag.Integer("entity_projectile_punch").defaultValue(0) // the punch enchantment level
+        private val ARROW_POWER_TAG = Tag.Integer("entity_arrow_power").defaultValue(0) // the power enchantment level
+        private val ARROW_PUNCH_TAG = Tag.Integer("entity_arrow_punch").defaultValue(0) // the punch enchantment level
         private val PEARL_OWNER_TAG = Tag.UUID("ender_pearl_owner")
         private val LAST_PROJECTILE_THROW_TAG = Tag.Long("last_projectile_throw").defaultValue(0)
     }
@@ -109,9 +109,12 @@ class ProjectileModule : GameModule() {
                         1.0f
                     ), event.player.position
                 )
-                val enchantments = event.itemStack.get(DataComponents.ENCHANTMENTS)?.enchantments
-                projectile.setTag(PUNCH_TAG, enchantments?.get(Enchantment.PUNCH) ?: 0)
-                projectile.setTag(ARROW_DAMAGE_TAG, enchantments?.get(Enchantment.POWER) ?: 0)
+                val enchantments = event.itemStack.get(DataComponents.ENCHANTMENTS)
+                projectile.setTag(ARROW_PUNCH_TAG, enchantments?.level(Enchantment.PUNCH))
+                projectile.setTag(ARROW_POWER_TAG, enchantments?.level(Enchantment.POWER))
+                if (enchantments?.has(Enchantment.FLAME) == true) {
+                    projectile.entityMeta.isOnFire = true
+                }
             }
         }
         eventNode.addListener(ProjectileCollideWithEntityEvent::class.java) { event ->
@@ -131,21 +134,23 @@ class ProjectileModule : GameModule() {
                 -projectile.velocity.x,
                 -projectile.velocity.z,
                 target,
-                projectile.getTag(PUNCH_TAG).toDouble()
+                projectile.getTag(ARROW_PUNCH_TAG).toDouble()
             )
 
-            val damageModifier =
-                (projectile.shooter as? LivingEntity)?.getAttribute(Attribute.ATTACK_DAMAGE)?.value ?: 1.0
+            // https://minecraft.wiki/w/Arrow#Damage
 
-            var originalDamage = damageModifier * 2.0f + Random.nextFloat() * 0.25 + 0.15f
-            if (projectile.getTag(ARROW_DAMAGE_TAG) > 0) {
-                originalDamage += projectile.getTag(ARROW_DAMAGE_TAG) * 0.5 + 0.5
+            // Damage tag = 2. If the bow had the power enchant, add 0.5 + another 0.5 for every level of power.
+            var damageTag = 2.0
+            if (projectile.getTag(ARROW_POWER_TAG) > 0) {
+                damageTag += projectile.getTag(ARROW_POWER_TAG) * 0.5 + 0.5
             }
 
+            // Base damage = speed (blocks/tick) * damage tag
             val baseDamage =
-                ceil(projectile.velocity.length() / ServerFlag.SERVER_TICKS_PER_SECOND * originalDamage).toFloat()
+                ceil(projectile.velocity.length() / ServerFlag.SERVER_TICKS_PER_SECOND * damageTag).toFloat()
                     .coerceAtLeast(0.0f)
 
+            // If the arrow is critical (fully charged from a bow), increase its damage by up to (damage / 2) + 2
             val damage = if (arrowMeta.isCritical) baseDamage + Random.nextInt((baseDamage / 2.0 + 2.0).toInt())
             else baseDamage
 
@@ -157,16 +162,26 @@ class ProjectileModule : GameModule() {
 
             target.damage(
                 Damage(
-                    DamageType.THROWN,
-                    projectile.shooter,
+                    DamageType.ARROW,
                     projectile,
-                    projectile.shooter?.position,
+                    projectile.shooter ?: projectile,
+                    null,
                     reducedDamage.toFloat()
                 )
             )
             target.arrowCount++
             projectile.remove()
             (target as? Player)?.resetInvincibilityPeriod()
+
+            if (projectile.isOnFire) {
+                // If the arrow is on fire, it sets the target entity on fire for 5 seconds
+                target.fireTicks = ServerFlag.SERVER_TICKS_PER_SECOND * 5
+            }
+        }
+        eventNode.addListener(ProjectileCollideWithBlockEvent::class.java) { event ->
+            val projectile = event.entity as? CustomArrowProjectile ?: return@addListener
+            projectile.isCritical = false
+            projectile.scheduleRemove(Duration.ofSeconds(60))
         }
     }
 
@@ -260,7 +275,7 @@ class ProjectileModule : GameModule() {
     }
 
     private fun explodeFireball(projectile: Entity) {
-        projectile as? CustomFireballProjectile ?: return
+        if (projectile !is CustomFireballProjectile) return
         projectile.remove()
         val pos = projectile.position
 
