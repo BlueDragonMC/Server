@@ -48,7 +48,8 @@ class ProjectileModule : GameModule() {
 
     class CustomArrowProjectile(val shooter: Entity?, entityType: EntityType) : ArrowProjectile(entityType, shooter)
     class CustomItemProjectile(val shooter: Entity?, entityType: EntityType) : ThrownItemProjectile(entityType, shooter)
-    class CustomFireballProjectile(val shooter: Entity?, entityType: EntityType) : FireballProjectile(entityType, shooter)
+    class CustomFireballProjectile(val shooter: Entity?, entityType: EntityType) :
+        FireballProjectile(entityType, shooter)
 
     private lateinit var parent: Game
 
@@ -56,7 +57,8 @@ class ProjectileModule : GameModule() {
         private val ARROW_POWER_TAG = Tag.Integer("entity_arrow_power").defaultValue(0) // the power enchantment level
         private val ARROW_PUNCH_TAG = Tag.Integer("entity_arrow_punch").defaultValue(0) // the punch enchantment level
         private val PEARL_OWNER_TAG = Tag.UUID("ender_pearl_owner")
-        private val LAST_PROJECTILE_THROW_TAG = Tag.Long("last_projectile_throw").defaultValue(0)
+        private val LAST_PEARL_THROWN_TAG = Tag.Long("last_ender_pearl_thrown").defaultValue(0)
+        private val LAST_PROJECTILE_THROW_TAG = Tag.Long("last_projectile_throw_time").defaultValue(0)
     }
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
@@ -427,7 +429,11 @@ class ProjectileModule : GameModule() {
         eventNode.addListener(PlayerUseItemEvent::class.java) { event ->
             val itemStack = event.player.getItemInHand(event.hand)
             if (itemStack.material() == Material.ENDER_PEARL) {
-                if (event.player.isOnCooldown()) return@addListener
+                if (event.player.isOnCooldown(
+                        LAST_PEARL_THROWN_TAG,
+                        ServerFlag.SERVER_TICKS_PER_SECOND.toLong() // Ender pearls have a cooldown of 1 second
+                    )
+                ) return@addListener
 
                 if (event.player.gameMode != GameMode.CREATIVE) {
                     event.player.setItemInHand(event.hand, itemStack.withAmount(itemStack.amount() - 1))
@@ -501,10 +507,10 @@ class ProjectileModule : GameModule() {
         setTag(OldCombatModule.HURT_RESISTANT_TIME, getTag(OldCombatModule.MAX_HURT_RESISTANT_TIME))
     }
 
-    private fun Player.isOnCooldown(): Boolean {
-        val timeSinceLastThrow = aliveTicks - getTag(LAST_PROJECTILE_THROW_TAG)
-        if (abs(timeSinceLastThrow) <= 1) return true
-        setTag(LAST_PROJECTILE_THROW_TAG, aliveTicks)
+    private fun Player.isOnCooldown(tag: Tag<Long> = LAST_PROJECTILE_THROW_TAG, cooldown: Long = 1): Boolean {
+        val timeSinceLastThrow = aliveTicks - getTag(tag)
+        if (abs(timeSinceLastThrow) <= cooldown) return true
+        setTag(tag, aliveTicks)
         return false
     }
 
