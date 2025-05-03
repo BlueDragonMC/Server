@@ -14,7 +14,6 @@ import net.minestom.server.component.DataComponents
 import net.minestom.server.coordinate.Point
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.*
-import net.minestom.server.entity.attribute.Attribute
 import net.minestom.server.entity.damage.Damage
 import net.minestom.server.entity.damage.DamageType
 import net.minestom.server.entity.metadata.projectile.ArrowMeta
@@ -22,8 +21,10 @@ import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.entity.projectile.ProjectileCollideWithBlockEvent
 import net.minestom.server.event.entity.projectile.ProjectileCollideWithEntityEvent
+import net.minestom.server.event.instance.RemoveEntityFromInstanceEvent
 import net.minestom.server.event.item.PlayerBeginItemUseEvent
 import net.minestom.server.event.item.PlayerCancelItemUseEvent
+import net.minestom.server.event.player.PlayerDeathEvent
 import net.minestom.server.event.player.PlayerSpawnEvent
 import net.minestom.server.event.player.PlayerUseItemEvent
 import net.minestom.server.event.player.PlayerUseItemOnBlockEvent
@@ -403,6 +404,11 @@ class ProjectileModule : GameModule() {
             val itemStack = event.player.getItemInHand(event.hand)
             if (itemStack.material() == Material.ENDER_PEARL) {
                 if (event.player.isOnCooldown()) return@addListener
+
+                if (event.player.gameMode != GameMode.CREATIVE) {
+                    event.player.setItemInHand(event.hand, itemStack.withAmount(itemStack.amount() - 1))
+                }
+
                 val pearl = CustomItemProjectile(event.player, EntityType.ENDER_PEARL)
                 pearl.setTag(PEARL_OWNER_TAG, event.player.uuid)
                 pearl.setInstance(event.instance, getEyePos(event.player))
@@ -417,6 +423,23 @@ class ProjectileModule : GameModule() {
                 )
                 pearl.scheduleRemove(Duration.ofSeconds(30))
             }
+        }
+
+        eventNode.addListener(RemoveEntityFromInstanceEvent::class.java) { event ->
+            // When a player switches instances, remove all their thrown ender pearls
+            if (event.entity !is Player) return@addListener
+            val enderPearls = event.instance.entities.filter {
+                it.getTag(PEARL_OWNER_TAG) == event.entity.uuid
+            }
+            enderPearls.forEach { it.remove() }
+        }
+
+        eventNode.addListener(PlayerDeathEvent::class.java) { event ->
+            // When a player dies, remove all their thrown ender pearls
+            val enderPearls = event.instance.entities.filter {
+                it.getTag(PEARL_OWNER_TAG) == event.entity.uuid
+            }
+            enderPearls.forEach { it.remove() }
         }
 
         eventNode.addListener(ProjectileCollideWithBlockEvent::class.java) { event ->
