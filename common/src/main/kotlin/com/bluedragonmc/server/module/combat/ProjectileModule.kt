@@ -292,7 +292,6 @@ class ProjectileModule : GameModule() {
 
     private fun explodeFireball(projectile: Entity) {
         if (projectile !is CustomFireballProjectile) return
-        projectile.remove()
         val pos = projectile.position
 
         val radius = 8.0f
@@ -309,19 +308,26 @@ class ProjectileModule : GameModule() {
                 EventDispatcher.call(event)
                 if (event.isCancelled) return@nearbyEntities
             }
-            OldCombatModule.takeKnockback(projectile.velocity.x, projectile.velocity.z, entity, mult)
+            OldCombatModule.takeKnockback(
+                (entity.position.x - projectile.position.x) * projectile.velocity.x,
+                (entity.position.z - projectile.position.z) * projectile.velocity.z,
+                entity,
+                mult
+            )
             if (entity is LivingEntity) {
                 entity.damage(
                     Damage(
                         DamageType.FIREBALL,
-                        projectile.shooter,
                         projectile,
-                        projectile.shooter?.position,
+                        projectile.shooter ?: projectile,
+                        null,
                         mult.toFloat()
                     )
                 )
             }
         }
+
+        projectile.remove()
     }
 
     private fun createExplosion(
@@ -386,7 +392,7 @@ class ProjectileModule : GameModule() {
             }
 
             OldCombatModule.takeKnockback(-projectile.velocity.x, -projectile.velocity.z, target, 0.0)
-            target.damage(Damage(DamageType.THROWN, projectile, projectile.shooter, projectile.shooter?.position, 0.0f))
+            target.damage(Damage(DamageType.THROWN, projectile, projectile.shooter, null, 0.0f))
             projectile.remove()
             (target as? Player)?.resetInvincibilityPeriod()
         }
@@ -481,7 +487,7 @@ class ProjectileModule : GameModule() {
                             DamageType.THROWN,
                             event.entity,
                             this,
-                            event.entity.position.add(0.0, 1.0, 0.0),
+                            null,
                             5.0f
                         )
                     )

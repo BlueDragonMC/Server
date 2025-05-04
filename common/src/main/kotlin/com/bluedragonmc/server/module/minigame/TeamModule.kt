@@ -83,7 +83,8 @@ class TeamModule(
         eventNode.addListener(OldCombatModule.PlayerAttackEvent::class.java) { event ->
             if (event.target is Player) {
                 // Check for friendly fire
-                // This listen will only fire if a misbehaving client attacks a player on its team
+                // This listener will only fire if a misbehaving client attacks a player on its team (or a thrown projectile hits a player)
+                if (event.attacker == event.target) return@addListener // Allow players to shoot themselves with projectiles
                 val attackerTeam = teams.find { it.players.contains(event.entity) } ?: return@addListener
                 if (attackerTeam.allowFriendlyFire) return@addListener
                 val targetTeam = teams.find { it.players.contains(event.target) } ?: return@addListener
