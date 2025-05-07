@@ -13,7 +13,7 @@ repositories {
     mavenLocal()
     mavenCentral()
     maven(url = "https://jitpack.io")
-    maven("https://reposilite.worldseed.online/public")
+    maven("https://reposilite.atlasengine.ca/public")
 }
 
 dependencies {
