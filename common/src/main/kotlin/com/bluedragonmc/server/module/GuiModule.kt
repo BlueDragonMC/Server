@@ -8,6 +8,7 @@ import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.inventory.InventoryCloseEvent
+import net.minestom.server.event.inventory.InventoryOpenEvent
 import net.minestom.server.event.inventory.InventoryPreClickEvent
 import net.minestom.server.event.player.PlayerTickEvent
 import net.minestom.server.inventory.AbstractInventory
@@ -43,10 +44,12 @@ open class GuiModule : GameModule() {
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         eventNode.addListener(InventoryCloseEvent::class.java) { event ->
-            inventories.remove(event.inventory.windowId)?.let {
-                it.destroy(event.player)
-                it.onClosedAction?.invoke(event.player)
-                inventories.remove(event.inventory.windowId)
+            onInventoryClose(event.player, event.inventory.windowId)
+        }
+        eventNode.addListener(InventoryOpenEvent::class.java) { event ->
+            // When the player opens a new inventory, the old one should be closed
+            event.player.openInventory?.windowId?.let { windowId ->
+                onInventoryClose(event.player, windowId)
             }
         }
         eventNode.addListener(PlayerLeaveGameEvent::class.java) { event ->
@@ -63,6 +66,14 @@ open class GuiModule : GameModule() {
         eventNode.addListener(InventoryPreClickEvent::class.java) { event ->
             if (event.inventory is PlayerInventory) return@addListener
             inventories[event.inventory.windowId]?.onPreClick(event)
+        }
+    }
+
+    private fun onInventoryClose(player: Player, windowId: Byte) {
+        inventories.remove(windowId)?.let {
+            it.destroy(player)
+            it.onClosedAction?.invoke(player)
+            inventories.remove(windowId)
         }
     }
 
@@ -114,8 +125,14 @@ open class GuiModule : GameModule() {
         }
 
         private fun getInventory(player: Player): Inventory {
-            if (!isPerPlayer && this::cachedInventory.isInitialized) return cachedInventory
-            if (isPerPlayer && cachedInventories.containsKey(player)) return cachedInventories[player]!!
+            if (!isPerPlayer && this::cachedInventory.isInitialized) {
+                inventories[cachedInventory.windowId] = this
+                return cachedInventory
+            }
+            if (isPerPlayer && cachedInventories.containsKey(player)) {
+                inventories[cachedInventories[player]!!.windowId] = this
+                return cachedInventories[player]!!
+            }
 
             val inventory = Inventory(inventoryType, title)
 
