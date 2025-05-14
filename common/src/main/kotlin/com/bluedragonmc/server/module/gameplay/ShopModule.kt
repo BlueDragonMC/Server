@@ -164,6 +164,15 @@ class ShopModule : GameModule() {
                 player.inventory.addItemStack(ItemStack.of(currency, price), TransactionOption.ALL)
                 return
             }
+            if (item.has(DataComponents.EQUIPPABLE)) {
+                // Prefer the item's equipment slot if possible
+                val slot = item.get(DataComponents.EQUIPPABLE)!!.slot
+                val current = player.inventory.getEquipment(slot, player.heldSlot)
+                if (current.isAir || (item.isSimilar(current) && item.amount() + current.amount() <= item.maxStackSize())) {
+                    player.inventory.setEquipment(slot, player.heldSlot, if (current.isAir) item else current.withAmount { it + item.amount() })
+                    return
+                }
+            }
             player.inventory.addItemStack(item, TransactionOption.ALL)
         }
 
