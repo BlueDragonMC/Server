@@ -83,11 +83,11 @@ class ShopModule : GameModule() {
                 { player -> itemStackProvider(player).material() },
                 { player ->
                     val itemStack = itemStackProvider(player)
+                    amount(itemStack.amount())
                     if (virtualItem != null) {
-                        set(DataComponents.ITEM_NAME, virtualItem.name.noItalic()) // todo - is noItalic necessary?
+                        set(DataComponents.ITEM_NAME, virtualItem.name)
                     } else {
-                        set(DataComponents.ITEM_NAME, itemStack.material().displayName(NamedTextColor.WHITE)
-                            .noItalic() + Component.text(" x${itemStack.amount()}", NamedTextColor.GRAY).noItalic())
+                        set(DataComponents.ITEM_NAME, itemStack.material().displayName(NamedTextColor.WHITE) + Component.text(" x${itemStack.amount()}", NamedTextColor.GRAY))
                     }
 
                     val info = listOf(
