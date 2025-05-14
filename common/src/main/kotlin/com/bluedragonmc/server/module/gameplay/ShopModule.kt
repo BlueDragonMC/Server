@@ -3,6 +3,7 @@ package com.bluedragonmc.server.module.gameplay
 import com.bluedragonmc.server.ALT_COLOR_1
 import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.event.GameEvent
 import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.GuiModule
@@ -14,8 +15,11 @@ import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.component.DataComponents
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
+import net.minestom.server.event.EventDispatcher
 import net.minestom.server.event.EventFilter
 import net.minestom.server.event.EventNode
+import net.minestom.server.event.trait.CancellableEvent
+import net.minestom.server.event.trait.PlayerInstanceEvent
 import net.minestom.server.inventory.InventoryType
 import net.minestom.server.inventory.TransactionOption
 import net.minestom.server.item.ItemStack
@@ -87,7 +91,13 @@ class ShopModule : GameModule() {
                     if (virtualItem != null) {
                         set(DataComponents.ITEM_NAME, virtualItem.name)
                     } else {
-                        set(DataComponents.ITEM_NAME, itemStack.material().displayName(NamedTextColor.WHITE) + Component.text(" x${itemStack.amount()}", NamedTextColor.GRAY))
+                        set(
+                            DataComponents.ITEM_NAME,
+                            itemStack.material().displayName(NamedTextColor.WHITE) + Component.text(
+                                " x${itemStack.amount()}",
+                                NamedTextColor.GRAY
+                            )
+                        )
                     }
 
                     val info = listOf(
@@ -111,7 +121,10 @@ class ShopModule : GameModule() {
 
                     if (virtualItem != null) {
                         // Display team upgrade descriptions if applicable
-                        set(DataComponents.LORE, splitAndFormatLore(virtualItem.description, ALT_COLOR_1, player) + info)
+                        set(
+                            DataComponents.LORE,
+                            splitAndFormatLore(virtualItem.description, ALT_COLOR_1, player) + info
+                        )
 
                         if (virtualItem.eventNode.parent == null) {
                             module.eventNode.addChild(virtualItem.eventNode)
@@ -142,14 +155,22 @@ class ShopModule : GameModule() {
                 )
                 return
             }
+            val event = ShopPurchaseEvent.Item(module.parent, player, price, currency, item)
+            EventDispatcher.call(event)
+            if (event.isCancelled) return
             if (!addSuccess) {
                 player.sendMessage(Component.translatable("module.shop.no_inventory_space", NamedTextColor.RED))
+                // Refund the player's currency
+                player.inventory.addItemStack(ItemStack.of(currency, price), TransactionOption.ALL)
                 return
             }
             player.inventory.addItemStack(item, TransactionOption.ALL)
         }
 
         private fun buyVirtualItem(player: Player, item: VirtualItem, price: Int, currency: Material) {
+            val event = ShopPurchaseEvent.VirtualItem(module.parent, player, price, currency, item)
+            EventDispatcher.call(event)
+            if (event.isCancelled) return
             if (item.isOwnedBy(player)) {
                 player.sendMessage(Component.translatable("module.shop.already_owned", NamedTextColor.RED))
                 return
@@ -169,6 +190,27 @@ class ShopModule : GameModule() {
             (player as CustomPlayer).virtualItems.add(item)
             item.obtainedCallback(player, item)
         }
+    }
+
+    sealed class ShopPurchaseEvent(
+        game: Game,
+        private val player: Player,
+        val price: Int,
+        val currency: Material
+    ) : PlayerInstanceEvent, CancellableEvent, GameEvent(game) {
+        private var isCancelled = false
+
+        override fun getPlayer() = this.player
+        override fun isCancelled() = this.isCancelled
+        override fun setCancelled(cancel: Boolean) {
+            this.isCancelled = cancel
+        }
+
+        class Item(game: Game, player: Player, price: Int, currency: Material, val itemStack: ItemStack) :
+            ShopPurchaseEvent(game, player, price, currency)
+
+        class VirtualItem(game: Game, player: Player, price: Int, currency: Material, val virtualItem: ShopModule.VirtualItem) :
+            ShopPurchaseEvent(game, player, price, currency)
     }
 
     /**
