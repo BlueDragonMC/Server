@@ -21,7 +21,9 @@ import net.minestom.server.event.EventNode
 import net.minestom.server.event.trait.CancellableEvent
 import net.minestom.server.event.trait.PlayerInstanceEvent
 import net.minestom.server.inventory.InventoryType
+import net.minestom.server.inventory.PlayerInventory
 import net.minestom.server.inventory.TransactionOption
+import net.minestom.server.inventory.TransactionType
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 
@@ -169,7 +171,10 @@ class ShopModule : GameModule() {
                 val slot = item.get(DataComponents.EQUIPPABLE)!!.slot
                 val current = player.inventory.getEquipment(slot, player.heldSlot)
                 if (current.isAir || (item.isSimilar(current) && item.amount() + current.amount() <= item.maxStackSize())) {
-                    player.inventory.setEquipment(slot, player.heldSlot, if (current.isAir) item else current.withAmount { it + item.amount() })
+                    player.inventory.setEquipment(
+                        slot,
+                        player.heldSlot,
+                        if (current.isAir) item else current.withAmount { it + item.amount() })
                     return
                 }
             }
@@ -184,8 +189,10 @@ class ShopModule : GameModule() {
                 player.sendMessage(Component.translatable("module.shop.already_owned", NamedTextColor.RED))
                 return
             }
+
             val removeSuccess =
-                player.inventory.takeItemStack(ItemStack.of(currency, price), TransactionOption.ALL_OR_NOTHING)
+                player.inventory.takeItemStack(ItemStack.of(currency, price), TransactionOption.ALL_OR_NOTHING, true)
+
             if (!removeSuccess) {
                 player.sendMessage(
                     Component.translatable(
@@ -218,7 +225,13 @@ class ShopModule : GameModule() {
         class Item(game: Game, player: Player, price: Int, currency: Material, val itemStack: ItemStack) :
             ShopPurchaseEvent(game, player, price, currency)
 
-        class VirtualItem(game: Game, player: Player, price: Int, currency: Material, val virtualItem: ShopModule.VirtualItem) :
+        class VirtualItem(
+            game: Game,
+            player: Player,
+            price: Int,
+            currency: Material,
+            val virtualItem: ShopModule.VirtualItem
+        ) :
             ShopPurchaseEvent(game, player, price, currency)
     }
 
@@ -249,4 +262,14 @@ class ShopModule : GameModule() {
                 isOwnedBy(event.player)
             }
     }
+}
+
+fun <T> PlayerInventory.takeItemStack(
+    itemStack: ItemStack,
+    tx: TransactionOption<T>,
+    takeFromEquipmentSlots: Boolean
+): T {
+    val maxSlot = if (takeFromEquipmentSlots) this.size else this.innerSize
+    val result = TransactionType.TAKE.process(this, itemStack, { _, _ -> true }, 0, maxSlot, 1)
+    return tx.fill(this, result.left(), result.right())
 }
