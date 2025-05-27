@@ -16,6 +16,7 @@ import net.minestom.server.entity.metadata.display.AbstractDisplayMeta
 import net.minestom.server.entity.metadata.display.TextDisplayMeta
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
+import net.minestom.server.event.entity.EntityAttackEvent
 import net.minestom.server.event.entity.EntityTickEvent
 import net.minestom.server.event.player.PlayerEntityInteractEvent
 import net.minestom.server.instance.EntityTracker
@@ -48,6 +49,14 @@ class NPCModule : GameModule() {
                 (event.target as? NPC)?.interaction?.accept(NPCInteraction(event.player, event.target as NPC))
             }
         }
+        eventNode.addListener(EntityAttackEvent::class.java) { event ->
+            val player = event.entity as? CustomPlayer ?: return@addListener
+            val npc = event.target as? NPC ?: return@addListener
+            if (System.currentTimeMillis() - player.lastNPCInteractionTime > 1_000) {
+                player.lastNPCInteractionTime = System.currentTimeMillis()
+                npc.attackInteraction?.accept(NPCInteraction(player, npc))
+            }
+        }
     }
 
     override fun deinitialize() {
@@ -66,10 +75,11 @@ class NPCModule : GameModule() {
         skin: PlayerSkin? = null,
         entityType: EntityType = EntityType.PLAYER,
         interaction: Consumer<NPCInteraction>? = null,
+        attackInteraction: Consumer<NPCInteraction>? = null,
         customNameVisible: Boolean = true,
     ) {
         positions.forEach { pos ->
-            addNPC(NPC(instance, pos, customName, skin, entityType, interaction, customNameVisible))
+            addNPC(NPC(instance, pos, customName, skin, entityType, interaction, attackInteraction, customNameVisible))
         }
     }
 
@@ -80,6 +90,7 @@ class NPCModule : GameModule() {
         skin: PlayerSkin? = null,
         entityType: EntityType = EntityType.PLAYER,
         interaction: Consumer<NPCInteraction>? = null,
+        attackInteraction: Consumer<NPCInteraction>? = null,
         customNameVisible: Boolean = true,
         lookAtPlayer: Boolean = true,
         enableFullSkin: Boolean = true,
@@ -90,6 +101,7 @@ class NPCModule : GameModule() {
         skin,
         entityType,
         interaction,
+        attackInteraction,
         customNameVisible,
         lookAtPlayer,
         enableFullSkin
@@ -102,6 +114,7 @@ class NPCModule : GameModule() {
         skin: PlayerSkin? = null,
         entityType: EntityType = EntityType.PLAYER,
         val interaction: Consumer<NPCInteraction>? = null,
+        val attackInteraction: Consumer<NPCInteraction>? = null,
         private val customNameVisible: Boolean = true,
         private val lookAtPlayer: Boolean = true,
         enableFullSkin: Boolean = true,
