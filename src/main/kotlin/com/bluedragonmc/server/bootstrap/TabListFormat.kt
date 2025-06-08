@@ -12,6 +12,8 @@ import net.minestom.server.event.player.PlayerSpawnEvent
 object TabListFormat : Bootstrap() {
     override fun hook(eventNode: EventNode<Event>) {
         eventNode.addListener(PlayerSpawnEvent::class.java) { event ->
+            if (!event.isFirstSpawn) return@addListener
+
             event.player.sendPlayerListHeaderAndFooter(SERVER_NAME_GRADIENT.decorate(TextDecoration.BOLD),
                 Component.translatable("global.tab.call_to_action",
                     BRAND_COLOR_PRIMARY_2,

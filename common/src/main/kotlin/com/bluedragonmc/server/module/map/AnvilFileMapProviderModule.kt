@@ -10,7 +10,7 @@ import net.minestom.server.instance.DynamicChunk
 import net.minestom.server.instance.InstanceContainer
 import net.minestom.server.instance.LightingChunk
 import net.minestom.server.instance.anvil.AnvilLoader
-import net.minestom.server.registry.DynamicRegistry
+import net.minestom.server.registry.RegistryKey
 import net.minestom.server.tag.Tag
 import net.minestom.server.world.DimensionType
 import java.nio.file.Path
@@ -29,7 +29,7 @@ import kotlin.io.path.absolutePathString
  * 
  * [See Documentation](https://developer.bluedragonmc.com/modules/anvilfilemapprovidermodule/)
  */
-class AnvilFileMapProviderModule(val worldFolder: Path, private val dimensionType: DynamicRegistry.Key<DimensionType> = DimensionType.OVERWORLD) : GameModule() {
+class AnvilFileMapProviderModule(val worldFolder: Path, private val dimensionType: RegistryKey<DimensionType> = DimensionType.OVERWORLD) : GameModule() {
 
     lateinit var instanceContainer: InstanceContainer
         private set

@@ -2,7 +2,7 @@ metadata.format.version = "1.1"
 
 [versions]
 kotlin = "2.1.10"
-minestom = "1_21_5-c5b715aa82"
+minestom = "1_21_5-c4814c2270"
 configurate = "4.2.0"
 minimessage = "4.19.0"
 kmongo = "5.2.1"

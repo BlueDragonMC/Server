@@ -29,7 +29,7 @@ import net.minestom.server.network.packet.server.play.EntityAnimationPacket
 import net.minestom.server.network.packet.server.play.EntityAnimationPacket.Animation
 import net.minestom.server.potion.Potion
 import net.minestom.server.potion.PotionEffect
-import net.minestom.server.registry.DynamicRegistry
+import net.minestom.server.registry.RegistryKey
 import net.minestom.server.tag.Tag
 import kotlin.experimental.or
 import kotlin.math.hypot
@@ -156,7 +156,7 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
             // The base attack damage according to the item they're holding
             var dmgAttribute = player.getAttributeValue(Attribute.ATTACK_DAMAGE)
 
-            val heldEnchantments = player.itemInMainHand.get(DataComponents.ENCHANTMENTS)?.enchantments ?: emptyMap<DynamicRegistry.Key<Enchantment>, Int>()
+            val heldEnchantments = player.itemInMainHand.get(DataComponents.ENCHANTMENTS)?.enchantments ?: emptyMap<RegistryKey<Enchantment>, Int>()
             // Extra damage provided by enchants like sharpness or smite
             val damageModifier = CombatUtils.getDamageModifier(heldEnchantments, target)
 

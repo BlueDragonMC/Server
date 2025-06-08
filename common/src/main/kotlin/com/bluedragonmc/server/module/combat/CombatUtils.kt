@@ -5,7 +5,7 @@ import net.minestom.server.entity.Entity
 import net.minestom.server.entity.EntityType
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.enchant.Enchantment
-import net.minestom.server.registry.DynamicRegistry
+import net.minestom.server.registry.RegistryKey
 import kotlin.random.Random
 
 object CombatUtils {
@@ -30,7 +30,7 @@ object CombatUtils {
 
     fun getThornsDamage(level: Int): Int = if (level > 10) 10 - level else 1 + Random.nextInt(4)
 
-    fun getDamageModifier(enchants: Map<DynamicRegistry.Key<Enchantment>, Int>, targetEntity: Entity): Float =
+    fun getDamageModifier(enchants: Map<RegistryKey<Enchantment>, Int>, targetEntity: Entity): Float =
         if (enchants.containsKey(Enchantment.SHARPNESS)) {
             enchants[Enchantment.SHARPNESS]!! * 1.25f
         } else if (enchants.containsKey(Enchantment.SMITE) && isUndead(targetEntity)) {
@@ -39,7 +39,7 @@ object CombatUtils {
             enchants[Enchantment.BANE_OF_ARTHROPODS]!! * 2.5f
         } else 0.0f
 
-    fun getArrowDamageModifier(enchants: Map<DynamicRegistry.Key<Enchantment>, Int>, targetEntity: Entity): Float =
+    fun getArrowDamageModifier(enchants: Map<RegistryKey<Enchantment>, Int>, targetEntity: Entity): Float =
         if (enchants.containsKey(Enchantment.POWER))
             0.5f + enchants[Enchantment.POWER]!! * 0.5f
         else 0.0f

@@ -99,7 +99,7 @@ class ProjectileModule : GameModule() {
                     if (!takeArrow(event.player)) return@addListener
                 }
                 val projectile = CustomArrowProjectile(event.player, EntityType.ARROW)
-                if (power > 0.9) (projectile.entityMeta as ArrowMeta).isCritical = true
+                if (power > 0.9) projectile.isCritical = true
                 projectile.scheduleRemove(Duration.ofSeconds(30))
                 val eyePos = getEyePos(event.player)
 
