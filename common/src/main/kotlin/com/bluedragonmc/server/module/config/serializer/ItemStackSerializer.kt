@@ -24,6 +24,7 @@ class ItemStackSerializer : TypeSerializer<ItemStack> {
         val name = node.node("name").get<Component>()?.noItalic()
         val lore = node.node("lore").getList(Component::class.java)
         val dye = node.node("dye").get<Color>()
+        val glider = node.node("glider").getBoolean(false)
 
         val itemStack = ItemStack.builder(material).run {
 
@@ -39,6 +40,10 @@ class ItemStackSerializer : TypeSerializer<ItemStack> {
 
             if (enchantments != null && enchantments.enchantments().isNotEmpty()) {
                 set(DataComponents.ENCHANTMENTS, enchantments)
+            }
+
+            if (glider) {
+                set(DataComponents.GLIDER)
             }
 
             build()
@@ -57,5 +62,6 @@ class ItemStackSerializer : TypeSerializer<ItemStack> {
         node?.node("enchants")?.set(obj?.get(DataComponents.ENCHANTMENTS)?.enchantments)
         node?.node("name")?.set(obj?.get(DataComponents.ITEM_NAME))
         node?.node("lore")?.set(obj?.get(DataComponents.LORE))
+        if (obj?.get(DataComponents.GLIDER) != null) node?.node("glider")?.set(true)
     }
 }
