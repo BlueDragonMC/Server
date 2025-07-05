@@ -5,10 +5,7 @@ import com.bluedragonmc.api.grpc.CommonTypes.GameType.GameTypeFieldSelector
 import com.bluedragonmc.api.grpc.gameState
 import com.bluedragonmc.api.grpc.gameType
 import com.bluedragonmc.server.api.Environment
-import com.bluedragonmc.server.event.GameEvent
-import com.bluedragonmc.server.event.GameStartEvent
-import com.bluedragonmc.server.event.GameStateChangedEvent
-import com.bluedragonmc.server.event.PlayerLeaveGameEvent
+import com.bluedragonmc.server.event.*
 import com.bluedragonmc.server.model.GameDocument
 import com.bluedragonmc.server.model.InstanceRecord
 import com.bluedragonmc.server.model.PlayerRecord
@@ -36,7 +33,6 @@ import net.minestom.server.event.EventFilter
 import net.minestom.server.event.EventListener
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.instance.RemoveEntityFromInstanceEvent
-import net.minestom.server.event.player.PlayerSpawnEvent
 import net.minestom.server.event.server.ServerTickMonitorEvent
 import net.minestom.server.event.trait.InstanceEvent
 import net.minestom.server.event.trait.PlayerEvent
@@ -128,13 +124,16 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
 
     protected open fun useMandatoryModules() {
         Messaging.outgoing.onGameCreated(this)
-        handleEvent<PlayerSpawnEvent> {
+        handleEvent<PlayerJoinGameEvent> {
             playerHasJoined = true
         }
         handleEvent<RemoveEntityFromInstanceEvent> { event ->
             if (event.entity !is Player) return@handleEvent
-            callCancellable(PlayerLeaveGameEvent(this, event.entity as Player)) {
-                players.remove(event.entity)
+            MinecraftServer.getSchedulerManager().scheduleNextTick {
+                if (event.entity.instance in getOwnedInstances()) return@scheduleNextTick
+                callCancellable(PlayerLeaveGameEvent(this, event.entity as Player)) {
+                    players.remove(event.entity)
+                }
             }
         }
         onGameStart {
@@ -196,7 +195,7 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
         players.add(player)
         if (sendPlayer && (player.instance == null || !ownsInstance(player.instance!!))) {
             try {
-                return sendPlayerToInstance(player)
+                return sendPlayerToInstance(player).whenComplete { _, _ -> callEvent(PlayerJoinGameEvent(player, this))}
             } catch (e: Throwable) {
                 e.printStackTrace()
                 player.sendMessage(
@@ -209,8 +208,10 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
                     name = Environment.defaultGameName
                     selectors += GameTypeFieldSelector.GAME_NAME
                 })
+                return AsyncUtils.empty()
             }
         }
+        callEvent(PlayerJoinGameEvent(player, this))
         return AsyncUtils.empty()
     }
 

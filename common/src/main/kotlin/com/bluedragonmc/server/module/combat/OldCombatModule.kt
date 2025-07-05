@@ -2,6 +2,7 @@ package com.bluedragonmc.server.module.combat
 
 import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.event.PlayerJoinGameEvent
 import com.bluedragonmc.server.event.PlayerKillPlayerEvent
 import com.bluedragonmc.server.event.PlayerLeaveGameEvent
 import com.bluedragonmc.server.module.GameModule
@@ -19,7 +20,6 @@ import net.minestom.server.event.entity.EntityAttackEvent
 import net.minestom.server.event.entity.EntityPotionAddEvent
 import net.minestom.server.event.entity.EntityTickEvent
 import net.minestom.server.event.item.PlayerFinishItemUseEvent
-import net.minestom.server.event.player.PlayerSpawnEvent
 import net.minestom.server.event.trait.CancellableEvent
 import net.minestom.server.event.trait.PlayerInstanceEvent
 import net.minestom.server.instance.Instance
@@ -94,7 +94,7 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
             }
         }
 
-        eventNode.addListener(PlayerSpawnEvent::class.java) { event ->
+        eventNode.addListener(PlayerJoinGameEvent::class.java) { event ->
             // Hint to client that there is no attack cooldown
             event.player.getAttribute(Attribute.ATTACK_SPEED).baseValue = 100.0
             event.player.getAttribute(Attribute.ATTACK_DAMAGE).baseValue = 1.0

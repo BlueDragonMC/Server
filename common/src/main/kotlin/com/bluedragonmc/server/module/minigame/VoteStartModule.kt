@@ -2,10 +2,7 @@ package com.bluedragonmc.server.module.minigame
 
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.Game
-import com.bluedragonmc.server.event.CountdownEvent
-import com.bluedragonmc.server.event.GameStartEvent
-import com.bluedragonmc.server.event.GameStateChangedEvent
-import com.bluedragonmc.server.event.PlayerLeaveGameEvent
+import com.bluedragonmc.server.event.*
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.utils.GameState
 import com.bluedragonmc.server.utils.manage
@@ -20,7 +17,6 @@ import net.minestom.server.entity.Player
 import net.minestom.server.entity.PlayerHand
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
-import net.minestom.server.event.player.PlayerSpawnEvent
 import net.minestom.server.event.player.PlayerUseItemEvent
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
@@ -50,7 +46,7 @@ class VoteStartModule(
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         this.parent = parent
-        eventNode.addListener(PlayerSpawnEvent::class.java) { event ->
+        eventNode.addListener(PlayerJoinGameEvent::class.java) { event ->
             fill(event.player, voteStartItem)
         }
         eventNode.addListener(PlayerUseItemEvent::class.java) { event ->
