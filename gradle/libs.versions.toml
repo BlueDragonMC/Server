@@ -2,7 +2,7 @@ metadata.format.version = "1.1"
 
 [versions]
 kotlin = "2.1.10"
-minestom = "1_21_5-c4814c2270"
+minestom = "2025.07.10b-1.21.7"
 configurate = "4.2.0"
 minimessage = "4.19.0"
 kmongo = "5.2.1"
@@ -23,7 +23,7 @@ junit = "5.9.0"
 
 [libraries]
 kotlin-jvm = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
-minestom = { group = "net.minestom", name = "minestom-snapshots", version.ref = "minestom" }
+minestom = { group = "net.minestom", name = "minestom", version.ref = "minestom" }
 configurate = { group = "org.spongepowered", name = "configurate-yaml", version.ref = "configurate" }
 configurate-extra-kotlin = { group = "org.spongepowered", name = "configurate-extra-kotlin", version.ref = "configurate" }
 minimessage = { group = "net.kyori", name = "adventure-text-minimessage", version.ref = "minimessage" }

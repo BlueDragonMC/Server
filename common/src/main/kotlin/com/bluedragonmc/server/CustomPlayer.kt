@@ -106,7 +106,7 @@ open class CustomPlayer(playerConnection: PlayerConnection, gameProfile: GamePro
 
     override fun getAdditionalHearts(): Float {
         return if (entityMeta !is PlayerMeta) 0f
-        else super.additionalHearts
+        else super.getAdditionalHearts()
     }
 
     fun isOnLadder() = listOf(
