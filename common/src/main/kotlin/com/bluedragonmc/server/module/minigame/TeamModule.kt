@@ -163,27 +163,29 @@ class TeamModule(
         TEAM_COUNT
     }
 
-    data class Team(
+    class Team(
         val name: Component = Component.empty(),
-        val players: MutableList<Player> = CopyOnWriteArrayList(),
+        players: List<Player> = CopyOnWriteArrayList(),
         val allowFriendlyFire: Boolean = false,
         val nameTagVisibility: NameTagVisibility = NameTagVisibility.ALWAYS,
     ) : PacketGroupingAudience {
         val uuid: UUID = UUID.randomUUID()
+        private val _players = players.toMutableList()
+        val players: List<Player> = _players
 
         lateinit var scoreboardTeam: net.minestom.server.scoreboard.Team
             private set
 
-        override fun getPlayers(): MutableCollection<Player> = players
+        override fun getPlayers(): Collection<Player> = players
 
         fun addPlayer(player: Player) {
-            players.add(player)
+            _players.add(player)
             if (::scoreboardTeam.isInitialized)
                 scoreboardTeam.addMember(player.username)
         }
 
         fun removePlayer(player: Player) {
-            players.remove(player)
+            _players.remove(player)
             if (::scoreboardTeam.isInitialized)
                 scoreboardTeam.removeMember(player.username)
         }

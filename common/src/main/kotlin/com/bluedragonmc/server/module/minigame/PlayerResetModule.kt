@@ -1,6 +1,7 @@
 package com.bluedragonmc.server.module.minigame
 
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.event.PlayerJoinGameEvent
 import com.bluedragonmc.server.module.GameModule
 import net.kyori.adventure.nbt.CompoundBinaryTag
 import net.minestom.server.entity.GameMode
@@ -8,7 +9,6 @@ import net.minestom.server.entity.Player
 import net.minestom.server.entity.attribute.Attribute
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
-import net.minestom.server.event.player.PlayerSpawnEvent
 
 /**
  * "Resets" the player when they join the game. This changes some basic attributes to make sure effects don't persist in between games.
@@ -25,7 +25,7 @@ import net.minestom.server.event.player.PlayerSpawnEvent
  */
 class PlayerResetModule(val defaultGameMode: GameMode? = null) : GameModule() {
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
-        eventNode.addListener(PlayerSpawnEvent::class.java) { event ->
+        eventNode.addListener(PlayerJoinGameEvent::class.java) { event ->
             resetPlayer(event.player, defaultGameMode)
         }
     }

@@ -71,7 +71,7 @@ class ChestModule : GameModule() {
         }
     }
 
-    private val chests = mutableMapOf<Point, ChestBlock>()
+    val chests = mutableMapOf<Point, ChestBlock>()
 
     abstract class ChestBlock {
 

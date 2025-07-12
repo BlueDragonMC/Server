@@ -3,6 +3,7 @@ package com.bluedragonmc.server.module.minigame
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.event.PlayerJoinGameEvent
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.SoftDependsOn
 import com.bluedragonmc.server.module.config.ConfigModule
@@ -16,7 +17,6 @@ import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
-import net.minestom.server.event.player.PlayerSpawnEvent
 
 /**
  * Displays a message to players when they join the game.
@@ -35,7 +35,7 @@ class MOTDModule(private val motd: Component, private var showMapName: Boolean =
         val description = node?.node("description")?.string ?: "An awesome map!"
         val author = node?.node("author")?.string ?: "BlueDragon Build Team"
 
-        eventNode.addListener(PlayerSpawnEvent::class.java) { event ->
+        eventNode.addListener(PlayerJoinGameEvent::class.java) { event ->
             event.player.sendMessage(
                 buildComponent {
                     // Game name

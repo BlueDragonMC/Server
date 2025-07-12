@@ -2,25 +2,25 @@ package com.bluedragonmc.server.module.gameplay
 
 import com.bluedragonmc.server.*
 import com.bluedragonmc.server.api.Environment
-import com.bluedragonmc.server.event.CountdownEvent
-import com.bluedragonmc.server.event.GameStartEvent
-import com.bluedragonmc.server.event.GameStateChangedEvent
-import com.bluedragonmc.server.event.PlayerLeaveGameEvent
+import com.bluedragonmc.server.event.*
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.utils.GameState
+import com.bluedragonmc.server.utils.plus
 import com.bluedragonmc.server.utils.withGradient
+import com.bluedragonmc.server.utils.withTransition
 import kotlinx.coroutines.runBlocking
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.Component.text
 import net.kyori.adventure.text.format.NamedTextColor.DARK_GRAY
 import net.kyori.adventure.text.format.NamedTextColor.RED
+import net.kyori.adventure.text.format.NamedTextColor.YELLOW
+import net.kyori.adventure.text.format.NamedTextColor.GREEN
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.translation.GlobalTranslator
 import net.minestom.server.MinecraftServer
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
-import net.minestom.server.event.player.PlayerSpawnEvent
 import net.minestom.server.scoreboard.Sidebar
 import net.minestom.server.scoreboard.Sidebar.ScoreboardLine
 import java.util.*
@@ -43,7 +43,7 @@ class SidebarModule(private val title: String) : GameModule() {
             if (::binding.isInitialized)
                 binding.updateFor(player)
         }
-        eventNode.addListener(PlayerSpawnEvent::class.java) { event ->
+        eventNode.addListener(PlayerJoinGameEvent::class.java) { event ->
             val sidebar = sidebars.getOrPut(event.player) { createSidebar() }
             sidebar.addViewer(event.player)
             if (::binding.isInitialized)

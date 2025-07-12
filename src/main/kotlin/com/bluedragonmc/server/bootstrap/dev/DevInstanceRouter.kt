@@ -15,9 +15,16 @@ import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.instance.InstanceTickEvent
 import net.minestom.server.event.player.AsyncPlayerConfigurationEvent
+import net.minestom.server.event.player.PlayerSpawnEvent
 
 object DevInstanceRouter : Bootstrap(EnvType.DEVELOPMENT) {
     override fun hook(eventNode: EventNode<Event>) {
+        eventNode.addListener(PlayerSpawnEvent::class.java) { event ->
+            // When a player logs in and spawns in the lobby, add them to the lobby's player list
+            if (event.isFirstSpawn && event.instance == lobby.getInstance()) {
+                lobby.addPlayer(event.player, sendPlayer = false)
+            }
+        }
         eventNode.addListener(AsyncPlayerConfigurationEvent::class.java) { event ->
             try {
                 runBlocking {
@@ -33,7 +40,6 @@ object DevInstanceRouter : Bootstrap(EnvType.DEVELOPMENT) {
             if (isLobbyInitialized()) {
                 // Send the player to the lobby
                 event.spawningInstance = lobby.getInstance()
-                lobby.players.add(event.player)
                 val spawnpoint =
                     lobby.getModuleOrNull<SpawnpointModule>()?.spawnpointProvider?.getSpawnpoint(event.player)
                 if (spawnpoint != null) {

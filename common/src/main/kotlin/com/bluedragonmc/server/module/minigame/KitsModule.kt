@@ -3,6 +3,7 @@ package com.bluedragonmc.server.module.minigame
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.event.KitSelectedEvent
+import com.bluedragonmc.server.event.PlayerJoinGameEvent
 import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.GuiModule
@@ -13,7 +14,6 @@ import net.minestom.server.component.DataComponents
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
-import net.minestom.server.event.player.PlayerSpawnEvent
 import net.minestom.server.inventory.InventoryType
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
@@ -40,8 +40,7 @@ open class KitsModule(
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         this.parent = parent
         // todo add support for unlockable kits
-        // todo make this use a "player join game event" instead of spawn event
-        eventNode.addListener(PlayerSpawnEvent::class.java) { event ->
+        eventNode.addListener(PlayerJoinGameEvent::class.java) { event ->
             if (showMenu) {
                 selectKit(event.player)
             }

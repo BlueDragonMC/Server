@@ -16,9 +16,7 @@ class LobbyCommand(name: String, vararg aliases: String?) : BlueDragonCommand(na
             }
             return@suspendSyntax
         }
-        player.setInstance(
-            lobby.getInstance(), lobby.getModule<SpawnpointModule>().spawnpointProvider.getSpawnpoint(player)
-        )
+        lobby.addPlayer(player)
         // Remove the player from the queue when they go to the lobby
         Messaging.outgoing.removeFromQueue(player)
     }

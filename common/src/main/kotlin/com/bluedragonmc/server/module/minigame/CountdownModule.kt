@@ -4,6 +4,7 @@ import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.CountdownEvent
 import com.bluedragonmc.server.event.GameStartEvent
+import com.bluedragonmc.server.event.PlayerJoinGameEvent
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.utils.GameState
 import net.kyori.adventure.text.Component
@@ -34,7 +35,7 @@ class CountdownModule(
     fun getTimeLeft() = secondsLeft ?: countdownSeconds
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
-        eventNode.addListener(PlayerSpawnEvent::class.java) {
+        eventNode.addListener(PlayerJoinGameEvent::class.java) {
             if (parent.state == GameState.STARTING || parent.state == GameState.INGAME || parent.state == GameState.ENDING || countdownRunning) return@addListener
             if (threshold > 0 && parent.players.size >= threshold) {
                 startCountdown(parent)

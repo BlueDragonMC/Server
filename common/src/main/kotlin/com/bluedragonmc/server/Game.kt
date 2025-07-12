@@ -5,10 +5,7 @@ import com.bluedragonmc.api.grpc.CommonTypes.GameType.GameTypeFieldSelector
 import com.bluedragonmc.api.grpc.gameState
 import com.bluedragonmc.api.grpc.gameType
 import com.bluedragonmc.server.api.Environment
-import com.bluedragonmc.server.event.GameEvent
-import com.bluedragonmc.server.event.GameStartEvent
-import com.bluedragonmc.server.event.GameStateChangedEvent
-import com.bluedragonmc.server.event.PlayerLeaveGameEvent
+import com.bluedragonmc.server.event.*
 import com.bluedragonmc.server.model.GameDocument
 import com.bluedragonmc.server.model.InstanceRecord
 import com.bluedragonmc.server.model.PlayerRecord
@@ -35,8 +32,7 @@ import net.minestom.server.event.Event
 import net.minestom.server.event.EventFilter
 import net.minestom.server.event.EventListener
 import net.minestom.server.event.EventNode
-import net.minestom.server.event.instance.RemoveEntityFromInstanceEvent
-import net.minestom.server.event.player.PlayerSpawnEvent
+import net.minestom.server.event.player.PlayerDisconnectEvent
 import net.minestom.server.event.server.ServerTickMonitorEvent
 import net.minestom.server.event.trait.InstanceEvent
 import net.minestom.server.event.trait.PlayerEvent
@@ -75,7 +71,8 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
             maxSlots = maxPlayers
         }
 
-    internal val players: MutableList<Player> = CopyOnWriteArrayList()
+    private val _players: MutableList<Player> = CopyOnWriteArrayList()
+    val players: List<Player> = _players
 
     protected val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
@@ -103,7 +100,7 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
             return@event when (event) {
                 is InstanceEvent -> ownsInstance(event.instance ?: return@event false)
                 is GameEvent -> event.game === this
-                is PlayerEvent -> event.player.isActive && ownsInstance(event.player.instance ?: return@event false)
+                is PlayerEvent -> players.contains(event.player)
                 is ServerTickMonitorEvent -> true
                 else -> false
             }
@@ -128,14 +125,11 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
 
     protected open fun useMandatoryModules() {
         Messaging.outgoing.onGameCreated(this)
-        handleEvent<PlayerSpawnEvent> {
+        handleEvent<PlayerJoinGameEvent> {
             playerHasJoined = true
         }
-        handleEvent<RemoveEntityFromInstanceEvent> { event ->
-            if (event.entity !is Player) return@handleEvent
-            callCancellable(PlayerLeaveGameEvent(this, event.entity as Player)) {
-                players.remove(event.entity)
-            }
+        handleEvent<PlayerDisconnectEvent> { event ->
+            removePlayer(event.player)
         }
         onGameStart {
             startTime = Date()
@@ -191,12 +185,17 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
     private val isJoinable
         get() = state.canPlayersJoin
 
+    private fun removePlayer(player: Player) {
+        _players.remove(player)
+        callEvent(PlayerLeaveGameEvent(this, player))
+    }
+
     fun addPlayer(player: Player, sendPlayer: Boolean = true): CompletableFuture<Instance> {
-        findGame(player)?.players?.remove(player)
-        players.add(player)
+        findGame(player)?.removePlayer(player)
+        _players.add(player)
         if (sendPlayer && (player.instance == null || !ownsInstance(player.instance!!))) {
             try {
-                return sendPlayerToInstance(player)
+                return sendPlayerToInstance(player).whenComplete { _, _ -> callEvent(PlayerJoinGameEvent(player, this))}
             } catch (e: Throwable) {
                 e.printStackTrace()
                 player.sendMessage(
@@ -209,8 +208,10 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
                     name = Environment.defaultGameName
                     selectors += GameTypeFieldSelector.GAME_NAME
                 })
+                return AsyncUtils.empty()
             }
         }
+        callEvent(PlayerJoinGameEvent(player, this))
         return AsyncUtils.empty()
     }
 
@@ -223,7 +224,7 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
         return player.setInstance(instance).thenApply { instance }
     }
 
-    override fun getPlayers(): MutableCollection<Player> = players
+    override fun getPlayers(): MutableCollection<Player> = _players
 
     open fun endGameLater(delay: Duration = Duration.ZERO) {
         state = GameState.ENDING
@@ -320,7 +321,7 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
             }
         }.executionType(ExecutionType.TICK_START).delay(Duration.ofSeconds(10))
 
-        players.clear()
+        while (players.isNotEmpty()) removePlayer(players.first())
     }
 
     open fun isInactive(): Boolean {
@@ -413,7 +414,7 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
                         logger.info("Ending inactive game ${game.id} (${game.name}/${game.mapName}/${game.mode})")
                         game.endGame(false)
                     }
-                    game.players.removeIf { player -> !player.isOnline }
+                    game._players.removeIf { player -> !player.isOnline }
                 }
 
                 instances.forEach { instance ->
