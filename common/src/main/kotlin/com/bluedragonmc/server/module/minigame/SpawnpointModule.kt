@@ -111,7 +111,10 @@ class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule(
 
         private fun findSpawnpoint(player: Player): Pos {
             val pos = spawnpoints[n++]
-            if (cachedSpawnpoints.containsValue(pos)) return findSpawnpoint(player) // Prevent players from spawning inside each other
+            if (cachedSpawnpoints.containsValue(pos) && cachedSpawnpoints.size < spawnpoints.size) {
+                // Prevent players from spawning inside each other when there's another spawnpoint available
+                return findSpawnpoint(player)
+            }
             cachedSpawnpoints[player] = pos
             return pos
         }
