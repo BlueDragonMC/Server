@@ -42,6 +42,8 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
         val LAST_DAMAGE: Tag<Float> = Tag.Float("last_damage").defaultValue(0.0f)
 
         fun takeKnockback(xComponent: Double, zComponent: Double, target: Entity, multiplier: Double) {
+            val xComponent = if (xComponent.isNaN()) 0.0 else xComponent
+            val zComponent = if (zComponent.isNaN()) 0.0 else zComponent
 
             if (target.entityType == EntityType.ARMOR_STAND && target.isInvisible) return
             if (target.entityType == EntityType.ITEM_FRAME || target.entityType == EntityType.GLOW_ITEM_FRAME) return
