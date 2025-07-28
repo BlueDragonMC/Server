@@ -59,9 +59,5 @@ interface OutgoingRPCHandler {
 
     // Jukebox controls
     suspend fun getSongInfo(player: Player): PlayerSongQueue
-    suspend fun playSong(player: Player, songName: String, queuePosition: Int, startTimeInTicks: Int, tags: List<String>): Boolean
-    suspend fun removeSongByName(player: Player, songName: String)
-    suspend fun removeSongByTag(player: Player, matchTags: List<String>)
-    suspend fun stopSongAndClearQueue(player: Player)
-
+    suspend fun setSongInfo(player: Player, songQueue: PlayerSongQueue)
 }

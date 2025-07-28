@@ -3,6 +3,7 @@ metadata.format.version = "1.1"
 [versions]
 kotlin = "2.1.10"
 minestom = "2025.07.27-1.21.8"
+jukebox = "a941945c86"
 configurate = "4.2.0"
 minimessage = "4.19.0"
 kmongo = "5.2.1"
@@ -12,7 +13,7 @@ serialization = "1.8.0"
 tinylog = "2.7.0"
 atlas-projectiles = "2.1.2"
 # Auto-generated GRPC/Protobuf messaging code
-rpc = "bff6cb5ac2"
+rpc = "d40ac743b5"
 # Messaging dependencies
 grpc = "1.71.0"
 grpc-kotlin-stub = "1.4.1"
@@ -24,6 +25,8 @@ junit = "5.9.0"
 [libraries]
 kotlin-jvm = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
 minestom = { group = "net.minestom", name = "minestom", version.ref = "minestom" }
+jukebox = { group = "com.github.BlueDragonMC", name = "Jukebox", version.ref = "jukebox" }
+#jukebox = { group = "com.bluedragonmc", name = "Jukebox", version = "1.0-SNAPSHOT" }
 configurate = { group = "org.spongepowered", name = "configurate-yaml", version.ref = "configurate" }
 configurate-extra-kotlin = { group = "org.spongepowered", name = "configurate-extra-kotlin", version.ref = "configurate" }
 minimessage = { group = "net.kyori", name = "adventure-text-minimessage", version.ref = "minimessage" }

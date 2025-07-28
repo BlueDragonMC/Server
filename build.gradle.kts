@@ -23,6 +23,7 @@ dependencies {
     testRuntimeOnly(libs.junit.engine)
 
     implementation(libs.minestom) // Minestom
+    implementation(libs.jukebox) // Jukebox (for note block song file parsing)
     implementation(libs.minimessage) // MiniMessage
     implementation(libs.kmongo) // Database support
     implementation(libs.caffeine) // Caching library for database responses

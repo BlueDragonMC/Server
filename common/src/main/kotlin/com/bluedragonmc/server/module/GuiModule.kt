@@ -38,9 +38,7 @@ import net.minestom.server.item.Material
  */
 open class GuiModule : GameModule() {
 
-    companion object {
-        internal val inventories = mutableMapOf<Byte, Menu>()
-    }
+    internal val inventories = mutableMapOf<Byte, Menu>()
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         eventNode.addListener(InventoryCloseEvent::class.java) { event ->
@@ -89,7 +87,7 @@ open class GuiModule : GameModule() {
         return Menu(title, inventoryType, builder.build(), isPerPlayer, allowSpectatorClicks)
     }
 
-    data class Menu(
+    inner class Menu(
         val title: Component,
         val inventoryType: InventoryType,
         private val items: List<Slot>,

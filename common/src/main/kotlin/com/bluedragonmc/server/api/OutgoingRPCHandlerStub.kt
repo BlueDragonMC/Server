@@ -123,25 +123,10 @@ class OutgoingRPCHandlerStub : OutgoingRPCHandler {
         }
     }
 
-    override suspend fun playSong(
+    override suspend fun setSongInfo(
         player: Player,
-        songName: String,
-        queuePosition: Int,
-        startTimeInTicks: Int,
-        tags: List<String>,
-    ): Boolean {
-        return false
-    }
-
-    override suspend fun removeSongByName(player: Player, songName: String) {
-
-    }
-
-    override suspend fun removeSongByTag(player: Player, matchTags: List<String>) {
-
-    }
-
-    override suspend fun stopSongAndClearQueue(player: Player) {
+        songQueue: JukeboxOuterClass.PlayerSongQueue
+    ) {
 
     }
 }
