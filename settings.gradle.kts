@@ -5,4 +5,4 @@ pluginManagement {
 }
 
 include("common")
-include("testing")
+
