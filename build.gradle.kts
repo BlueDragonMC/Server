@@ -1,6 +1,6 @@
 plugins {
     id("server.common-conventions")
-    id("com.github.johnrengelman.shadow") version "8.1.1"
+    id("com.gradleup.shadow") version "9.0.1"
     kotlin("plugin.serialization") version "2.1.10"
     id("net.kyori.blossom") version "2.1.0"
     `maven-publish`
@@ -42,9 +42,9 @@ sourceSets {
             val gitCommitDate = getOutputOf("git log -1 --format=%ct")
 
             kotlinSources {
-                property("gitCommit", gitCommit)
-                property("gitBranch", gitBranch)
-                property("gitCommitDate", gitCommitDate)
+                property("gitCommit", gitCommit.orEmpty())
+                property("gitBranch", gitBranch.orEmpty())
+                property("gitCommitDate", gitCommitDate.orEmpty())
             }
         }
     }
@@ -52,13 +52,11 @@ sourceSets {
 
 fun getOutputOf(command: String): String? {
     try {
-        val stream = org.apache.commons.io.output.ByteArrayOutputStream()
-        project.exec {
+        val output = providers.exec {
             commandLine = command.split(" ")
-            standardOutput = stream
         }
-        return String(stream.toByteArray()).trim()
-    } catch (e: Throwable) {
+        return output.standardOutput.asText.get().trim()
+    } catch (_: Throwable) {
         return null
     }
 }
