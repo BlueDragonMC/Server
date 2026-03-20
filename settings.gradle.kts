@@ -5,4 +5,3 @@ pluginManagement {
 }
 
 include("common")
-

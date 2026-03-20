@@ -79,6 +79,7 @@ object PerInstanceTabList : Bootstrap() {
         player.gameMode,
         player.name,
         null,
-        1024
+        1024,
+        true
     )
 }

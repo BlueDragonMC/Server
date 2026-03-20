@@ -10,7 +10,7 @@ import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.Entity
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
-import net.minestom.server.entity.metadata.PlayerMeta
+import net.minestom.server.entity.metadata.avatar.PlayerMeta
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
 import net.minestom.server.network.player.GameProfile

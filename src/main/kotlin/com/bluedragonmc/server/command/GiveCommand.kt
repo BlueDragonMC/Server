@@ -17,7 +17,7 @@ class GiveCommand(name: String, usageString: String, vararg aliases: String) :
 
             sender.sendMessage(formatMessageTranslated("command.give.self",
                 1,
-                Component.translatable(itemStack.material().registry().translationKey())))
+                Component.translatable(itemStack.material().registry()!!.translationKey())))
         }.requirePlayers()
 
         syntax(itemArgument, amountArgument) {
@@ -28,7 +28,7 @@ class GiveCommand(name: String, usageString: String, vararg aliases: String) :
 
             sender.sendMessage(formatMessageTranslated("command.give.self",
                 amount,
-                Component.translatable(itemStack.material().registry().translationKey())))
+                Component.translatable(itemStack.material().registry()!!.translationKey())))
         }.requirePlayers()
 
         syntax(playerArgument, itemArgument) {
@@ -40,7 +40,7 @@ class GiveCommand(name: String, usageString: String, vararg aliases: String) :
             sender.sendMessage(formatMessageTranslated("command.give.other",
                 player.name,
                 1,
-                Component.translatable(itemStack.material().registry().translationKey())))
+                Component.translatable(itemStack.material().registry()!!.translationKey())))
         }
 
         syntax(playerArgument, itemArgument, amountArgument) {
@@ -53,6 +53,6 @@ class GiveCommand(name: String, usageString: String, vararg aliases: String) :
             sender.sendMessage(formatMessageTranslated("command.give.other",
                 player.name,
                 amount,
-                Component.translatable(itemStack.material().registry().translationKey())))
+                Component.translatable(itemStack.material().registry()!!.translationKey())))
         }
     })

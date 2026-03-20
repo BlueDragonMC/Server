@@ -94,7 +94,7 @@ class FallDamageModule : GameModule() {
 
                         val blockPos = Pos(x.toDouble(), y.toDouble(), z.toDouble())
                         val blockCenter = blockPos.add(0.5, 0.5, 0.5)
-                        val blockBoundingBox = player.instance.getBlock(blockPos).registry().collisionShape()
+                        val blockBoundingBox = player.instance.getBlock(blockPos).registry()!!.collisionShape()
 
                         val collides = blockBoundingBox.intersectBox(player.position.sub(blockPos), expandedBoundingBox)
                         if (!collides) continue

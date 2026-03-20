@@ -11,7 +11,7 @@ import net.minestom.server.MinecraftServer
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.*
 import net.minestom.server.entity.damage.DamageType
-import net.minestom.server.entity.metadata.PlayerMeta
+import net.minestom.server.entity.metadata.avatar.PlayerMeta
 import net.minestom.server.entity.metadata.display.AbstractDisplayMeta
 import net.minestom.server.entity.metadata.display.TextDisplayMeta
 import net.minestom.server.event.Event
@@ -144,7 +144,8 @@ class NPCModule : GameModule() {
                 GameMode.CREATIVE,
                 Component.text("[NPC] $randomName", NamedTextColor.DARK_GRAY, TextDecoration.ITALIC),
                 null,
-                0
+                0,
+                true
             )
         )
 

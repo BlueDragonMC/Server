@@ -1,7 +1,7 @@
 plugins {
     id("server.common-conventions")
-    id("com.gradleup.shadow") version "9.0.1"
-    kotlin("plugin.serialization") version "2.1.10"
+    id("com.gradleup.shadow") version "9.4.0"
+    kotlin("plugin.serialization") version "2.3.0"
     id("net.kyori.blossom") version "2.1.0"
     `maven-publish`
 }
@@ -75,7 +75,7 @@ publishing {
 
 kotlin {
     jvmToolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
+        languageVersion.set(JavaLanguageVersion.of(25))
     }
 }
 
