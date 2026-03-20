@@ -343,44 +343,18 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
     }
 
     override suspend fun getSongInfo(player: Player): JukeboxOuterClass.PlayerSongQueue {
-        return jukeboxStub.withDeadlineAfter(5, TimeUnit.SECONDS).getSongInfo(songInfoRequest {
+        return jukeboxStub.withDeadlineAfter(5, TimeUnit.SECONDS).getSongQueue(getSongQueueRequest {
             playerUuid = player.uuid.toString()
         })
     }
 
-    override suspend fun playSong(
+    override suspend fun setSongInfo(
         player: Player,
-        songName: String,
-        queuePosition: Int,
-        startTimeInTicks: Int,
-        tags: List<String>,
-    ): Boolean {
-        return jukeboxStub.withDeadlineAfter(5, TimeUnit.SECONDS).playSong(playSongRequest {
-            this.playerUuid = player.uuid.toString()
-            this.songName = songName
-            this.queuePosition = queuePosition
-            this.startTimeTicks = startTimeInTicks
-            tags.forEach { this.tags.add(it) }
-        }).startedPlaying
-    }
-
-    override suspend fun removeSongByName(player: Player, songName: String) {
-        jukeboxStub.withDeadlineAfter(5, TimeUnit.SECONDS).removeSong(songRemoveRequest {
-            this.playerUuid = player.uuid.toString()
-            this.songName = songName
-        })
-    }
-
-    override suspend fun removeSongByTag(player: Player, matchTags: List<String>) {
-        jukeboxStub.withDeadlineAfter(5, TimeUnit.SECONDS).removeSongs(batchSongRemoveRequest {
-            this.playerUuid = player.uuid.toString()
-            matchTags.forEach { this.matchTags.add(it) }
-        })
-    }
-
-    override suspend fun stopSongAndClearQueue(player: Player) {
-        jukeboxStub.withDeadlineAfter(5, TimeUnit.SECONDS).stopSong(stopSongRequest {
-            this.playerUuid = player.uuid.toString()
+        songQueue: JukeboxOuterClass.PlayerSongQueue
+    ) {
+        jukeboxStub.withDeadlineAfter(5, TimeUnit.SECONDS).setSongQueue(setSongQueueRequest {
+            playerUuid = player.uuid.toString()
+            queue = songQueue
         })
     }
 }

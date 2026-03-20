@@ -54,6 +54,7 @@ fun start() {
         GlobalTranslation,
         InitialInstanceRouter,
         IntegrationsInit,
+        Jukebox,
         MojangAuthentication,
         OpenToLAN,
         PerInstanceChat,
@@ -67,8 +68,13 @@ fun start() {
     GameLoader.loadGames()
 
     services.forEach {
-        logger.debug("Initializing service ${it::class.simpleName ?: it::class.qualifiedName}")
-        it.hook(eventNode)
+        try {
+            logger.debug("Initializing service ${it::class.simpleName ?: it::class.qualifiedName}")
+            it.hook(eventNode)
+        } catch (e: Exception) {
+            Exception("Failed to initialize service ${it::class.qualifiedName}", e).printStackTrace()
+            exitProcess(1)
+        }
     }
 
     logger.info("Initialized ${services.size} services in environment ${Environment.current::class.simpleName}.")

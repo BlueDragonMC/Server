@@ -1,5 +1,3 @@
-import org.gradle.kotlin.dsl.support.serviceOf
-
 plugins {
     id("server.common-conventions")
     id("com.gradleup.shadow") version "9.4.0"
@@ -25,6 +23,7 @@ dependencies {
     testRuntimeOnly(libs.junit.engine)
 
     implementation(libs.minestom) // Minestom
+    implementation(libs.jukebox) // Jukebox (for note block song file parsing)
     implementation(libs.minimessage) // MiniMessage
     implementation(libs.kmongo) // Database support
     implementation(libs.caffeine) // Caching library for database responses
@@ -43,9 +42,9 @@ sourceSets {
             val gitCommitDate = getOutputOf("git log -1 --format=%ct")
 
             kotlinSources {
-                property("gitCommit", gitCommit)
-                property("gitBranch", gitBranch)
-                property("gitCommitDate", gitCommitDate)
+                property("gitCommit", gitCommit.orEmpty())
+                property("gitBranch", gitBranch.orEmpty())
+                property("gitCommitDate", gitCommitDate.orEmpty())
             }
         }
     }
@@ -53,13 +52,11 @@ sourceSets {
 
 fun getOutputOf(command: String): String? {
     try {
-        val stream = org.apache.commons.io.output.ByteArrayOutputStream()
-        serviceOf<ExecOperations>().exec {
+        val output = providers.exec {
             commandLine = command.split(" ")
-            standardOutput = stream
         }
-        return String(stream.toByteArray()).trim()
-    } catch (e: Throwable) {
+        return output.standardOutput.asText.get().trim()
+    } catch (_: Throwable) {
         return null
     }
 }

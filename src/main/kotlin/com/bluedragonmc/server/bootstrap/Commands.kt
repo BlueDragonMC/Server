@@ -25,7 +25,7 @@ object Commands : Bootstrap() {
             KillCommand("kill", "/kill [player]"),
             LeaderboardCommand("leaderboard", "/leaderboard <statistic>"),
             ListCommand("list"),
-            LobbyCommand("lobby", "/lobby", "l", "hub"),
+            LobbyCommand("lobby", "l", "hub"),
             MessageCommand("msg", "message", "w", "tell"),
             MindecraftesCommand("mindecraftes", "/mindecraftes"),
             PardonCommand("pardon", "/pardon <player|ban ID>", "unban", "unmute"),
@@ -41,6 +41,7 @@ object Commands : Bootstrap() {
             VersionCommand("version", "/version", "icanhasminestom", "ver", "pl"),
             ViewPunishmentCommand("punishment", "/punishment <id>", "vp"),
             ViewPunishmentsCommand("punishments", "/punishments <player>", "vps", "history"),
+            JukeboxCommand("jukebox", "play", "song")
         ).forEach(MinecraftServer.getCommandManager()::register)
 
         MinecraftServer.getCommandManager().setUnknownCommandCallback { sender, command ->

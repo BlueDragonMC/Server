@@ -4,6 +4,7 @@ import com.bluedragonmc.api.grpc.*
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.api.IncomingRPCHandler
+import com.bluedragonmc.server.bootstrap.Jukebox
 import com.bluedragonmc.server.utils.miniMessage
 import com.google.protobuf.Empty
 import io.grpc.ServerBuilder
@@ -20,6 +21,7 @@ class IncomingRPCHandlerImpl(serverPort: Int) : IncomingRPCHandler {
     private val server = ServerBuilder.forPort(serverPort)
         .addService(GameClientService())
         .addService(PlayerHolderService())
+        .addService(JukeboxService())
         .build()
 
     private val logger = LoggerFactory.getLogger(this::class.java)
@@ -140,6 +142,16 @@ class IncomingRPCHandlerImpl(serverPort: Int) : IncomingRPCHandler {
                     }
                 }
             }
+        }
+    }
+
+    class JukeboxService : JukeboxGrpcKt.JukeboxCoroutineImplBase() {
+        override suspend fun setSongQueue(request: JukeboxOuterClass.SetSongQueueRequest): Empty {
+            val player = MinecraftServer.getConnectionManager().getOnlinePlayerByUuid(UUID.fromString(request.playerUuid))
+            if (player != null) {
+                Jukebox.updateSongQueueFromIncomingMessage(player, request.queue)
+            }
+            return Empty.getDefaultInstance()
         }
     }
 }
