@@ -152,8 +152,8 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
         handler: Consumer<T>,
     ) = handleEvent(EventListener.of(T::class.java, handler))
 
-    protected inline fun <reified T : Event> handleEvent(handler: EventListener<out T>) {
-        eventNode.addListener(handler)
+    protected fun <T : Event> handleEvent(handler: EventListener<out T>) {
+        use(SingleEventModule(handler))
     }
 
     fun unregister(module: GameModule) {
@@ -433,6 +433,19 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
                     InstanceUtils.forceUnregisterInstance(instance)
                 }
             }.repeat(Duration.ofMillis(INSTANCE_CLEANUP_PERIOD)).schedule()
+        }
+    }
+
+    private class SingleEventModule<T : Event>(private val listener: EventListener<out T>) : GameModule() {
+        override fun initialize(
+            parent: Game,
+            eventNode: EventNode<Event>
+        ) {
+            eventNode.addListener(listener)
+        }
+
+        override fun toString(): String {
+            return "SingleEventModule(eventType=${listener.eventType().simpleName})"
         }
     }
 }
