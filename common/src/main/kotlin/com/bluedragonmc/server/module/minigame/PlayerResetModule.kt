@@ -24,6 +24,10 @@ import net.minestom.server.event.EventNode
  * - Clear all tags
  */
 class PlayerResetModule(val defaultGameMode: GameMode? = null) : GameModule() {
+
+    override val eventPriority: Int
+        get() = -999 // Run this event handler before others, in case a game wants to set a player's state upon join
+
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         eventNode.addListener(PlayerJoinGameEvent::class.java) { event ->
             resetPlayer(event.player, defaultGameMode)
