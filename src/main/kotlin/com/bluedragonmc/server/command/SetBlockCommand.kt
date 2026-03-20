@@ -22,7 +22,7 @@ class SetBlockCommand(
             formatMessageTranslated(
                 "command.setblock.response",
                 formatPos(pos),
-                Component.translatable(block.registry().translationKey())
+                Component.translatable(block.registry()!!.translationKey())
             )
         )
     }.requirePlayers()

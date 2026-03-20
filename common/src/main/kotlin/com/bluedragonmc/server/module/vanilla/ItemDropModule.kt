@@ -81,7 +81,7 @@ class ItemDropModule(var dropBlocksOnBreak: Boolean = true, var dropAllOnDeath: 
         }
         eventNode.addListener(PlayerBlockBreakEvent::class.java) { event ->
             if (dropBlocksOnBreak && !event.isCancelled && !excludedBlocks.contains(event.block)) {
-                val itemStack = ItemStack.of(event.block.registry().material() ?: Material.AIR, 1)
+                val itemStack = ItemStack.of(event.block.registry()!!.material() ?: Material.AIR, 1)
                 val dropEvent = BlockItemDropEvent(event.instance, event.block, event.blockPosition, itemStack)
                 parent.callCancellable(dropEvent) {
                     dropItem(

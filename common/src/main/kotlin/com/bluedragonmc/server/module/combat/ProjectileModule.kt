@@ -346,7 +346,7 @@ class ProjectileModule : GameModule() {
             ).filter { pos ->
                 // Check if the block should be destroyed based on the radius
                 val distance = pos.distanceSquared(centerX.toDouble(), centerY.toDouble(), centerZ.toDouble())
-                val resistance = instance.getBlock(pos).registry().explosionResistance()
+                val resistance = instance.getBlock(pos).registry()!!.explosionResistance()
                 val maxStrength = strength * 1.5 - resistance / 2.0
                 if (maxStrength <= 0 || Random.nextDouble(0.0, maxStrength) < distance)
                     return@filter false
@@ -359,7 +359,7 @@ class ProjectileModule : GameModule() {
                 parent.callEvent(event)
 
                 if (dropItems && !event.isCancelled) {
-                    val material = block.registry().material()
+                    val material = block.registry()!!.material()
                     if (material != null)
                         parent.getModule<ItemDropModule>().dropItem(ItemStack.of(material), instance, pos)
                 }

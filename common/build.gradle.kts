@@ -1,6 +1,6 @@
 plugins {
     id("server.common-conventions")
-    kotlin("plugin.serialization") version "2.1.10"
+    kotlin("plugin.serialization") version "2.3.0"
     `maven-publish`
 }
 
@@ -24,6 +24,7 @@ dependencies {
     implementation(libs.bundles.messaging)
     implementation(libs.serialization.json)
     implementation(libs.bundles.tinylog)
+    implementation(libs.fastutil)
 }
 
 publishing {
@@ -40,4 +41,10 @@ publishing {
 
 tasks.getByName<Test>("test") {
     useJUnitPlatform()
+}
+
+kotlin {
+    jvmToolchain {
+        languageVersion.set(JavaLanguageVersion.of(25))
+    }
 }

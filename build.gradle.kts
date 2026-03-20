@@ -1,7 +1,9 @@
+import org.gradle.kotlin.dsl.support.serviceOf
+
 plugins {
     id("server.common-conventions")
-    id("com.github.johnrengelman.shadow") version "8.1.1"
-    kotlin("plugin.serialization") version "2.1.10"
+    id("com.gradleup.shadow") version "9.4.0"
+    kotlin("plugin.serialization") version "2.3.0"
     id("net.kyori.blossom") version "2.1.0"
     `maven-publish`
 }
@@ -52,7 +54,7 @@ sourceSets {
 fun getOutputOf(command: String): String? {
     try {
         val stream = org.apache.commons.io.output.ByteArrayOutputStream()
-        project.exec {
+        serviceOf<ExecOperations>().exec {
             commandLine = command.split(" ")
             standardOutput = stream
         }
@@ -76,7 +78,7 @@ publishing {
 
 kotlin {
     jvmToolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
+        languageVersion.set(JavaLanguageVersion.of(25))
     }
 }
 

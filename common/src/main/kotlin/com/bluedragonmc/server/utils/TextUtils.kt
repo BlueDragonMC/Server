@@ -51,17 +51,17 @@ fun Component.hoverEventTranslatable(key: String, color: TextColor): Component =
     hoverEvent(Component.translatable(key, color))
 
 fun Component.clickEvent(command: String): Component =
-    clickEvent(ClickEvent.clickEvent(ClickEvent.Action.RUN_COMMAND, command))
+    clickEvent(ClickEvent.clickEvent(ClickEvent.Action.RUN_COMMAND, ClickEvent.Payload.string(command)))
 
 fun Component.clickEvent(action: ClickEvent.Action, value: String): Component {
     if (action == ClickEvent.Action.COPY_TO_CLIPBOARD && hoverEvent() == null) {
-        return clickEvent(ClickEvent.clickEvent(action, value)).hoverEventTranslatable(
+        return clickEvent(ClickEvent.clickEvent(action, ClickEvent.Payload.string(value))).hoverEventTranslatable(
             "command.click_to_copy",
             ALT_COLOR_1
         )
     }
     if (action == ClickEvent.Action.OPEN_URL && hoverEvent() == null) {
-        return clickEvent(ClickEvent.clickEvent(action, value)).hoverEvent(
+        return clickEvent(ClickEvent.clickEvent(action, ClickEvent.Payload.string(value))).hoverEvent(
             Component.translatable(
                 "command.click_to_open_url",
                 ALT_COLOR_1,
@@ -69,11 +69,11 @@ fun Component.clickEvent(action: ClickEvent.Action, value: String): Component {
             )
         )
     }
-    return clickEvent(ClickEvent.clickEvent(action, value))
+    return clickEvent(ClickEvent.clickEvent(action, ClickEvent.Payload.string(value)))
 }
 
-fun Material.displayName() = Component.translatable(registry().translationKey())
-fun Material.displayName(color: TextColor) = Component.translatable(registry().translationKey(), color)
+fun Material.displayName() = Component.translatable(registry()!!.translationKey())
+fun Material.displayName(color: TextColor) = Component.translatable(registry()!!.translationKey(), color)
 
 fun Component.noItalic() = decoration(TextDecoration.ITALIC, false)
 fun Component.noBold() = decoration(TextDecoration.BOLD, false)
