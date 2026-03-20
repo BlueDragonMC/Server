@@ -3,13 +3,12 @@ package com.bluedragonmc.server
 import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.bootstrap.*
 import com.bluedragonmc.server.bootstrap.dev.DevInstanceRouter
-import com.bluedragonmc.server.bootstrap.dev.MojangAuthentication
 import com.bluedragonmc.server.bootstrap.dev.OpenToLAN
 import com.bluedragonmc.server.bootstrap.prod.AgonesIntegration
 import com.bluedragonmc.server.bootstrap.prod.InitialInstanceRouter
-import com.bluedragonmc.server.bootstrap.prod.VelocityForwarding
 import com.bluedragonmc.server.queue.GameLoader
 import com.bluedragonmc.server.queue.createEnvironment
+import net.minestom.server.Auth
 import net.minestom.server.MinecraftServer
 import org.slf4j.LoggerFactory
 import java.text.DateFormat
@@ -38,7 +37,20 @@ fun start() {
     Environment.setEnvironment(createEnvironment())
     logger.info("Starting Minecraft server in environment ${Environment.current::class.simpleName}")
 
-    val minecraftServer = MinecraftServer.init()
+    lateinit var auth: Auth
+    val velocitySecret: String? = System.getenv("PUFFIN_VELOCITY_SECRET")
+
+    if (velocitySecret != null) {
+        auth = Auth.Velocity(System.getenv("PUFFIN_VELOCITY_SECRET").trim())
+        MinecraftServer.setCompressionThreshold(0) // Disable compression because packets are being proxied
+    } else {
+        if (!Environment.isDev) {
+            logger.warn("Warning: Running in a production-like environment without Velocity forwarding!")
+        }
+        auth = Auth.Online()
+    }
+
+    val minecraftServer = MinecraftServer.init(auth)
     val eventNode = MinecraftServer.getGlobalEventHandler()
 
     val services = listOf(
@@ -55,13 +67,11 @@ fun start() {
         InitialInstanceRouter,
         IntegrationsInit,
         Jukebox,
-        MojangAuthentication,
         OpenToLAN,
         PerInstanceChat,
         PerInstanceTabList,
         ServerListPingHandler,
         TabListFormat,
-        VelocityForwarding
     ).filter { it.canHook() }
 
     // Load game plugins and preinitialize their main classes
