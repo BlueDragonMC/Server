@@ -18,9 +18,11 @@ class MaxHealthModule(private val maxHealth: Double) : GameModule() {
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         eventNode.addListener(PlayerJoinGameEvent::class.java) { event ->
             event.player.getAttribute(Attribute.MAX_HEALTH).baseValue = maxHealth
+            event.player.health = maxHealth.toFloat()
         }
         eventNode.addListener(PlayerLeaveGameEvent::class.java) { event ->
             event.player.getAttribute(Attribute.MAX_HEALTH).baseValue = 20.0
+            event.player.health = 20f
         }
     }
 }
