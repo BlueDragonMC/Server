@@ -2,6 +2,8 @@ package com.bluedragonmc.server.module.gameplay
 
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.GameModule
+import net.minestom.server.MinecraftServer
+import net.minestom.server.component.DataComponents
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventFilter
@@ -10,7 +12,10 @@ import net.minestom.server.event.item.ItemDropEvent
 import net.minestom.server.event.item.PickupItemEvent
 import net.minestom.server.event.player.PlayerUseItemEvent
 import net.minestom.server.item.ItemStack
+import net.minestom.server.item.component.UseCooldown
+import net.minestom.server.network.packet.server.play.SetCooldownPacket
 import net.minestom.server.tag.Tag
+import java.time.Duration
 import java.util.*
 
 class CustomItemModule(vararg val items: CustomItem) : GameModule() {
@@ -73,11 +78,22 @@ class CustomItemModule(vararg val items: CustomItem) : GameModule() {
          * A unique value that identifies all items of this type.
          */
         abstract val uid: String
+        open val cooldown: Duration = Duration.ZERO
+
+        private val cooldownGroup = "bluedragon:custom-item-$uid"
+
+        /**
+         * Set of players who cannot currently use the item.
+         */
+        protected val cooldownPlayers = mutableSetOf<Player>()
 
         protected abstract fun createItemStack(): ItemStack
 
         fun getItemStack(): ItemStack {
-            return createItemStack().withTag(CUSTOM_UUID_TAG, uid)
+            return createItemStack().with { builder ->
+                builder.setTag(CUSTOM_UUID_TAG, uid)
+                builder.set(DataComponents.USE_COOLDOWN, UseCooldown(cooldown.seconds.toFloat(), cooldownGroup))
+            }
         }
 
         val eventNode by lazy {
@@ -87,7 +103,16 @@ class CustomItemModule(vararg val items: CustomItem) : GameModule() {
             }
 
             eventNode.addListener(net.minestom.server.event.player.PlayerUseItemEvent::class.java) { event ->
+                if (cooldownPlayers.contains(event.player)) return@addListener
                 onUse(event)
+                if (cooldown != Duration.ZERO) {
+                    cooldownPlayers.add(event.player)
+                    event.player.sendPacket(SetCooldownPacket(cooldownGroup, cooldown.seconds.toInt() * 20))
+                    MinecraftServer.getSchedulerManager().buildTask {
+                        cooldownPlayers.remove(event.player)
+                        event.player.sendPacket(SetCooldownPacket(cooldownGroup, 0))
+                    }.delay(cooldown).schedule()
+                }
             }
             eventNode.addListener(ItemDropEvent::class.java) { event ->
                 onDrop(event)
