@@ -19,8 +19,7 @@ object GlobalBlockHandlers : Bootstrap() {
         )
         registerHandler(
             "minecraft:skull", listOf(
-                Tag.String("ExtraType"),
-                Tag.NBT("SkullOwner")
+                Tag.NBT("profile")
             )
         )
         registerHandler(
@@ -34,9 +33,10 @@ object GlobalBlockHandlers : Bootstrap() {
         )
         registerHandler(
             "minecraft:furnace", listOf(
-                Tag.Short("BurnTime"),
-                Tag.Short("CookTime"),
-                Tag.Short("CookTimeTotal"),
+                Tag.Short("lit_time_remaining"),
+                Tag.Short("cooking_time_spent"),
+                Tag.Short("cooking_total_time"),
+                Tag.Short("lit_total_time"),
                 Tag.Component("CustomName"),
                 Tag.ItemStack("Items").list(),
                 Tag.String("Lock"),
@@ -46,7 +46,7 @@ object GlobalBlockHandlers : Bootstrap() {
         registerHandler(
             "minecraft:banner", listOf(
                 Tag.String("CustomName"),
-                Tag.NBT("Patterns").list()
+                Tag.NBT("patterns").list()
             )
         )
         registerHandler(
@@ -66,6 +66,12 @@ object GlobalBlockHandlers : Bootstrap() {
                 Tag.String("Lock"),
                 Tag.String("LootTable"),
                 Tag.Long("LootTableSeed")
+            )
+        )
+        registerHandler(
+            "minecraft:shelf", listOf(
+                Tag.NBT("Items"),
+                Tag.Boolean("align_items_to_bottom")
             )
         )
     }
