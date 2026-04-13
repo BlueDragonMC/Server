@@ -21,33 +21,12 @@ import kotlin.random.Random
  * Modified to work with the latest minestom-ce
  * https://github.com/TogAr2/BasicRedstone/blob/master/src/main/java/io/github/bloepiloepi/basicredstone/door/Doors.java
  */
-class DoorsModule : GameModule() {
-
-    private val woodDoors = listOf(
-        Block.ACACIA_DOOR,
-        Block.BAMBOO_DOOR,
-        Block.BIRCH_DOOR,
-        Block.DARK_OAK_DOOR,
-        Block.CHERRY_DOOR,
-        Block.CRIMSON_DOOR,
-        Block.JUNGLE_DOOR,
-        Block.MANGROVE_DOOR,
-        Block.SPRUCE_DOOR,
-        Block.WARPED_DOOR,
-        Block.OAK_DOOR,
-        Block.COPPER_DOOR,
-        Block.EXPOSED_COPPER_DOOR,
-        Block.WEATHERED_COPPER_DOOR,
-        Block.OXIDIZED_COPPER_DOOR,
-        Block.WAXED_COPPER_DOOR,
-        Block.WAXED_EXPOSED_COPPER_DOOR,
-        Block.WAXED_WEATHERED_COPPER_DOOR,
-        Block.WAXED_OXIDIZED_COPPER_DOOR,
-    )
+class DoorsModule(private val allowDoors: Boolean = true, private val allowTrapdoors: Boolean = true) : GameModule() {
 
     private fun isDoor(block: Block) = woodDoors.any { it.compare(block, Block.Comparator.ID) }
+    private fun isTrapdoor(block: Block) = woodTrapdoors.any { it.compare(block, Block.Comparator.ID) }
 
-    private fun setOpen(instance: Instance, position: Point, open: Boolean, playEffect: Boolean, source: Player?) {
+    private fun setOpen(instance: Instance, position: Point, open: Boolean, playEffect: Boolean, source: Player?, isFullDoor: Boolean) {
         val block: Block = instance.getBlock(position)
 
         // Modify the half that the player clicked
@@ -56,16 +35,18 @@ class DoorsModule : GameModule() {
         )
 
         // Modify the other half
-        val half = block.getProperty("half")
-        val otherHalfPos = if (half == "upper") {
-            position.sub(0.0, 1.0, 0.0)
-        } else {
-            position.add(0.0, 1.0, 0.0)
-        }
+        if (isFullDoor) {
+            val half = block.getProperty("half")
+            val otherHalfPos = if (half == "upper") {
+                position.sub(0.0, 1.0, 0.0)
+            } else {
+                position.add(0.0, 1.0, 0.0)
+            }
 
-        instance.setBlock(
-            otherHalfPos, instance.getBlock(otherHalfPos).withProperty("open", open.toString())
-        )
+            instance.setBlock(
+                otherHalfPos, instance.getBlock(otherHalfPos).withProperty("open", open.toString())
+            )
+        }
 
         val shouldPlaySound = playEffect && (block.getProperty("open").equals("true")) != open
 
@@ -87,6 +68,7 @@ class DoorsModule : GameModule() {
             Block.ACACIA_DOOR,
             Block.BIRCH_DOOR,
             Block.DARK_OAK_DOOR,
+            Block.PALE_OAK_DOOR,
             Block.JUNGLE_DOOR,
             Block.MANGROVE_DOOR,
             Block.SPRUCE_DOOR,
@@ -109,21 +91,100 @@ class DoorsModule : GameModule() {
             Block.WAXED_WEATHERED_COPPER_DOOR,
             Block.WAXED_OXIDIZED_COPPER_DOOR -> SoundEvent.BLOCK_COPPER_DOOR_OPEN to SoundEvent.BLOCK_COPPER_DOOR_CLOSE
 
+            // trapdoors
+
+            Block.OAK_TRAPDOOR,
+            Block.SPRUCE_TRAPDOOR,
+            Block.BIRCH_TRAPDOOR,
+            Block.JUNGLE_TRAPDOOR,
+            Block.ACACIA_TRAPDOOR,
+            Block.MANGROVE_TRAPDOOR,
+            Block.PALE_OAK_TRAPDOOR,
+            Block.DARK_OAK_TRAPDOOR -> SoundEvent.BLOCK_WOODEN_TRAPDOOR_OPEN to SoundEvent.BLOCK_WOODEN_TRAPDOOR_CLOSE
+
+            Block.CHERRY_TRAPDOOR -> SoundEvent.BLOCK_CHERRY_WOOD_TRAPDOOR_OPEN to SoundEvent.BLOCK_CHERRY_WOOD_TRAPDOOR_CLOSE
+
+            Block.CRIMSON_TRAPDOOR,
+            Block.WARPED_TRAPDOOR -> SoundEvent.BLOCK_NETHER_WOOD_TRAPDOOR_OPEN to SoundEvent.BLOCK_NETHER_WOOD_TRAPDOOR_CLOSE
+
+            Block.BAMBOO_TRAPDOOR -> SoundEvent.BLOCK_BAMBOO_WOOD_TRAPDOOR_OPEN to SoundEvent.BLOCK_BAMBOO_WOOD_TRAPDOOR_CLOSE
+
+            Block.COPPER_TRAPDOOR,
+            Block.EXPOSED_COPPER_TRAPDOOR,
+            Block.WEATHERED_COPPER_TRAPDOOR,
+            Block.OXIDIZED_COPPER_TRAPDOOR,
+            Block.WAXED_COPPER_TRAPDOOR,
+            Block.WAXED_EXPOSED_COPPER_TRAPDOOR,
+            Block.WAXED_WEATHERED_COPPER_TRAPDOOR,
+            Block.WAXED_OXIDIZED_COPPER_TRAPDOOR -> SoundEvent.BLOCK_COPPER_TRAPDOOR_OPEN to SoundEvent.BLOCK_COPPER_TRAPDOOR_CLOSE
+
             else -> null
         }
     }
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         eventNode.addListener(PlayerBlockInteractEvent::class.java) { event ->
-            if (event.player.isSneaking || !isDoor(event.block)) return@addListener
+            val door = isDoor(event.block)
+            val trapdoor = isTrapdoor(event.block)
+            if (event.player.isSneaking || (!door && !trapdoor)) return@addListener
+            if (door && !allowDoors) return@addListener
+            if (trapdoor && !allowTrapdoors) return@addListener
 
             event.isBlockingItemUse = true
 
             val isOpen = event.block.getProperty("open").equals("true")
 
             setOpen(
-                event.instance, event.blockPosition, open = !isOpen, playEffect = true, source = event.player
+                event.instance, event.blockPosition, open = !isOpen, playEffect = true, source = event.player, isFullDoor = door
             )
         }
+    }
+
+    private companion object {
+        private val woodDoors = setOf(
+            Block.ACACIA_DOOR,
+            Block.BAMBOO_DOOR,
+            Block.BIRCH_DOOR,
+            Block.DARK_OAK_DOOR,
+            Block.PALE_OAK_DOOR,
+            Block.CHERRY_DOOR,
+            Block.CRIMSON_DOOR,
+            Block.JUNGLE_DOOR,
+            Block.MANGROVE_DOOR,
+            Block.SPRUCE_DOOR,
+            Block.WARPED_DOOR,
+            Block.OAK_DOOR,
+            Block.COPPER_DOOR,
+            Block.EXPOSED_COPPER_DOOR,
+            Block.WEATHERED_COPPER_DOOR,
+            Block.OXIDIZED_COPPER_DOOR,
+            Block.WAXED_COPPER_DOOR,
+            Block.WAXED_EXPOSED_COPPER_DOOR,
+            Block.WAXED_WEATHERED_COPPER_DOOR,
+            Block.WAXED_OXIDIZED_COPPER_DOOR,
+        )
+
+        private val woodTrapdoors = setOf(
+            Block.OAK_TRAPDOOR,
+            Block.SPRUCE_TRAPDOOR,
+            Block.BIRCH_TRAPDOOR,
+            Block.JUNGLE_TRAPDOOR,
+            Block.ACACIA_TRAPDOOR,
+            Block.CHERRY_TRAPDOOR,
+            Block.DARK_OAK_TRAPDOOR,
+            Block.PALE_OAK_TRAPDOOR,
+            Block.MANGROVE_TRAPDOOR,
+            Block.BAMBOO_TRAPDOOR,
+            Block.CRIMSON_TRAPDOOR,
+            Block.WARPED_TRAPDOOR,
+            Block.COPPER_TRAPDOOR,
+            Block.EXPOSED_COPPER_TRAPDOOR,
+            Block.WEATHERED_COPPER_TRAPDOOR,
+            Block.OXIDIZED_COPPER_TRAPDOOR,
+            Block.WAXED_COPPER_TRAPDOOR,
+            Block.WAXED_EXPOSED_COPPER_TRAPDOOR,
+            Block.WAXED_WEATHERED_COPPER_TRAPDOOR,
+            Block.WAXED_OXIDIZED_COPPER_TRAPDOOR,
+        )
     }
 }
