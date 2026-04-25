@@ -183,7 +183,7 @@ class CustomItemModule(vararg val items: CustomItem) : GameModule() {
         abstract val uid: String
         open val cooldown: Duration = Duration.ZERO
 
-        internal val cooldownGroup = "bluedragon:custom-item-$uid"
+        internal val cooldownGroup get() = "bluedragon:custom-item-$uid"
 
         protected abstract fun createItemStack(): ItemStack
 
