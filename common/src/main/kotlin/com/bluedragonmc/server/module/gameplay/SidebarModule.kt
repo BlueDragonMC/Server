@@ -5,16 +5,12 @@ import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.event.*
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.utils.GameState
-import com.bluedragonmc.server.utils.plus
 import com.bluedragonmc.server.utils.withGradient
-import com.bluedragonmc.server.utils.withTransition
 import kotlinx.coroutines.runBlocking
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.Component.text
 import net.kyori.adventure.text.format.NamedTextColor.DARK_GRAY
 import net.kyori.adventure.text.format.NamedTextColor.RED
-import net.kyori.adventure.text.format.NamedTextColor.YELLOW
-import net.kyori.adventure.text.format.NamedTextColor.GREEN
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.translation.GlobalTranslator
 import net.minestom.server.MinecraftServer
@@ -145,7 +141,7 @@ class SidebarModule(private val title: String) : GameModule() {
             } else {
                 // Re-create the sidebar as its size has changed.
                 val new = module.createSidebar()
-                lines.forEachIndexed { i, line -> new.createLine(ScoreboardLine("line-$i", line, lines.size - i)) }
+                lines.forEachIndexed { i, line -> new.createLine(ScoreboardLine("line-$i", line, lines.size - i, Sidebar.NumberFormat.blank())) }
                 old.viewers.forEach { new.addViewer(it) } // Re-add all existing viewers
                 module.sidebars[player] = new
             }
