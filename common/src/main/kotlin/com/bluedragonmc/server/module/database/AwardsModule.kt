@@ -82,15 +82,17 @@ class AwardsModule : GameModule() {
     private fun addCoins(player: Player, amount: Int) {
         player as CustomPlayer
         require(player.isDataInitialized()) { "Player's data has not loaded!" }
-        val oldLevel = CustomPlayer.getXpLevel(player.data.experience).toInt()
         Database.IO.launch {
             player.data.compute(PlayerDocument::coins) { it + amount }
-            player.data.compute(PlayerDocument::experience) { it + amount }
-            Messaging.outgoing.recordCoinAward(player.uuid, amount, parent.id)
+            val prev = player.data.compute(PlayerDocument::experience) { it + amount }
+            val oldLevel = CustomPlayer.getXpLevel(prev).toInt()
             val newLevel = CustomPlayer.getXpLevel(player.data.experience).toInt()
             if (newLevel > oldLevel)
                 MinecraftServer.getSchedulerManager().buildTask { notifyLevelUp(player, oldLevel, newLevel) }
                     .delay(Duration.ofSeconds(2)).schedule()
+        }
+        Database.IO.launch {
+            Messaging.outgoing.recordCoinAward(player.uuid, amount, parent.id)
         }
     }
 

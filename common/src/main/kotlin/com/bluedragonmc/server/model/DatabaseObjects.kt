@@ -3,6 +3,8 @@
 package com.bluedragonmc.server.model
 
 import com.bluedragonmc.server.service.Database
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
@@ -10,7 +12,6 @@ import kotlinx.serialization.Serializable
 import java.time.Duration
 import java.time.Instant
 import java.util.*
-import kotlin.reflect.KMutableProperty
 import kotlin.reflect.KMutableProperty1
 
 @Serializable
@@ -27,16 +28,25 @@ data class PlayerDocument(
     val firstJoinDate: Long = System.currentTimeMillis(),
     var lastJoinDate: Long = System.currentTimeMillis(),
 ) {
+    private val mutex = Mutex()
 
-    suspend fun <T> update(field: KMutableProperty<T>, value: T) {
-        Database.connection.updatePlayer(uuid.toString(), field, value)
-        field.setter.call(this, value)
+    suspend fun <T> update(field: KMutableProperty1<PlayerDocument, T>, value: T): T {
+        return mutex.withLock {
+            Database.connection.updatePlayer(uuid.toString(), field, value)
+            val oldValue = field.get(this)
+            field.setter.call(this, value)
+            return@withLock oldValue
+        }
     }
 
-    suspend fun <T> compute(field: KMutableProperty1<PlayerDocument, T>, block: (T) -> T) {
-        val newValue = block(field.get(this))
-        Database.connection.updatePlayer(uuid.toString(), field, newValue)
-        field.set(this, newValue)
+    suspend fun <T> compute(field: KMutableProperty1<PlayerDocument, T>, block: (T) -> T): T {
+        return mutex.withLock {
+            val oldValue = field.get(this)
+            val newValue = block(oldValue)
+            Database.connection.updatePlayer(uuid.toString(), field, newValue)
+            field.setter.call(this, newValue)
+            return@withLock oldValue
+        }
     }
 }
 
