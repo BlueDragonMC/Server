@@ -32,8 +32,6 @@ object GlobalChatFormat : Bootstrap() {
             val level = CustomPlayer.getXpLevel(experience)
             val xpToNextLevel = CustomPlayer.getXpToNextLevel(level, experience)
 
-            val prefix = Permissions.getMetadata(player.uuid).prefix
-
             event.isCancelled = true
             val component = buildComponent {
                 +buildComponent {
@@ -47,7 +45,6 @@ object GlobalChatFormat : Bootstrap() {
                     Component.text(xpToNextLevel, ALT_COLOR_1),
                     Component.text(level.toInt() + 1, ALT_COLOR_2))))
 
-                +prefix
                 +player.name
                 +Component.text(": ", NamedTextColor.DARK_GRAY)
                 if (Permissions.hasPermission(player.uuid, "chat.minimessage") == true)

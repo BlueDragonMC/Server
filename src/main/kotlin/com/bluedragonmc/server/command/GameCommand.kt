@@ -6,7 +6,6 @@ import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.event.GameStartEvent
-import com.bluedragonmc.server.module.minigame.TeamModule
 import com.bluedragonmc.server.module.minigame.WinModule
 import com.bluedragonmc.server.utils.GameState
 import com.bluedragonmc.server.utils.buildComponent
@@ -34,7 +33,7 @@ class GameCommand(name: String, usageString: String, vararg aliases: String?) : 
 
         fun end(sender: CommandSender, game: Game) {
             if (game.state == GameState.INGAME) {
-                game.callEvent(WinModule.WinnerDeclaredEvent(game, TeamModule.Team()))
+                game.callEvent(WinModule.WinnerDeclaredEvent(game, text("Nobody"), emptySet()))
             }
             game.endGame()
             sender.sendMessage(formatMessageTranslated("command.game.ended"))

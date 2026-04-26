@@ -117,5 +117,7 @@ class AwardsModule : GameModule() {
 
     companion object {
         val AWARD_REASON_KILLS = Component.translatable("module.award.reason.kills")
+        val AWARD_REASON_WIN = Component.translatable("module.win.coins.won")
+        val AWARD_REASON_PARTICIPATION = Component.translatable("module.win.coins.participation")
     }
 }

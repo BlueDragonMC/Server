@@ -84,7 +84,7 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
     }.joinToString("")
 
     private lateinit var startTime: Date
-    private lateinit var winningTeam: TeamModule.Team
+    private lateinit var winningTeam: TeamRecord
 
     open val maxPlayers = 8
 
@@ -135,7 +135,7 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
             startTime = Date()
         }
         handleEvent<WinModule.WinnerDeclaredEvent> { event ->
-            winningTeam = event.winningTeam
+            winningTeam = TeamRecord(event.winningTeamName.toPlainText(), event.winningTeamPlayers.map { PlayerRecord(it.uuid, it.username) })
         }
     }
 
@@ -249,16 +249,7 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
                 }
             )
         }
-        val winningTeamRecord = if (::winningTeam.isInitialized) {
-            TeamRecord(
-                name = winningTeam.name.toPlainText(),
-                players = winningTeam.players.map { player ->
-                    PlayerRecord(
-                        uuid = player.uuid,
-                        username = player.username
-                    )
-                })
-        } else null
+        val winningTeamRecord = if (::winningTeam.isInitialized) winningTeam else null
 
         val instanceRecords = getOwnedInstances().map { instance ->
             InstanceRecord(

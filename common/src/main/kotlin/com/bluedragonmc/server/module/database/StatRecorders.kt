@@ -46,7 +46,7 @@ object StatRecorders {
     val WINS_AND_LOSSES =
         StatisticsModule.EventStatisticRecorder(WinModule.WinnerDeclaredEvent::class.java) { game, event ->
             ArrayList(game.players).forEach { player ->
-                if (player in event.winningTeam.players) {
+                if (player in event.winningTeamPlayers) {
                     incrementStatistic(player, getStatPrefix(game) + "_wins")
                 } else {
                     incrementStatistic(player, getStatPrefix(game) + "_losses")

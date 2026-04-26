@@ -7,7 +7,6 @@ import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.GameEvent
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.GlobalCosmeticModule
-import com.bluedragonmc.server.module.database.AwardsModule
 import com.bluedragonmc.server.utils.CircularList
 import com.bluedragonmc.server.utils.FireworkUtils
 import com.bluedragonmc.server.utils.GameState
@@ -27,7 +26,6 @@ import java.time.Duration
 
 class WinModule(
     val winCondition: WinCondition = WinCondition.MANUAL,
-    private val coinAwardsFunction: (Player, TeamModule.Team) -> Int = { _, _ -> 0 },
 ) : GameModule() {
     private lateinit var parent: Game
 
@@ -52,36 +50,25 @@ class WinModule(
                     ?.let { declareWinner(it) }
             }
         }
-        eventNode.addListener(WinnerDeclaredEvent::class.java) { event ->
-            parent.players.forEach { player ->
-                val coins = coinAwardsFunction(player, event.winningTeam)
-                if (coins == 0) return@forEach
-                parent.getModule<AwardsModule>().awardCoins(
-                    player, coins, Component.translatable(
-                        if (player in event.winningTeam.players) "module.win.coins.won" else "module.win.coins.participation"
-                    )
-                )
-            }
-        }
     }
 
     /**
      * Declares the winner of the game to be a specific team, waits 5 seconds, and ends the game.
      * All players are notified of the winning team.
      */
-    fun declareWinner(team: TeamModule.Team) {
+    fun declareWinner(winningTeamName: Component, winningTeamPlayers: Collection<Player>) {
         if (isWinnerDeclared) return
-        MinecraftServer.getGlobalEventHandler().callCancellable(WinnerDeclaredEvent(parent, team)) {
+        MinecraftServer.getGlobalEventHandler().callCancellable(WinnerDeclaredEvent(parent, winningTeamName, winningTeamPlayers)) {
             isWinnerDeclared = true
             // Normal message
             parent.players.forEach {
                 it.sendMessage(
-                    Component.translatable("module.win.team_won", BRAND_COLOR_PRIMARY_2, team.name)
+                    Component.translatable("module.win.team_won", BRAND_COLOR_PRIMARY_2, winningTeamName)
                         .surroundWithSeparators()
                 )
             }
             for (p in parent.players) {
-                if (team.players.contains(p)) {
+                if (winningTeamPlayers.contains(p)) {
                     p.showTitle(
                         Title.title(
                             Component.translatable(
@@ -103,7 +90,9 @@ class WinModule(
         }
     }
 
-    class WinnerDeclaredEvent(game: Game, val winningTeam: TeamModule.Team) : GameEvent(game)
+    fun declareWinner(team: TeamModule.Team) = declareWinner(team.name, team.players)
+
+    class WinnerDeclaredEvent(game: Game, val winningTeamName: Component, val winningTeamPlayers: Collection<Player>) : GameEvent(game)
 
     private val defaultColors = arrayOf(BRAND_COLOR_PRIMARY_1, BRAND_COLOR_PRIMARY_2, BRAND_COLOR_PRIMARY_3)
 
@@ -150,9 +139,7 @@ class WinModule(
         }
     }
 
-    fun declareWinner(winner: Player) {
-        declareWinner(TeamModule.Team(winner.name, mutableListOf(winner)))
-    }
+    fun declareWinner(winner: Player) = declareWinner(winner.name, listOf(winner))
 
     enum class WinCondition {
         /**

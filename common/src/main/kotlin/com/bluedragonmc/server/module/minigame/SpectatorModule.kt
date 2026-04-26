@@ -6,8 +6,11 @@ import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.GameEvent
 import com.bluedragonmc.server.event.PlayerLeaveGameEvent
 import com.bluedragonmc.server.module.GameModule
+import com.bluedragonmc.server.module.SoftDependsOn
 import com.bluedragonmc.server.utils.GameState
+import com.bluedragonmc.server.utils.withDecoration
 import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.TextDecoration
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
@@ -18,6 +21,7 @@ import net.minestom.server.event.player.PlayerDeathEvent
 /**
  * A simple module to manage spectators in a game.
  */
+@SoftDependsOn(TeamModule::class)
 class SpectatorModule(var spectateOnDeath: Boolean, var spectateOnLeave: Boolean = true) : GameModule() {
     private val spectators = mutableListOf<Player>()
     private lateinit var parent: Game
@@ -39,7 +43,7 @@ class SpectatorModule(var spectateOnDeath: Boolean, var spectateOnLeave: Boolean
         eventNode.addListener(PlayerLeaveGameEvent::class.java) { event ->
             if (spectateOnLeave && parent.state == GameState.INGAME) {
                 parent.players.forEach { it.sendMessage(Component.translatable("module.spectator.disconnect", BRAND_COLOR_PRIMARY_2, event.player.name)) }
-                addSpectator(event.player)
+                addSpectator(event.player, updateDisplayName = false)
             }
         }
     }
@@ -53,10 +57,13 @@ class SpectatorModule(var spectateOnDeath: Boolean, var spectateOnLeave: Boolean
      * Fires the `StartSpectatingEvent`.
      * When a player is a spectator, they are considered to be "out of the game".
      */
-    fun addSpectator(player: Player) {
+    fun addSpectator(player: Player, updateDisplayName: Boolean = true) {
         spectators.add(player)
         player.gameMode = GameMode.SPECTATOR
         parent.callEvent(StartSpectatingEvent(parent, player))
+        if (updateDisplayName) {
+            player.displayName = player.name.withDecoration(TextDecoration.STRIKETHROUGH)
+        }
     }
 
     /**
@@ -69,6 +76,9 @@ class SpectatorModule(var spectateOnDeath: Boolean, var spectateOnLeave: Boolean
         if (player is CustomPlayer && player.isSpectating) player.stopSpectating()
         if (parent.hasModule<PlayerResetModule>()) player.gameMode = parent.getModule<PlayerResetModule>().defaultGameMode
         parent.callEvent(StopSpectatingEvent(parent, player))
+
+        val teamColor = parent.getModuleOrNull<TeamModule>()?.getTeam(player)?.name?.color()
+        (player as CustomPlayer).updateDisplayName(teamColor)
     }
 
     /**

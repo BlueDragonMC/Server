@@ -3,8 +3,12 @@ package com.bluedragonmc.server
 import com.bluedragonmc.server.model.PlayerDocument
 import com.bluedragonmc.server.model.PunishmentType
 import com.bluedragonmc.server.module.gameplay.ShopModule
+import com.bluedragonmc.server.service.Permissions
+import com.bluedragonmc.server.utils.plus
+import com.bluedragonmc.server.utils.withColor
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.TextColor
 import net.minestom.server.MinecraftServer
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.Entity
@@ -34,6 +38,13 @@ open class CustomPlayer(playerConnection: PlayerConnection, gameProfile: GamePro
     var virtualItems = mutableListOf<ShopModule.VirtualItem>()
 
     lateinit var data: PlayerDocument
+    val permissionMetadata by lazy { Permissions.getMetadata(uuid) }
+
+    fun updateDisplayName(teamColor: TextColor?) {
+        displayName = Component.empty() + permissionMetadata.prefix + username.withColor(
+            teamColor ?: permissionMetadata.rankColor
+        )
+    }
 
     fun isDataInitialized() = ::data.isInitialized
 
