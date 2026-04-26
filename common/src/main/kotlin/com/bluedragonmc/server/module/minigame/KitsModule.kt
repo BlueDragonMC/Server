@@ -10,10 +10,13 @@ import com.bluedragonmc.server.module.GuiModule
 import com.bluedragonmc.server.utils.splitAndFormatLore
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
+import net.minestom.server.MinecraftServer
 import net.minestom.server.component.DataComponents
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
+import net.minestom.server.event.inventory.InventoryCloseEvent
+import net.minestom.server.inventory.Inventory
 import net.minestom.server.inventory.InventoryType
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
@@ -29,6 +32,7 @@ import net.minestom.server.item.Material
 @DependsOn(GuiModule::class)
 open class KitsModule(
     val showMenu: Boolean = false,
+    val forceSelection: Boolean = false,
     val giveKitsOnStart: Boolean = true,
     val giveKitsOnSelect: Boolean = false,
     val selectableKits: List<Kit>,
@@ -48,13 +52,24 @@ open class KitsModule(
         eventNode.addListener(GameStartEvent::class.java) {
             if (giveKitsOnStart) for (player in parent.players) giveKit(player)
         }
+
+        if (forceSelection) {
+            eventNode.addListener(InventoryCloseEvent::class.java) { event ->
+                if ((event.inventory as? Inventory)?.title != KITS_MENU_TITLE) return@addListener
+                if (!selectedKits.containsKey(event.player)) {
+                    // scheduleNextTick works around an issue where InventoryCloseEvent wasn't always firing
+                    MinecraftServer.getSchedulerManager()
+                        .scheduleNextTick { selectKit(event.player) }
+                }
+            }
+        }
     }
 
     /**
      * Displays the kit selection menu to the specified player.
      */
     fun selectKit(player: Player) {
-        val menu = parent.getModule<GuiModule>().createMenu(title = Component.translatable("module.kit.menu.title"), inventoryType = InventoryType.CHEST_1_ROW, isPerPlayer = true) {
+        val menu = parent.getModule<GuiModule>().createMenu(title = KITS_MENU_TITLE, inventoryType = InventoryType.CHEST_1_ROW, isPerPlayer = true) {
             for (selectableKit in selectableKits) {
                 val index = selectableKits.indexOf(selectableKit)
                 slot(index, selectableKit.icon, { player ->
@@ -102,5 +117,9 @@ open class KitsModule(
         val abilities: List<String> = emptyList()
     ) {
         fun hasAbility(ability: String) = abilities.contains(ability)
+    }
+
+    private companion object {
+        val KITS_MENU_TITLE = Component.translatable("module.kit.menu.title")
     }
 }
