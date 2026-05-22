@@ -22,6 +22,7 @@ import net.minestom.server.event.EventNode
 import net.minestom.server.network.packet.server.play.TeamsPacket
 import net.minestom.server.network.packet.server.play.TeamsPacket.NameTagVisibility
 import java.util.*
+import java.util.concurrent.CopyOnWriteArraySet
 
 /**
  * A module that provides team support.
@@ -184,7 +185,7 @@ class TeamModule(
         val collisionRule: TeamsPacket.CollisionRule = TeamsPacket.CollisionRule.ALWAYS,
     ) : PacketGroupingAudience {
         val uuid: UUID = UUID.randomUUID()
-        private val _players = mutableSetOf<Player>()
+        private val _players = CopyOnWriteArraySet<Player>()
 
         lateinit var scoreboardTeam: net.minestom.server.scoreboard.Team
             private set
