@@ -5,10 +5,7 @@ package com.bluedragonmc.server.model
 import com.bluedragonmc.server.service.Database
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.serialization.EncodeDefault
-import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
+import kotlinx.serialization.*
 import java.time.Duration
 import java.time.Instant
 import java.util.*
@@ -28,6 +25,7 @@ data class PlayerDocument(
     val firstJoinDate: Long = System.currentTimeMillis(),
     var lastJoinDate: Long = System.currentTimeMillis(),
 ) {
+    @Transient
     private val mutex = Mutex()
 
     suspend fun <T> update(field: KMutableProperty1<PlayerDocument, T>, value: T): T {
