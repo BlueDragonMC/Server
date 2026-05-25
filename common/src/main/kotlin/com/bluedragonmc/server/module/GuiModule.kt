@@ -62,8 +62,16 @@ open class GuiModule : GameModule() {
             inventories[openInv]?.onTickAction?.invoke(event.player)
         }
         eventNode.addListener(InventoryPreClickEvent::class.java) { event ->
-            if (event.inventory is PlayerInventory) return@addListener
-            inventories[event.inventory.windowId]?.onPreClick(event)
+            if (event.inventory is PlayerInventory) {
+                if (event.click is Click.LeftShift || event.click is Click.RightShift) {
+                    // Shift-clicking an item into another inventory
+                    val windowId = event.player.openInventory?.windowId ?: return@addListener
+                    val action = inventories[windowId]?.onShiftClickAction
+                    action?.invoke(event)
+                }
+            } else {
+                inventories[event.inventory.windowId]?.onPreClick(event)
+            }
         }
     }
 
@@ -99,6 +107,7 @@ open class GuiModule : GameModule() {
         private var cachedInventories = mutableMapOf<Player, Inventory>()
 
         private var onOpenedAction: ((Player) -> Unit)? = null
+        internal var onShiftClickAction: ((InventoryPreClickEvent) -> Unit)? = null
         internal var onTickAction: ((Player) -> Unit)? = null
         internal var onClosedAction: ((Player) -> Unit)? = null
 
@@ -186,6 +195,15 @@ open class GuiModule : GameModule() {
                 cachedInventories.remove(player)
                 player.openInventory(getInventory(player))
             }
+        }
+
+        /**
+         * Register a function to be called when the player shift-clicks an item
+         * into this inventory. To listen for shift-clicks *out* of the inventory,
+         * use the click listener built in to [ItemsBuilder.slot].
+         */
+        fun onShiftClickIn(function: (InventoryPreClickEvent) -> Unit) {
+            onShiftClickAction = function
         }
 
         val viewers: Collection<Player>

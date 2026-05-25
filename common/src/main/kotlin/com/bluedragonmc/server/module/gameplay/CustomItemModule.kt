@@ -64,7 +64,7 @@ class CustomItemModule(vararg val items: CustomItem) : GameModule() {
             }
             if (cooldownPlayers[customItem]?.containsKey(event.player) == false) {
                 itemEventNode.call(PlayerUseCustomItemEvent(event.player, event.hand, event.itemStack, event.itemUseTime))
-                if (customItem.cooldown != Duration.ZERO) {
+                if (!customItem.cooldown.isZero) {
                     setCooldownRemaining(event.player, customItem, customItem.cooldown)
                 }
             }
@@ -150,7 +150,7 @@ class CustomItemModule(vararg val items: CustomItem) : GameModule() {
     fun getCustomItem(itemStack: ItemStack) = getCustomItemOrNull(itemStack) ?: error("No custom item matches the given itemStack!")
 
     fun setCooldownRemaining(player: Player, item: CustomItem, duration: Duration) {
-        if (duration == Duration.ZERO) {
+        if (duration.isZero) {
             cooldownPlayers[item]!!.remove(player)
             player.sendPacket(SetCooldownPacket(item.cooldownGroup, 0))
             item.onCooldownEnd(player)
