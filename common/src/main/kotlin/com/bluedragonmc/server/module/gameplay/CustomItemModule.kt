@@ -36,6 +36,10 @@ class CustomItemModule(vararg val items: CustomItem) : GameModule() {
 
     companion object {
         private val CUSTOM_UUID_TAG = Tag.String("custom_item_uid")
+
+        fun getCustomItemId(itemStack: ItemStack): String? {
+            return itemStack.getTag(CUSTOM_UUID_TAG)
+        }
     }
 
     private lateinit var parent: Game
@@ -92,7 +96,7 @@ class CustomItemModule(vararg val items: CustomItem) : GameModule() {
         cooldownPlayers[item] = mutableMapOf()
 
         val itemEventNode = EventNode.event("custom-item-${parent.id}-${item.uid}", EventFilter.ITEM) { event ->
-            event.itemStack.getTag(CUSTOM_UUID_TAG) == item.uid
+            getCustomItemId(event.itemStack) == item.uid
         }
 
         itemEventNode.addListener(PlayerUseCustomItemEvent::class.java) { event ->
@@ -136,7 +140,7 @@ class CustomItemModule(vararg val items: CustomItem) : GameModule() {
      * Returns the [CustomItem] that the given `itemStack` is an instance of, or `null` if this item does not represent a CustomItem.
      */
     fun getCustomItemOrNull(itemStack: ItemStack): CustomItem? {
-        val uid = itemStack.getTag(CUSTOM_UUID_TAG) ?: return null // itemStack is not a custom item
+        val uid = getCustomItemId(itemStack) ?: return null // itemStack is not a custom item
         return getCustomItemOrNull(uid)
     }
 
@@ -189,7 +193,7 @@ class CustomItemModule(vararg val items: CustomItem) : GameModule() {
 
         val itemStack: ItemStack by lazy { createItemStack().with { builder ->
             builder.setTag(CUSTOM_UUID_TAG, uid)
-            if (cooldown != Duration.ZERO) {
+            if (!cooldown.isZero) {
                 builder.set(DataComponents.USE_COOLDOWN, UseCooldown(cooldown.seconds + cooldown.nano / 1_000_000_000f, cooldownGroup))
             }
         }}
