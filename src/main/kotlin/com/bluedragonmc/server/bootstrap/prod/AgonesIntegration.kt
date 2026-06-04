@@ -3,7 +3,6 @@ package com.bluedragonmc.server.bootstrap.prod
 import agones.dev.sdk.Agones
 import agones.dev.sdk.SDKGrpcKt
 import agones.dev.sdk.duration
-import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.bootstrap.Bootstrap
 import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.service.Messaging
@@ -86,8 +85,6 @@ object AgonesIntegration : Bootstrap(EnvType.PRODUCTION) {
     }
 
     private fun isHealthy(): Boolean {
-        // Verify that at least one game is running (Lobby)
-        if (Game.games.isEmpty()) return false
         // Verify that the local gRPC server is running
         if (!Messaging.isConnected()) return false
         // Verify that the server is ticking (the tick thread isn't blocked)

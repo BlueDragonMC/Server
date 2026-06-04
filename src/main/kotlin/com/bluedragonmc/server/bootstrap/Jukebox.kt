@@ -1,19 +1,16 @@
 package com.bluedragonmc.server.bootstrap
 
-import com.bluedragonmc.api.grpc.JukeboxOuterClass
-import com.bluedragonmc.api.grpc.copy
-import com.bluedragonmc.api.grpc.playerSongInfo
-import com.bluedragonmc.api.grpc.playerSongQueue
+import com.bluedragonmc.api.grpc.*
 import com.bluedragonmc.jukebox.api.Song
 import com.bluedragonmc.jukebox.impl.NBSSongLoader
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.game.GameData
 import com.bluedragonmc.server.module.GuiModule
+import com.bluedragonmc.server.service.Maps
 import com.bluedragonmc.server.service.Messaging
 import com.google.protobuf.Timestamp
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -25,7 +22,6 @@ import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventListener
 import net.minestom.server.event.EventNode
-import net.minestom.server.event.player.PlayerDisconnectEvent
 import net.minestom.server.event.player.PlayerLoadedEvent
 import net.minestom.server.event.player.PlayerSpawnEvent
 import net.minestom.server.instance.block.jukebox.JukeboxSong
@@ -38,9 +34,7 @@ import net.minestom.server.timer.Task
 import java.io.File
 import java.nio.file.Paths
 import java.time.Duration
-import java.util.WeakHashMap
-import java.util.concurrent.CompletableFuture
-import kotlin.coroutines.suspendCoroutine
+import java.util.*
 import kotlin.io.path.exists
 import kotlin.math.PI
 import kotlin.math.pow
@@ -177,7 +171,7 @@ object Jukebox : Bootstrap() {
     }
 
     private val loader = NBSSongLoader()
-    private val emptyGame = object : Game("", "") {
+    private val emptyGame = object : Game(GameData("", Maps.MapSource("", "", CommonTypes.MapFormat.UNRECOGNIZED, ""))) {
         // Used as a placeholder when registering the GuiModule under this Bootstrap's event node
         override fun initialize() {}
     }

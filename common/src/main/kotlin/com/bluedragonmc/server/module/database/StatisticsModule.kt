@@ -77,6 +77,21 @@ class StatisticsModule(private vararg val recorders: StatisticRecorder) : GameMo
                 }
             }
         }
+
+        suspend fun rankPlayersByStatistic(
+            key: String,
+            sortOrderBy: OrderBy = OrderBy.DESC,
+            limit: Int = 10,
+        ): Map<PlayerDocument, Double> {
+
+            val cachedEntry = statisticsCache.getIfPresent(sortOrderBy.toString() + key)
+            if (cachedEntry != null) return cachedEntry.associateWith { it.statistics[key]!! }
+
+            val documents = Database.connection.rankPlayersByStatistic(key, sortOrderBy.toString(), limit)
+            statisticsCache.put(sortOrderBy.toString() + key, documents)
+
+            return documents.associateWith { it.statistics[key]!! }
+        }
     }
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
@@ -222,21 +237,6 @@ class StatisticsModule(private vararg val recorders: StatisticRecorder) : GameMo
 
     enum class OrderBy {
         ASC, DESC
-    }
-
-    suspend fun rankPlayersByStatistic(
-        key: String,
-        sortOrderBy: OrderBy = OrderBy.DESC,
-        limit: Int = 10,
-    ): Map<PlayerDocument, Double> {
-
-        val cachedEntry = statisticsCache.getIfPresent(sortOrderBy.toString() + key)
-        if (cachedEntry != null) return cachedEntry.associateWith { it.statistics[key]!! }
-
-        val documents = Database.connection.rankPlayersByStatistic(key, sortOrderBy.toString(), limit)
-        statisticsCache.put(sortOrderBy.toString() + key, documents)
-
-        return documents.associateWith { it.statistics[key]!! }
     }
 
     class EventStatisticRecorder<T : Event>(

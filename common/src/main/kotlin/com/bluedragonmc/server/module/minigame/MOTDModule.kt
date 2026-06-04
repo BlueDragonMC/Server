@@ -39,7 +39,7 @@ class MOTDModule(private val motd: Component, private var showMapName: Boolean =
             event.player.sendMessage(
                 buildComponent {
                     // Game name
-                    +Component.text(parent.name, BRAND_COLOR_PRIMARY_1, TextDecoration.BOLD)
+                    +Component.text(parent.data.name, BRAND_COLOR_PRIMARY_1, TextDecoration.BOLD)
                     +Component.newline()
                     +buildComponent {
                         // MOTD

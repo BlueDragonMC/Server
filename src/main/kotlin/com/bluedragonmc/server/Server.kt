@@ -15,8 +15,6 @@ import java.text.DateFormat
 import kotlin.system.exitProcess
 import kotlin.system.measureTimeMillis
 
-lateinit var lobby: Game
-fun isLobbyInitialized() = ::lobby.isInitialized
 private val logger = LoggerFactory.getLogger("ServerKt")
 
 fun main() {
@@ -58,7 +56,6 @@ fun start() {
         Commands,
         CustomPlayerProvider,
         DefaultDimensionTypes,
-        DevInstanceRouter,
         GlobalBlockHandlers,
         GlobalChatFormat,
         GlobalPlayerNameFormat,
@@ -72,6 +69,7 @@ fun start() {
         PerInstanceTabList,
         ServerListPingHandler,
         TabListFormat,
+        DevInstanceRouter,
     ).filter { it.canHook() }
 
     // Load game plugins and preinitialize their main classes
@@ -94,14 +92,4 @@ fun start() {
 
     // Start the server & bind to port 25565
     minecraftServer.start("0.0.0.0", 25565)
-
-    // Create a Lobby instance
-    lobby = try {
-        GameLoader.createNewGame(Environment.defaultGameName, null, null)
-    } catch (e: Throwable) {
-        logger.error("There was an error initializing the Lobby. Shutting down...")
-        e.printStackTrace()
-        MinecraftServer.stopCleanly()
-        exitProcess(1)
-    }
 }

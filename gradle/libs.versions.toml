@@ -13,8 +13,9 @@ serialization = "1.8.0"
 tinylog = "2.7.0"
 atlas-projectiles = "2.1.2"
 fastutil = "8.5.18"
+polar = "1.15.1"
 # Auto-generated GRPC/Protobuf messaging code
-rpc = "d40ac743b5"
+rpc = "3327d427bc"
 # Messaging dependencies
 grpc = "1.71.0"
 grpc-kotlin-stub = "1.4.1"
@@ -50,6 +51,7 @@ junit-engine = { group = "org.junit.jupiter", name = "junit-jupiter-engine", ver
 tinylog-api = { group = "org.tinylog", name = "tinylog-api", version.ref = "tinylog"}
 tinylog-impl = { group = "org.tinylog", name = "tinylog-impl", version.ref = "tinylog"}
 tinylog-slf4j = { group = "org.tinylog", name = "slf4j-tinylog", version.ref = "tinylog"}
+polar = { group = "dev.hollowcube", name = "polar", version.ref = "polar"}
 
 [bundles]
 configurate = ["configurate", "configurate-extra-kotlin"]

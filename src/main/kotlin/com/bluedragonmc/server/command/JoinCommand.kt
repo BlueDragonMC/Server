@@ -1,6 +1,5 @@
 package com.bluedragonmc.server.command
 
-import com.bluedragonmc.api.grpc.CommonTypes.GameType.GameTypeFieldSelector
 import com.bluedragonmc.api.grpc.gameType
 import com.bluedragonmc.server.api.Environment
 import net.kyori.adventure.text.Component
@@ -18,7 +17,6 @@ class JoinCommand(name: String, private val usageString: String, vararg aliases:
     syntax(gameArgument) {
         Environment.queue.queue(player, gameType {
             this.name = get(gameArgument)
-            selectors += GameTypeFieldSelector.GAME_NAME
         })
     }.requirePlayers()
 
@@ -26,8 +24,6 @@ class JoinCommand(name: String, private val usageString: String, vararg aliases:
         Environment.queue.queue(player, gameType {
             this.name = get(gameArgument)
             this.mode = get(modeArgument)
-            selectors += GameTypeFieldSelector.GAME_NAME
-            selectors += GameTypeFieldSelector.GAME_MODE
         })
     }.apply {
         requirePlayers()
@@ -38,10 +34,7 @@ class JoinCommand(name: String, private val usageString: String, vararg aliases:
         Environment.queue.queue(player, gameType {
             this.name = get(gameArgument)
             this.mode = get(modeArgument)
-            this.mapName = get(mapArgument)
-            selectors += GameTypeFieldSelector.GAME_NAME
-            selectors += GameTypeFieldSelector.MAP_NAME
-            selectors += GameTypeFieldSelector.GAME_MODE
+            this.mapId = get(mapArgument)
         })
     }.apply {
         requirePlayers()

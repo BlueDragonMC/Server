@@ -108,7 +108,7 @@ class IncomingRPCHandlerImpl(serverPort: Int) : IncomingRPCHandler {
                     instances += GetInstancesResponseKt.runningInstance {
                         this.gameState = game.rpcGameState
                         this.instanceUuid = game.id
-                        this.gameType = game.gameType
+                        this.gameType = game.data.gameType
                         game.getPlayers().forEach { player ->
                             this.playerUuids.add(player.uuid.toString())
                         }

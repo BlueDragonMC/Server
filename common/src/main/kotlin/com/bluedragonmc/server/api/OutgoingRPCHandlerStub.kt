@@ -1,11 +1,15 @@
 package com.bluedragonmc.server.api
 
 import com.bluedragonmc.api.grpc.*
+import com.bluedragonmc.api.grpc.Map
 import com.bluedragonmc.server.Game
 import net.kyori.adventure.text.Component
 import net.minestom.server.command.CommandSender
 import net.minestom.server.entity.Player
+import java.io.File
+import java.nio.file.Paths
 import java.util.*
+import kotlin.io.path.name
 
 /**
  * Stub - no functionality. Used in development and testing environments.
@@ -37,10 +41,6 @@ class OutgoingRPCHandlerStub : OutgoingRPCHandler {
 
     }
 
-    override suspend fun checkRemoveInstance(gameId: String): Boolean {
-        return true
-    }
-
     override suspend fun recordInstanceChange(player: Player, newGame: String) {
 
     }
@@ -51,6 +51,20 @@ class OutgoingRPCHandlerStub : OutgoingRPCHandler {
 
     override suspend fun queryPlayer(username: String?, uuid: UUID?): PlayerTrackerOuterClass.QueryPlayerResponse {
         return PlayerTrackerOuterClass.QueryPlayerResponse.getDefaultInstance()
+    }
+
+    override suspend fun getAvailableMaps(gameName: String?, gameMode: String?, whitelist: List<UUID>?): Map.MapList {
+        val mapDefs = File("worlds").listFiles()
+            .flatMap { it.listFiles().map { file -> file.absolutePath } }
+            .map { mapFolderPath ->
+                CommonTypes.MapSource.newBuilder()
+                    .setMapId(Paths.get(mapFolderPath).name)
+                    .setMapConfig(File(mapFolderPath, "config.yml").readText())
+                    .setMapFormat(CommonTypes.MapFormat.ANVIL)
+                    .setMapUrl("file://$mapFolderPath")
+                    .build()
+            }
+        return com.bluedragonmc.api.grpc.Map.MapList.newBuilder().addAllMaps(mapDefs).build()
     }
 
     override suspend fun addToQueue(player: Player, gameType: CommonTypes.GameType) {

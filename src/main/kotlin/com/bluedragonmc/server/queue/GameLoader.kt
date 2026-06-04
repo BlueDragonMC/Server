@@ -1,7 +1,8 @@
 package com.bluedragonmc.server.queue
 
-import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.bootstrap.GlobalTranslation
+import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.game.GameData
 import org.slf4j.LoggerFactory
 import java.io.BufferedInputStream
 import java.nio.file.Path
@@ -57,14 +58,10 @@ object GameLoader {
         error("No 'game.properties' file found in path: ${jarPath.pathString}")
     }
 
-    fun createNewGame(name: String, mapName: String?, mode: String?): Game {
-        val ctor = classes[name]?.kotlin?.primaryConstructor ?: error("Game class not found or improperly loaded")
-        if (ctor.parameters.isNotEmpty() && mapName.isNullOrBlank()) error("Map name is required by game, but not supplied")
-        return when(ctor.parameters.size) {
-            0 -> ctor.call()
-            1 -> ctor.call(mapName)
-            2 -> ctor.call(mapName, mode)
-            else -> error("Unexpected constructor format: $ctor")
-        }.apply { init() }
+    fun createNewGame(data: GameData): Game {
+        val ctor = classes[data.name]?.kotlin?.primaryConstructor ?: error("Game class not found or improperly loaded")
+        val game = ctor.call(data)
+        game.init()
+        return game
     }
 }
