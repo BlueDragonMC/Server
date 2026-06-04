@@ -1,11 +1,11 @@
 package com.bluedragonmc.server
 
 import com.bluedragonmc.api.grpc.CommonTypes
-import com.bluedragonmc.api.grpc.CommonTypes.GameType.GameTypeFieldSelector
 import com.bluedragonmc.api.grpc.gameState
 import com.bluedragonmc.api.grpc.gameType
 import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.event.*
+import com.bluedragonmc.server.game.GameData
 import com.bluedragonmc.server.model.GameDocument
 import com.bluedragonmc.server.model.InstanceRecord
 import com.bluedragonmc.server.model.PlayerRecord
@@ -22,7 +22,6 @@ import com.bluedragonmc.server.utils.GameState
 import com.bluedragonmc.server.utils.InstanceUtils
 import com.bluedragonmc.server.utils.toPlainText
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.MinecraftServer
@@ -51,17 +50,8 @@ import java.util.function.Predicate
 import kotlin.random.Random
 import kotlin.reflect.jvm.jvmName
 
-abstract class Game(val name: String, val mapName: String, val mode: String? = null) : ModuleHolder(),
+abstract class Game(val data: GameData) : ModuleHolder(),
     PacketGroupingAudience {
-
-    val gameType: CommonTypes.GameType
-        get() = gameType {
-            name = this@Game.name
-            mapName = this@Game.mapName
-            if (this@Game.mode != null) {
-                mode = this@Game.mode
-            }
-        }
 
     val rpcGameState: CommonTypes.GameState
         get() = gameState {
@@ -80,7 +70,7 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
      * A random, 4-character identifier unique to this game.
      */
     val id = (0 until 4).map {
-        'a' + Random.nextInt(0, 26)
+        'a' + Random.Default.nextInt(0, 26)
     }.joinToString("")
 
     private lateinit var startTime: Date
@@ -95,7 +85,7 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
             }
         }
 
-    protected val eventNode = EventNode.event("$name-$mapName-$mode", EventFilter.ALL) { event ->
+    protected val eventNode = EventNode.event("$id-$data", EventFilter.ALL) { event ->
         try {
             return@event when (event) {
                 is InstanceEvent -> ownsInstance(event.instance ?: return@event false)
@@ -135,7 +125,9 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
             startTime = Date()
         }
         handleEvent<WinModule.WinnerDeclaredEvent> { event ->
-            winningTeam = TeamRecord(event.winningTeamName.toPlainText(), event.winningTeamPlayers.map { PlayerRecord(it.uuid, it.username) })
+            winningTeam = TeamRecord(
+                event.winningTeamName.toPlainText(),
+                event.winningTeamPlayers.map { PlayerRecord(it.uuid, it.username) })
         }
     }
 
@@ -206,7 +198,6 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
                 )
                 Environment.queue.queue(player, gameType {
                     name = Environment.defaultGameName
-                    selectors += GameTypeFieldSelector.GAME_NAME
                 })
                 return AsyncUtils.empty()
             }
@@ -263,9 +254,9 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
                 GameDocument(
                     gameId = id,
                     serverId = Environment.getServerName(),
-                    gameType = name,
-                    mapName = mapName,
-                    mode = mode,
+                    gameType = data.name,
+                    mapName = data.mapSource.id,
+                    mode = data.mode,
                     statistics = statHistory,
                     teams = teams,
                     winningTeam = winningTeamRecord,
@@ -293,12 +284,10 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
             players.forEach {
                 it.sendMessage(Component.translatable("game.status.ending", NamedTextColor.GREEN))
                 Environment.queue.queue(it, gameType {
-                    name = this@Game.name
-                    if (this@Game.mode != null) {
-                        mode = this@Game.mode
-                        selectors += GameTypeFieldSelector.GAME_MODE
+                    name = data.name
+                    if (data.mode != null) {
+                        mode = data.mode
                     }
-                    selectors += GameTypeFieldSelector.GAME_NAME
                 })
             }
         }
@@ -323,14 +312,7 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
         // Games without players are always active in the first 30 minutes after being created
         if (System.currentTimeMillis() - creationTime <= 1_000 * 60 * 30 && !playerHasJoined) return false
 
-        try {
-            return runBlocking {
-                Messaging.outgoing.checkRemoveInstance(id)
-            }
-        } catch (e: Throwable) {
-            e.printStackTrace()
-            return true
-        }
+        return true
     }
 
     fun init() {
@@ -358,7 +340,7 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
     override fun toString(): String {
         val modules = modules.joinToString { it::class.simpleName ?: it::class.jvmName }
         val players = players.joinToString { it.username }
-        return "Game(id='$id', name='$name', mapName='$mapName', mode='$mode', modules=$modules, players=$players, maxPlayers=$maxPlayers, isJoinable=$isJoinable, state=$state)"
+        return "Game(id='$id', data=$data, modules=$modules, players=$players, maxPlayers=$maxPlayers, isJoinable=$isJoinable, state=$state)"
     }
 
     companion object {
@@ -402,7 +384,7 @@ abstract class Game(val name: String, val mapName: String, val mode: String? = n
 
                 games.forEach { game ->
                     if (game.isInactive()) {
-                        logger.info("Ending inactive game ${game.id} (${game.name}/${game.mapName}/${game.mode})")
+                        logger.info("Ending inactive game ${game.id} (${game.data})")
                         game.endGame(false)
                     }
                     game._players.removeIf { player -> !player.isOnline }

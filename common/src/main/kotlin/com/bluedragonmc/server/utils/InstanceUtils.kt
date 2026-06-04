@@ -1,6 +1,5 @@
 package com.bluedragonmc.server.utils
 
-import com.bluedragonmc.api.grpc.CommonTypes.GameType.GameTypeFieldSelector
 import com.bluedragonmc.api.grpc.gameType
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.api.Environment
@@ -48,7 +47,7 @@ object InstanceUtils {
             return CompletableFuture.completedFuture(null)
         } else {
             // If the instance is not empty, attempt to send all players to a lobby
-            val lobby = Game.games.find { it.name == Environment.defaultGameName }
+            val lobby = Game.games.find { it.data.name == Environment.defaultGameName }
             if (lobby != null) {
                 return CompletableFuture.allOf(
                     *instance.players.map {
@@ -64,7 +63,6 @@ object InstanceUtils {
                     instance.players.forEach {
                         Environment.queue.queue(it, gameType {
                             name = Environment.defaultGameName
-                            selectors += GameTypeFieldSelector.GAME_NAME
                         })
                     }
                 }.repeat(Duration.ofSeconds(10)).schedule()

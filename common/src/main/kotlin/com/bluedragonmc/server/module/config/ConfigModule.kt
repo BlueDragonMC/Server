@@ -4,8 +4,10 @@ import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.SoftDependsOn
 import com.bluedragonmc.server.module.config.serializer.*
-import com.bluedragonmc.server.module.map.AnvilFileMapProviderModule
+import com.bluedragonmc.server.module.map.MapProviderModule
 import com.bluedragonmc.server.module.minigame.KitsModule
+import com.bluedragonmc.server.service.Maps
+import kotlinx.coroutines.runBlocking
 import net.kyori.adventure.text.Component
 import net.minestom.server.color.Color
 import net.minestom.server.coordinate.Pos
@@ -22,13 +24,11 @@ import org.spongepowered.configurate.ConfigurationOptions
 import org.spongepowered.configurate.yaml.YamlConfigurationLoader
 import java.io.BufferedReader
 import java.nio.file.Paths
-import kotlin.io.path.absolutePathString
 import kotlin.io.path.bufferedReader
 import kotlin.io.path.exists
-import kotlin.io.path.reader
 
-@SoftDependsOn(AnvilFileMapProviderModule::class)
-class ConfigModule(private val configFileName: String? = null) : GameModule() {
+@SoftDependsOn(MapProviderModule::class)
+class ConfigModule(private val configFileName: String? = null, private val mapSource: Maps.MapSource? = null) : GameModule() {
 
     private lateinit var root: ConfigurationNode
     private lateinit var mapRoot: ConfigurationNode
@@ -39,20 +39,14 @@ class ConfigModule(private val configFileName: String? = null) : GameModule() {
 
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         this.parent = parent
+        val mapSource = mapSource ?: parent.data.mapSource
         if (configFileName != null) {
             logger.info("Loading game configuration from $configFileName")
             root = loadFile(getReader(parent, configFileName))
         }
 
-        if (parent.hasModule<AnvilFileMapProviderModule>()) {
-            val worldFolder = parent.getModule<AnvilFileMapProviderModule>().worldFolder
-            val file = worldFolder.resolve("config.yml")
-            if (file.exists()) {
-                logger.info("Loading map configuration from " + file.absolutePathString())
-                mapRoot = loadFile(file.reader(Charsets.UTF_8).buffered())
-            } else {
-                logger.info("No map configuration found at " + file.absolutePathString())
-            }
+        runBlocking {
+            mapRoot = mapSource.config
         }
 
         logger.info("Configuration successfully loaded.")
@@ -103,7 +97,7 @@ class ConfigModule(private val configFileName: String? = null) : GameModule() {
             }
         }
 
-        private fun loadFile(reader: BufferedReader): ConfigurationNode {
+        fun loadFile(reader: BufferedReader): ConfigurationNode {
 
             val loader = YamlConfigurationLoader.builder()
                 .source { reader }

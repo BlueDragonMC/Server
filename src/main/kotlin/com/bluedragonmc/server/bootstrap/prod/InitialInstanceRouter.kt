@@ -81,7 +81,7 @@ object InitialInstanceRouter : Bootstrap(EnvType.PRODUCTION) {
             } else {
                 logger.warn("Invalid destination ('$destination') supplied for player ${event.player.username}, sending to Lobby.")
                 // If no destination was found, send the player to a lobby.
-                Game.games.find { it.name.equals(Environment.defaultGameName, ignoreCase = true) }
+                Game.games.find { it.data.name.equals(Environment.defaultGameName, ignoreCase = true) }
             }
 
             // Spawn the player in the game's spawning instance

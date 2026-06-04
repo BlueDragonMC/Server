@@ -3,7 +3,7 @@ package com.bluedragonmc.server.command
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.Game
-import com.bluedragonmc.server.module.map.AnvilFileMapProviderModule.Companion.MAP_NAME_TAG
+import com.bluedragonmc.server.module.map.MapProviderModule.Companion.MAP_NAME_TAG
 import com.bluedragonmc.server.module.minigame.SpawnpointModule
 import com.bluedragonmc.server.utils.*
 import net.kyori.adventure.text.Component.*
@@ -48,11 +48,11 @@ class InstanceCommand(name: String, usageString: String, vararg aliases: String?
                         )
                     } else {
                         // Game name
-                        if (game?.name != null) {
-                            +text(game.name, NamedTextColor.YELLOW)
-                            if (game.mode != null) {
+                        if (game?.data?.name != null) {
+                            +text(game.data.name, NamedTextColor.YELLOW)
+                            if (game.data.mode != null) {
                                 +text(" (", NamedTextColor.GRAY)
-                                +text(game.mode!!, NamedTextColor.DARK_GREEN)
+                                +text(game.data.mode!!, NamedTextColor.DARK_GREEN)
                                 +text(")", NamedTextColor.GRAY)
                             }
                         } else {
@@ -60,8 +60,8 @@ class InstanceCommand(name: String, usageString: String, vararg aliases: String?
                         }
                         +text(" · ", NamedTextColor.GRAY)
                         // Map name
-                        if (game?.mapName != null) {
-                            +text(game.mapName, NamedTextColor.GOLD)
+                        if (game?.data?.mapSource?.id != null) {
+                            +text(game.data.mapSource.id, NamedTextColor.GOLD)
                         } else {
                             +translatable("command.instance.no_map", NamedTextColor.RED)
                         }
@@ -83,11 +83,11 @@ class InstanceCommand(name: String, usageString: String, vararg aliases: String?
                             "command.instance.required_by",
                             NamedTextColor.GRAY,
                             text(game.id, BRAND_COLOR_PRIMARY_1).hoverEvent(
-                                text(game.name, NamedTextColor.YELLOW) +
+                                text(game.data.name, NamedTextColor.YELLOW) +
                                         text(" · ", NamedTextColor.GRAY) +
-                                        text(game.mapName, NamedTextColor.GOLD) +
+                                        text(game.data.mapSource.id, NamedTextColor.GOLD) +
                                         text(" · ", NamedTextColor.GRAY) +
-                                        text(game.mode ?: "--", NamedTextColor.DARK_GREEN)
+                                        text(game.data.mode ?: "--", NamedTextColor.DARK_GREEN)
                             )
                         )
                     }

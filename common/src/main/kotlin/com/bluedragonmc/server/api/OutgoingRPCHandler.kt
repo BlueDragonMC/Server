@@ -3,6 +3,7 @@ package com.bluedragonmc.server.api
 import com.bluedragonmc.api.grpc.CommonTypes.GameState
 import com.bluedragonmc.api.grpc.CommonTypes.GameType
 import com.bluedragonmc.api.grpc.JukeboxOuterClass.PlayerSongQueue
+import com.bluedragonmc.api.grpc.Map
 import com.bluedragonmc.api.grpc.PartySvc.PartyListResponse
 import com.bluedragonmc.api.grpc.PlayerTrackerOuterClass.QueryPlayerResponse
 import com.bluedragonmc.server.Game
@@ -26,12 +27,14 @@ interface OutgoingRPCHandler {
     suspend fun initGame(id: String, gameType: GameType, gameState: GameState)
     suspend fun updateGameState(id: String, gameState: GameState)
     suspend fun notifyInstanceRemoved(gameId: String)
-    suspend fun checkRemoveInstance(gameId: String): Boolean
 
     // Player tracking
     suspend fun recordInstanceChange(player: Player, newGame: String)
     suspend fun playerTransfer(player: Player, newGame: String?)
     suspend fun queryPlayer(username: String? = null, uuid: UUID? = null): QueryPlayerResponse
+
+    // Maps
+    suspend fun getAvailableMaps(gameName: String?, gameMode: String?, whitelist: List<UUID>?): Map.MapList
 
     // Queue
     suspend fun addToQueue(player: Player, gameType: GameType)

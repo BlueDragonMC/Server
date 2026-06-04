@@ -30,6 +30,7 @@ dependencies {
     implementation(libs.bundles.configurate) // Configurate for game configuration
     implementation(libs.bundles.messaging) // Messaging
     implementation(libs.okhttp)
+    implementation(libs.polar)
 
     implementation(project(":common"))
 }

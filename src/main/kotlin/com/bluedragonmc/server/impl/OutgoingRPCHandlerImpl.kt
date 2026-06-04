@@ -54,7 +54,7 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
 
         override fun initialize(parent: Game, eventNode: EventNode<Event>): Unit = runBlocking {
             this@MessagingModule.parent = parent
-            Messaging.outgoing.initGame(parent.id, parent.gameType, parent.rpcGameState)
+            Messaging.outgoing.initGame(parent.id, parent.data.gameType, parent.rpcGameState)
 
             eventNode.listenAsync<GameStateChangedEvent> { event ->
                 Messaging.outgoing.updateGameState(parent.id, event.game.rpcGameState)
@@ -105,6 +105,7 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
         VelocityMessageServiceGrpcKt.VelocityMessageServiceCoroutineStub(channel)
     private val playerTrackerStub = PlayerTrackerGrpcKt.PlayerTrackerCoroutineStub(channel)
     private val queueStub = QueueServiceGrpcKt.QueueServiceCoroutineStub(channel)
+    private val mapStub = MapServiceGrpcKt.MapServiceCoroutineStub(channel)
     private val partyStub = PartyServiceGrpcKt.PartyServiceCoroutineStub(channel)
     private val jukeboxStub = JukeboxGrpcKt.JukeboxCoroutineStub(channel)
 
@@ -155,15 +156,6 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
         )
     }
 
-    override suspend fun checkRemoveInstance(gameId: String): Boolean {
-        return instanceSvcStub.withDeadlineAfter(5, TimeUnit.SECONDS).checkRemoveInstance(
-            ServerTracking.InstanceRemovedRequest.newBuilder()
-                .setServerName(serverName)
-                .setInstanceUuid(gameId)
-                .build()
-        ).shouldRemove
-    }
-
     override suspend fun recordInstanceChange(player: Player, newGame: String) {
         playerTrackerStub.withDeadlineAfter(5, TimeUnit.SECONDS).playerInstanceChange(
             PlayerTrackerOuterClass.PlayerInstanceChangeRequest.newBuilder()
@@ -197,6 +189,15 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
                 }
                 .build()
         )
+    }
+
+    override suspend fun getAvailableMaps(gameName: String?, gameMode: String?, whitelist: List<UUID>?): Map.MapList {
+        val builder = com.bluedragonmc.api.grpc.Map.GetAvailableMapsRequest.newBuilder()
+        if (gameName != null) builder.gameName = gameName
+        if (gameMode != null) builder.gameMode = gameMode
+        if (whitelist != null) builder.whitelist =
+            com.bluedragonmc.api.grpc.Map.PlayerList.newBuilder().addAllPlayers(whitelist.map { it.toString() }).build()
+        return mapStub.withDeadlineAfter(5, TimeUnit.SECONDS).getAvailableMaps(builder.build())
     }
 
     override suspend fun addToQueue(player: Player, gameType: CommonTypes.GameType) {

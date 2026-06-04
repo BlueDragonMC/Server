@@ -83,9 +83,9 @@ class GameCommand(name: String, usageString: String, vararg aliases: String?) : 
                 buildComponent {
                     +text(it.id, BRAND_COLOR_PRIMARY_1)
                     +text(" · ", NamedTextColor.GRAY)
-                    +text(it.name, BRAND_COLOR_PRIMARY_1)
+                    +text(it.data.name, BRAND_COLOR_PRIMARY_1)
                     +text(" · ", NamedTextColor.GRAY)
-                    +text(it.mapName, BRAND_COLOR_PRIMARY_1)
+                    +text(it.data.mapSource.id, BRAND_COLOR_PRIMARY_1)
                     +text(" · ", NamedTextColor.GRAY)
                     +text(it.players.size, BRAND_COLOR_PRIMARY_1)
                         .hoverEvent(text(it.players.joinToString { it.username }))
@@ -132,36 +132,6 @@ class GameCommand(name: String, usageString: String, vararg aliases: String?) : 
                 }
                 sender.sendMessage(formatErrorTranslated("command.game.module.not_found"))
             }
-        }
-    }
-
-    subcommand("create") {
-        val gameType by WordArgument
-        val mapName by StringArgument
-        val modeArgument by StringArgument
-
-        fun create(sender: CommandSender, type: String, map: String, mode: String) {
-            val newGame = Environment.queue.createInstance(
-                GsClient.CreateInstanceRequest.newBuilder()
-                    .setGameType(GameType.newBuilder()
-                        .setName(type)
-                        .setMapName(map)
-                        .setMode(mode)).setCorrelationId(UUID.randomUUID().toString()).build()
-            )
-
-            if (newGame != null) {
-                sender.sendMessage(formatMessageTranslated("command.game.create.success", newGame.id))
-            } else {
-                sender.sendMessage(formatErrorTranslated("command.game.create.failed"))
-            }
-        }
-
-        syntax(gameType, mapName) {
-            create(sender, get(gameType), get(mapName), "")
-        }
-
-        syntax(gameType, mapName, modeArgument) {
-            create(sender, get(gameType), get(mapName), get(modeArgument))
         }
     }
 })

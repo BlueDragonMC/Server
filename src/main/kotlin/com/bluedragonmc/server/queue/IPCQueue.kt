@@ -3,12 +3,12 @@ package com.bluedragonmc.server.queue
 import com.bluedragonmc.api.grpc.CommonTypes
 import com.bluedragonmc.api.grpc.GsClient
 import com.bluedragonmc.api.grpc.PlayerHolderOuterClass.SendPlayerRequest
-import com.bluedragonmc.server.Game
-import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.api.Queue
-import com.bluedragonmc.server.lobby
+import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.game.GameData
 import com.bluedragonmc.server.module.instance.InstanceModule
 import com.bluedragonmc.server.service.Database
+import com.bluedragonmc.server.service.Maps
 import com.bluedragonmc.server.service.Messaging
 import kotlinx.coroutines.launch
 import net.kyori.adventure.text.Component
@@ -26,10 +26,6 @@ object IPCQueue : Queue() {
     private val queuedPlayers = mutableListOf<Player>()
 
     override fun queue(player: Player, gameType: CommonTypes.GameType) {
-        if (gameType.name == Environment.defaultGameName && gameType.mapName == null && gameType.mode == null) {
-            lobby.addPlayer(player)
-            return
-        }
         player.sendMessage(Component.translatable("queue.adding", NamedTextColor.DARK_GRAY))
         Database.IO.launch {
             if (queuedPlayers.contains(player)) {
@@ -44,24 +40,12 @@ object IPCQueue : Queue() {
 
     }
 
-    override fun getMaps(gameType: String): Array<File>? {
-        val worldFolder = "worlds/$gameType"
-        val file = File(worldFolder)
-        if (!(file.exists() && file.isDirectory)) arrayOf<File>()
-        return file.listFiles()
-    }
-
-    override fun randomMap(gameType: String): String? = getMaps(gameType)?.randomOrNull()?.name
-
-    override fun createInstance(request: GsClient.CreateInstanceRequest): Game? {
+    override fun createInstance(request: GsClient.CreateInstanceRequest): Game {
         val start = System.nanoTime()
-        val map = if (request.gameType.hasMapName()) request.gameType.mapName else randomMap(request.gameType.name)
-        if (map == null) {
-            logger.error("An instance request for ${request.gameType.name} was received, but no map name was provided and a random map was not found.")
-            return null
-        }
-        val game = GameLoader.createNewGame(request.gameType.name, map, request.gameType.mode)
-        logger.info("Created '${request.gameType.name}' game on map '$map' and mode '${game.mode}' with id '${game.id}'. (${(System.nanoTime() - start) / 1_000_000}ms)")
+        val game = GameLoader.createNewGame(GameData(request.game, request.mapSource.let {
+            Maps.MapSource(it.mapId, it.mapUrl, it.mapFormat, it.mapConfig)
+        }, request.mode))
+        logger.info("Created '${request.game}' game on map '${game.data.mapSource.id}' and mode '${game.data.mode}' with id '${game.id}'. (${(System.nanoTime() - start) / 1_000_000}ms)")
         // The service will soon be notified of this instance's creation
         // once the mandatory MessagingModule is initialized
         return game

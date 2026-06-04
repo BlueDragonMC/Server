@@ -1,21 +1,21 @@
 package com.bluedragonmc.server.queue
 
 import com.bluedragonmc.api.grpc.CommonTypes
-import com.bluedragonmc.server.Game
-import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.api.Queue
-import com.bluedragonmc.server.lobby
+import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.game.GameData
+import com.bluedragonmc.server.service.Maps
+import com.bluedragonmc.server.service.Messaging
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
+import kotlinx.coroutines.runBlocking
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.event.HoverEvent
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.MinecraftServer
 import net.minestom.server.entity.Player
 import org.slf4j.LoggerFactory
-import java.io.File
 import java.time.Duration
-import kotlin.random.Random
 import kotlin.reflect.jvm.jvmName
 
 /**
@@ -29,25 +29,23 @@ class TestQueue : Queue() {
 
     private val logger = LoggerFactory.getLogger(TestQueue::class.java)
 
+    private lateinit var maps: List<Maps.MapSource>
+
     /**
      * Adds the player to the queue.
      * @param player The player to add to the queue.
      * @param gameType The game type which the player wants to join.
      */
     override fun queue(player: Player, gameType: CommonTypes.GameType) {
-        if (gameType.name == Environment.defaultGameName && gameType.mapName.isEmpty() && gameType.mode.isEmpty()) {
-            lobby.addPlayer(player)
-            return
-        }
         if (queuedPlayers.getIfPresent(player) != null) {
             player.sendMessage(Component.translatable("queue.removing", NamedTextColor.RED))
             queuedPlayers.invalidate(player)
             return
         }
-        if (gameType.mapName.isNotEmpty()) {
-            val mapExists = getMapNames(gameType.name).contains(gameType.mapName)
+        if (gameType.hasMapId()) {
+            val mapExists =
+                maps.any { map -> map matches gameType }
             if (!mapExists) {
-                player.sendMessage(Component.translatable("queue.error.no_map_found", NamedTextColor.RED))
                 return
             }
         }
@@ -74,6 +72,11 @@ class TestQueue : Queue() {
 
     private var instanceStarting = false // only one instance is allowed to start per queue cycle
     override fun start() {
+        maps = runBlocking {
+            Messaging.outgoing.getAvailableMaps(null, null, null).mapsList.map {
+                Maps.MapSource(it.mapId, it.mapUrl, it.mapFormat, it.mapConfig)
+            }
+        }
         MinecraftServer.getSchedulerManager().buildTask {
             try {
                 instanceStarting = false
@@ -85,27 +88,31 @@ class TestQueue : Queue() {
                         queuedPlayers.invalidate(player)
                         return@forEach
                     }
-                    for (game in Game.games) {
-                        if (game.name == gameType.name &&
-                            (!gameType.selectorsList.contains(CommonTypes.GameType.GameTypeFieldSelector.MAP_NAME) || gameType.mapName == game.mapName)
-                        ) {
-                            if (gameType.selectorsList.contains(CommonTypes.GameType.GameTypeFieldSelector.GAME_MODE) && game.mode != gameType.mode) {
-                                continue
-                            }
-                            logger.info("Found a good game for ${player.username} to join")
-                            queuedPlayers.invalidate(player)
-                            join(player, game)
-                            return@forEach
-                        }
+                    val game = Game.games.firstOrNull {
+                        it.data.name == gameType.name
+                            && (it.data.mapSource matches gameType)
+                            && (it.data.mapSource.isPlayerAllowed(player.uuid))
+                            && (!gameType.hasMode() || gameType.mode == it.data.mode)
+                    }
+                    if (game != null) {
+                        logger.info("Found a good game for ${player.username} to join")
+                        join(player, game)
+                        queuedPlayers.invalidate(player)
+                        return@forEach
                     }
                     if (instanceStarting) return@forEach
                     logger.info("Starting a new instance for ${player.username}")
                     player.sendMessage(Component.translatable("queue.creating_instance", NamedTextColor.GREEN))
-                    val map = if (gameType.mapName.isNullOrEmpty()) randomMap(gameType.name)
-                    else gameType.mapName
-                    logger.info("Map chosen: $map")
+                    val map = maps.filter { map -> map matches gameType && map.isPlayerAllowed(player.uuid) }.random()
+                    logger.info("Map chosen: ${map.id}")
                     try {
-                        GameLoader.createNewGame(gameType.name, map ?: error("No map found for game"), gameType.mode)
+                        GameLoader.createNewGame(
+                            GameData(
+                                gameType.name,
+                                map,
+                                gameType.mode
+                            )
+                        )
                         instanceStarting = true
                     } catch (e: Throwable) {
                         e.printStackTrace()
@@ -122,28 +129,6 @@ class TestQueue : Queue() {
                 e.printStackTrace()
             }
         }.repeat(Duration.ofMillis(500)).schedule()
-    }
-
-    override fun getMaps(gameType: String): Array<File>? {
-        val worldFolder = "worlds/$gameType"
-        val file = File(worldFolder)
-        if (!(file.exists() && file.isDirectory)) arrayOf<File>()
-        return file.listFiles()
-    }
-
-    private fun getMapNames(gameType: String): ArrayList<String> {
-        val maps = getMaps(gameType) ?: return arrayListOf()
-        val mapNames = ArrayList<String>()
-        for (map in maps) {
-            mapNames.add(map.name)
-        }
-        return mapNames
-    }
-
-    override fun randomMap(gameType: String): String? {
-        val allMaps = getMaps(gameType)
-        if (allMaps != null) return allMaps[Random.nextInt(allMaps.size)].name
-        return null
     }
 
 }
