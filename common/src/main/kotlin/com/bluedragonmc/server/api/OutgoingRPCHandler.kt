@@ -35,6 +35,7 @@ interface OutgoingRPCHandler {
 
     // Maps
     suspend fun getAvailableMaps(gameName: String?, gameMode: String?, whitelist: List<UUID>?): Map.MapList
+    suspend fun updateMapConfig(mapId: String, configJson: String)
 
     // Queue
     suspend fun addToQueue(player: Player, gameType: GameType)

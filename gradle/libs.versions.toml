@@ -15,7 +15,7 @@ atlas-projectiles = "2.1.2"
 fastutil = "8.5.18"
 polar = "1.15.1"
 # Auto-generated GRPC/Protobuf messaging code
-rpc = "3327d427bc"
+rpc = "eddbeed696"
 # Messaging dependencies
 grpc = "1.71.0"
 grpc-kotlin-stub = "1.4.1"
@@ -29,7 +29,8 @@ kotlin-jvm = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", ve
 minestom = { group = "net.minestom", name = "minestom", version.ref = "minestom" }
 jukebox = { group = "com.github.BlueDragonMC", name = "Jukebox", version.ref = "jukebox" }
 #jukebox = { group = "com.bluedragonmc", name = "Jukebox", version = "1.0-SNAPSHOT" }
-configurate = { group = "org.spongepowered", name = "configurate-yaml", version.ref = "configurate" }
+configurate-yaml = { group = "org.spongepowered", name = "configurate-yaml", version.ref = "configurate" }
+configurate-gson = { group = "org.spongepowered", name = "configurate-gson", version.ref = "configurate" }
 configurate-extra-kotlin = { group = "org.spongepowered", name = "configurate-extra-kotlin", version.ref = "configurate" }
 minimessage = { group = "net.kyori", name = "adventure-text-minimessage", version.ref = "minimessage" }
 atlas-projectiles = { group = "ca.atlasengine", name = "atlas-projectiles", version.ref = "atlas-projectiles" }
@@ -54,6 +55,6 @@ tinylog-slf4j = { group = "org.tinylog", name = "slf4j-tinylog", version.ref = "
 polar = { group = "dev.hollowcube", name = "polar", version.ref = "polar"}
 
 [bundles]
-configurate = ["configurate", "configurate-extra-kotlin"]
+configurate = ["configurate-yaml", "configurate-gson", "configurate-extra-kotlin"]
 messaging = ["rpc", "grpc-protobuf", "grpc-netty", "grpc-kotlin-stub", "protobuf-kotlin"]
 tinylog = ["tinylog-api", "tinylog-impl", "tinylog-slf4j"]

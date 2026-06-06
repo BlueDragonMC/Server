@@ -2,9 +2,7 @@ package com.bluedragonmc.server.module.config
 
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.GameModule
-import com.bluedragonmc.server.module.SoftDependsOn
 import com.bluedragonmc.server.module.config.serializer.*
-import com.bluedragonmc.server.module.map.MapProviderModule
 import com.bluedragonmc.server.module.minigame.KitsModule
 import com.bluedragonmc.server.service.Maps
 import kotlinx.coroutines.runBlocking
@@ -27,7 +25,6 @@ import java.nio.file.Paths
 import kotlin.io.path.bufferedReader
 import kotlin.io.path.exists
 
-@SoftDependsOn(MapProviderModule::class)
 class ConfigModule(private val configFileName: String? = null, private val mapSource: Maps.MapSource? = null) : GameModule() {
 
     private lateinit var root: ConfigurationNode
