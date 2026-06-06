@@ -67,6 +67,10 @@ class OutgoingRPCHandlerStub : OutgoingRPCHandler {
         return com.bluedragonmc.api.grpc.Map.MapList.newBuilder().addAllMaps(mapDefs).build()
     }
 
+    override suspend fun updateMapConfig(mapId: String, configJson: String) {
+
+    }
+
     override suspend fun addToQueue(player: Player, gameType: CommonTypes.GameType) {
 
     }

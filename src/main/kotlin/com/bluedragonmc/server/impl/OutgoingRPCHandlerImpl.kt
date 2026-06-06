@@ -1,6 +1,7 @@
 package com.bluedragonmc.server.impl
 
 import com.bluedragonmc.api.grpc.*
+import com.bluedragonmc.api.grpc.Map
 import com.bluedragonmc.api.grpc.Queue
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.api.OutgoingRPCHandler
@@ -198,6 +199,16 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
         if (whitelist != null) builder.whitelist =
             com.bluedragonmc.api.grpc.Map.PlayerList.newBuilder().addAllPlayers(whitelist.map { it.toString() }).build()
         return mapStub.withDeadlineAfter(5, TimeUnit.SECONDS).getAvailableMaps(builder.build())
+    }
+
+    override suspend fun updateMapConfig(mapId: String, configJson: String) {
+        mapStub.withDeadlineAfter(5, TimeUnit.SECONDS).updateMapConfig(
+            Map.UpdateMapConfigRequest.newBuilder()
+                .setMapId(mapId)
+                .setConfigJson(configJson)
+                .build()
+        )
+
     }
 
     override suspend fun addToQueue(player: Player, gameType: CommonTypes.GameType) {

@@ -3,10 +3,13 @@ package com.bluedragonmc.server.service
 import com.bluedragonmc.api.grpc.CommonTypes
 import com.bluedragonmc.server.module.config.ConfigModule
 import net.minestom.server.instance.ChunkLoader
+import net.minestom.server.instance.InstanceContainer
 import org.spongepowered.configurate.ConfigurationNode
+import org.spongepowered.configurate.gson.GsonConfigurationLoader
 import org.spongepowered.configurate.objectmapping.ConfigSerializable
 import java.io.BufferedReader
 import java.io.StringReader
+import java.net.URI
 import java.util.*
 
 object Maps {
@@ -62,16 +65,32 @@ object Maps {
         constructor() : this("", "")
     }
 
-    abstract class MapProvider {
-        abstract suspend fun provideMap(source: MapSource): ChunkLoader
+    abstract class MapProvider<L : ChunkLoader> {
+        abstract suspend fun provideMap(source: MapSource): L
+
+        /**
+         * Posts the binary contents of the map to the map's URL.
+         */
+        abstract suspend fun saveMap(source: MapSource, instance: InstanceContainer)
     }
 
-    private val mapProviders = mutableMapOf<CommonTypes.MapFormat, MapProvider>()
+    private val mapProviders = mutableMapOf<CommonTypes.MapFormat, MapProvider<*>>()
 
     suspend fun provideMap(source: MapSource): ChunkLoader =
         mapProviders[source.format]?.provideMap(source) ?: error("No valid map provider found to fulfill request: $source")
 
-    fun registerMapProvider(format: CommonTypes.MapFormat, mapProvider: MapProvider) {
+    suspend fun saveMap(source: MapSource, instance: InstanceContainer) =
+        (mapProviders[source.format] as? MapProvider<ChunkLoader>)?.saveMap(source, instance)
+            ?: error("No valid map provider found to fulfill save request: $source")
+
+    suspend fun saveMapConfig(source: MapSource, config: ConfigurationNode) {
+        val json = GsonConfigurationLoader.builder()
+            .url(URI(source.url).toURL())
+            .buildAndSaveString(config)
+        Messaging.outgoing.updateMapConfig(source.id, json)
+    }
+
+    fun registerMapProvider(format: CommonTypes.MapFormat, mapProvider: MapProvider<*>) {
         mapProviders[format] = mapProvider
     }
 }
