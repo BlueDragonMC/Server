@@ -25,7 +25,6 @@ import net.minestom.server.command.builder.arguments.Argument
 import net.minestom.server.coordinate.Point
 import net.minestom.server.entity.Player
 import net.minestom.server.utils.entity.EntityFinder
-import java.util.function.Predicate
 
 /**
  * A basic command class that is extended by BlueDragon commands.
@@ -143,21 +142,6 @@ open class BlueDragonCommand(
 
     private fun constructSubcommand(name: String, block: BlueDragonCommand.() -> Unit) =
         BlueDragonCommand(name, emptyArray(), permission, block)
-
-    /**
-     * Only allow senders which pass the [scopePredicate]
-     * to execute the command. Primarily used to limit commands
-     * on a per-game basis.
-     */
-    fun scopeTo(scopePredicate: Predicate<CommandSender>) {
-        conditions.add {
-            if (!scopePredicate.test(sender)) {
-                sender.sendMessage(Component.text("You can't use that command here!", NamedTextColor.RED))
-                return@add false
-            }
-            return@add true
-        }
-    }
 
     fun syntax(vararg args: Argument<*>, block: CommandCtx.() -> Unit) = Syntax(this, args.toList(), block)
     fun suspendSyntax(vararg args: Argument<*>, block: suspend CommandCtx.() -> Unit) =
