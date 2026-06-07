@@ -1,7 +1,7 @@
 package com.bluedragonmc.server.queue
 
-import com.bluedragonmc.server.bootstrap.GlobalTranslation
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.bootstrap.GlobalTranslation
 import com.bluedragonmc.server.game.GameData
 import org.slf4j.LoggerFactory
 import java.io.BufferedInputStream

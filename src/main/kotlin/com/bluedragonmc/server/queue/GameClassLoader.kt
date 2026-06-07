@@ -8,31 +8,6 @@ import java.net.URLClassLoader
  */
 class GameClassLoader(urls: Array<out URL>?) : URLClassLoader(urls) {
 
-    override fun loadClass(name: String?, resolve: Boolean): Class<*> {
-        return loadClass0(name, resolve, search = true)
-    }
-
-    private fun loadClass0(name: String?, resolve: Boolean, search: Boolean): Class<*> {
-        val ex: ClassNotFoundException
-        try {
-            return super.loadClass(name, resolve)
-        } catch (classNotFoundException: ClassNotFoundException) {
-            // Ignored
-            ex = classNotFoundException
-        }
-        if (!search) throw ex
-
-        loaders.filter { it != this }.forEach { loader ->
-            try {
-                return loader.loadClass0(name, resolve, search = false)
-            } catch (_: ClassNotFoundException) {
-                // Ignored
-            }
-        }
-
-        throw ex
-    }
-
     init {
         loaders.add(this)
     }
@@ -52,6 +27,6 @@ class GameClassLoader(urls: Array<out URL>?) : URLClassLoader(urls) {
     }
 
     companion object {
-        internal val loaders = mutableSetOf<GameClassLoader>()
+        internal val loaders = mutableListOf<GameClassLoader>()
     }
 }
