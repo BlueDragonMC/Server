@@ -11,6 +11,7 @@ import com.bluedragonmc.server.utils.surroundWithSeparators
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.event.HoverEvent
 import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.`object`.ObjectContents
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventFilter
 import net.minestom.server.event.EventNode
@@ -44,6 +45,9 @@ object GlobalChatFormat : Bootstrap() {
                     Component.text(experience, NamedTextColor.GREEN),
                     Component.text(xpToNextLevel, ALT_COLOR_1),
                     Component.text(level.toInt() + 1, ALT_COLOR_2))))
+
+                +Component.`object`(ObjectContents.playerHead(player.uuid))
+                +Component.space()
 
                 +player.name
                 +Component.text(": ", NamedTextColor.DARK_GRAY)
