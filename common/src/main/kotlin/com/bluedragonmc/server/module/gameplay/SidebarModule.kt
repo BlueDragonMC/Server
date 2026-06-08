@@ -3,7 +3,6 @@ package com.bluedragonmc.server.module.gameplay
 import com.bluedragonmc.server.*
 import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.event.*
-import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.utils.GameState
 import com.bluedragonmc.server.utils.withGradient
@@ -41,10 +40,12 @@ class SidebarModule(private val title: String) : GameModule() {
                 binding.updateFor(player)
         }
         eventNode.addListener(PlayerJoinGameEvent::class.java) { event ->
-            val sidebar = sidebars.getOrPut(event.player) { createSidebar() }
-            sidebar.addViewer(event.player)
-            if (::binding.isInitialized)
-                binding.updateFor(event.player)
+            MinecraftServer.getSchedulerManager().scheduleNextTick {
+                val sidebar = sidebars.getOrPut(event.player) { createSidebar() }
+                sidebar.addViewer(event.player)
+                if (::binding.isInitialized)
+                    binding.updateFor(event.player)
+            }
         }
         eventNode.addListener(PlayerLeaveGameEvent::class.java) { event ->
             sidebars[event.player]?.removeViewer(event.player)
