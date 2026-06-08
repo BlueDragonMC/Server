@@ -44,7 +44,7 @@ object IPCQueue : Queue() {
         val start = System.nanoTime()
         val game = GameLoader.createNewGame(GameData(request.game, request.mapSource.let {
             Maps.MapSource(it.mapId, it.mapUrl, it.mapFormat, it.mapConfig)
-        }, request.mode))
+        }, if (request.hasMode()) request.mode else null))
         logger.info("Created '${request.game}' game on map '${game.data.mapSource.id}' and mode '${game.data.mode}' with id '${game.id}'. (${(System.nanoTime() - start) / 1_000_000}ms)")
         // The service will soon be notified of this instance's creation
         // once the mandatory MessagingModule is initialized
