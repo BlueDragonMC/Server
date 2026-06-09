@@ -15,7 +15,7 @@ atlas-projectiles = "2.1.2"
 fastutil = "8.5.18"
 polar = "1.15.1"
 # Auto-generated GRPC/Protobuf messaging code
-rpc = "eddbeed696"
+rpc = "aee4852ca5"
 # Messaging dependencies
 grpc = "1.71.0"
 grpc-kotlin-stub = "1.4.1"

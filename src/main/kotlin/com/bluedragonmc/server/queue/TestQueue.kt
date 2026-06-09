@@ -1,8 +1,8 @@
 package com.bluedragonmc.server.queue
 
 import com.bluedragonmc.api.grpc.CommonTypes
-import com.bluedragonmc.server.api.Queue
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.api.Queue
 import com.bluedragonmc.server.game.GameData
 import com.bluedragonmc.server.service.Maps
 import com.bluedragonmc.server.service.Messaging
@@ -54,6 +54,10 @@ class TestQueue : Queue() {
             Component.translatable("queue.added", NamedTextColor.GREEN)
                 .hoverEvent(HoverEvent.showText(Component.text("Test queue debug information\nGame type: $gameType")))
         )
+    }
+
+    override fun bulkEnqueue(requests: List<Pair<Player, CommonTypes.GameType>>) {
+        requests.forEach { (player, gameType) -> queue(player, gameType) }
     }
 
     /**

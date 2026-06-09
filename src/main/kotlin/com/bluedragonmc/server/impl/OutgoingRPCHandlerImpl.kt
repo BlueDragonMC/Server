@@ -220,6 +220,18 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
         )
     }
 
+    override suspend fun bulkAddToQueue(messages: List<Pair<Player, CommonTypes.GameType>>) {
+        queueStub.withDeadlineAfter(5, TimeUnit.SECONDS).bulkAddToQueue(
+            Queue.BulkAddToQueueRequest.newBuilder()
+                .addAllRequests(messages.map { (player, gameType) ->
+                    Queue.AddToQueueRequest.newBuilder()
+                        .setPlayerUuid(player.uuid.toString())
+                        .setGameType(gameType)
+                        .build()
+                }).build()
+        )
+    }
+
     override suspend fun removeFromQueue(player: Player) {
         queueStub.withDeadlineAfter(5, TimeUnit.SECONDS).removeFromQueue(
             Queue.RemoveFromQueueRequest.newBuilder()
