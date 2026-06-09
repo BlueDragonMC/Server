@@ -75,6 +75,10 @@ class OutgoingRPCHandlerStub : OutgoingRPCHandler {
 
     }
 
+    override suspend fun bulkAddToQueue(messages: List<Pair<Player, CommonTypes.GameType>>) {
+
+    }
+
     override suspend fun removeFromQueue(player: Player) {
 
     }

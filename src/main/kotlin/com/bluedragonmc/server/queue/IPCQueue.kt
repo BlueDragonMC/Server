@@ -17,7 +17,6 @@ import net.minestom.server.MinecraftServer
 import net.minestom.server.entity.Player
 import net.minestom.server.network.ConnectionState
 import org.slf4j.LoggerFactory
-import java.io.File
 import java.util.*
 
 object IPCQueue : Queue() {
@@ -33,6 +32,13 @@ object IPCQueue : Queue() {
             } else {
                 Messaging.outgoing.addToQueue(player, gameType)
             }
+        }
+    }
+
+    override fun bulkEnqueue(requests: List<Pair<Player, CommonTypes.GameType>>) {
+        requests.forEach { it.first.sendMessage(Component.translatable("queue.adding", NamedTextColor.DARK_GRAY)) }
+        Database.IO.launch {
+            Messaging.outgoing.bulkAddToQueue(requests)
         }
     }
 

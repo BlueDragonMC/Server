@@ -281,15 +281,13 @@ abstract class Game(val data: GameData) : ModuleHolder(),
         while (modules.isNotEmpty()) unregister(modules.first())
 
         if (queueAllPlayers) {
-            players.forEach {
-                it.sendMessage(Component.translatable("game.status.ending", NamedTextColor.GREEN))
-                Environment.queue.queue(it, gameType {
-                    name = data.name
-                    if (data.mode != null) {
-                        mode = data.mode
-                    }
-                })
+            val gameType = gameType {
+                name = data.name
+                if (data.mode != null) {
+                    mode = data.mode
+                }
             }
+            Environment.queue.bulkEnqueue(players.map { it to gameType })
         }
 
         MinecraftServer.getSchedulerManager().buildTask {
@@ -307,12 +305,8 @@ abstract class Game(val data: GameData) : ModuleHolder(),
     open fun isInactive(): Boolean {
         // Games with players are always considered active
         if (players.isNotEmpty()) return false
-        // Games without players are always inactive after 4 hours
-        if (System.currentTimeMillis() - creationTime >= 1_000 * 60 * 60 * 4) return true
-        // Games without players are always active in the first 30 minutes after being created
-        if (System.currentTimeMillis() - creationTime <= 1_000 * 60 * 30 && !playerHasJoined) return false
-
-        return true
+        // Games without players are always inactive after 5 minutes
+        return System.currentTimeMillis() - creationTime >= 1_000 * 60 * 5
     }
 
     fun init() {
