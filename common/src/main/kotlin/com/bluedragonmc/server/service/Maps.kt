@@ -9,7 +9,6 @@ import org.spongepowered.configurate.gson.GsonConfigurationLoader
 import org.spongepowered.configurate.objectmapping.ConfigSerializable
 import java.io.BufferedReader
 import java.io.StringReader
-import java.net.URI
 import java.util.*
 
 object Maps {
@@ -31,9 +30,11 @@ object Maps {
          */
         val config: ConfigurationNode,
     ) {
-        constructor(id: String, url: String, format: CommonTypes.MapFormat, config: String) : this(id, url, format,
+        constructor(id: String, url: String, format: CommonTypes.MapFormat, config: String) : this(
+            id, url, format,
             ConfigModule.loadFile(BufferedReader(StringReader(config)))
         )
+
         val games: List<GameEntry> by lazy { config.node("world", "games").getList(GameEntry::class.java)!! }
         val whitelist: List<UUID>? by lazy {
             if (!config.node("world").hasChild("whitelist")) return@lazy null
@@ -45,10 +46,10 @@ object Maps {
          */
         infix fun matches(gameType: CommonTypes.GameType): Boolean =
             (!gameType.hasMapId() || gameType.mapId == id)
-                && games.any { game ->
-                    game.name == gameType.name
+                    && games.any { game ->
+                game.name == gameType.name
                         && (game.mode == null || game.mode == gameType.mode)
-                }
+            }
 
         /**
          * Returns true if the player is not blocked from joining this map by the whitelist.
@@ -77,16 +78,15 @@ object Maps {
     private val mapProviders = mutableMapOf<CommonTypes.MapFormat, MapProvider<*>>()
 
     suspend fun provideMap(source: MapSource): ChunkLoader =
-        mapProviders[source.format]?.provideMap(source) ?: error("No valid map provider found to fulfill request: $source")
+        mapProviders[source.format]?.provideMap(source)
+            ?: error("No valid map provider found to fulfill request: $source")
 
     suspend fun saveMap(source: MapSource, instance: InstanceContainer) =
         (mapProviders[source.format] as? MapProvider<ChunkLoader>)?.saveMap(source, instance)
             ?: error("No valid map provider found to fulfill save request: $source")
 
     suspend fun saveMapConfig(source: MapSource, config: ConfigurationNode) {
-        val json = GsonConfigurationLoader.builder()
-            .url(URI(source.url).toURL())
-            .buildAndSaveString(config)
+        val json = GsonConfigurationLoader.builder().buildAndSaveString(config)
         Messaging.outgoing.updateMapConfig(source.id, json)
     }
 
