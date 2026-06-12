@@ -11,6 +11,7 @@ import net.minestom.server.instance.anvil.AnvilLoader
 import okhttp3.*
 import okhttp3.RequestBody.Companion.toRequestBody
 import okio.IOException
+import org.slf4j.LoggerFactory
 import java.net.URI
 import java.nio.file.Paths
 import kotlin.coroutines.resume
@@ -19,14 +20,17 @@ import kotlin.coroutines.resumeWithException
 private val client = OkHttpClient()
 
 class PolarMapProvider : Maps.MapProvider<PolarLoader>() {
+
+    private val logger = LoggerFactory.getLogger(this::class.java)
+
     override suspend fun provideMap(source: Maps.MapSource): PolarLoader {
-        println("Providing Polar map at ${source.url}")
+        logger.info("Providing Polar map at ${source.url}")
         val request = Request.Builder().url(source.url).build()
         val response = client.newCall(request).await()
         val body = response.body!!
-        println("Got response of length ${body.contentLength()}")
+        logger.info("Got response of length ${body.contentLength()}")
         if (body.contentLength() == 0L) {
-            println("Map has no contents. Providing an empty map with default values.")
+            logger.info("Map has no contents. Providing an empty map with default values.")
             return PolarLoader(PolarWorld())
         }
         return PolarLoader(response.body!!.byteStream())
@@ -42,8 +46,11 @@ class PolarMapProvider : Maps.MapProvider<PolarLoader>() {
 }
 
 class AnvilMapProvider : Maps.MapProvider<AnvilLoader>() {
+
+    private val logger = LoggerFactory.getLogger(this::class.java)
+
     override suspend fun provideMap(source: Maps.MapSource): AnvilLoader {
-        println("Providing Anvil map at ${source.url}")
+        logger.info("Providing Anvil map at ${source.url}")
         return AnvilLoader(Paths.get(URI.create(source.url)))
     }
 

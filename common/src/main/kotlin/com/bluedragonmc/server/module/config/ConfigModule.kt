@@ -8,7 +8,7 @@ import com.bluedragonmc.server.service.Maps
 import kotlinx.coroutines.runBlocking
 import net.kyori.adventure.text.Component
 import net.minestom.server.color.Color
-import net.minestom.server.coordinate.Pos
+import net.minestom.server.coordinate.Point
 import net.minestom.server.entity.EntityType
 import net.minestom.server.entity.PlayerSkin
 import net.minestom.server.event.Event
@@ -94,25 +94,25 @@ class ConfigModule(private val configFileName: String? = null, private val mapSo
             }
         }
 
-        fun loadFile(reader: BufferedReader): ConfigurationNode {
+        val SERIALIZATION_OPTIONS: ConfigurationOptions = ConfigurationOptions.defaults().serializers { builder ->
+            builder.register(Point::class.java, PointSerializer())
+            builder.register(Color::class.java, ColorSerializer())
+            builder.register(Component::class.java, ComponentSerializer())
+            builder.register(EntityType::class.java, EntityTypeSerializer())
+            builder.register(Material::class.java, MaterialSerializer())
+            builder.register(EnchantmentList::class.java, EnchantmentListSerializer())
+            builder.register(PlayerSkin::class.java, PlayerSkinSerializer())
+            builder.register(KitsModule.Kit::class.java, KitSerializer())
+            builder.register(ItemStack::class.java, ItemStackSerializer())
+            builder.register(Block::class.java, BlockSerializer())
+        }
 
+        fun loadFile(reader: BufferedReader): ConfigurationNode {
             val loader = YamlConfigurationLoader.builder()
                 .source { reader }
                 .build()
 
-            val config = ConfigurationOptions.defaults().serializers { builder ->
-                builder.register(Pos::class.java, PosSerializer())
-                builder.register(Color::class.java, ColorSerializer())
-                builder.register(Component::class.java, ComponentSerializer())
-                builder.register(EntityType::class.java, EntityTypeSerializer())
-                builder.register(Material::class.java, MaterialSerializer())
-                builder.register(EnchantmentList::class.java, EnchantmentListSerializer())
-                builder.register(PlayerSkin::class.java, PlayerSkinSerializer())
-                builder.register(KitsModule.Kit::class.java, KitSerializer())
-                builder.register(ItemStack::class.java, ItemStackSerializer())
-                builder.register(Block::class.java, BlockSerializer())
-            }
-            return loader.load(config)
+            return loader.load(SERIALIZATION_OPTIONS)
         }
 
         fun loadExtra(game: Game, fileName: String): ConfigurationNode? {
