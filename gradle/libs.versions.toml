@@ -3,7 +3,7 @@ metadata.format.version = "1.1"
 [versions]
 kotlin = "2.3.0"
 minestom = "2026.03.25-1.21.11"
-jukebox = "a941945c86"
+jukebox = "2026-06-13-3d8993c"
 configurate = "4.2.0"
 minimessage = "4.19.0"
 kmongo = "5.2.1"
@@ -11,11 +11,11 @@ caffeine = "3.2.0"
 okhttp = "4.12.0"
 serialization = "1.8.0"
 tinylog = "2.7.0"
-atlas-projectiles = "2.1.2"
+atlas-projectiles = "2.1.5"
 fastutil = "8.5.18"
 polar = "1.15.1"
 # Auto-generated GRPC/Protobuf messaging code
-rpc = "aee4852ca5"
+rpc = "2026-06-13-f05505c"
 # Messaging dependencies
 grpc = "1.71.0"
 grpc-kotlin-stub = "1.4.1"
@@ -27,8 +27,8 @@ junit = "5.9.0"
 [libraries]
 kotlin-jvm = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
 minestom = { group = "net.minestom", name = "minestom", version.ref = "minestom" }
-jukebox = { group = "com.github.BlueDragonMC", name = "Jukebox", version.ref = "jukebox" }
-#jukebox = { group = "com.bluedragonmc", name = "Jukebox", version = "1.0-SNAPSHOT" }
+jukebox = { group = "com.bluedragonmc", name = "jukebox", version.ref = "jukebox" }
+#jukebox = { group = "com.bluedragonmc", name = "jukebox", version = "dev" }
 configurate-yaml = { group = "org.spongepowered", name = "configurate-yaml", version.ref = "configurate" }
 configurate-gson = { group = "org.spongepowered", name = "configurate-gson", version.ref = "configurate" }
 configurate-extra-kotlin = { group = "org.spongepowered", name = "configurate-extra-kotlin", version.ref = "configurate" }
@@ -39,8 +39,8 @@ kmongo = { group = "org.litote.kmongo", name = "kmongo-coroutine-serialization",
 serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "serialization" }
 caffeine = { group = "com.github.ben-manes.caffeine", name = "caffeine", version.ref = "caffeine" }
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
-rpc = { group = "com.github.BlueDragonMC", name = "RPC", version.ref = "rpc" }
-#rpc = { group = "com.bluedragonmc", name = "rpc", version = "1.0" }
+rpc = { group = "com.bluedragonmc", name = "rpc", version.ref = "rpc" }
+#rpc = { group = "com.bluedragonmc", name = "rpc", version = "dev" }
 grpc-protobuf = { group = "io.grpc", name = "grpc-protobuf", version.ref = "grpc" }
 grpc-netty = { group = "io.grpc", name = "grpc-netty", version.ref = "grpc" }
 grpc-kotlin-stub = { group = "io.grpc", name = "grpc-kotlin-stub", version.ref = "grpc-kotlin-stub" }

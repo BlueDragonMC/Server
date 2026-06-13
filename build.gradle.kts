@@ -1,3 +1,6 @@
+import java.text.SimpleDateFormat
+import java.util.*
+
 plugins {
     id("server.common-conventions")
     id("com.gradleup.shadow") version "9.4.0"
@@ -7,13 +10,12 @@ plugins {
 }
 
 group = "com.bluedragonmc"
-version = "1.0-SNAPSHOT"
+version = getPublishingVersion()
 
 repositories {
     mavenLocal()
     mavenCentral()
-    maven(url = "https://jitpack.io")
-    maven("https://reposilite.atlasengine.ca/public")
+    maven(url = "https://reposilite.bluedragonmc.com/releases")
 }
 
 dependencies {
@@ -62,16 +64,15 @@ fun getOutputOf(command: String): String? {
     }
 }
 
-publishing {
-    publications {
-        create<MavenPublication>("maven") {
-            groupId = "com.bluedragonmc"
-            artifactId = "Server"
-            version = "1.0"
+fun isInCI() = System.getenv("CI") != null
 
-            from(components["java"])
-        }
-    }
+fun getPublishingVersion(): String = if (isInCI()) {
+    val commitSha = getOutputOf("git rev-parse --verify --short HEAD")
+    val date = SimpleDateFormat("YYYY-MM-dd").format(Date())
+
+    "$date-$commitSha"
+} else {
+    "dev"
 }
 
 kotlin {
