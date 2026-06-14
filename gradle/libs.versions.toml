@@ -2,7 +2,7 @@ metadata.format.version = "1.1"
 
 [versions]
 kotlin = "2.3.0"
-minestom = "2026.03.25-1.21.11"
+minestom = "2026.06.05-26.1.2"
 jukebox = "2026-06-13-3d8993c"
 configurate = "4.2.0"
 minimessage = "4.19.0"
@@ -14,6 +14,7 @@ tinylog = "2.7.0"
 atlas-projectiles = "2.1.5"
 fastutil = "8.5.18"
 polar = "1.15.1"
+slf4j = "2.0.18"
 # Auto-generated GRPC/Protobuf messaging code
 rpc = "2026-06-13-f05505c"
 # Messaging dependencies
@@ -53,6 +54,7 @@ tinylog-api = { group = "org.tinylog", name = "tinylog-api", version.ref = "tiny
 tinylog-impl = { group = "org.tinylog", name = "tinylog-impl", version.ref = "tinylog"}
 tinylog-slf4j = { group = "org.tinylog", name = "slf4j-tinylog", version.ref = "tinylog"}
 polar = { group = "dev.hollowcube", name = "polar", version.ref = "polar"}
+slf4j = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4j" }
 
 [bundles]
 configurate = ["configurate-yaml", "configurate-gson", "configurate-extra-kotlin"]

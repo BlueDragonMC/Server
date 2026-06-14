@@ -31,7 +31,7 @@ fun main() {
 }
 
 fun start() {
-
+    System.setProperty("minestom.automatic-component-translation", "true") // See GlobalTranslation
     Environment.setEnvironment(createEnvironment())
     logger.info("Starting Minecraft server in environment ${Environment.current::class.simpleName}")
 

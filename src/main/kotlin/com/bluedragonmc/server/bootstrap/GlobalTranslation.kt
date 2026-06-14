@@ -5,8 +5,7 @@ import com.bluedragonmc.server.NAMESPACE
 import com.bluedragonmc.server.queue.GameClassLoader
 import net.kyori.adventure.key.Key
 import net.kyori.adventure.translation.GlobalTranslator
-import net.kyori.adventure.translation.TranslationRegistry
-import net.minestom.server.adventure.MinestomAdventure
+import net.kyori.adventure.translation.TranslationStore
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import java.net.URL
@@ -23,7 +22,6 @@ import java.util.*
  */
 object GlobalTranslation : Bootstrap() {
     override fun hook(eventNode: EventNode<Event>) {
-        MinestomAdventure.AUTOMATIC_COMPONENT_TRANSLATION = true
         addSource(NAMESPACE, GlobalTranslation::class.java.classLoader)
     }
 
@@ -48,7 +46,7 @@ object GlobalTranslation : Bootstrap() {
      * using the same [classLoader].
      */
     fun addSource(namespace: String, classLoader: ClassLoader) {
-        val registry = TranslationRegistry.create(Key.key(namespace, "i18n"))
+        val registry = TranslationStore.messageFormat(Key.key(namespace, "i18n"))
         val translations = Properties()
         val file = getEntryAsStream(classLoader, "i18n.properties")
         if (file == null) {

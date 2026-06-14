@@ -53,7 +53,7 @@ fun Component.hoverEventTranslatable(key: String, color: TextColor): Component =
 fun Component.clickEvent(command: String): Component =
     clickEvent(ClickEvent.clickEvent(ClickEvent.Action.RUN_COMMAND, ClickEvent.Payload.string(command)))
 
-fun Component.clickEvent(action: ClickEvent.Action, value: String): Component {
+fun Component.clickEvent(action: ClickEvent.Action<ClickEvent.Payload.Text>, value: String): Component {
     if (action == ClickEvent.Action.COPY_TO_CLIPBOARD && hoverEvent() == null) {
         return clickEvent(ClickEvent.clickEvent(action, ClickEvent.Payload.string(value))).hoverEventTranslatable(
             "command.click_to_copy",

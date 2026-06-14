@@ -21,6 +21,7 @@ import net.minestom.server.event.EventNode
 import net.minestom.server.event.player.AsyncPlayerConfigurationEvent
 import net.minestom.server.network.ConnectionState
 import net.minestom.server.timer.TaskSchedule
+import kotlin.time.Duration.Companion.milliseconds
 
 object InitialInstanceRouter : Bootstrap(EnvType.PRODUCTION) {
 
@@ -44,14 +45,14 @@ object InitialInstanceRouter : Bootstrap(EnvType.PRODUCTION) {
 
             val dataLoadJob = Database.IO.async {
                 // Load player data from the database
-                withTimeout(5000) {
+                withTimeout(5000.milliseconds) {
                     Database.connection.loadDataDocument(event.player as CustomPlayer)
                 }
             }
 
             val getDestinationJob = Messaging.IO.async {
                 // Find the game that the player requested to join
-                withTimeout(5000) {
+                withTimeout(5000.milliseconds) {
                     Messaging.outgoing.getDestination(event.player.uuid)
                 }
             }
@@ -115,7 +116,7 @@ object InitialInstanceRouter : Bootstrap(EnvType.PRODUCTION) {
             // Wait up to 10 seconds for the player to enter the PLAY phase and then add them to the game.
             MinecraftServer.getSchedulerManager().submitTask {
                 ticks ++
-                if (event.player.playerConnection.connectionState == ConnectionState.PLAY) {
+                if (event.player.playerConnection.clientState == ConnectionState.PLAY) {
                     game.addPlayer(event.player, sendPlayer = false)
                     return@submitTask TaskSchedule.stop()
                 } else if (ticks < ServerFlag.SERVER_TICKS_PER_SECOND * 10) {

@@ -54,19 +54,19 @@ class TimeCommand(name: String, usageString: String, vararg aliases: String?) :
         subcommand("rate") {
             usage("/time rate <query|set> ...")
             syntax {
-                player.sendMessage(formatMessageTranslated("command.time.rate.query", player.instance!!.timeRate))
+                player.sendMessage(formatMessageTranslated("command.time.rate.query", player.instance!!.defaultClock()!!.rate()))
             }
             subcommand("query") {
                 usage("/time rate query")
                 syntax {
-                    player.sendMessage(formatMessageTranslated("command.time.rate.query", player.instance!!.timeRate))
+                    player.sendMessage(formatMessageTranslated("command.time.rate.query", player.instance!!.defaultClock()!!.rate()))
                 }
             }
             subcommand("set") {
                 usage("/time rate set <newRate>")
                 syntax(timeRateArgument) {
                     val newRate = get(timeRateArgument)
-                    player.instance!!.timeRate = newRate
+                    player.instance!!.defaultClock()!!.rate(newRate.toFloat())
                     player.sendMessage(formatMessageTranslated("command.time.rate.set", newRate))
                 }
             }

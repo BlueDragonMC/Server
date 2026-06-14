@@ -15,16 +15,16 @@ repositories {
 }
 
 dependencies {
-    implementation(libs.minestom)
-    implementation(libs.atlas.projectiles)
-    implementation(libs.kmongo)
-    implementation(libs.caffeine)
-    implementation(libs.minimessage)
-    implementation(libs.bundles.configurate)
-    implementation(libs.bundles.messaging)
-    implementation(libs.serialization.json)
-    implementation(libs.bundles.tinylog)
-    implementation(libs.fastutil)
+    compileOnly(libs.minestom)
+    compileOnly(libs.atlas.projectiles)
+    compileOnly(libs.kmongo)
+    compileOnly(libs.caffeine)
+    compileOnly(libs.minimessage)
+    compileOnly(libs.bundles.configurate)
+    compileOnly(libs.bundles.messaging)
+    compileOnly(libs.serialization.json)
+    compileOnly(libs.fastutil)
+    compileOnly(libs.slf4j)
 }
 
 val sourcesJar by tasks.registering(Jar::class) {

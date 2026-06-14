@@ -33,6 +33,8 @@ dependencies {
     implementation(libs.bundles.messaging) // Messaging
     implementation(libs.okhttp)
     implementation(libs.polar)
+    implementation(libs.slf4j)
+    implementation(libs.bundles.tinylog)
 
     implementation(project(":common"))
 }

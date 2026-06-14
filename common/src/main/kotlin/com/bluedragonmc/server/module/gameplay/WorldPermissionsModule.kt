@@ -14,6 +14,7 @@ import net.minestom.server.event.EventNode
 import net.minestom.server.event.player.PlayerBlockBreakEvent
 import net.minestom.server.event.player.PlayerBlockInteractEvent
 import net.minestom.server.event.player.PlayerBlockPlaceEvent
+import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
 import net.minestom.server.instance.block.BlockFace
 
@@ -46,6 +47,7 @@ class WorldPermissionsModule(
                     parent.callCancellable(
                         PreventPlayerBreakMapEvent(
                             event.player,
+                            event.instance,
                             event.block,
                             event.resultBlock,
                             event.blockPosition,
@@ -72,6 +74,7 @@ class WorldPermissionsModule(
                 } else parent.callCancellable(
                     PreventPlayerBreakMapEvent(
                         event.player,
+                        event.instance,
                         event.block,
                         event.block,
                         vec,
@@ -102,10 +105,11 @@ class WorldPermissionsModule(
      */
     class PreventPlayerBreakMapEvent(
         player: Player,
+        instance: Instance,
         block: Block,
         resultBlock: Block,
         blockPosition: BlockVec,
         blockFace: BlockFace,
     ) :
-        PlayerBlockBreakEvent(player, block, resultBlock, blockPosition, blockFace)
+        PlayerBlockBreakEvent(player, instance, block, resultBlock, blockPosition, blockFace)
 }

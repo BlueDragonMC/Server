@@ -355,7 +355,7 @@ class ProjectileModule : GameModule() {
                 // (seeing if a PlayerBlockBreakEvent would be cancelled)
                 val player = projectile.shooter as? Player ?: return@filter false
                 val block = instance.getBlock(pos)
-                val event = ProjectileBreakBlockEvent(parent, player, block, pos)
+                val event = ProjectileBreakBlockEvent(parent, instance,player, block, pos)
                 parent.callEvent(event)
 
                 if (dropItems && !event.isCancelled) {

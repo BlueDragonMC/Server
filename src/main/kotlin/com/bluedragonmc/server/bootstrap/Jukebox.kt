@@ -311,7 +311,7 @@ object Jukebox : Bootstrap() {
         if (firstItem != null && queue.isPlaying) {
             play(
                 firstItem.songName, player,
-                (queue.startingTick + msToTicks(System.currentTimeMillis() - queue.startedPlayingAt.toMillis())).toInt()
+                (queue.startingTick + msToTicks(System.currentTimeMillis() - queue.startedPlayingAt.toMillis()))
             )
         }
     }

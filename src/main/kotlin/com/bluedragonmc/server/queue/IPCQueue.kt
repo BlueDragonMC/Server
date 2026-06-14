@@ -3,8 +3,8 @@ package com.bluedragonmc.server.queue
 import com.bluedragonmc.api.grpc.CommonTypes
 import com.bluedragonmc.api.grpc.GsClient
 import com.bluedragonmc.api.grpc.PlayerHolderOuterClass.SendPlayerRequest
-import com.bluedragonmc.server.api.Queue
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.api.Queue
 import com.bluedragonmc.server.game.GameData
 import com.bluedragonmc.server.module.instance.InstanceModule
 import com.bluedragonmc.server.service.Database
@@ -72,7 +72,7 @@ object IPCQueue : Queue() {
         }
         val instance = game.getModule<InstanceModule>().getSpawningInstance(player)
         // Only allow players that have fully logged in, preventing them from being sent to the game twice
-        if (player.playerConnection.connectionState != ConnectionState.PLAY) return
+        if (player.playerConnection.clientState != ConnectionState.PLAY) return
         if (Game.findGame(player) == game || player.instance == null) return
         player.sendMessage(
             Component.translatable(

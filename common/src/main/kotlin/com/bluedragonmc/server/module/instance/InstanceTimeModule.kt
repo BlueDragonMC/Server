@@ -16,7 +16,7 @@ class InstanceTimeModule(val default: Int = 12000) : GameModule() {
         val time = parent.getModule<ConfigModule>().getConfig().node("world", "time").getInt(default)
         parent.getOwnedInstances().forEach {
             it.time = time.toLong()
-            it.timeRate = 0
+            it.defaultClock()?.pause()
         }
     }
 }

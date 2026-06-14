@@ -78,7 +78,7 @@ class SidebarModule(private val title: String) : GameModule() {
 
             fun getSpacer() = text(" ".repeat(spaces++))
 
-            fun getStatusSection() = when (module.parent.state) {
+            fun getStatusSection(): Collection<Component> = when (module.parent.state) {
                 GameState.SERVER_STARTING -> listOf(
                     getSpacer(),
                     Component.translatable("module.sidebar.server_starting", BRAND_COLOR_PRIMARY_2),
