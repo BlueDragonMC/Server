@@ -4,6 +4,7 @@ import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.NAMESPACE
 import net.kyori.adventure.key.Key
 import net.minestom.server.MinecraftServer
+import net.minestom.server.color.Color
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
@@ -11,6 +12,7 @@ import net.minestom.server.instance.Instance
 import net.minestom.server.instance.generator.Generator
 import net.minestom.server.registry.RegistryKey
 import net.minestom.server.world.DimensionType
+import net.minestom.server.world.attribute.EnvironmentAttribute
 
 class CustomGeneratorInstanceModule(
     private val dimensionType: RegistryKey<DimensionType> = DimensionType.OVERWORLD,
@@ -40,7 +42,12 @@ class CustomGeneratorInstanceModule(
             if (MinecraftServer.getDimensionTypeRegistry().get(id) == null) {
                 key = MinecraftServer.getDimensionTypeRegistry().register(
                     id,
-                    DimensionType.builder().ambientLight(1.0F).build()
+                    DimensionType.builder()
+                        .ambientLight(1.0F)
+                        .setAttribute(EnvironmentAttribute.AMBIENT_LIGHT_COLOR, Color.WHITE)
+                        .setAttribute(EnvironmentAttribute.FOG_COLOR, Color(0xC0D8FF))
+                        .setAttribute(EnvironmentAttribute.SKY_COLOR, Color(0x78A7FF))
+                        .build()
                 )
             }
         }
