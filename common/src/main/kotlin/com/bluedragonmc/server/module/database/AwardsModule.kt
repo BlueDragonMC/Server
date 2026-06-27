@@ -1,13 +1,15 @@
 package com.bluedragonmc.server.module.database
 
-import com.bluedragonmc.server.*
-import com.bluedragonmc.server.event.PlayerLeaveGameEvent
+import com.bluedragonmc.server.ALT_COLOR_1
+import com.bluedragonmc.server.ALT_COLOR_2
+import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.event.PlayerLeaveGameEvent
 import com.bluedragonmc.server.model.PlayerDocument
-import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.minigame.SpectatorModule
 import com.bluedragonmc.server.module.minigame.WinModule
+import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.service.Messaging
 import com.bluedragonmc.server.utils.*
 import kotlinx.coroutines.launch
@@ -22,6 +24,11 @@ import net.minestom.server.event.EventNode
 import net.minestom.server.sound.SoundEvent
 import java.time.Duration
 
+/**
+ * A module used to give the player coins and XP as a reward for doing well in games.
+ *
+ * [See Documentation](https://developer.bluedragonmc.com/modules/awardsmodule/)
+ */
 class AwardsModule : GameModule() {
 
     private lateinit var parent: Game

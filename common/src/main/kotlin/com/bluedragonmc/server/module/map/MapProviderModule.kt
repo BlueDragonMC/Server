@@ -22,12 +22,12 @@ import net.minestom.server.world.DimensionType
  * **Note**: By default, [lighting](https://wiki.minestom.net/world/chunk-management/lightloader) is enabled by setting the chunk supplier to the [LightingChunk] constructor.
  * To disable this, you can revert it back to [DynamicChunk] like so:
  * ```kotlin
- * use(AnvilFileMapProviderModule(path)) { module ->
+ * use(MapProviderModule(mapSource)) { module ->
  *   module.getInstance().setChunkSupplier(::DynamicChunk)
  * }
  * ```
  * 
- * [See Documentation](https://developer.bluedragonmc.com/modules/anvilfilemapprovidermodule/)
+ * [See Documentation](https://developer.bluedragonmc.com/modules/mapprovidermodule/)
  */
 class MapProviderModule(
     val mapSource: Maps.MapSource,

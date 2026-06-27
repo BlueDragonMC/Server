@@ -20,8 +20,10 @@ import java.time.Duration
 /**
  * Vanilla-like functionality for firework rockets.
  * The particles depend on the properties of the rocket.
- * If [boostElytra] is enabled, using a firework rocket will
- * increase the velocity of a player flying with elytra.
+ *
+ * [See Documentation](https://developer.bluedragonmc.com/modules/fireworkrocketmodule/)
+ *
+ * @property boostElytra If enabled, using a firework rocket will increase the velocity of a player flying with elytra.
  */
 class FireworkRocketModule(private val boostElytra: Boolean = true) : GameModule() {
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {

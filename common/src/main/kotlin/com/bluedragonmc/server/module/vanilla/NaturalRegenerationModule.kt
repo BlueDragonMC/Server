@@ -14,6 +14,8 @@ import java.time.Duration
 
 /**
  * Regenerates a player's health by 0.5 every second when they have been out of combat for at least 15 seconds.
+ *
+ * [See Documentation](https://developer.bluedragonmc.com/modules/naturalregenerationmodule/)
  */
 @DependsOn(OldCombatModule::class)
 class NaturalRegenerationModule : GameModule() {

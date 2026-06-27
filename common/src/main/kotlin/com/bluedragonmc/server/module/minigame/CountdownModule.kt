@@ -18,11 +18,23 @@ import net.minestom.server.event.Event
 import net.minestom.server.event.EventFilter
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.instance.RemoveEntityFromInstanceEvent
-import net.minestom.server.event.player.*
+import net.minestom.server.event.player.PlayerBlockBreakEvent
+import net.minestom.server.event.player.PlayerBlockInteractEvent
+import net.minestom.server.event.player.PlayerBlockPlaceEvent
+import net.minestom.server.event.player.PlayerMoveEvent
 import net.minestom.server.event.server.ServerTickMonitorEvent
 import net.minestom.server.event.trait.CancellableEvent
 import java.time.Duration
 
+/**
+ * Provides a visual countdown that is automatically displayed before the game starts.
+ *
+ * [See Documentation](https://developer.bluedragonmc.com/modules/countdownmodule/)
+ *
+ * @property threshold The number of players required to start the countdown.
+ * @property allowMoveDuringCountdown If `false`, players will be blocked from moving while the countdown is running.
+ * @property countdownSeconds How long the countdown lasts, in seconds.
+ */
 class CountdownModule(
     private val threshold: Int,
     private val allowMoveDuringCountdown: Boolean = true,

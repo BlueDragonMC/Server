@@ -32,6 +32,14 @@ import net.minestom.server.sound.SoundEvent
 import net.minestom.server.tag.Tag
 import java.time.Duration
 
+/**
+ * A module that allows you to define custom items,
+ * which have specialized behaviors when players interact with them.
+ *
+ * [See Documentation](https://developer.bluedragonmc.com/modules/customitemmodule/)
+ *
+ * @property items Vararg [CustomItem] that defines all items recognized by this module.
+ */
 class CustomItemModule(vararg val items: CustomItem) : GameModule() {
 
     companion object {

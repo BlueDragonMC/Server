@@ -4,6 +4,11 @@ import com.bluedragonmc.server.module.GameModule
 import net.minestom.server.entity.Player
 import net.minestom.server.instance.Instance
 
+/**
+ * An abstract module that supplies instances to the game.
+ *
+ * [See Documentation](https://developer.bluedragonmc.com/modules/instancemodule/)
+ */
 abstract class InstanceModule : GameModule() {
 
     /**

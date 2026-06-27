@@ -10,6 +10,8 @@ import net.minestom.server.event.item.PickupItemEvent
 
 /**
  * Allows players to pick up items.
+ *
+ * [See Documentation](https://developer.bluedragonmc.com/modules/itempickupmodule/)
  */
 class ItemPickupModule : GameModule() {
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {

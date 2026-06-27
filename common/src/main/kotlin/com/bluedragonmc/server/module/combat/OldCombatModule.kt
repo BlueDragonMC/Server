@@ -34,6 +34,11 @@ import net.minestom.server.tag.Tag
 import kotlin.experimental.or
 import kotlin.math.hypot
 
+/**
+ * A reimplementation of Minecraft combat features.
+ *
+ * [See Documentation](https://developer.bluedragonmc.com/modules/oldcombatmodule/)
+ */
 class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boolean = true) : GameModule() {
 
     companion object {

@@ -11,6 +11,13 @@ import net.minestom.server.event.EventNode
 import net.minestom.server.item.ItemStack
 import kotlin.random.Random
 
+/**
+ * A module that adds items to the inventory of a chest when it is first opened.
+ *
+ * [See Documentation](https://developer.bluedragonmc.com/modules/chestlootmodule/)
+ *
+ * @property lootProvider The [ChestLootProvider] used to seed the items in a chest.
+ */
 @DependsOn(ChestModule::class)
 class ChestLootModule(private val lootProvider: ChestLootProvider) : GameModule() {
 

@@ -17,9 +17,12 @@ import net.minestom.server.sound.SoundEvent
 import kotlin.random.Random
 
 /**
+ * Reimplements the vanilla behavior for interacting with doors.
+ *
  * Adapted from BasicRedstone by TogAr2 under the MIT License
- * Modified to work with the latest minestom-ce
  * https://github.com/TogAr2/BasicRedstone/blob/master/src/main/java/io/github/bloepiloepi/basicredstone/door/Doors.java
+ *
+ * [See Documentation](https://developer.bluedragonmc.com/modules/doorsmodule/)
  */
 class DoorsModule(private val allowDoors: Boolean = true, private val allowTrapdoors: Boolean = true) : GameModule() {
 

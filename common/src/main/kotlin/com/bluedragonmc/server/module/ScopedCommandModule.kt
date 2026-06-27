@@ -15,6 +15,8 @@ import java.lang.ref.WeakReference
  *
  * Note that Minestom requires command names to be **globally unique**. Registering two commands with the same names
  * will use the implementation of the first one to be registered.
+ *
+ * [See Documentation](https://developer.bluedragonmc.com/modules/scopedcommandmodule/)
  */
 class ScopedCommandModule : GameModule() {
     private lateinit var parent: Game

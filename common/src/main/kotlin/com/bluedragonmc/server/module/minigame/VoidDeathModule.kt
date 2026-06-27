@@ -10,8 +10,11 @@ import net.minestom.server.event.player.PlayerMoveEvent
 
 /**
  * A module that respawns the player when their height goes below a certain threshold.
- * @param threshold Minimum height the player can be at without being respawned.
- * @param respawnMode True if the player should just be respawned instead of being killed.
+ *
+ * [See Documentation](https://developer.bluedragonmc.com/modules/voiddeathmodule/)
+ *
+ * @property threshold Minimum height the player can be at without being respawned.
+ * @property respawnMode True if the player should just be respawned instead of being killed.
  */
 class VoidDeathModule(private val threshold: Double, private val respawnMode: Boolean = false) : GameModule() {
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {

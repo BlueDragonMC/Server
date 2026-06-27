@@ -19,7 +19,14 @@ import java.time.Duration
  * Disallows combat unless the attacker and target are in any combat zone.
  * When the module is initialized, any map zones with the label "Combat" are added as combat zones.
  * Optionally, the module prevents the player from leaving the zone if they are in a fight.
- * Requires the [MapZonesModule]
+ * Requires the [MapZonesModule].
+ *
+ * [See Documentation](https://developer.bluedragonmc.com/modules/combatzonesmodule/)
+ *
+ * @property allowLeaveDuringCombat If `false`, players will be stuck in the combat zones while in combat
+ * @property minCombatSeconds The time, in seconds, a player must not fight anyone before they are considered "out of combat".
+ * @property startingCombatZones List of [MapZonesModule.MapZone] objects, aside from the ones labeled "Combat", affected by this module.
+ * More can be added at any time with [addCombatZone].
  */
 @DependsOn(MapZonesModule::class, OldCombatModule::class)
 class CombatZonesModule(

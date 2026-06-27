@@ -10,6 +10,12 @@ import net.minestom.server.event.EventNode
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.InstanceContainer
 
+/**
+ * An implementation of [InstanceModule] that creates a single
+ * [InstanceContainer] for each game using a map loaded by [MapProviderModule].
+ *
+ * [See Documentation](https://developer.bluedragonmc.com/modules/instancecontainermodule/)
+ */
 @DependsOn(MapProviderModule::class)
 class InstanceContainerModule : InstanceModule() {
 

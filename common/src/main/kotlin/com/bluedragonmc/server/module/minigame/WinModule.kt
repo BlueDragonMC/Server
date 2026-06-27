@@ -24,6 +24,11 @@ import net.minestom.server.item.component.FireworkExplosion
 import net.minestom.server.item.component.FireworkList
 import java.time.Duration
 
+/**
+ * Handles the win celebration that takes place at the end of every minigame.
+ *
+ * [See Documentation](https://developer.bluedragonmc.com/modules/winmodule/)
+ */
 class WinModule(
     val winCondition: WinCondition = WinCondition.MANUAL,
 ) : GameModule() {

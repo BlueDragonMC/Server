@@ -13,6 +13,8 @@ import net.minestom.server.event.trait.PlayerEvent
 
 /**
  * Ties specific areas of the map to specific gameplay events.
+ *
+ * [See Documentation](https://developer.bluedragonmc.com/modules/mapzonesmodule/)
  */
 class MapZonesModule : GameModule() {
     private val zones = mutableListOf<MapZone>()

@@ -12,6 +12,8 @@ import net.minestom.server.event.EventNode
  * Sets the max health of the player when they join the game.
  * This sets the base value of the attribute, it does not add a modifier.
  * The module automatically resets their max health to 20 when they leave the instance.
+ *
+ * [See Documentation](https://developer.bluedragonmc.com/modules/maxhealthmodule/)
  */
 class MaxHealthModule(private val maxHealth: Double) : GameModule() {
 

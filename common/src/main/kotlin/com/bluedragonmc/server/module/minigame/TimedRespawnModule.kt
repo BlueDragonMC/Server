@@ -15,6 +15,11 @@ import net.minestom.server.event.EventNode
 import net.minestom.server.event.player.PlayerDeathEvent
 import java.time.Duration
 
+/**
+ * Automatically respawns players after a short delay.
+ *
+ * [See Documentation](https://developer.bluedragonmc.com/modules/timedrespawnmodule/)
+ */
 class TimedRespawnModule(private val seconds: Int = 5) : GameModule() {
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         eventNode.addListener(PlayerDeathEvent::class.java) { event ->

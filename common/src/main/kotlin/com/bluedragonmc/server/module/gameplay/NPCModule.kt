@@ -36,6 +36,8 @@ import java.util.function.Consumer
  * getModule<NPCModule>().addNPC(position = Pos(2.5, 64.0, 7.5), customName = Component.text("NPC woohoo!"), interaction = {
  * it.player.sendMessage("WOOHOO!")})
  * ```
+ *
+ * [See Documentation](https://developer.bluedragonmc.com/modules/npcmodule/)
  */
 class NPCModule : GameModule() {
 

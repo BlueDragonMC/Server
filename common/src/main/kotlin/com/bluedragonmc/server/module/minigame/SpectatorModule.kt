@@ -20,6 +20,8 @@ import net.minestom.server.event.player.PlayerDeathEvent
 
 /**
  * A simple module to manage spectators in a game.
+ *
+ * [See Documentation](https://developer.bluedragonmc.com/modules/spectatormodule/)
  */
 @SoftDependsOn(TeamModule::class)
 class SpectatorModule(var spectateOnDeath: Boolean, var spectateOnLeave: Boolean = true) : GameModule() {

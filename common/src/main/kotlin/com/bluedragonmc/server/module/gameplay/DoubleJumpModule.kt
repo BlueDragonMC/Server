@@ -22,6 +22,15 @@ import kotlin.math.sin
 
 /**
  * Allows players to double jump. The default settings are the ones used in the lobby.
+ *
+ * [See Documentation](https://developer.bluedragonmc.com/modules/doublejumpmodule/)
+ *
+ * @property strength A multiplier for the horizontal velocity added during a double-jump.
+ * @property pitchInfluence The extent to which the player’s pitch direction affects the vertical velocity added during a double-jump.
+ * Only upward pitch will affect the velocity.
+ * @property verticalStrength The base vertical velocity added during a double-jump.
+ * @property cooldownMillis How long after starting a double-jump a player will have to wait before starting another.
+ * If greater than 0, the cooldown will be displayed in the player’s action bar.
  */
 class DoubleJumpModule(
     private val strength: Double = 25.0,

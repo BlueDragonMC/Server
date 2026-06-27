@@ -33,7 +33,9 @@ import java.util.function.Predicate
  * as well as rank players by their statistic values.
  *
  * It is recommended, however not required, to use a
- * [StatisticRecorder] to record statistics
+ * [StatisticRecorder] to record statistics.
+ *
+ * [See Documentation](https://developer.bluedragonmc.com/modules/statisticsmodule/)
  */
 class StatisticsModule(private vararg val recorders: StatisticRecorder) : GameModule() {
 

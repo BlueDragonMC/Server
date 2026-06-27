@@ -27,6 +27,8 @@ import java.util.concurrent.CopyOnWriteArraySet
 /**
  * A module that provides team support.
  * This module can automatically generate teams when the game starts, or teams can be created manually and added to the `teams` list.
+ *
+ * [See Documentation](https://developer.bluedragonmc.com/modules/teammodule/)
  */
 class TeamModule(
     private val autoTeams: Boolean = false,

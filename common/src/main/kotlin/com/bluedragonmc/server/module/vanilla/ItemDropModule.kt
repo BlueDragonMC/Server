@@ -27,6 +27,8 @@ import kotlin.random.Random
 /**
  * Allows players to drop items, and optionally drops all their items on death.
  * Also allows blocks be dropped when broken.
+ *
+ * [See Documentation](https://developer.bluedragonmc.com/modules/itemdropmodule/)
  */
 class ItemDropModule(var dropBlocksOnBreak: Boolean = true, var dropAllOnDeath: Boolean = false) : GameModule() {
 

@@ -21,6 +21,8 @@ import net.minestom.server.instance.block.BlockFace
 /**
  * This module can prevent the player from placing, breaking, or interacting with blocks in the world.
  * Note: Denying `allowBlockInteract` will also prevent players from placing blocks, even if `allowBlockPlace` is true.
+ *
+ * [See Documentation](https://developer.bluedragonmc.com/modules/worldpermissionsmodule/)
  */
 class WorldPermissionsModule(
     var allowBlockBreak: Boolean = false,

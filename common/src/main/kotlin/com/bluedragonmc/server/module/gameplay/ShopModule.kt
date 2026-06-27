@@ -27,6 +27,9 @@ import net.minestom.server.inventory.TransactionType
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 
+/**
+ * [See Documentation](https://developer.bluedragonmc.com/modules/shopmodule/)
+ */
 @DependsOn(GuiModule::class)
 class ShopModule : GameModule() {
 

@@ -19,6 +19,11 @@ import net.minestom.server.potion.PotionEffect
 import net.minestom.server.tag.Tag
 import kotlin.math.floor
 
+/**
+ * Implements vanilla-like fall damage.
+ *
+ * [See Documentation](https://developer.bluedragonmc.com/modules/falldamagemodule/)
+ */
 class FallDamageModule : GameModule() {
 
     companion object {

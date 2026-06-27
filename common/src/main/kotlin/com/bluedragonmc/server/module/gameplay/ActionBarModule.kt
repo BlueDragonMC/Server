@@ -11,6 +11,14 @@ import net.minestom.server.event.EventNode
 import net.minestom.server.event.player.PlayerTickEvent
 import net.minestom.server.event.trait.PlayerEvent
 
+/**
+ * A module that provides a standard way of displaying information in the player's action bar.
+ *
+ * [See Documentation](https://developer.bluedragonmc.com/modules/actionbarmodule/)
+ *
+ * @property interval The delay between each action bar update, in ticks.
+ * @property separator The [Component] used to separate multiple items in the action bar.
+ */
 class ActionBarModule(
     private val interval: Int = 2,
     private val separator: Component = Component.text(" | ", NamedTextColor.DARK_GRAY),

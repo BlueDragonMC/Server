@@ -25,6 +25,8 @@ import java.time.Duration
 /**
  * Gives each player a full hotbar of items they can click to vote to start the game.
  * When the majority of players vote to start, the countdown starts.
+ *
+ * [See Documentation](https://developer.bluedragonmc.com/modules/votestartmodule/)
  */
 class VoteStartModule(
     private val minPlayers: Int = 2,

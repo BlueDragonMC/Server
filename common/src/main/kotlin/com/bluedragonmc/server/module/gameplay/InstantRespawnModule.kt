@@ -17,6 +17,8 @@ import net.minestom.server.event.player.PlayerRespawnEvent
 /**
  * This module automatically respawns players when they die.
  * No configuration is necessary.
+ *
+ * [See Documentation](https://developer.bluedragonmc.com/modules/instantrespawnmodule/)
  */
 class InstantRespawnModule : GameModule() {
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {

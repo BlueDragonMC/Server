@@ -9,6 +9,8 @@ import net.minestom.server.event.EventNode
 
 /**
  * Uses a config value (if present) to set the time of day/night in the instance
+ *
+ * [See Documentation](https://developer.bluedragonmc.com/modules/instancetimemodule/)
  */
 @DependsOn(ConfigModule::class)
 class InstanceTimeModule(val default: Int = 12000) : GameModule() {

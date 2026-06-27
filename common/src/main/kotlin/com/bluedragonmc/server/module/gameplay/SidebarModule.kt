@@ -26,6 +26,8 @@ import java.util.*
  * Sidebars are created by adding "bindings", which can be updated at
  * any point. These bindings supply a list of [Component] which is used
  * to re-render the scoreboard.
+ *
+ * [See Documentation](https://developer.bluedragonmc.com/modules/sidebarmodule/)
  */
 class SidebarModule(private val title: String) : GameModule() {
 

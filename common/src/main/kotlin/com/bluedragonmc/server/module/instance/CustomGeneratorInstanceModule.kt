@@ -14,6 +14,12 @@ import net.minestom.server.registry.RegistryKey
 import net.minestom.server.world.DimensionType
 import net.minestom.server.world.attribute.EnvironmentAttribute
 
+/**
+ * An implementation of [InstanceModule] that creates a single instance
+ * for each game that automatically generates chunks using a custom world generator.
+ *
+ * [See Documentation](https://developer.bluedragonmc.com/modules/customgeneratorinstancemodule/)
+ */
 class CustomGeneratorInstanceModule(
     private val dimensionType: RegistryKey<DimensionType> = DimensionType.OVERWORLD,
     private val generator: Generator,

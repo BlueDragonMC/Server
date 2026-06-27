@@ -11,6 +11,11 @@ import net.minestom.server.instance.Instance
 import net.minestom.server.instance.InstanceContainer
 import net.minestom.server.instance.SharedInstance
 
+/**
+ * An implementation of [InstanceModule] that create a single [SharedInstance] for each game.
+ *
+ * [See Documentation](https://developer.bluedragonmc.com/modules/sharedinstancemodule/)
+ */
 @DependsOn(MapProviderModule::class)
 class SharedInstanceModule : InstanceModule() {
 

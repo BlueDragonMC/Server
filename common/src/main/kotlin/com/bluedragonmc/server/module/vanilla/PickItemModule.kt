@@ -19,6 +19,8 @@ import net.minestom.server.registry.RegistryTranscoder
 
 /**
  * Enables the vanilla "pick block" functionality (middle click)
+ *
+ * [See Documentation](https://developer.bluedragonmc.com/modules/pickitemmodule/)
  */
 class PickItemModule : GameModule() {
     override fun initialize(

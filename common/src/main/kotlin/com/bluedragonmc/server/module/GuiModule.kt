@@ -21,20 +21,8 @@ import net.minestom.server.item.Material
 
 /**
  * A library for creating GUIs with buttons that react to user input.
- * Code example:
- * ```
- * val menu = createMenu(Component.text("WackyMaze Shop"), InventoryType.CHEST_6_ROW, isPerPlayer = true) {
- * // This block is a builder for the menu's slots. Use the `slot` method to create a new slot, and it is immediately added to the menu.
- *   slot(pos(6, 5), Material.BARRIER, { player -> // Inventories are generated per-player by default, so items can be customized depending on whose inventory is being viewed.
- *     // This block's context is Minestom's `ItemStack.Builder`, so all of its methods can be used without method chaining or running `build()`
- *     displayName(Component.text("Close", NamedTextColor.RED))
- *     lore(player.displayName)
- *   }) {
- *     // The second block passed to the `slot` method is the action that will be triggered when the slot is clicked. It receives a `SlotClickEvent`.
- *     menu.close(player)
- *   } // More slots can be registered exactly the same way using the `slot` method.
- * }
- * ```
+ *
+ * [See Documentation](https://developer.bluedragonmc.com/modules/guimodule/)
  */
 open class GuiModule : GameModule() {
 

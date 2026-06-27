@@ -16,6 +16,8 @@ import net.minestom.server.event.player.PlayerSpawnEvent
  * A module that allows players to spawn in designated locations.
  * A `SpawnpointProvider` is used to determine the spawn location for a specific player.
  * This module does not automatically teleport the player when they join the game. That is the queue's reponsibility.
+ *
+ * [See Documentation](https://developer.bluedragonmc.com/modules/spawnpointmodule/)
  */
 @SoftDependsOn(ConfigModule::class, TeamModule::class)
 class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule() {

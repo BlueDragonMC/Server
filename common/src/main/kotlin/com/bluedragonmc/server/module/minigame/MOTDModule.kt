@@ -20,6 +20,8 @@ import net.minestom.server.event.EventNode
 
 /**
  * Displays a message to players when they join the game.
+ *
+ * [See Documentation](https://developer.bluedragonmc.com/modules/motdmodule/)
  */
 @SoftDependsOn(ConfigModule::class)
 class MOTDModule(private val motd: Component, private var showMapName: Boolean = true) : GameModule() {

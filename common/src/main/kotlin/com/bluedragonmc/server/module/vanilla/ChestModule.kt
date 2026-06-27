@@ -26,6 +26,8 @@ import java.awt.Menu
  * Assigns a [Menu] to every chest in the world and allows them to be accessed by interacting with the chest.
  * Additionally, assigns an ender chest to every player, which can be accessed using any ender chest block.
  * Combine with [com.bluedragonmc.server.module.gameplay.ChestLootModule] to add auto-generated loot to chests.
+ *
+ * [See Documentation](https://developer.bluedragonmc.com/modules/chestmodule/)
  */
 @DependsOn(GuiModule::class)
 class ChestModule : GameModule() {

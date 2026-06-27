@@ -28,6 +28,14 @@ import net.minestom.server.item.Material
  * When the game starts, the module automatically gives the player their selected kit, or the default kit if none was selected.
  * Use the `giveKit` function to manually give a player their selected kit.
  * When the module is unloaded, players keep their kits.
+ *
+ * [See Documentation](https://developer.bluedragonmc.com/modules/kitsmodule/)
+ *
+ * @property showMenu If `true`, players will be shown the kit selection menu when they join the game.
+ * @property forceSelection If `true`, players will not be able to close the kit selection menu until they select a kit.
+ * @property giveKitsOnStart If `true`, players will be given their selected kits when [GameStartEvent] is called.
+ * @property giveKitsOnSelect If `true`, players will be given their kits as soon as they select them.
+ * @property selectableKits A list of [Kit]s that players can choose from.
  */
 @DependsOn(GuiModule::class)
 open class KitsModule(

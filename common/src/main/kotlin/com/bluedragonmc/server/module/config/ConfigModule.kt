@@ -25,6 +25,18 @@ import java.nio.file.Paths
 import kotlin.io.path.bufferedReader
 import kotlin.io.path.exists
 
+/**
+ * A module that loads game configuration from .yml files.
+ * Configuration data can be loaded from both the game’s JAR file and the map folder.
+ * This way, it is possible to change in-game values based on the map.
+ *
+ * [See Documentation](https://developer.bluedragonmc.com/modules/configmodule/)
+ *
+ * @property configFileName Optional name for an additional config file in /etc/config or the compiled JAR.
+ *
+ * @property mapSource [Maps.MapSource] containing map-specific configuration to load.
+ * If not specified, the game's map source will be used.
+ */
 class ConfigModule(private val configFileName: String? = null, private val mapSource: Maps.MapSource? = null) : GameModule() {
 
     private lateinit var root: ConfigurationNode

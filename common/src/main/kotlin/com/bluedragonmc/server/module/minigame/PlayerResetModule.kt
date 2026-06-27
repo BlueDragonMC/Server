@@ -22,6 +22,8 @@ import net.minestom.server.event.EventNode
  * - Disable glowing
  * - Reset XP
  * - Clear all tags
+ *
+ * [See Documentation](https://developer.bluedragonmc.com/modules/playerresetmodule/)
  */
 class PlayerResetModule(val defaultGameMode: GameMode? = null) : GameModule() {
 
