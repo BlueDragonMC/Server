@@ -16,6 +16,7 @@ import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
 import net.minestom.server.MinecraftServer
 import net.minestom.server.adventure.audience.PacketGroupingAudience
+import net.minestom.server.color.TeamColor
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
@@ -54,6 +55,7 @@ class TeamModule(
                         }
                         logger.info("Created ${_teams.size} teams with $autoTeamCount players per team.")
                     }
+
                     AutoTeamMode.TEAM_COUNT -> {
                         val teamCount = autoTeamCount
                         val playersPerTeam = (parent.players.size / teamCount).coerceAtLeast(1)
@@ -180,7 +182,7 @@ class TeamModule(
     }
 
 
-    inner class Team internal constructor (
+    inner class Team internal constructor(
         val name: Component = Component.empty(),
         val allowFriendlyFire: Boolean = false,
         val nameTagVisibility: NameTagVisibility = NameTagVisibility.ALWAYS,
@@ -228,16 +230,22 @@ class TeamModule(
             val builder = MinecraftServer.getTeamManager()
                 .createBuilder(uuid.toString())
                 .teamDisplayName(name)
-                .prefix(Component.text(
-                    name.toPlainText().first() + " ", // The first letter of the team's name
-                    name.color() ?: NamedTextColor.WHITE, // The team name's text color
-                    TextDecoration.BOLD
-                ))
+                .prefix(
+                    Component.text(
+                        name.toPlainText().first() + " ", // The first letter of the team's name
+                        name.color() ?: NamedTextColor.WHITE, // The team name's text color
+                        TextDecoration.BOLD
+                    )
+                )
                 .nameTagVisibility(nameTagVisibility)
                 .collisionRule(collisionRule)
-                .teamColor(NamedTextColor.nearestTo(
-                    name.color() ?: NamedTextColor.WHITE
-                )) // Used for coloring player usernames
+                .teamColor(
+                    TeamColor.fromName(
+                        NamedTextColor.nearestTo(
+                            name.color() ?: NamedTextColor.WHITE
+                        ).name()
+                    )
+                ) // Used for coloring player usernames
             // Allow friendly fire if necessary
             if (allowFriendlyFire) builder.allowFriendlyFire()
             scoreboardTeam = builder.build() // Register the team

@@ -1,8 +1,8 @@
 package com.bluedragonmc.server.utils.packet
 
-import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.MinecraftServer
 import net.minestom.server.adventure.audience.PacketGroupingAudience
+import net.minestom.server.color.TeamColor
 import net.minestom.server.entity.Entity
 import net.minestom.server.entity.Player
 import net.minestom.server.network.packet.server.play.TeamsPacket
@@ -14,9 +14,9 @@ object GlowingEntityUtils {
 
     private val SEEN_TEAMS_TAG = Tag.String("seen_glow_teams").list()
     private val CURRENT_GLOW_TAG = Tag.String("current_glow_team")
-    private val teamCache = mutableMapOf<NamedTextColor, Team>()
+    private val teamCache = mutableMapOf<TeamColor, Team>()
 
-    fun glow(entity: Entity, color: NamedTextColor, viewers: Collection<Player>) {
+    fun glow(entity: Entity, color: TeamColor, viewers: Collection<Player>) {
         entity.isGlowing = true
         val team = teamCache.getOrPut(color) {
             MinecraftServer.getTeamManager().createBuilder(UUID.randomUUID().toString()).teamColor(color).build()
