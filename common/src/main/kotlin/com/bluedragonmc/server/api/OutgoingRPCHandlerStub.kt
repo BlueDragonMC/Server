@@ -61,10 +61,10 @@ class OutgoingRPCHandlerStub : OutgoingRPCHandler {
                     .setMapId(Paths.get(mapFolderPath).name)
                     .setMapConfig(File(mapFolderPath, "config.yml").readText())
                     .setMapFormat(CommonTypes.MapFormat.ANVIL)
-                    .setMapUrl("file://$mapFolderPath")
+                    .setMapUrl(File(mapFolderPath).toURI().toURL().toString())
                     .build()
             }
-        return com.bluedragonmc.api.grpc.Map.MapList.newBuilder().addAllMaps(mapDefs).build()
+        return Map.MapList.newBuilder().addAllMaps(mapDefs).build()
     }
 
     override suspend fun updateMapConfig(mapId: String, configJson: String) {

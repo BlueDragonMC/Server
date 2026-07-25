@@ -193,7 +193,7 @@ class NPCModule : GameModule() {
 
         override fun tick(time: Long) {
             if (!lookAtPlayer) return
-            instance.entityTracker.nearbyEntities(position, 5.0, EntityTracker.Target.PLAYERS) {
+            instance!!.entityTracker.nearbyEntities(position, 5.0, EntityTracker.Target.PLAYERS) {
                 val pos =
                     position.withY(position.y + eyeHeight).withLookAt(it.position.withY(it.position.y + it.eyeHeight))
                 it.sendPacket(EntityHeadLookPacket(entityId, pos.yaw))
