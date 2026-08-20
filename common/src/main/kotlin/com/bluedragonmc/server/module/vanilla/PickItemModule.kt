@@ -60,7 +60,7 @@ class PickItemModule : GameModule() {
                 if (inventory.getItemStack(slot).compareBlock(block, includeData)) {
                     val newSlot = inventory.getEmptyHotbarSlot(default = event.player.heldSlot.toInt())
                     inventory.swap(slot, newSlot)
-                    event.player.setHeldItemSlot(slot.toByte())
+                    event.player.setHeldItemSlot(newSlot.toByte())
                     return@addListener
                 }
             }
