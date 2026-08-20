@@ -4,6 +4,7 @@ import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.PlayerJoinGameEvent
 import com.bluedragonmc.server.module.GameModule
 import net.kyori.adventure.nbt.CompoundBinaryTag
+import net.kyori.adventure.text.Component
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
 import net.minestom.server.entity.attribute.Attribute
@@ -14,6 +15,7 @@ import net.minestom.server.event.EventNode
  * "Resets" the player when they join the game. This changes some basic attributes to make sure effects don't persist in between games.
  * - Change game mode
  * - Clear inventory
+ * - Clear titles and action bar
  * - Reset health/hunger
  * - Reset movement speed
  * - Clear potion effects
@@ -37,6 +39,8 @@ class PlayerResetModule(val defaultGameMode: GameMode? = null) : GameModule() {
     }
 
     fun resetPlayer(player: Player, gameMode: GameMode? = defaultGameMode) {
+        player.sendActionBar(Component.empty())
+        player.clearTitle()
         player.gameMode = gameMode ?: player.gameMode
         player.inventory.clear()
         Attribute.values().forEach { attribute ->
