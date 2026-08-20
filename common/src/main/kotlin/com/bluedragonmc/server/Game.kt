@@ -219,7 +219,7 @@ abstract class Game(val data: GameData) : ModuleHolder(),
 
     open fun endGameLater(delay: Duration = Duration.ZERO) {
         state = GameState.ENDING
-        games.remove(this)
+        _games.remove(this)
         MinecraftServer.getSchedulerManager().buildTask {
             endGame()
         }.delay(delay).schedule()
@@ -273,7 +273,7 @@ abstract class Game(val data: GameData) : ModuleHolder(),
         logGameInfo()
 
         state = GameState.ENDING
-        games.remove(this)
+        _games.remove(this)
 
         val instancesToRemove = MinecraftServer.getInstanceManager().instances.filter { this.ownsInstance(it) }
 
@@ -322,7 +322,7 @@ abstract class Game(val data: GameData) : ModuleHolder(),
         logger.debug("Initializing game with modules: {}", modules.map { it::class.simpleName ?: it::class.jvmName })
 
         // Let the queue system send players to the game
-        games.add(this)
+        _games.add(this)
         state = GameState.WAITING
 
         // Allow the game to start receiving events
@@ -339,7 +339,9 @@ abstract class Game(val data: GameData) : ModuleHolder(),
 
     companion object {
         private val logger = LoggerFactory.getLogger(this::class.java)
-        val games: MutableList<Game> = CopyOnWriteArrayList()
+
+        private val _games: MutableList<Game> = CopyOnWriteArrayList()
+        val games: List<Game> = _games
 
         /**
          * Instances will be cleaned up every 10 seconds (by default).
