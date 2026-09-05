@@ -46,11 +46,6 @@ import kotlin.random.Random
 
 class ProjectileModule : GameModule() {
 
-    class CustomArrowProjectile(val shooter: Entity?, entityType: EntityType) : ArrowProjectile(entityType, shooter)
-    class CustomItemProjectile(val shooter: Entity?, entityType: EntityType) : ThrownItemProjectile(entityType, shooter)
-    class CustomFireballProjectile(val shooter: Entity?, entityType: EntityType) :
-        FireballProjectile(entityType, shooter)
-
     private lateinit var parent: Game
 
     companion object {
@@ -98,7 +93,7 @@ class ProjectileModule : GameModule() {
                 if (event.player.gameMode != GameMode.CREATIVE) {
                     if (!takeArrow(event.player)) return@addListener
                 }
-                val projectile = CustomArrowProjectile(event.player, EntityType.ARROW)
+                val projectile = ArrowProjectile(EntityType.ARROW, event.player)
                 if (power > 0.9) projectile.isCritical = true
                 projectile.scheduleRemove(Duration.ofSeconds(30))
                 val eyePos = getEyePos(event.player)
@@ -123,7 +118,7 @@ class ProjectileModule : GameModule() {
         }
         eventNode.addListener(ProjectileCollideWithEntityEvent::class.java) { event ->
             val target = event.target as? LivingEntity ?: return@addListener
-            val projectile = event.entity as? CustomArrowProjectile ?: return@addListener
+            val projectile = event.entity as? ArrowProjectile ?: return@addListener
 
             val arrowMeta = projectile.entityMeta as? ArrowMeta ?: return@addListener
             val shooter = projectile.shooter
@@ -174,7 +169,7 @@ class ProjectileModule : GameModule() {
                 Damage(
                     DamageType.ARROW,
                     projectile,
-                    projectile.shooter ?: projectile,
+                    projectile.shooter,
                     null,
                     reducedDamage.toFloat()
                 )
@@ -189,7 +184,7 @@ class ProjectileModule : GameModule() {
             }
         }
         eventNode.addListener(ProjectileCollideWithBlockEvent::class.java) { event ->
-            val projectile = event.entity as? CustomArrowProjectile ?: return@addListener
+            val projectile = event.entity as? ArrowProjectile ?: return@addListener
             projectile.isCritical = false
             projectile.scheduleRemove(Duration.ofSeconds(60))
         }
@@ -210,7 +205,7 @@ class ProjectileModule : GameModule() {
                 }
 
                 // Shoot a snowball from the player's position
-                val snowball = CustomItemProjectile(event.player, EntityType.SNOWBALL)
+                val snowball = ThrownItemProjectile(EntityType.SNOWBALL, event.player)
                 snowball.setInstance(event.instance, getEyePos(event.player))
                 snowball.shoot(getLaunchPos(event.player), 3.0, 1.0)
                 event.player.instance?.playSound(
@@ -226,20 +221,21 @@ class ProjectileModule : GameModule() {
         }
         eventNode.addListener(ProjectileCollideWithEntityEvent::class.java) { event ->
             val target = event.target as? LivingEntity ?: return@addListener
-            val projectile = event.entity as? CustomItemProjectile ?: return@addListener
+            val projectile = event.entity as? ThrownItemProjectile ?: return@addListener
 
             if (projectile.entityType != EntityType.SNOWBALL) return@addListener
 
             if ((target as? Player)?.isInvincible() == true) return@addListener
 
-            if (projectile.shooter is Player) {
-                val event = OldCombatModule.PlayerAttackEvent(event.instance, projectile.shooter, target)
+            val shooter = projectile.shooter
+            if (shooter is Player) {
+                val event = OldCombatModule.PlayerAttackEvent(event.instance, shooter, target)
                 EventDispatcher.call(event)
                 if (event.isCancelled) return@addListener
             }
 
             OldCombatModule.takeKnockback(-projectile.velocity.x, -projectile.velocity.z, target, 0.0)
-            target.damage(Damage(DamageType.THROWN, projectile, projectile.shooter, projectile.shooter?.position, 0.0f))
+            target.damage(Damage(DamageType.THROWN, projectile, projectile.shooter, projectile.shooter.position, 0.0f))
             projectile.remove()
             (target as? Player)?.resetInvincibilityPeriod()
         }
@@ -279,7 +275,7 @@ class ProjectileModule : GameModule() {
             }
 
             // Shoot a fireball from the player's position
-            val fireball = CustomFireballProjectile(player, EntityType.FIREBALL)
+            val fireball = FireballProjectile(EntityType.FIREBALL, player)
             fireball.setInstance(instance, getEyePos(player))
             fireball.shoot(getLaunchPos(player), 3.0, 1.0)
             player.instance?.playSound(
@@ -291,7 +287,7 @@ class ProjectileModule : GameModule() {
     }
 
     private fun explodeFireball(projectile: Entity) {
-        if (projectile !is CustomFireballProjectile) return
+        if (projectile !is FireballProjectile) return
         val pos = projectile.position
 
         val radius = 8.0f
@@ -303,8 +299,9 @@ class ProjectileModule : GameModule() {
             center, radius.toDouble(), EntityTracker.Target.ENTITIES
         ) { entity ->
             val mult = radius - entity.position.distance(center)
-            if (projectile.shooter is Player) {
-                val event = OldCombatModule.PlayerAttackEvent(projectile.instance, projectile.shooter, entity)
+            val shooter = projectile.shooter
+            if (shooter is Player) {
+                val event = OldCombatModule.PlayerAttackEvent(projectile.instance, shooter, entity)
                 EventDispatcher.call(event)
                 if (event.isCancelled) return@nearbyEntities
             }
@@ -319,7 +316,7 @@ class ProjectileModule : GameModule() {
                     Damage(
                         DamageType.FIREBALL,
                         projectile,
-                        projectile.shooter ?: projectile,
+                        projectile.shooter,
                         null,
                         mult.toFloat()
                     )
@@ -335,7 +332,7 @@ class ProjectileModule : GameModule() {
         centerY: Float,
         centerZ: Float,
         strength: Float,
-        projectile: CustomFireballProjectile,
+        projectile: FireballProjectile,
     ) = object : Explosion(centerX, centerY, centerZ, strength) {
 
         override fun prepare(instance: Instance): List<Point> {
@@ -346,7 +343,7 @@ class ProjectileModule : GameModule() {
             ).filter { pos ->
                 // Check if the block should be destroyed based on the radius
                 val distance = pos.distanceSquared(centerX.toDouble(), centerY.toDouble(), centerZ.toDouble())
-                val resistance = instance.getBlock(pos).registry()!!.explosionResistance()
+                val resistance = instance.getBlock(pos).explosionResistance()
                 val maxStrength = strength * 1.5 - resistance / 2.0
                 if (maxStrength <= 0 || Random.nextDouble(0.0, maxStrength) < distance)
                     return@filter false
@@ -359,7 +356,7 @@ class ProjectileModule : GameModule() {
                 parent.callEvent(event)
 
                 if (dropItems && !event.isCancelled) {
-                    val material = block.registry()!!.material()
+                    val material = block.material()
                     if (material != null)
                         parent.getModule<ItemDropModule>().dropItem(ItemStack.of(material), instance, pos)
                 }
@@ -379,14 +376,15 @@ class ProjectileModule : GameModule() {
         }
         eventNode.addListener(ProjectileCollideWithEntityEvent::class.java) { event ->
             val target = event.target as? LivingEntity ?: return@addListener
-            val projectile = event.entity as? CustomItemProjectile ?: return@addListener
+            val projectile = event.entity as? ThrownItemProjectile ?: return@addListener
 
             if (projectile.entityType != EntityType.EGG) return@addListener
 
             if ((target as? Player)?.isInvincible() == true) return@addListener
 
-            if (projectile.shooter is Player) {
-                val event = OldCombatModule.PlayerAttackEvent(event.instance, projectile.shooter, target)
+            val shooter = projectile.shooter
+            if (shooter is Player) {
+                val event = OldCombatModule.PlayerAttackEvent(event.instance, shooter, target)
                 EventDispatcher.call(event)
                 if (event.isCancelled) return@addListener
             }
@@ -413,7 +411,7 @@ class ProjectileModule : GameModule() {
             }
 
             // Shoot an egg from the player's position
-            val egg = CustomItemProjectile(player, EntityType.EGG)
+            val egg = ThrownItemProjectile(EntityType.EGG, player)
             egg.setInstance(instance, getEyePos(player))
             egg.shoot(getLaunchPos(player), 3.0, 1.0)
             instance.playSound(
@@ -445,7 +443,7 @@ class ProjectileModule : GameModule() {
                     event.player.setItemInHand(event.hand, itemStack.withAmount(itemStack.amount() - 1))
                 }
 
-                val pearl = CustomItemProjectile(event.player, EntityType.ENDER_PEARL)
+                val pearl = ThrownItemProjectile(EntityType.ENDER_PEARL, event.player)
                 pearl.setTag(PEARL_OWNER_TAG, event.player.uuid)
                 pearl.setInstance(event.instance, getEyePos(event.player))
                 pearl.shoot(getLaunchPos(event.player), 2.5, 1.0)
