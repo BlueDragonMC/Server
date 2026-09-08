@@ -85,13 +85,15 @@ class PartyCommand(name: String, usageString: String, vararg aliases: String) :
         subcommand("list") {
             suspendSyntax {
                 val response = Messaging.outgoing.listPartyMembers(player.uuid)
-                val leader = response.playersList.find { it.role == "Leader" }
-                val members = response.playersList.filter { it != leader }
-                if (leader != null && response.playersCount > 0) {
-                    val leaderText = formatMessageTranslated(
-                        "puffin.party.list.leader",
-                        miniMessage.deserialize(leader.username)
-                    )
+                if (response.playersCount > 0) {
+                    val leader = response.playersList.find { it.role == "Leader" }
+                    val members = response.playersList.filter { it != leader }
+                    val leaderText = leader?.let {
+                        formatMessageTranslated(
+                            "puffin.party.list.leader",
+                            miniMessage.deserialize(it.username)
+                        )
+                    }
                     val membersText = formatMessageTranslated(
                         "puffin.party.list.members",
                         members.size,
@@ -99,7 +101,8 @@ class PartyCommand(name: String, usageString: String, vararg aliases: String) :
                             JoinConfiguration.separator(Component.text(", ", BRAND_COLOR_PRIMARY_2)),
                             members.map { miniMessage.deserialize(it.username) })
                     )
-                    sender.sendMessage((leaderText + Component.newline() + membersText).surroundWithSeparators())
+                    val text = if (leaderText != null) leaderText + Component.newline() + membersText else membersText
+                    sender.sendMessage(text.surroundWithSeparators())
                 } else {
                     sender.sendMessage(Component.translatable("puffin.party.list.not_found", NamedTextColor.RED))
                 }
