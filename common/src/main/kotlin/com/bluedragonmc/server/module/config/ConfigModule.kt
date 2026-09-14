@@ -5,7 +5,6 @@ import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.config.serializer.*
 import com.bluedragonmc.server.module.minigame.KitsModule
 import com.bluedragonmc.server.service.Maps
-import kotlinx.coroutines.runBlocking
 import net.kyori.adventure.text.Component
 import net.minestom.server.color.Color
 import net.minestom.server.coordinate.Point
@@ -19,6 +18,8 @@ import net.minestom.server.item.Material
 import net.minestom.server.item.component.EnchantmentList
 import org.spongepowered.configurate.ConfigurationNode
 import org.spongepowered.configurate.ConfigurationOptions
+import org.spongepowered.configurate.serialize.TypeSerializer
+import org.spongepowered.configurate.serialize.TypeSerializerCollection
 import org.spongepowered.configurate.yaml.YamlConfigurationLoader
 import java.io.BufferedReader
 import java.nio.file.Paths
@@ -39,48 +40,66 @@ import kotlin.io.path.exists
  */
 class ConfigModule(private val configFileName: String? = null, private val mapSource: Maps.MapSource? = null) : GameModule() {
 
-    private lateinit var root: ConfigurationNode
-    private lateinit var mapRoot: ConfigurationNode
-
     private lateinit var parent: Game
+    private lateinit var resolvedMapSource: Maps.MapSource
 
     private var initialized = false
 
+    /**
+     * Custom serializers registered via [registerSerializer], merged on top of the built-in defaults.
+     */
+    private val registeredSerializers = mutableMapOf<Class<*>, TypeSerializer<*>>()
+
+    private var cachedConfig: ConfigurationNode? = null
+
     override fun initialize(parent: Game, eventNode: EventNode<Event>) {
         this.parent = parent
-        val mapSource = mapSource ?: parent.data.mapSource
-        if (configFileName != null) {
-            logger.info("Loading game configuration from $configFileName")
-            root = loadFile(getReader(parent, configFileName))
-        }
-
-        runBlocking {
-            mapRoot = mapSource.config
-        }
-
-        logger.info("Configuration successfully loaded.")
+        resolvedMapSource = mapSource ?: parent.data.mapSource
         initialized = true
     }
 
-    fun getConfig(): ConfigurationNode {
+    /**
+     * Registers a custom [TypeSerializer] for this [ConfigModule] instance.
+     *
+     * Must be called before [getConfig] is first invoked, or an exception will be thrown.
+     * Registering a serializer for a type that already has one replaces it.
+     */
+    fun registerSerializer(type: Class<*>, serializer: TypeSerializer<*>) {
+        synchronized(this) {
+            check(cachedConfig == null) { "Cannot register a serializer after the configuration has been loaded via getConfig()." }
+            registeredSerializers[type] = serializer
+        }
+    }
 
+    fun getConfig(): ConfigurationNode {
         if (!initialized) {
             throw IllegalStateException("Accessing ConfigModule before it was initialized.")
         }
 
-        if (!::root.isInitialized) {
-            if (::mapRoot.isInitialized) {
-                return mapRoot
-            } else {
-                throw IllegalStateException("No game or map configuration found!")
+        synchronized(this) {
+            if (cachedConfig == null) {
+                cachedConfig = buildConfig()
             }
+            return cachedConfig!!
         }
+    }
 
-        if (::mapRoot.isInitialized) {
-            return root.mergeFrom(mapRoot)
-        } else {
-            return root
+    private fun buildConfig(): ConfigurationNode {
+        val options = buildSerializationOptions()
+        val mapRoot: ConfigurationNode = resolvedMapSource.parse(options)
+
+        if (configFileName != null) {
+            logger.info("Loading game configuration from $configFileName")
         }
+        val root = configFileName?.let { loadFile(getReader(parent, it), options) }
+
+        val result = if (root != null) root.mergeFrom(mapRoot) else mapRoot
+        logger.info("Configuration successfully loaded.")
+        return result
+    }
+
+    private fun buildSerializationOptions(): ConfigurationOptions = SERIALIZATION_OPTIONS.serializers { builder ->
+        registeredSerializers.forEach { (type, serializer) -> register(builder, type, serializer) }
     }
 
     companion object {
@@ -119,12 +138,17 @@ class ConfigModule(private val configFileName: String? = null, private val mapSo
             builder.register(Block::class.java, BlockSerializer())
         }
 
-        fun loadFile(reader: BufferedReader): ConfigurationNode {
+        @Suppress("UNCHECKED_CAST")
+        private fun register(builder: TypeSerializerCollection.Builder, type: Class<*>, serializer: TypeSerializer<*>) {
+            builder.register(type as Class<Any>, serializer as TypeSerializer<in Any>)
+        }
+
+        fun loadFile(reader: BufferedReader, options: ConfigurationOptions = SERIALIZATION_OPTIONS): ConfigurationNode {
             val loader = YamlConfigurationLoader.builder()
                 .source { reader }
                 .build()
 
-            return loader.load(SERIALIZATION_OPTIONS)
+            return loader.load(options)
         }
 
         fun loadExtra(game: Game, fileName: String): ConfigurationNode? {

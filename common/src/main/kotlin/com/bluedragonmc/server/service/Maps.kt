@@ -5,6 +5,7 @@ import com.bluedragonmc.server.module.config.ConfigModule
 import net.minestom.server.instance.ChunkLoader
 import net.minestom.server.instance.InstanceContainer
 import org.spongepowered.configurate.ConfigurationNode
+import org.spongepowered.configurate.ConfigurationOptions
 import org.spongepowered.configurate.gson.GsonConfigurationLoader
 import org.spongepowered.configurate.objectmapping.ConfigSerializable
 import java.io.BufferedReader
@@ -26,17 +27,25 @@ object Maps {
          */
         val format: CommonTypes.MapFormat,
         /**
+         * Raw configuration for this map, parsed on each access.
+         */
+        private val rawConfig: String,
+    ) {
+        /**
+         * Parses this map's configuration using the provided serialization [options].
+         */
+        fun parse(options: ConfigurationOptions): ConfigurationNode =
+            ConfigModule.loadFile(BufferedReader(StringReader(rawConfig)), options)
+
+        /**
          * The map's root configuration node. By convention, map-specific entries are under the "world" node.
          */
-        val config: ConfigurationNode,
-    ) {
-        constructor(id: String, url: String, format: CommonTypes.MapFormat, config: String) : this(
-            id, url, format,
-            ConfigModule.loadFile(BufferedReader(StringReader(config)))
-        )
+        val config: ConfigurationNode
+            get() = parse(ConfigModule.SERIALIZATION_OPTIONS)
 
         val games: List<GameEntry> by lazy { config.node("world", "games").getList(GameEntry::class.java)!! }
         val whitelist: List<UUID>? by lazy {
+            val config = config
             if (!config.node("world").hasChild("whitelist")) return@lazy null
             config.node("world", "whitelist").getList(UUID::class.java)
         }
