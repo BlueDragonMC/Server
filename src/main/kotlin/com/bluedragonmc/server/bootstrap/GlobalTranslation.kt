@@ -39,7 +39,6 @@ object GlobalTranslation : Bootstrap() {
      * ```properties
      * lang_en-US=lang_en.properties
      * lang_en-PT=lang_en_pt.properties
-     * lang_zh-CN=lang_zh_cn.properties
      * ```
      * Each `.properties` file specified as a value should
      * contain translation keys. It will be loaded
