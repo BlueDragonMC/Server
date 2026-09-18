@@ -1,7 +1,7 @@
 package com.bluedragonmc.server.utils
 
+import com.bluedragonmc.server.GameRegistry
 import com.bluedragonmc.api.grpc.gameType
-import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.api.Environment
 import net.kyori.adventure.text.Component
 import net.minestom.server.MinecraftServer
@@ -47,7 +47,7 @@ object InstanceUtils {
             return CompletableFuture.completedFuture(null)
         } else {
             // If the instance is not empty, attempt to send all players to a lobby
-            val lobby = Game.games.find { it.data.name == Environment.defaultGameName }
+            val lobby = GameRegistry.games.find { it.data.name == Environment.defaultGameName }
             if (lobby != null) {
                 return CompletableFuture.allOf(
                     *instance.players.map {

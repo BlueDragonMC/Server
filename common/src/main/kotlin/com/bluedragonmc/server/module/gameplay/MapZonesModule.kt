@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.module.gameplay
 
-import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.GameContext
 import com.bluedragonmc.server.module.GameModule
 import net.minestom.server.coordinate.Point
 import net.minestom.server.entity.Player
@@ -18,7 +18,7 @@ import net.minestom.server.event.trait.PlayerEvent
  */
 class MapZonesModule : GameModule() {
     private val zones = mutableListOf<MapZone>()
-    override fun initialize(parent: Game, eventNode: EventNode<Event>) {
+    override fun initialize(parent: GameContext, eventNode: EventNode<Event>) {
         eventNode.addListener(PlayerMoveEvent::class.java) { event ->
             zones.forEach { zone ->
                 val oldPosInZone = zone.checkInZone(event.player.position)

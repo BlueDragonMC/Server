@@ -1,7 +1,7 @@
 package com.bluedragonmc.server.module.minigame
 
+import com.bluedragonmc.server.GameContext
 import com.bluedragonmc.server.CustomPlayer
-import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.event.PlayerLeaveGameEvent
 import com.bluedragonmc.server.event.TeamAssignedEvent
@@ -37,10 +37,10 @@ class TeamModule(
     private val autoTeamCount: Int = 2,
     private val allowFriendlyFire: Boolean = false
 ) : GameModule() {
-    private lateinit var parent: Game
+    private lateinit var parent: GameContext
     private val _teams = mutableListOf<Team>()
     val teams: Collection<Team> = _teams
-    override fun initialize(parent: Game, eventNode: EventNode<Event>) {
+    override fun initialize(parent: GameContext, eventNode: EventNode<Event>) {
         this.parent = parent
         eventNode.addListener(GameStartEvent::class.java) {
             // Auto team system

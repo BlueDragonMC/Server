@@ -1,7 +1,7 @@
 package com.bluedragonmc.server.module.gameplay
 
+import com.bluedragonmc.server.GameContext
 import com.bluedragonmc.server.CustomPlayer
-import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.GameModule
 import net.minestom.server.MinecraftServer
 import net.minestom.server.coordinate.Vec
@@ -21,7 +21,7 @@ import net.minestom.server.event.player.PlayerRespawnEvent
  * [See Documentation](https://developer.bluedragonmc.com/modules/instantrespawnmodule/)
  */
 class InstantRespawnModule : GameModule() {
-    override fun initialize(parent: Game, eventNode: EventNode<Event>) {
+    override fun initialize(parent: GameContext, eventNode: EventNode<Event>) {
         eventNode.addListener(EntityDamageEvent::class.java) { event ->
             if (event.entity is Player && event.damage.amount >= (event.entity.health + (event.entity as Player).additionalHearts)) {
                 event.damage.amount = 0.0f

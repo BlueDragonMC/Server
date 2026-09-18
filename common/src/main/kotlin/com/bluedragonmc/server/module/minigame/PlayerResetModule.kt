@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.module.minigame
 
-import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.GameContext
 import com.bluedragonmc.server.event.PlayerJoinGameEvent
 import com.bluedragonmc.server.module.GameModule
 import net.kyori.adventure.nbt.CompoundBinaryTag
@@ -32,7 +32,7 @@ class PlayerResetModule(val defaultGameMode: GameMode? = null) : GameModule() {
     override val eventPriority: Int
         get() = -999 // Run this event handler before others, in case a game wants to set a player's state upon join
 
-    override fun initialize(parent: Game, eventNode: EventNode<Event>) {
+    override fun initialize(parent: GameContext, eventNode: EventNode<Event>) {
         eventNode.addListener(PlayerJoinGameEvent::class.java) { event ->
             resetPlayer(event.player, defaultGameMode)
         }

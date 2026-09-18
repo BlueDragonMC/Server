@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.module.gameplay
 
-import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.GameContext
 import com.bluedragonmc.server.event.ChestPopulateEvent
 import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
@@ -60,7 +60,7 @@ class ChestLootModule(private val lootProvider: ChestLootProvider) : GameModule(
         }
     }
 
-    override fun initialize(parent: Game, eventNode: EventNode<Event>) {
+    override fun initialize(parent: GameContext, eventNode: EventNode<Event>) {
         eventNode.addListener(ChestPopulateEvent::class.java) { event ->
             lootProvider.getLoot(event.position).forEachIndexed { index, itemStack ->
                 event.menu.setItemStack(event.player, index, itemStack)

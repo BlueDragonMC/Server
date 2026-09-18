@@ -1,5 +1,7 @@
 package com.bluedragonmc.server.impl
 
+import com.bluedragonmc.server.GameContext
+import com.bluedragonmc.server.GameRegistry
 import com.bluedragonmc.api.grpc.*
 import com.bluedragonmc.api.grpc.Map
 import com.bluedragonmc.api.grpc.Queue
@@ -51,9 +53,9 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
     @DependsOn(InstanceModule::class)
     class MessagingModule : GameModule() {
 
-        private lateinit var parent: Game
+        private lateinit var parent: GameContext
 
-        override fun initialize(parent: Game, eventNode: EventNode<Event>): Unit = runBlocking {
+        override fun initialize(parent: GameContext, eventNode: EventNode<Event>): Unit = runBlocking {
             this@MessagingModule.parent = parent
             Messaging.outgoing.initGame(parent.id, parent.data.gameType, parent.rpcGameState)
 
@@ -70,7 +72,7 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
             }
 
             eventNode.listenAsync<AddEntityToInstanceEvent> { event ->
-                val gameId = Game.findGame(event.instance.uuid)?.id
+                val gameId = GameRegistry.findGame(event.instance.uuid)?.id
                 if (gameId != null) {
                     Messaging.outgoing.recordInstanceChange(event.entity as? Player ?: return@listenAsync, gameId)
                 }

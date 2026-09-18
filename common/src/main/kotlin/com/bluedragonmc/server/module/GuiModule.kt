@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.module
 
-import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.GameContext
 import com.bluedragonmc.server.event.PlayerLeaveGameEvent
 import net.kyori.adventure.text.Component
 import net.minestom.server.entity.GameMode
@@ -28,7 +28,7 @@ open class GuiModule : GameModule() {
 
     internal val inventories = mutableMapOf<Byte, Menu>()
 
-    override fun initialize(parent: Game, eventNode: EventNode<Event>) {
+    override fun initialize(parent: GameContext, eventNode: EventNode<Event>) {
         eventNode.addListener(InventoryCloseEvent::class.java) { event ->
             onInventoryClose(event.player, event.inventory.windowId)
         }

@@ -1,5 +1,7 @@
 package com.bluedragonmc.server.module
 
+import com.bluedragonmc.server.GameContext
+import com.bluedragonmc.server.GameRegistry
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.PlayerJoinGameEvent
 import com.bluedragonmc.server.event.PlayerLeaveGameEvent
@@ -19,10 +21,10 @@ import java.lang.ref.WeakReference
  * [See Documentation](https://developer.bluedragonmc.com/modules/scopedcommandmodule/)
  */
 class ScopedCommandModule : GameModule() {
-    private lateinit var parent: Game
+    private lateinit var parent: GameContext
 
     override fun initialize(
-        parent: Game,
+        parent: GameContext,
         eventNode: EventNode<Event>
     ) {
         this.parent = parent
@@ -75,7 +77,7 @@ class ScopedCommandModule : GameModule() {
                 if (originalCondition?.canUse(player, name) == false) {
                     return@condition false
                 }
-                val currentGame = Game.findGame(player) ?: return@condition false
+                val currentGame = GameRegistry.findGame(player) ?: return@condition false
                 if (!currentGame.players.contains(player)) return@condition false // This happens when currentGame owns the instance that the player is in, but they haven't been added to the player list. In this case, they shouldn't see the command.
                 return@condition registration.games.any { it.get() == currentGame }
             }
@@ -111,5 +113,5 @@ class ScopedCommandModule : GameModule() {
         private val registeredCommands: MutableMap<String, ScopedCommand> = mutableMapOf()
     }
 
-    private data class ScopedCommand(val command: Command, val games: MutableList<WeakReference<Game>>)
+    private data class ScopedCommand(val command: Command, val games: MutableList<WeakReference<GameContext>>)
 }

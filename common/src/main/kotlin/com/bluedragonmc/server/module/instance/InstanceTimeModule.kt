@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.module.instance
 
-import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.GameContext
 import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.config.ConfigModule
@@ -14,7 +14,7 @@ import net.minestom.server.event.EventNode
  */
 @DependsOn(ConfigModule::class)
 class InstanceTimeModule(val default: Int = 12000) : GameModule() {
-    override fun initialize(parent: Game, eventNode: EventNode<Event>) {
+    override fun initialize(parent: GameContext, eventNode: EventNode<Event>) {
         val time = parent.getModule<ConfigModule>().getConfig().node("world", "time").getInt(default)
         parent.getOwnedInstances().forEach {
             it.time = time.toLong()

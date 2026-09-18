@@ -1,5 +1,6 @@
 package com.bluedragonmc.server.command
 
+import com.bluedragonmc.server.GameRegistry
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.model.PlayerDocument
 import com.bluedragonmc.server.service.Database
@@ -80,7 +81,7 @@ class ArgumentGameId(id: String) : Argument<Game>(id) {
 
     init {
         setSuggestionCallback { _, _, suggestion ->
-            suggestion.entries.addAll(Game.games.map {
+            suggestion.entries.addAll(GameRegistry.games.map {
                 SuggestionEntry(it.id)
             }.filter { it.entry.startsWith(suggestion.input) })
         }
@@ -88,7 +89,7 @@ class ArgumentGameId(id: String) : Argument<Game>(id) {
 
     override fun parse(sender: CommandSender, input: String): Game {
         val gameId = backingArgument.parse(sender, input)
-        return Game.findGame(gameId)
+        return GameRegistry.findGame(gameId)
             ?: throw ArgumentSyntaxException("Game not found", gameId, INVALID_GAME_ID)
     }
 

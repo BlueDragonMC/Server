@@ -2,7 +2,7 @@ package com.bluedragonmc.server.module.minigame
 
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
-import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.GameContext
 import com.bluedragonmc.server.event.PlayerJoinGameEvent
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.SoftDependsOn
@@ -26,7 +26,7 @@ import net.minestom.server.event.EventNode
 @SoftDependsOn(ConfigModule::class)
 class MOTDModule(private val motd: Component, private var showMapName: Boolean = true) : GameModule() {
 
-    override fun initialize(parent: Game, eventNode: EventNode<Event>) {
+    override fun initialize(parent: GameContext, eventNode: EventNode<Event>) {
         val node = parent.getModuleOrNull<ConfigModule>()?.getConfig()?.node("world")
 
         if (!parent.hasModule<ConfigModule>()) {

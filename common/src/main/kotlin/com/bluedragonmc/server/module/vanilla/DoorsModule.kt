@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.module.vanilla
 
-import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.GameContext
 import com.bluedragonmc.server.module.GameModule
 import net.kyori.adventure.sound.Sound
 import net.minestom.server.adventure.audience.PacketGroupingAudience
@@ -125,7 +125,7 @@ class DoorsModule(private val allowDoors: Boolean = true, private val allowTrapd
         }
     }
 
-    override fun initialize(parent: Game, eventNode: EventNode<Event>) {
+    override fun initialize(parent: GameContext, eventNode: EventNode<Event>) {
         eventNode.addListener(PlayerBlockInteractEvent::class.java) { event ->
             val door = isDoor(event.block)
             val trapdoor = isTrapdoor(event.block)

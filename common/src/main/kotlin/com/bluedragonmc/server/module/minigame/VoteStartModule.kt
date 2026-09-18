@@ -1,7 +1,7 @@
 package com.bluedragonmc.server.module.minigame
 
+import com.bluedragonmc.server.GameContext
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
-import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.*
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.utils.GameState
@@ -44,9 +44,9 @@ class VoteStartModule(
 
     private var votes = mutableListOf<Player>()
 
-    private lateinit var parent: Game
+    private lateinit var parent: GameContext
 
-    override fun initialize(parent: Game, eventNode: EventNode<Event>) {
+    override fun initialize(parent: GameContext, eventNode: EventNode<Event>) {
         this.parent = parent
         eventNode.addListener(PlayerJoinGameEvent::class.java) { event ->
             fill(event.player, voteStartItem)

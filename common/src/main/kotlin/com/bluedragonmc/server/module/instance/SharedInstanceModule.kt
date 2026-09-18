@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.module.instance
 
-import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.GameContext
 import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.map.MapProviderModule
 import net.minestom.server.MinecraftServer
@@ -31,7 +31,7 @@ class SharedInstanceModule : InstanceModule() {
         return setOf(instanceContainer)
     }
 
-    override fun initialize(parent: Game, eventNode: EventNode<Event>) {
+    override fun initialize(parent: GameContext, eventNode: EventNode<Event>) {
         instanceContainer = parent.getModule<MapProviderModule>().instanceContainer
         if (!instanceContainer.isRegistered) {
             MinecraftServer.getInstanceManager().registerInstance(instanceContainer)

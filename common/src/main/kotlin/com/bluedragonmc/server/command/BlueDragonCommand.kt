@@ -1,9 +1,9 @@
 package com.bluedragonmc.server.command
 
+import com.bluedragonmc.server.GameRegistry
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.CustomPlayer
-import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.command.BlueDragonCommand.Companion.errorColor
 import com.bluedragonmc.server.model.PlayerDocument
 import com.bluedragonmc.server.service.Permissions
@@ -149,7 +149,7 @@ open class BlueDragonCommand(
 
     open class CommandCtx(val sender: CommandSender, val ctx: CommandContext) {
         val player by lazy { sender as Player }
-        val game by lazy { Game.findGame(player)!! }
+        val game by lazy { GameRegistry.findGame(player)!! }
 
         fun <T> get(argument: Argument<T>): T = ctx.get(argument)
         fun getPlayer(argument: Argument<PlayerDocument>): Player? =
@@ -219,7 +219,7 @@ interface ConditionHolder {
 
     fun requireInGame() {
         conditions.add {
-            if (sender !is Player || Game.findGame(sender) == null) {
+            if (sender !is Player || GameRegistry.findGame(sender) == null) {
                 sender.sendMessage("You are not in a game! Join a game in order to run this command." withColor errorColor)
                 false
             } else true

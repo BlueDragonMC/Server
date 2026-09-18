@@ -1,8 +1,8 @@
 package com.bluedragonmc.server.module.gameplay
 
+import com.bluedragonmc.server.GameContext
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
-import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.utils.displayName
 import com.bluedragonmc.server.utils.manage
@@ -50,7 +50,7 @@ class CustomItemModule(vararg val items: CustomItem) : GameModule() {
         }
     }
 
-    private lateinit var parent: Game
+    private lateinit var parent: GameContext
 
     /**
      * Each registered item has a map containing the last time each player used the item.
@@ -59,7 +59,7 @@ class CustomItemModule(vararg val items: CustomItem) : GameModule() {
     private val cooldownPlayers = mutableMapOf<CustomItem, MutableMap<Player, Long>>()
     private val eventNodes = mutableMapOf<CustomItem, EventNode<ItemEvent>>()
 
-    override fun initialize(parent: Game, eventNode: EventNode<Event>) {
+    override fun initialize(parent: GameContext, eventNode: EventNode<Event>) {
         this.parent = parent
         items.forEach { registerItem(it) }
 

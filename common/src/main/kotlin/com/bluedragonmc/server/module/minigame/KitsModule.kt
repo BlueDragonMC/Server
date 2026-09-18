@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.module.minigame
 
-import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.GameContext
 import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.event.KitSelectedEvent
 import com.bluedragonmc.server.event.PlayerJoinGameEvent
@@ -46,10 +46,10 @@ open class KitsModule(
     val selectableKits: List<Kit>,
 ) : GameModule() {
 
-    private lateinit var parent: Game
+    private lateinit var parent: GameContext
 
     protected val selectedKits = hashMapOf<Player, Kit>()
-    override fun initialize(parent: Game, eventNode: EventNode<Event>) {
+    override fun initialize(parent: GameContext, eventNode: EventNode<Event>) {
         this.parent = parent
         // todo add support for unlockable kits
         eventNode.addListener(PlayerJoinGameEvent::class.java) { event ->

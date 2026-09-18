@@ -1,5 +1,6 @@
 package com.bluedragonmc.server.queue
 
+import com.bluedragonmc.server.GameRegistry
 import com.bluedragonmc.api.grpc.CommonTypes
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.api.Queue
@@ -92,7 +93,7 @@ class TestQueue : Queue() {
                         queuedPlayers.invalidate(player)
                         return@forEach
                     }
-                    val game = Game.games.firstOrNull {
+                    val game = GameRegistry.games.firstOrNull {
                         it.data.name == gameType.name
                             && (it.data.mapSource matches gameType)
                             && (it.data.mapSource.isPlayerAllowed(player.uuid))

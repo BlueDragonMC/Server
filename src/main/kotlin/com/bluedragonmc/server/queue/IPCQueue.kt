@@ -1,5 +1,6 @@
 package com.bluedragonmc.server.queue
 
+import com.bluedragonmc.server.GameRegistry
 import com.bluedragonmc.api.grpc.CommonTypes
 import com.bluedragonmc.api.grpc.GsClient
 import com.bluedragonmc.api.grpc.PlayerHolderOuterClass.SendPlayerRequest
@@ -60,7 +61,7 @@ object IPCQueue : Queue() {
     override fun sendPlayer(request: SendPlayerRequest) {
         val gameId = request.instanceId
         val player = MinecraftServer.getConnectionManager().getOnlinePlayerByUuid(UUID.fromString(request.playerUuid)) ?: return
-        val game = Game.findGame(gameId) ?: run {
+        val game = GameRegistry.findGame(gameId) ?: run {
             player.sendMessage(
                 Component.translatable(
                     "queue.error_sending",
@@ -73,7 +74,7 @@ object IPCQueue : Queue() {
         val instance = game.getModule<InstanceModule>().getSpawningInstance(player)
         // Only allow players that have fully logged in, preventing them from being sent to the game twice
         if (player.playerConnection.clientState != ConnectionState.PLAY) return
-        if (Game.findGame(player) == game || player.instance == null) return
+        if (GameRegistry.findGame(player) == game || player.instance == null) return
         player.sendMessage(
             Component.translatable(
                 "queue.sending",

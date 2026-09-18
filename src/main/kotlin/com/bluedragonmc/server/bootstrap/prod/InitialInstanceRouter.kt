@@ -1,7 +1,7 @@
 package com.bluedragonmc.server.bootstrap.prod
 
+import com.bluedragonmc.server.GameRegistry
 import com.bluedragonmc.server.CustomPlayer
-import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.bootstrap.Bootstrap
 import com.bluedragonmc.server.module.instance.InstanceModule
@@ -78,11 +78,11 @@ object InitialInstanceRouter : Bootstrap(EnvType.PRODUCTION) {
             // Using the destination string, find the player's desired game
 
             val game = if (!destination.isNullOrBlank()) {
-                Game.findGame(destination)
+                GameRegistry.findGame(destination)
             } else {
                 logger.warn("Invalid destination ('$destination') supplied for player ${event.player.username}, sending to Lobby.")
                 // If no destination was found, send the player to a lobby.
-                Game.games.find { it.data.name.equals(Environment.defaultGameName, ignoreCase = true) }
+                GameRegistry.games.find { it.data.name.equals(Environment.defaultGameName, ignoreCase = true) }
             }
 
             // Spawn the player in the game's spawning instance

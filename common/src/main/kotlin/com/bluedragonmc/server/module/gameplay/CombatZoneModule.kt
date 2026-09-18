@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.module.gameplay
 
-import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.GameContext
 import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.combat.OldCombatModule
@@ -38,11 +38,11 @@ class CombatZonesModule(
     private val combatStatus = hashMapOf<Player, Int>()
 
     private lateinit var mapZonesModule: MapZonesModule
-    private lateinit var parent: Game
+    private lateinit var parent: GameContext
 
     private val combatZones = mutableListOf<MapZonesModule.MapZone>()
 
-    override fun initialize(parent: Game, eventNode: EventNode<Event>) {
+    override fun initialize(parent: GameContext, eventNode: EventNode<Event>) {
         this.parent = parent
         mapZonesModule = parent.getModule()
         startingCombatZones.forEach { zone ->

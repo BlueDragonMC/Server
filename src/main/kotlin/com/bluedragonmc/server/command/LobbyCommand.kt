@@ -1,15 +1,15 @@
 package com.bluedragonmc.server.command
 
+import com.bluedragonmc.server.GameRegistry
 import com.bluedragonmc.api.grpc.CommonTypes
 import com.bluedragonmc.server.api.Environment
-import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.minigame.SpawnpointModule
 import com.bluedragonmc.server.service.Messaging
 
 class LobbyCommand(name: String, vararg aliases: String?) : BlueDragonCommand(name, aliases, block = {
     requirePlayers()
     suspendSyntax {
-        val localLobby = Game.games.filter { it.data.name == Environment.defaultGameName }.randomOrNull()
+        val localLobby = GameRegistry.games.filter { it.data.name == Environment.defaultGameName }.randomOrNull()
 
         if (localLobby == null) {
             Messaging.outgoing.addToQueue(player, CommonTypes.GameType.newBuilder().setName("Lobby").build())

@@ -1,8 +1,8 @@
 package com.bluedragonmc.server.module.minigame
 
+import com.bluedragonmc.server.GameContext
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.CustomPlayer
-import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.GameEvent
 import com.bluedragonmc.server.event.PlayerLeaveGameEvent
 import com.bluedragonmc.server.module.GameModule
@@ -26,9 +26,9 @@ import net.minestom.server.event.player.PlayerDeathEvent
 @SoftDependsOn(TeamModule::class)
 class SpectatorModule(var spectateOnDeath: Boolean, var spectateOnLeave: Boolean = true) : GameModule() {
     private val spectators = mutableListOf<Player>()
-    private lateinit var parent: Game
+    private lateinit var parent: GameContext
 
-    override fun initialize(parent: Game, eventNode: EventNode<Event>) {
+    override fun initialize(parent: GameContext, eventNode: EventNode<Event>) {
         this.parent = parent
         eventNode.addListener(PlayerDeathEvent::class.java) { event ->
             if (parent.state == GameState.INGAME && spectateOnDeath && !isSpectating(event.player)) addSpectator(event.player)
@@ -96,10 +96,10 @@ class SpectatorModule(var spectateOnDeath: Boolean, var spectateOnLeave: Boolean
     /**
      * This event is fired when a player becomes a spectator.
      */
-    class StartSpectatingEvent(game: Game, val player: Player) : GameEvent(game)
+    class StartSpectatingEvent(game: GameContext, val player: Player) : GameEvent(game)
 
     /**
      * This event is fired when a player stops being a spectator.
      */
-    class StopSpectatingEvent(game: Game, val player: Player) : GameEvent(game)
+    class StopSpectatingEvent(game: GameContext, val player: Player) : GameEvent(game)
 }

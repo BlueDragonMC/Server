@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.module.instance
 
-import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.GameContext
 import com.bluedragonmc.server.NAMESPACE
 import net.kyori.adventure.key.Key
 import net.minestom.server.MinecraftServer
@@ -26,7 +26,7 @@ class CustomGeneratorInstanceModule(
 ) : InstanceModule() {
     private lateinit var instance: Instance
 
-    override fun initialize(parent: Game, eventNode: EventNode<Event>) {
+    override fun initialize(parent: GameContext, eventNode: EventNode<Event>) {
         instance = MinecraftServer.getInstanceManager().createInstanceContainer(dimensionType)
         instance.setGenerator(generator)
     }

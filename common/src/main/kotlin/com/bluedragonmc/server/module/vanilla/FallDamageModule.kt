@@ -1,7 +1,7 @@
 package com.bluedragonmc.server.module.vanilla
 
+import com.bluedragonmc.server.GameContext
 import com.bluedragonmc.server.CustomPlayer
-import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.combat.EnumArmorToughness.ArmorToughness.getArmor
 import net.minestom.server.collision.BoundingBox
@@ -116,7 +116,7 @@ class FallDamageModule : GameModule() {
         }
     }
 
-    override fun initialize(parent: Game, eventNode: EventNode<Event>) {
+    override fun initialize(parent: GameContext, eventNode: EventNode<Event>) {
         eventNode.addListener(PlayerTickEvent::class.java) { event ->
             val player = event.player
             val block = event.instance.getBlock(player.position)

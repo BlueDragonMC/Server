@@ -2,7 +2,7 @@ package com.bluedragonmc.server.command
 
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
-import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.GameRegistry
 import com.bluedragonmc.server.module.map.MapProviderModule.Companion.MAP_NAME_TAG
 import com.bluedragonmc.server.module.minigame.SpawnpointModule
 import com.bluedragonmc.server.utils.*
@@ -40,7 +40,7 @@ class InstanceCommand(name: String, usageString: String, vararg aliases: String?
                     +text(instance::class.simpleName.toString(), NamedTextColor.AQUA)
                     +newline()
                     +text(" → ", NamedTextColor.GRAY)
-                    val game = Game.findGame(instance.uuid)
+                    val game = GameRegistry.findGame(instance.uuid)
                     if (instance.hasTag(MAP_NAME_TAG)) {
                         +translatable(
                             "command.instance.instance_container", NamedTextColor.GRAY,
@@ -75,7 +75,7 @@ class InstanceCommand(name: String, usageString: String, vararg aliases: String?
                             .hoverEventTranslatable("command.instance.action.connect.hover", NamedTextColor.YELLOW)
                             .clickEvent("/instance join ${instance.uuid}")
                     }
-                    val requiredBy = Game.games.filter { it.getRequiredInstances().contains(instance) }
+                    val requiredBy = GameRegistry.games.filter { it.getRequiredInstances().contains(instance) }
                     if (requiredBy.isNotEmpty()) requiredBy.forEach { game ->
                         +newline()
                         +text(" → ", NamedTextColor.GRAY)
@@ -105,7 +105,7 @@ class InstanceCommand(name: String, usageString: String, vararg aliases: String?
             val instance = get(instanceArgument)
             player.sendMessage(formatMessageTranslated("queue.sending", instance.uuid))
             try {
-                val spawnpoint = Game.findGame(instance.uuid)
+                val spawnpoint = GameRegistry.findGame(instance.uuid)
                     ?.getModuleOrNull<SpawnpointModule>()
                     ?.spawnpointProvider
                     ?.getSpawnpoint(player)

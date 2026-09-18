@@ -1,7 +1,7 @@
 package com.bluedragonmc.server.module.database
 
+import com.bluedragonmc.server.GameContext
 import com.bluedragonmc.server.CustomPlayer
-import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.DataLoadedEvent
 import com.bluedragonmc.server.event.PlayerLeaveGameEvent
 import com.bluedragonmc.server.model.PlayerDocument
@@ -96,7 +96,7 @@ class StatisticsModule(private vararg val recorders: StatisticRecorder) : GameMo
         }
     }
 
-    override fun initialize(parent: Game, eventNode: EventNode<Event>) {
+    override fun initialize(parent: GameContext, eventNode: EventNode<Event>) {
         mostRecentInstance = this
 
         val ingameOnlyEventNode = EventNode.event("$this-ingame", EventFilter.ALL) { event: Event -> parent.state == GameState.INGAME }
@@ -243,9 +243,9 @@ class StatisticsModule(private vararg val recorders: StatisticRecorder) : GameMo
 
     class EventStatisticRecorder<T : Event>(
         private val eventType: Class<T>,
-        val handler: suspend StatisticsModule.(Game, T) -> Unit,
+        val handler: suspend StatisticsModule.(GameContext, T) -> Unit,
     ) : StatisticRecorder() {
-        override fun subscribe(module: StatisticsModule, game: Game, eventNode: EventNode<Event>) {
+        override fun subscribe(module: StatisticsModule, game: GameContext, eventNode: EventNode<Event>) {
             eventNode.addListener(eventType) { event ->
                 Database.IO.launch { handler(module, game, event) }
             }
@@ -253,13 +253,13 @@ class StatisticsModule(private vararg val recorders: StatisticRecorder) : GameMo
     }
 
     class MultiStatisticRecorder(private vararg val recorders: StatisticRecorder) : StatisticRecorder() {
-        override fun subscribe(module: StatisticsModule, game: Game, eventNode: EventNode<Event>) {
+        override fun subscribe(module: StatisticsModule, game: GameContext, eventNode: EventNode<Event>) {
             recorders.forEach { it.subscribe(module, game, eventNode) }
         }
     }
 
     abstract class StatisticRecorder {
 
-        abstract fun subscribe(module: StatisticsModule, game: Game, eventNode: EventNode<Event>)
+        abstract fun subscribe(module: StatisticsModule, game: GameContext, eventNode: EventNode<Event>)
     }
 }

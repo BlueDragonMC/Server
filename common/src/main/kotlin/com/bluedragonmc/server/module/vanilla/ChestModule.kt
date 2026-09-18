@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.module.vanilla
 
-import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.GameContext
 import com.bluedragonmc.server.event.ChestOpenEvent
 import com.bluedragonmc.server.event.ChestPopulateEvent
 import com.bluedragonmc.server.module.DependsOn
@@ -32,9 +32,9 @@ import java.awt.Menu
 @DependsOn(GuiModule::class)
 class ChestModule : GameModule() {
 
-    private lateinit var parent: Game
+    private lateinit var parent: GameContext
 
-    override fun initialize(parent: Game, eventNode: EventNode<Event>) {
+    override fun initialize(parent: GameContext, eventNode: EventNode<Event>) {
         this.parent = parent
 
         eventNode.addListener(PlayerBlockInteractEvent::class.java) { event ->
@@ -120,7 +120,7 @@ class ChestModule : GameModule() {
 //        }
     }
 
-    class EnderChest(private val game: Game, override val position: Point, override val instance: Instance) :
+    class EnderChest(private val game: GameContext, override val position: Point, override val instance: Instance) :
         ChestBlock() {
 
         companion object {
@@ -146,7 +146,7 @@ class ChestModule : GameModule() {
     }
 
     class Chest(
-        private val game: Game,
+        private val game: GameContext,
         inventoryType: InventoryType,
         override val instance: Instance,
         override val position: Point,

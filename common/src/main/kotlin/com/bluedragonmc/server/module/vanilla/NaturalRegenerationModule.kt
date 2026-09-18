@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.module.vanilla
 
-import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.GameContext
 import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
@@ -22,7 +22,7 @@ class NaturalRegenerationModule : GameModule() {
 
     private val combatStatus = hashMapOf<Player, Int>()
 
-    override fun initialize(parent: Game, eventNode: EventNode<Event>) {
+    override fun initialize(parent: GameContext, eventNode: EventNode<Event>) {
         eventNode.addListener(OldCombatModule.PlayerAttackEvent::class.java) { event ->
             if (event.target !is Player) return@addListener
             combatStatus[event.attacker] = 0

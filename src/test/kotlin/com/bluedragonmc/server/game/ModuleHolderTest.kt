@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.game
 
-import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.GameContext
 import com.bluedragonmc.server.ModuleHolder
 import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
@@ -25,7 +25,7 @@ class ModuleHolderTest {
     }
 
     private open class GameModuleStub : GameModule() {
-        override fun initialize(parent: Game, eventNode: EventNode<Event>) {}
+        override fun initialize(parent: GameContext, eventNode: EventNode<Event>) {}
     }
 
     private open class SimpleGameModule : GameModuleStub()
@@ -201,7 +201,7 @@ class ModuleHolderTest {
         assertContentEquals(instance.modules, listOf(module))
         instance.use(module)
         assertContentEquals(instance.modules, listOf(module))
-        assertEquals(instance.modules.size, 1)
+        assertEquals(1, instance.modules.size)
     }
 
     @Test

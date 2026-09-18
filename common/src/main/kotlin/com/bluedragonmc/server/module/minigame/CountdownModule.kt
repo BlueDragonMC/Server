@@ -1,7 +1,7 @@
 package com.bluedragonmc.server.module.minigame
 
+import com.bluedragonmc.server.GameContext
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
-import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.CountdownEvent
 import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.event.PlayerJoinGameEvent
@@ -46,7 +46,7 @@ class CountdownModule(
 
     fun getTimeLeft() = secondsLeft ?: countdownSeconds
 
-    override fun initialize(parent: Game, eventNode: EventNode<Event>) {
+    override fun initialize(parent: GameContext, eventNode: EventNode<Event>) {
         eventNode.addListener(PlayerJoinGameEvent::class.java) {
             if (parent.state == GameState.STARTING || parent.state == GameState.INGAME || parent.state == GameState.ENDING || countdownRunning) return@addListener
             if (threshold > 0 && parent.players.size >= threshold) {
@@ -138,7 +138,7 @@ class CountdownModule(
         }
     }
 
-    private fun startCountdown(parent: Game) {
+    private fun startCountdown(parent: GameContext) {
         cancelCountdown()
         parent.callEvent(CountdownEvent.CountdownStartEvent(parent))
         if (!allowMoveDuringCountdown) parent.players.filter { it.isActive }.forEach { it.teleport(it.respawnPoint) }

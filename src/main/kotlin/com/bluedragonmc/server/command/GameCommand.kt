@@ -1,10 +1,8 @@
 package com.bluedragonmc.server.command
 
-import com.bluedragonmc.api.grpc.CommonTypes.GameType
-import com.bluedragonmc.api.grpc.GsClient
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
 import com.bluedragonmc.server.Game
-import com.bluedragonmc.server.api.Environment
+import com.bluedragonmc.server.GameRegistry
 import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.module.minigame.WinModule
 import com.bluedragonmc.server.utils.GameState
@@ -19,7 +17,6 @@ import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.title.Title
 import net.minestom.server.command.CommandSender
-import java.util.*
 
 /**
  * Usage:
@@ -79,7 +76,7 @@ class GameCommand(name: String, usageString: String, vararg aliases: String?) : 
 
     subcommand("list") {
         syntax {
-            val components = Game.games.map {
+            val components = GameRegistry.games.map {
                 buildComponent {
                     +text(it.id, BRAND_COLOR_PRIMARY_1)
                     +text(" · ", NamedTextColor.GRAY)

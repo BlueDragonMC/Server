@@ -1,8 +1,8 @@
 package com.bluedragonmc.server.event
 
-import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.GameContext
 
 class CountdownEvent {
-    class CountdownStartEvent(game: Game) : GameEvent(game)
-    class CountdownTickEvent(game: Game, val secondsLeft: Int) : GameEvent(game)
+    class CountdownStartEvent(game: GameContext) : GameEvent(game)
+    class CountdownTickEvent(game: GameContext, val secondsLeft: Int) : GameEvent(game)
 }

@@ -1,9 +1,9 @@
 package com.bluedragonmc.server.module.minigame
 
+import com.bluedragonmc.server.GameContext
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_3
-import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.GameEvent
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.GlobalCosmeticModule
@@ -32,11 +32,11 @@ import java.time.Duration
 class WinModule(
     val winCondition: WinCondition = WinCondition.MANUAL,
 ) : GameModule() {
-    private lateinit var parent: Game
+    private lateinit var parent: GameContext
 
     private var isWinnerDeclared = false
 
-    override fun initialize(parent: Game, eventNode: EventNode<Event>) {
+    override fun initialize(parent: GameContext, eventNode: EventNode<Event>) {
         this.parent = parent
         eventNode.addListener(SpectatorModule.StartSpectatingEvent::class.java) {
             if (winCondition == WinCondition.MANUAL || parent.state != GameState.INGAME) return@addListener
@@ -97,7 +97,7 @@ class WinModule(
 
     fun declareWinner(team: TeamModule.Team) = declareWinner(team.name, team.players)
 
-    class WinnerDeclaredEvent(game: Game, val winningTeamName: Component, val winningTeamPlayers: Collection<Player>) : GameEvent(game)
+    class WinnerDeclaredEvent(game: GameContext, val winningTeamName: Component, val winningTeamPlayers: Collection<Player>) : GameEvent(game)
 
     private val defaultColors = arrayOf(BRAND_COLOR_PRIMARY_1, BRAND_COLOR_PRIMARY_2, BRAND_COLOR_PRIMARY_3)
 

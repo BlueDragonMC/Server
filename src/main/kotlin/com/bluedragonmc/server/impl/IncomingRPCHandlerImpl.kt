@@ -1,7 +1,7 @@
 package com.bluedragonmc.server.impl
 
+import com.bluedragonmc.server.GameRegistry
 import com.bluedragonmc.api.grpc.*
-import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.api.IncomingRPCHandler
 import com.bluedragonmc.server.bootstrap.Jukebox
@@ -104,7 +104,7 @@ class IncomingRPCHandlerImpl(serverPort: Int) : IncomingRPCHandler {
 
         override suspend fun getInstances(request: Empty): GsClient.GetInstancesResponse {
             return getInstancesResponse {
-                Game.games.forEach { game ->
+                GameRegistry.games.forEach { game ->
                     instances += GetInstancesResponseKt.runningInstance {
                         this.gameState = game.rpcGameState
                         this.instanceUuid = game.id
@@ -118,7 +118,7 @@ class IncomingRPCHandlerImpl(serverPort: Int) : IncomingRPCHandler {
         }
 
         override suspend fun endGame(request: GsClient.EndGameRequest): Empty {
-            val game = Game.findGame(request.gameId)
+            val game = GameRegistry.findGame(request.gameId)
             game?.endGame(request.queuePlayersForLobby)
             return Empty.getDefaultInstance()
         }

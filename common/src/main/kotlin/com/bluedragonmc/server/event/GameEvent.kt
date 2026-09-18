@@ -1,5 +1,5 @@
 package com.bluedragonmc.server.event
 
-import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.GameContext
 
-abstract class GameEvent(val game: Game) : Cancellable()
+abstract class GameEvent(val game: GameContext) : Cancellable()

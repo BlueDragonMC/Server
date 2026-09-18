@@ -1,7 +1,7 @@
 package com.bluedragonmc.server.command
 
+import com.bluedragonmc.server.GameRegistry
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
-import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.service.Messaging
 import com.bluedragonmc.server.service.Permissions
 import com.bluedragonmc.server.utils.miniMessage
@@ -66,7 +66,7 @@ class PartyCommand(name: String, usageString: String, vararg aliases: String) :
 
         subcommand("warp") {
             suspendSyntax {
-                val gameId = Game.findGame(player)?.id
+                val gameId = GameRegistry.findGame(player)?.id
                 if (gameId == null) {
                     sender.sendMessage(Component.translatable("puffin.party.warp.invalid_destination", errorColor))
                     return@suspendSyntax
