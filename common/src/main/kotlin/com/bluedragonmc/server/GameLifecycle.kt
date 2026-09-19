@@ -73,5 +73,6 @@ class GameLifecycle(private val game: Game) {
         }.executionType(ExecutionType.TICK_START).delay(Duration.ofSeconds(10))
 
         game.roster.clear()
+        game.events.detach()
     }
 }

@@ -44,6 +44,10 @@ class GameEventBus(private val game: Game) {
         MinecraftServer.getGlobalEventHandler().addChild(node)
     }
 
+    fun detach() {
+        node.parent?.removeChild(node)
+    }
+
     fun createChild(module: GameModule, filter: Predicate<Event>): EventNode<Event> {
         val child = EventNode.event(module::class.simpleName.orEmpty(), EventFilter.ALL, filter)
         child.priority = module.eventPriority

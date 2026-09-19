@@ -29,6 +29,7 @@ junit = "5.9.0"
 [libraries]
 kotlin-jvm = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
 minestom = { group = "net.minestom", name = "minestom", version.ref = "minestom" }
+minestom-testing = { group = "net.minestom", name = "testing", version.ref = "minestom" }
 jukebox = { group = "com.bluedragonmc", name = "jukebox", version.ref = "jukebox" }
 #jukebox = { group = "com.bluedragonmc", name = "jukebox", version = "dev" }
 configurate-yaml = { group = "org.spongepowered", name = "configurate-yaml", version.ref = "configurate" }
