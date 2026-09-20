@@ -13,7 +13,7 @@ import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.MinecraftServer
-import net.minestom.server.ServerFlag
+import net.minestom.server.property.ServerProperties
 import net.minestom.server.component.DataComponents
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.Player
@@ -293,7 +293,7 @@ object Jukebox : Bootstrap() {
     }
 
     private fun msToTicks(ms: Long): Int {
-        return ms.toInt() / (1000 / ServerFlag.SERVER_TICKS_PER_SECOND)
+        return ms.toInt() / (1000 / ServerProperties.SERVER_TICKS_PER_SECOND.get())
     }
 
     fun updateSongQueueFromIncomingMessage(player: Player, queue: JukeboxOuterClass.PlayerSongQueue) {

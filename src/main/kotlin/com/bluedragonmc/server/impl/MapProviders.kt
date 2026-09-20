@@ -6,6 +6,7 @@ import net.hollowcube.polar.PolarDataConverter
 import net.hollowcube.polar.PolarLoader
 import net.hollowcube.polar.PolarWorld
 import net.hollowcube.polar.PolarWriter
+import net.kyori.adventure.key.Key
 import net.minestom.server.instance.InstanceContainer
 import net.minestom.server.instance.anvil.AnvilLoader
 import okhttp3.*
@@ -13,6 +14,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import okio.IOException
 import org.slf4j.LoggerFactory
 import java.net.URI
+import java.nio.file.Files
 import java.nio.file.Paths
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -49,9 +51,16 @@ class AnvilMapProvider : Maps.MapProvider<AnvilLoader>() {
 
     private val logger = LoggerFactory.getLogger(this::class.java)
 
+    @Suppress("DEPRECATION", "removal")
     override suspend fun provideMap(source: Maps.MapSource): AnvilLoader {
         logger.info("Providing Anvil map at ${source.url}")
-        return AnvilLoader(Paths.get(URI.create(source.url)))
+        val path = Paths.get(URI.create(source.url))
+        // Worlds created before 26.1 use the legacy `region/` layout and have no `dimensions/` directory.
+        return if (Files.isDirectory(path.resolve("dimensions"))) {
+            AnvilLoader(path, Key.key("minecraft", "overworld"))
+        } else {
+            AnvilLoader(path)
+        }
     }
 
     override suspend fun saveMap(source: Maps.MapSource, instance: InstanceContainer) {

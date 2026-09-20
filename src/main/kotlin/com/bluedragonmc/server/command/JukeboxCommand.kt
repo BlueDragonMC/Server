@@ -10,7 +10,7 @@ import com.bluedragonmc.server.service.Messaging
 import com.bluedragonmc.server.utils.surroundWithSeparators
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
-import net.minestom.server.ServerFlag
+import net.minestom.server.property.ServerProperties
 
 class JukeboxCommand(name: String, vararg aliases: String) :
     BlueDragonCommand(name, aliases, block = {
@@ -33,7 +33,7 @@ class JukeboxCommand(name: String, vararg aliases: String) :
                     Messaging.outgoing.setSongInfo(player, current.copy {
                         isPlaying = false
                         val millisSinceStart = (System.currentTimeMillis() - startedPlayingAt.toMillis()).toInt()
-                        val ticksSinceStart = millisSinceStart / (1000 / ServerFlag.SERVER_TICKS_PER_SECOND)
+                        val ticksSinceStart = millisSinceStart / (1000 / ServerProperties.SERVER_TICKS_PER_SECOND.get())
                         startingTick += ticksSinceStart
                     })
                 }

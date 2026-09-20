@@ -54,7 +54,7 @@ class DoorsModule(private val allowDoors: Boolean = true, private val allowTrapd
         val shouldPlaySound = playEffect && (block.getProperty("open").equals("true")) != open
 
         if (shouldPlaySound) {
-            val (openSound, closeSound) = (getSounds(block.registry()!!.material() ?: return) ?: return)
+            val (openSound, closeSound) = (getSounds(block.material() ?: return) ?: return)
             val soundEvent = if (open) openSound else closeSound
 
             val audience = mutableListOf<Player>()

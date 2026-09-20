@@ -128,7 +128,7 @@ open class CustomPlayer(playerConnection: PlayerConnection, gameProfile: GamePro
         Block.WEEPING_VINES
     ).any { instance!!.getBlock(position).compare(it) }
 
-    fun isInWater() = instance!!.getBlock(position).isLiquid
+    fun isInWater() = instance!!.getBlock(position).liquid()
 
     fun isBlind() = activeEffects.any { it.potion.effect == PotionEffect.BLINDNESS }
     fun setDead(dead: Boolean) = refreshIsDead(dead)

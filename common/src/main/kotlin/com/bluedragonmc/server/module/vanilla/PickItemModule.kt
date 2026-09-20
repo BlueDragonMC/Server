@@ -39,7 +39,7 @@ class PickItemModule : GameModule() {
 
         eventNode.addListener(PlayerPickBlockEvent::class.java) { event ->
             val block = event.instance.getBlock(event.blockPosition)
-            if (block.isAir) return@addListener
+            if (block.air()) return@addListener
             val inventory = event.player.inventory
             val includeData = event.isIncludeData && event.player.gameMode == GameMode.CREATIVE
             if (inventory.getItemStack(event.player.heldSlot.toInt()).compareBlock(block, includeData)) {
@@ -67,9 +67,9 @@ class PickItemModule : GameModule() {
 
             // If the player is in creative, give them a new item stack
             if (event.player.gameMode == GameMode.CREATIVE) {
-                val material = block.registry()!!.material() ?: return@addListener
+                val material = block.material() ?: return@addListener
                 val itemStack = ItemStack.builder(material).apply {
-                    val blockEntityType = block.registry()!!.blockEntityType()
+                    val blockEntityType = block.blockEntityType()
                     if (includeData && blockEntityType != null) {
                         set(DataComponents.BLOCK_ENTITY_DATA, TypedCustomData(blockEntityType, block.nbtOrEmpty()))
                         block.nbtOrEmpty().forEach { nbt ->

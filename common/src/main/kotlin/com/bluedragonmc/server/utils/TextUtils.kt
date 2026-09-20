@@ -72,8 +72,8 @@ fun Component.clickEvent(action: ClickEvent.Action<ClickEvent.Payload.Text>, val
     return clickEvent(ClickEvent.clickEvent(action, ClickEvent.Payload.string(value)))
 }
 
-fun Material.displayName() = Component.translatable(registry()!!.translationKey())
-fun Material.displayName(color: TextColor) = Component.translatable(registry()!!.translationKey(), color)
+fun Material.displayName() = Component.translatable(translationKey())
+fun Material.displayName(color: TextColor) = Component.translatable(translationKey(), color)
 
 fun Component.noItalic() = decoration(TextDecoration.ITALIC, false)
 fun Component.noBold() = decoration(TextDecoration.BOLD, false)

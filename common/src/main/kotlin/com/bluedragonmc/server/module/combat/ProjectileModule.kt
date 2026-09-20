@@ -9,7 +9,7 @@ import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.vanilla.ItemDropModule
 import com.bluedragonmc.server.utils.CoordinateUtils
 import net.kyori.adventure.sound.Sound
-import net.minestom.server.ServerFlag
+import net.minestom.server.property.ServerProperties
 import net.minestom.server.component.DataComponents
 import net.minestom.server.coordinate.Point
 import net.minestom.server.coordinate.Pos
@@ -86,7 +86,7 @@ class ProjectileModule : GameModule() {
         eventNode.addListener(PlayerCancelItemUseEvent::class.java) { event ->
             if (event.itemStack.material() != Material.BOW) return@addListener
 
-            val secondsCharged: Double = event.useDuration.toDouble() / ServerFlag.SERVER_TICKS_PER_SECOND
+            val secondsCharged: Double = event.useDuration.toDouble() / ServerProperties.SERVER_TICKS_PER_SECOND.get()
             val power = ((secondsCharged * secondsCharged + 2 * secondsCharged) / 2.0).coerceIn(0.0, 1.0)
 
             if (power > 0.2) {
@@ -152,7 +152,7 @@ class ProjectileModule : GameModule() {
 
             // Base damage = speed (blocks/tick) * damage tag
             val baseDamage =
-                ceil(projectile.velocity.length() / ServerFlag.SERVER_TICKS_PER_SECOND * damageTag).toFloat()
+                ceil(projectile.velocity.length() / ServerProperties.SERVER_TICKS_PER_SECOND.get() * damageTag).toFloat()
                     .coerceAtLeast(0.0f)
 
             // If the arrow is critical (fully charged from a bow), increase its damage by up to (damage / 2) + 2
@@ -180,7 +180,7 @@ class ProjectileModule : GameModule() {
 
             if (projectile.isOnFire) {
                 // If the arrow is on fire, it sets the target entity on fire for 5 seconds
-                target.fireTicks = ServerFlag.SERVER_TICKS_PER_SECOND * 5
+                target.fireTicks = ServerProperties.SERVER_TICKS_PER_SECOND.get() * 5
             }
         }
         eventNode.addListener(ProjectileCollideWithBlockEvent::class.java) { event ->
@@ -435,7 +435,7 @@ class ProjectileModule : GameModule() {
             if (itemStack.material() == Material.ENDER_PEARL) {
                 if (event.player.isOnCooldown(
                         LAST_PEARL_THROWN_TAG,
-                        ServerFlag.SERVER_TICKS_PER_SECOND.toLong() // Ender pearls have a cooldown of 1 second
+                        ServerProperties.SERVER_TICKS_PER_SECOND.get().toLong() // Ender pearls have a cooldown of 1 second
                     )
                 ) return@addListener
 

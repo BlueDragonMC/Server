@@ -7,7 +7,7 @@ import com.bluedragonmc.server.event.PlayerKillPlayerEvent
 import com.bluedragonmc.server.event.PlayerLeaveGameEvent
 import com.bluedragonmc.server.module.GameModule
 import net.minestom.server.MinecraftServer
-import net.minestom.server.ServerFlag
+import net.minestom.server.property.ServerProperties
 import net.minestom.server.component.DataComponents
 import net.minestom.server.coordinate.Vec
 import net.minestom.server.entity.*
@@ -63,9 +63,9 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
 
             // see https://github.com/TogAr2/MinestomPvP/blob/4b2aa1e05b7a877ffe62183ed9b0b09088a7ca88/src/main/java/io/github/bloepiloepi/pvp/legacy/LegacyKnockbackSettings.java#L10
             // for more info on these constants
-            val horizontal = ServerFlag.SERVER_TICKS_PER_SECOND * 0.8 * 0.4
-            val vertical = (0.4 - 0.04) * ServerFlag.SERVER_TICKS_PER_SECOND
-            val verticalLimit = 0.4 * ServerFlag.SERVER_TICKS_PER_SECOND
+            val horizontal = ServerProperties.SERVER_TICKS_PER_SECOND.get() * 0.8 * 0.4
+            val vertical = (0.4 - 0.04) * ServerProperties.SERVER_TICKS_PER_SECOND.get()
+            val verticalLimit = 0.4 * ServerProperties.SERVER_TICKS_PER_SECOND.get()
             val extra = multiplier + 1.0
 
             target.velocity = target.velocity.apply { x, y, z ->
@@ -219,7 +219,7 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
             // Process fire aspect
             if (target is LivingEntity && (heldEnchantments[Enchantment.FIRE_ASPECT] ?: 0) > 0 && !target.isOnFire) {
                 // Add 80 fire ticks per enchantment level - https://minecraft.wiki/w/Fire_Aspect#Usage
-                target.fireTicks = heldEnchantments[Enchantment.FIRE_ASPECT]!! * 4 * ServerFlag.SERVER_TICKS_PER_SECOND
+                target.fireTicks = heldEnchantments[Enchantment.FIRE_ASPECT]!! * 4 * ServerProperties.SERVER_TICKS_PER_SECOND.get()
             }
 
             // Standard knockback that is unaffected by modifiers

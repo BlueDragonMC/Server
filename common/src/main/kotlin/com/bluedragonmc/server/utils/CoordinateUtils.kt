@@ -3,7 +3,6 @@ package com.bluedragonmc.server.utils
 import net.minestom.server.coordinate.BlockVec
 import net.minestom.server.coordinate.Point
 import net.minestom.server.coordinate.Pos
-import net.minestom.server.coordinate.Vec
 import kotlin.math.abs
 import kotlin.math.min
 
@@ -14,7 +13,6 @@ operator fun Point.component3() = z()
 operator fun Pos.component4() = yaw
 operator fun Pos.component5() = pitch
 
-fun Point.toVec(): Vec = Vec.fromPoint(this)
 fun Point.toBlockVec(): BlockVec = this as? BlockVec ?: BlockVec(x(), y(), z())
 
 fun Pos.round() = Pos(

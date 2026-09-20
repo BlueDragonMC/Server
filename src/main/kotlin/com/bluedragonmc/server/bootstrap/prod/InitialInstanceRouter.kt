@@ -15,7 +15,7 @@ import kotlinx.coroutines.withTimeout
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.MinecraftServer
-import net.minestom.server.ServerFlag
+import net.minestom.server.property.ServerProperties
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.player.AsyncPlayerConfigurationEvent
@@ -119,7 +119,7 @@ object InitialInstanceRouter : Bootstrap(EnvType.PRODUCTION) {
                 if (event.player.playerConnection.clientState == ConnectionState.PLAY) {
                     game.addPlayer(event.player, sendPlayer = false)
                     return@submitTask TaskSchedule.stop()
-                } else if (ticks < ServerFlag.SERVER_TICKS_PER_SECOND * 10) {
+                } else if (ticks < ServerProperties.SERVER_TICKS_PER_SECOND.get() * 10) {
                     return@submitTask TaskSchedule.nextTick()
                 } else {
                     event.player.kick(LOAD_TIMED_OUT)

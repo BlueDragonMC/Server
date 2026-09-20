@@ -18,7 +18,7 @@ object CombatUtils {
 
     private fun shouldRestoreDurability(itemStack: ItemStack, unbreakingLevel: Int): Boolean {
         // see https://minecraft.fandom.com/wiki/Unbreaking?so=search#Usage
-        if (itemStack.material().isArmor) {
+        if (itemStack.material().armor()) {
             if (Math.random() >= (0.6 + 0.4 / (unbreakingLevel + 1))) return false
         } else {
             if (Math.random() >= 1.0 / (unbreakingLevel + 1)) return false

@@ -91,7 +91,7 @@ class WorldPermissionsModule(
             if (exceptions.contains(event.block)) return@addListener
             event.isCancelled = !allowBlockPlace
 
-            if (!event.instance.getBlock(event.blockPosition).isAir) event.isCancelled = true
+            if (!event.instance.getBlock(event.blockPosition).air()) event.isCancelled = true
 
             if (!allowBreakMap) playerPlacedBlocks.add(event.blockPosition)
         }
