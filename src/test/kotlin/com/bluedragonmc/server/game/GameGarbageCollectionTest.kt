@@ -2,10 +2,15 @@ package com.bluedragonmc.server.game
 
 import com.bluedragonmc.api.grpc.CommonTypes
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.api.DatabaseConnectionStub
+import com.bluedragonmc.server.api.OutgoingRPCHandlerStub
+import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.service.Maps
+import com.bluedragonmc.server.service.Messaging
 import net.minestom.testing.Env
 import net.minestom.testing.EnvTest
 import net.minestom.testing.TestUtils.waitUntilCleared
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.lang.ref.WeakReference
 import kotlin.test.assertFalse
@@ -21,8 +26,13 @@ class GameGarbageCollectionTest {
             null,
         )
     ) {
-        override fun useMandatoryModules() {}
         override fun initialize() {}
+    }
+
+    @BeforeEach
+    fun setup() {
+        Messaging.initializeOutgoing(OutgoingRPCHandlerStub())
+        Database.initialize(DatabaseConnectionStub())
     }
 
     @Test

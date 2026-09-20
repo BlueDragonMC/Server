@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.module.database
 
-import com.bluedragonmc.server.GameContext
+import com.bluedragonmc.server.*
 import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.model.CosmeticEntry
 import com.bluedragonmc.server.model.PlayerDocument
@@ -21,7 +21,7 @@ import kotlin.reflect.KClass
 
 class CosmeticsModule : GameModule() {
 
-    private lateinit var parent: GameContext
+    private lateinit var parent: ModuleHolder
 
     companion object {
         private lateinit var config: ConfigurationNode
@@ -65,7 +65,7 @@ class CosmeticsModule : GameModule() {
             } else ItemStack.of(material)
     }
 
-    override fun initialize(parent: GameContext, eventNode: EventNode<Event>) {
+    override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>) {
         this.parent = parent
         if (!isConfigLoaded()) {
             config = ConfigModule.loadExtra(parent, "cosmetics.yml")

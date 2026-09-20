@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.module.instance
 
-import com.bluedragonmc.server.GameContext
+import com.bluedragonmc.server.*
 import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.map.MapProviderModule
 import net.minestom.server.MinecraftServer
@@ -24,7 +24,7 @@ class InstanceContainerModule : InstanceModule() {
     override fun getSpawningInstance(player: Player): Instance = this.instance
     override fun ownsInstance(instance: Instance): Boolean = instance == this.instance
 
-    override fun initialize(parent: GameContext, eventNode: EventNode<Event>) {
+    override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>) {
         // Create a copy of the loaded InstanceContainer to prevent modifying the state of the original
         val mapProviderModule = parent.getModule<MapProviderModule>()
         this.instance = mapProviderModule.instanceContainer.copy().apply {

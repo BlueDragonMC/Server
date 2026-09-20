@@ -7,7 +7,7 @@ import net.minestom.server.event.EventNode
 
 internal class SingleEventModule<T : Event>(private val listener: EventListener<out T>) : GameModule() {
     override fun initialize(
-        parent: GameContext,
+        parent: ModuleHolder,
         eventNode: EventNode<Event>,
     ) {
         eventNode.addListener(listener)

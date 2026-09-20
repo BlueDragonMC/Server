@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.module.config
 
-import com.bluedragonmc.server.GameContext
+import com.bluedragonmc.server.*
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.config.serializer.*
 import com.bluedragonmc.server.module.minigame.KitsModule
@@ -40,7 +40,7 @@ import kotlin.io.path.exists
  */
 class ConfigModule(private val configFileName: String? = null, private val mapSource: Maps.MapSource? = null) : GameModule() {
 
-    private lateinit var parent: GameContext
+    private lateinit var parent: ModuleHolder
     private lateinit var resolvedMapSource: Maps.MapSource
 
     private var initialized = false
@@ -52,7 +52,7 @@ class ConfigModule(private val configFileName: String? = null, private val mapSo
 
     private var cachedConfig: ConfigurationNode? = null
 
-    override fun initialize(parent: GameContext, eventNode: EventNode<Event>) {
+    override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>) {
         this.parent = parent
         resolvedMapSource = mapSource ?: parent.data.mapSource
         initialized = true
@@ -116,7 +116,7 @@ class ConfigModule(private val configFileName: String? = null, private val mapSo
          */
         private val internalFolder = "config/"
 
-        private fun getReader(game: GameContext, path: String): BufferedReader {
+        private fun getReader(game: ModuleHolder, path: String): BufferedReader {
             val overrideFile = Paths.get(externalFolder, path)
             return if (overrideFile.exists()) {
                 overrideFile.bufferedReader()
@@ -151,7 +151,7 @@ class ConfigModule(private val configFileName: String? = null, private val mapSo
             return loader.load(options)
         }
 
-        fun loadExtra(game: GameContext, fileName: String): ConfigurationNode? {
+        fun loadExtra(game: ModuleHolder, fileName: String): ConfigurationNode? {
             return runCatching {
                 loadFile(getReader(game, fileName))
             }.getOrNull()

@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.module.combat
 
-import com.bluedragonmc.server.GameContext
+import com.bluedragonmc.server.*
 import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.event.PlayerJoinGameEvent
 import com.bluedragonmc.server.event.PlayerKillPlayerEvent
@@ -78,7 +78,7 @@ class OldCombatModule(var allowDamage: Boolean = true, var allowKnockback: Boole
         }
     }
 
-    override fun initialize(parent: GameContext, eventNode: EventNode<Event>) {
+    override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>) {
 
         eventNode.addListener(EntityTickEvent::class.java) { event ->
             if (event.entity is LivingEntity) {

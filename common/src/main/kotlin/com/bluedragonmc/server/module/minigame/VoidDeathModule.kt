@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.module.minigame
 
-import com.bluedragonmc.server.GameContext
+import com.bluedragonmc.server.*
 import com.bluedragonmc.server.module.GameModule
 import net.minestom.server.entity.damage.DamageType
 import net.minestom.server.event.Event
@@ -17,7 +17,7 @@ import net.minestom.server.event.player.PlayerMoveEvent
  * @property respawnMode True if the player should just be respawned instead of being killed.
  */
 class VoidDeathModule(private val threshold: Double, private val respawnMode: Boolean = false) : GameModule() {
-    override fun initialize(parent: GameContext, eventNode: EventNode<Event>) {
+    override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>) {
         eventNode.addListener(PlayerMoveEvent::class.java) { event ->
             if (event.player.position.y < threshold && !event.player.isDead) {
                 if (respawnMode) {

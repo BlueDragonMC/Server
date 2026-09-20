@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.module
 
-import com.bluedragonmc.server.GameContext
+import com.bluedragonmc.server.*
 import com.bluedragonmc.server.module.database.CosmeticsModule
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextColor
@@ -13,7 +13,7 @@ class GlobalCosmeticModule : GameModule() {
 
     private lateinit var cosmetics: CosmeticsModule
 
-    override fun initialize(parent: GameContext, eventNode: EventNode<Event>) {
+    override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>) {
         cosmetics = parent.getModule<CosmeticsModule>()
     }
 

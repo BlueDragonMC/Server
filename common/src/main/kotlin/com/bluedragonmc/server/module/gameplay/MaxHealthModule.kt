@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.module.gameplay
 
-import com.bluedragonmc.server.GameContext
+import com.bluedragonmc.server.*
 import com.bluedragonmc.server.event.PlayerJoinGameEvent
 import com.bluedragonmc.server.event.PlayerLeaveGameEvent
 import com.bluedragonmc.server.module.GameModule
@@ -17,7 +17,7 @@ import net.minestom.server.event.EventNode
  */
 class MaxHealthModule(private val maxHealth: Double) : GameModule() {
 
-    override fun initialize(parent: GameContext, eventNode: EventNode<Event>) {
+    override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>) {
         eventNode.addListener(PlayerJoinGameEvent::class.java) { event ->
             event.player.getAttribute(Attribute.MAX_HEALTH).baseValue = maxHealth
             event.player.health = maxHealth.toFloat()

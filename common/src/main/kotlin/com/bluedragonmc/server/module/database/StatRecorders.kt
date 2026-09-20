@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.module.database
 
-import com.bluedragonmc.server.GameContext
+import com.bluedragonmc.server.*
 import com.bluedragonmc.server.event.PlayerKillPlayerEvent
 import com.bluedragonmc.server.module.minigame.WinModule
 import com.bluedragonmc.server.utils.GameState
@@ -58,7 +58,7 @@ object StatRecorders {
         KILLS_AND_DEATHS, WINS_AND_LOSSES
     )
 
-    private fun getStatPrefix(game: GameContext): String {
+    private fun getStatPrefix(game: ModuleHolder): String {
         val data = game.data
         val mode = data.mode
         return if (mode.isNullOrBlank()) "game_${data.name.lowercase()}"

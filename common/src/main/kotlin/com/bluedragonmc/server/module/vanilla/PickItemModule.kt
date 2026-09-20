@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.module.vanilla
 
-import com.bluedragonmc.server.GameContext
+import com.bluedragonmc.server.*
 import com.bluedragonmc.server.module.GameModule
 import net.minestom.server.MinecraftServer
 import net.minestom.server.codec.Transcoder
@@ -24,7 +24,7 @@ import net.minestom.server.registry.RegistryTranscoder
  */
 class PickItemModule : GameModule() {
     override fun initialize(
-        parent: GameContext,
+        parent: ModuleHolder,
         eventNode: EventNode<Event>
     ) {
         // If a player places a block with block entity data, add the data to the new block

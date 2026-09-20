@@ -2,15 +2,28 @@ package com.bluedragonmc.server
 
 import com.bluedragonmc.server.module.GameModule
 import net.minestom.server.event.Event
+import net.minestom.server.event.EventFilter
+import net.minestom.server.event.EventNode
 import org.slf4j.LoggerFactory
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.function.Consumer
 import java.util.function.Predicate
 import kotlin.reflect.KClass
 
-abstract class ModuleHolder {
+open class ModuleHolder {
 
     private val logger = LoggerFactory.getLogger(ModuleHolder::class.java)
+
+    /**
+     * The root event node that every module's child node is attached to.
+     *
+     * Callers hosting modules outside of a [Game] should add this node as a child
+     * of their own event node. Subclasses (such as [Game]) may override this to
+     * supply a filtered or otherwise customized event node.
+     */
+    open val rootEventNode: EventNode<Event> by lazy {
+        EventNode.all("module-holder")
+    }
 
     data class WaitingGameModule<T : GameModule>(val module: T, val filter: Predicate<Event>, val callback: Consumer<T>)
 
@@ -38,7 +51,32 @@ abstract class ModuleHolder {
         return null
     }
 
-    abstract fun <T : GameModule> register(module: T, filter: Predicate<Event>)
+    open fun <T : GameModule> register(module: T, filter: Predicate<Event>) {
+        val node = EventNode.event(module::class.simpleName.orEmpty(), EventFilter.ALL, filter)
+        node.priority = module.eventPriority
+        rootEventNode.addChild(node)
+        module.eventNode = node
+        module.initialize(this, node)
+    }
+
+    open fun unregister(module: GameModule) {
+        logger.debug("Unregistering module {}", module)
+        module.deinitialize()
+        modules.remove(module)
+        val node = module.eventNode
+        node.parent?.removeChild(node)
+    }
+
+    /**
+     * Dispatches [event] on this holder's root event node.
+     */
+    fun callEvent(event: Event) = rootEventNode.call(event)
+
+    /**
+     * Dispatches a cancellable [event], running [successCallback] if it was not cancelled.
+     */
+    fun callCancellable(event: Event, successCallback: Runnable) =
+        rootEventNode.callCancellable(event, successCallback)
 
     private fun <T : GameModule> add(
         module: T,

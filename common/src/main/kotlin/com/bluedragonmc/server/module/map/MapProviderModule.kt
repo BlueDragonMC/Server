@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.module.map
 
-import com.bluedragonmc.server.GameContext
+import com.bluedragonmc.server.*
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.service.Maps
@@ -36,7 +36,7 @@ class MapProviderModule(
     lateinit var instanceContainer: InstanceContainer
         private set
 
-    override fun initialize(parent: GameContext, eventNode: EventNode<Event>) {
+    override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>) {
         // If this world has already been loaded, use its existing InstanceContainer
         if (loadedMaps.containsKey(mapSource.id)) {
             instanceContainer = loadedMaps[mapSource.id]!!

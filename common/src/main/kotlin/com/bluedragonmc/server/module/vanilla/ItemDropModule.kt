@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.module.vanilla
 
-import com.bluedragonmc.server.GameContext
+import com.bluedragonmc.server.*
 import com.bluedragonmc.server.module.GameModule
 import net.minestom.server.coordinate.BlockVec
 import net.minestom.server.coordinate.Pos
@@ -66,9 +66,9 @@ class ItemDropModule(var dropBlocksOnBreak: Boolean = true, var dropAllOnDeath: 
         Block.COBWEB
     )
 
-    private lateinit var parent: GameContext
+    private lateinit var parent: ModuleHolder
 
-    override fun initialize(parent: GameContext, eventNode: EventNode<Event>) {
+    override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>) {
         this.parent = parent
         eventNode.addListener(ItemDropEvent::class.java) { event ->
             dropItemFromPlayer(event.itemStack, event.instance, event.player, false)

@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.event
 
-import com.bluedragonmc.server.GameContext
+import com.bluedragonmc.server.*
 import com.bluedragonmc.server.module.minigame.KitsModule
 import net.minestom.server.entity.Player
 
@@ -8,4 +8,4 @@ import net.minestom.server.entity.Player
  * This event is fired when the player confirms their kit selection.
  * If the player closes the kit selection menu, this event is not fired.
  */
-class KitSelectedEvent(game: GameContext, val player: Player, val kit: KitsModule.Kit) : GameEvent(game)
+class KitSelectedEvent(game: ModuleHolder, val player: Player, val kit: KitsModule.Kit) : GameEvent(game)

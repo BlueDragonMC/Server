@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.module.minigame
 
-import com.bluedragonmc.server.GameContext
+import com.bluedragonmc.server.*
 import com.bluedragonmc.server.event.GameEvent
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.utils.manage
@@ -21,7 +21,7 @@ import java.time.Duration
  * [See Documentation](https://developer.bluedragonmc.com/modules/timedrespawnmodule/)
  */
 class TimedRespawnModule(private val seconds: Int = 5) : GameModule() {
-    override fun initialize(parent: GameContext, eventNode: EventNode<Event>) {
+    override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>) {
         eventNode.addListener(PlayerDeathEvent::class.java) { event ->
             MinecraftServer.getSchedulerManager().buildTask {
                 if (parent.getModule<SpectatorModule>().isSpectating(event.player)) return@buildTask
@@ -45,5 +45,5 @@ class TimedRespawnModule(private val seconds: Int = 5) : GameModule() {
         }
     }
 
-    class TimedRespawnEvent(game: GameContext, val player: Player) : GameEvent(game)
+    class TimedRespawnEvent(game: ModuleHolder, val player: Player) : GameEvent(game)
 }

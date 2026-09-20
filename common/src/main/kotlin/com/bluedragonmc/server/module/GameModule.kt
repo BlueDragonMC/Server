@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.module
 
-import com.bluedragonmc.server.GameContext
+import com.bluedragonmc.server.*
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import org.slf4j.Logger
@@ -13,7 +13,7 @@ abstract class GameModule {
 
     lateinit var eventNode: EventNode<Event>
 
-    abstract fun initialize(parent: GameContext, eventNode: EventNode<Event>)
+    abstract fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>)
     open fun deinitialize() {}
 
     val logger: Logger by lazy {

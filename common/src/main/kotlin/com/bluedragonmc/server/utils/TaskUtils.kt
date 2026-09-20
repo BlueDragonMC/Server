@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.utils
 
-import com.bluedragonmc.server.GameContext
+import com.bluedragonmc.server.*
 import com.bluedragonmc.server.GameRegistry
 import com.bluedragonmc.server.event.GameEvent
 import com.bluedragonmc.server.event.GameStateChangedEvent
@@ -16,10 +16,10 @@ import java.util.function.Predicate
  * The received event must pass the [condition] to cancel the task.
  * @return The task, for method chaining
  */
-fun <T : Event> Task.cancelOn(game: GameContext, eventType: Class<out T>, condition: Predicate<T> = Predicate { true }): Task {
+fun <T : Event> Task.cancelOn(game: ModuleHolder, eventType: Class<out T>, condition: Predicate<T> = Predicate { true }): Task {
     lateinit var module: GameModule
     module = object : GameModule() {
-        override fun initialize(parent: GameContext, eventNode: EventNode<Event>) {
+        override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>) {
             eventNode.addListener(eventType) { event ->
                 if (condition.test(event)) {
                     logger.debug("Canceling task with id ${this@cancelOn.id()} because event of type ${eventType.simpleName} was triggered.")
@@ -41,7 +41,7 @@ fun <T : Event> Task.cancelOn(game: GameContext, eventType: Class<out T>, condit
  * Cancels the task when the game state is set to ENDING, a winner is declared, or game modules are uninitialized, whichever comes first.
  * @return The task, for method chaining
  */
-fun Task.manage(game: GameContext): Task = cancelOn(game, GameEvent::class.java) { event ->
+fun Task.manage(game: ModuleHolder): Task = cancelOn(game, GameEvent::class.java) { event ->
     when (event) {
         is GameStateChangedEvent -> event.newState == GameState.ENDING
         is WinModule.WinnerDeclaredEvent -> true

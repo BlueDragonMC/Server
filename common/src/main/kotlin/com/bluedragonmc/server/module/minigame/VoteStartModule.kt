@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.module.minigame
 
-import com.bluedragonmc.server.GameContext
+import com.bluedragonmc.server.*
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.event.*
 import com.bluedragonmc.server.module.GameModule
@@ -44,9 +44,9 @@ class VoteStartModule(
 
     private var votes = mutableListOf<Player>()
 
-    private lateinit var parent: GameContext
+    private lateinit var parent: ModuleHolder
 
-    override fun initialize(parent: GameContext, eventNode: EventNode<Event>) {
+    override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>) {
         this.parent = parent
         eventNode.addListener(PlayerJoinGameEvent::class.java) { event ->
             fill(event.player, voteStartItem)
@@ -79,7 +79,7 @@ class VoteStartModule(
         MinecraftServer.getSchedulerManager().buildTask {
             if (countdown != null) {
                 if (countdown!! > 0) {
-                    parent.showTitle(
+                    parent.audience.showTitle(
                         Title.title(
                             Component.text(countdown!!, BRAND_COLOR_PRIMARY_2),
                             Component.empty(),
@@ -88,7 +88,7 @@ class VoteStartModule(
                     )
                     parent.callEvent(CountdownEvent.CountdownTickEvent(parent, countdown!!))
                 } else {
-                    parent.sendTitlePart(
+                    parent.audience.sendTitlePart(
                         TitlePart.TITLE,
                         Component.translatable("module.countdown.go", NamedTextColor.GREEN)
                             .decorate(TextDecoration.BOLD)
@@ -148,7 +148,7 @@ class VoteStartModule(
 
     private fun cancelCountdown() {
         if (countdown != null) {
-            parent.showTitle(
+            parent.audience.showTitle(
                 Title.title(
                     Component.translatable("module.countdown.cancelled", NamedTextColor.RED),
                     Component.translatable("module.votestart.cancelled.subtitle", NamedTextColor.RED),

@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.module.gameplay
 
-import com.bluedragonmc.server.GameContext
+import com.bluedragonmc.server.*
 import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.utils.listen
@@ -41,9 +41,9 @@ import java.util.function.Consumer
  */
 class NPCModule : GameModule() {
 
-    private lateinit var parent: GameContext
+    private lateinit var parent: ModuleHolder
     private val npcList: MutableList<NPC> = mutableListOf()
-    override fun initialize(parent: GameContext, eventNode: EventNode<Event>) {
+    override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>) {
         this.parent = parent
         eventNode.addListener(PlayerEntityInteractEvent::class.java) { event ->
             if (System.currentTimeMillis() - (event.player as CustomPlayer).lastNPCInteractionTime > 1_000) {

@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.module.gameplay
 
-import com.bluedragonmc.server.GameContext
+import com.bluedragonmc.server.*
 import com.bluedragonmc.server.module.GameModule
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
@@ -18,7 +18,7 @@ import net.minestom.server.inventory.PlayerInventory
  * @property allowMoveItem If false, players will not be allowed to move items within their inventories.
  */
 class InventoryPermissionsModule(var allowDropItem: Boolean, var allowMoveItem: Boolean) : GameModule() {
-    override fun initialize(parent: GameContext, eventNode: EventNode<Event>) {
+    override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>) {
         eventNode.addListener(InventoryPreClickEvent::class.java) { event ->
             if (event.inventory !is PlayerInventory) return@addListener
             event.isCancelled = !allowMoveItem

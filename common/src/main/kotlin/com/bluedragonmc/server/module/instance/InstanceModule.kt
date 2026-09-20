@@ -1,6 +1,7 @@
 package com.bluedragonmc.server.module.instance
 
 import com.bluedragonmc.server.module.GameModule
+import net.minestom.server.MinecraftServer
 import net.minestom.server.entity.Player
 import net.minestom.server.instance.Instance
 
@@ -23,6 +24,17 @@ abstract class InstanceModule : GameModule() {
      * Get the instance that a player should spawn in when initially joining the game.
      */
     abstract fun getSpawningInstance(player: Player): Instance
+
+    /**
+     * Returns every instance owned by this module.
+     */
+    fun getOwnedInstances(): List<Instance> = MinecraftServer.getInstanceManager().instances.filter { ownsInstance(it) }
+
+    /**
+     * Returns the single instance owned by this module.
+     * If the module owns multiple instances, an error is thrown.
+     */
+    open fun getInstance(): Instance = getOwnedInstances().single()
 
     /**
      * Determines whether the module "owns" an instance. Modules should own an instance

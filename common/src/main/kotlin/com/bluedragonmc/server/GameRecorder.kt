@@ -56,14 +56,22 @@ class GameRecorder(private val game: Game) {
             )
         }
 
+        // Grab these variables now so that the Game can be garbage collected
+        // before the logGame call finishes running.
+        val gameId = game.id
+        val gameType = game.data.name
+        val mapName = game.data.mapSource.id
+        val mode = game.data.mode
+        val winningTeam = winningTeam
+
         Database.IO.launch {
             Database.connection.logGame(
                 GameDocument(
-                    gameId = game.id,
+                    gameId = gameId,
                     serverId = Environment.getServerName(),
-                    gameType = game.data.name,
-                    mapName = game.data.mapSource.id,
-                    mode = game.data.mode,
+                    gameType = gameType,
+                    mapName = mapName,
+                    mode = mode,
                     statistics = statHistory,
                     teams = teams,
                     winningTeam = winningTeam,

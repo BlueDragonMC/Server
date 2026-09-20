@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.module.gameplay
 
-import com.bluedragonmc.server.GameContext
+import com.bluedragonmc.server.*
 import com.bluedragonmc.server.ALT_COLOR_1
 import com.bluedragonmc.server.event.CancellablePlayerEvent
 import com.bluedragonmc.server.module.GameModule
@@ -68,7 +68,7 @@ class DoubleJumpModule(
             isOffCooldown(player) &&
             player.getTag(DOUBLE_JUMP_BLOCKERS_TAG)?.isNotEmpty() != true
 
-    override fun initialize(parent: GameContext, eventNode: EventNode<Event>) {
+    override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>) {
         eventNode.addListener(PlayerPacketOutEvent::class.java) { event ->
             if (event.packet is ChangeGameStatePacket && canDoubleJump(event.player)) {
                 event.player.isAllowFlying = true

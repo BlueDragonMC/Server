@@ -1,7 +1,7 @@
 package com.bluedragonmc.server.game
 
-import com.bluedragonmc.server.GameContext
-import com.bluedragonmc.server.ModuleHolder
+import com.bluedragonmc.server.*
+import com.bluedragonmc.server.*
 import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.SoftDependsOn
@@ -25,7 +25,7 @@ class ModuleHolderTest {
     }
 
     private open class GameModuleStub : GameModule() {
-        override fun initialize(parent: GameContext, eventNode: EventNode<Event>) {}
+        override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>) {}
     }
 
     private open class SimpleGameModule : GameModuleStub()

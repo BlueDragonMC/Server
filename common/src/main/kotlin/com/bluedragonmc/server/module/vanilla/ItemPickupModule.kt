@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.module.vanilla
 
-import com.bluedragonmc.server.GameContext
+import com.bluedragonmc.server.*
 import com.bluedragonmc.server.module.GameModule
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
@@ -14,7 +14,7 @@ import net.minestom.server.event.item.PickupItemEvent
  * [See Documentation](https://developer.bluedragonmc.com/modules/itempickupmodule/)
  */
 class ItemPickupModule : GameModule() {
-    override fun initialize(parent: GameContext, eventNode: EventNode<Event>) {
+    override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>) {
         eventNode.addListener(PickupItemEvent::class.java) { event ->
             val entity = event.entity
             if (entity !is Player) return@addListener

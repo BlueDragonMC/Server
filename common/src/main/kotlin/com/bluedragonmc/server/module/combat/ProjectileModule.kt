@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.module.combat
 
-import com.bluedragonmc.server.GameContext
+import com.bluedragonmc.server.*
 import ca.atlasengine.projectiles.entities.ArrowProjectile
 import ca.atlasengine.projectiles.entities.FireballProjectile
 import ca.atlasengine.projectiles.entities.ThrownItemProjectile
@@ -46,7 +46,7 @@ import kotlin.random.Random
 
 class ProjectileModule : GameModule() {
 
-    private lateinit var parent: GameContext
+    private lateinit var parent: ModuleHolder
 
     companion object {
         private val ARROW_POWER_TAG = Tag.Integer("entity_arrow_power").defaultValue(0) // the power enchantment level
@@ -56,7 +56,7 @@ class ProjectileModule : GameModule() {
         private val LAST_PROJECTILE_THROW_TAG = Tag.Long("last_projectile_throw_time").defaultValue(0)
     }
 
-    override fun initialize(parent: GameContext, eventNode: EventNode<Event>) {
+    override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>) {
         this.parent = parent
 
         hookBowEvents(eventNode)

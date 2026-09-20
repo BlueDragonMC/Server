@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.module.vanilla
 
-import com.bluedragonmc.server.GameContext
+import com.bluedragonmc.server.*
 import com.bluedragonmc.server.module.GameModule
 import net.kyori.adventure.sound.Sound
 import net.minestom.server.MinecraftServer
@@ -26,7 +26,7 @@ import java.time.Duration
  * @property boostElytra If enabled, using a firework rocket will increase the velocity of a player flying with elytra.
  */
 class FireworkRocketModule(private val boostElytra: Boolean = true) : GameModule() {
-    override fun initialize(parent: GameContext, eventNode: EventNode<Event>) {
+    override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>) {
         eventNode.addListener(PlayerUseItemEvent::class.java) { event ->
             // Firework particles
             if (event.itemStack.material() != Material.FIREWORK_ROCKET) return@addListener

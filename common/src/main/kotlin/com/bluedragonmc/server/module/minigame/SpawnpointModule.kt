@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.module.minigame
 
-import com.bluedragonmc.server.GameContext
+import com.bluedragonmc.server.*
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.SoftDependsOn
 import com.bluedragonmc.server.module.config.ConfigModule
@@ -22,7 +22,7 @@ import net.minestom.server.event.player.PlayerSpawnEvent
 @SoftDependsOn(ConfigModule::class, TeamModule::class)
 class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule() {
 
-    override fun initialize(parent: GameContext, eventNode: EventNode<Event>) {
+    override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>) {
         if (spawnpointProvider is TeamConfigSpawnpointProvider && !parent.hasModule<TeamModule>()) {
             error("Team module not present! TeamDatabaseSpawnpointProvider cannot determine players' teams.")
         }
@@ -43,7 +43,7 @@ class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule(
         /**
          * Called when the spawnpoint module is loaded.
          */
-        fun initialize(game: GameContext)
+        fun initialize(game: ModuleHolder)
 
         /**
          * Returns a spawnpoint for the specified player.
@@ -63,7 +63,7 @@ class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule(
         private val cachedSpawnpoints = hashMapOf<Player, Pos>()
         private val list = CircularList(listOf(*spawns))
         private var i = 0
-        override fun initialize(game: GameContext) {}
+        override fun initialize(game: ModuleHolder) {}
 
         override fun getSpawnpoint(player: Player): Pos {
             return cachedSpawnpoints.getOrPut(player) { list[i++] }
@@ -76,7 +76,7 @@ class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule(
      * Spawns all players at a single location.
      */
     class SingleSpawnpointProvider(private val spawn: Pos) : SpawnpointProvider {
-        override fun initialize(game: GameContext) {}
+        override fun initialize(game: ModuleHolder) {}
 
         override fun getSpawnpoint(player: Player): Pos {
             return spawn
@@ -95,7 +95,7 @@ class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule(
         private lateinit var spawnpoints: CircularList<Pos>
         private var n = 0
 
-        override fun initialize(game: GameContext) {
+        override fun initialize(game: ModuleHolder) {
             val config = game.getModule<ConfigModule>().getConfig()
             val spawnpointList =
                 config.node("world", "spawnpoints").getList(Pos::class.java)
@@ -149,7 +149,7 @@ class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule(
 
         private lateinit var teamModule: TeamModule
 
-        override fun initialize(game: GameContext) {
+        override fun initialize(game: ModuleHolder) {
             this.teamModule = game.getModule()
 
             val config = game.getModule<ConfigModule>().getConfig()

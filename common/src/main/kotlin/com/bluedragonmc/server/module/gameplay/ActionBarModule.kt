@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.module.gameplay
 
-import com.bluedragonmc.server.GameContext
+import com.bluedragonmc.server.*
 import com.bluedragonmc.server.module.GameModule
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.JoinConfiguration
@@ -23,7 +23,7 @@ class ActionBarModule(
     private val interval: Int = 2,
     private val separator: Component = Component.text(" | ", NamedTextColor.DARK_GRAY),
 ) : GameModule() {
-    override fun initialize(parent: GameContext, eventNode: EventNode<Event>) {
+    override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>) {
         eventNode.addListener(PlayerTickEvent::class.java) { event ->
             if (event.entity.aliveTicks % interval == 0L) {
                 val actionBar = collectActionBar(parent, event.player)
@@ -32,7 +32,7 @@ class ActionBarModule(
         }
     }
 
-    private fun collectActionBar(parent: GameContext, player: Player): Component {
+    private fun collectActionBar(parent: ModuleHolder, player: Player): Component {
         val event = CollectActionBarEvent(player)
         parent.callEvent(event)
         val items = event.getItems()

@@ -1,20 +1,17 @@
 package com.bluedragonmc.server
 
 import com.bluedragonmc.server.event.GameEvent
-import com.bluedragonmc.server.module.GameModule
 import net.minestom.server.MinecraftServer
-import net.minestom.server.event.Event
 import net.minestom.server.event.EventFilter
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.server.ServerTickMonitorEvent
 import net.minestom.server.event.trait.InstanceEvent
 import net.minestom.server.event.trait.PlayerEvent
 import org.slf4j.LoggerFactory
-import java.util.function.Predicate
 
 /**
- * The event node owned by a single [Game], along with helpers to dispatch
- * events and create per-module child nodes.
+ * The root event node owned by a single [Game], along with helpers to attach
+ * and detach it from the global event handler.
  */
 class GameEventBus(private val game: Game) {
 
@@ -36,22 +33,11 @@ class GameEventBus(private val game: Game) {
         }
     }
 
-    fun call(event: Event) = node.call(event)
-
-    fun callCancellable(event: Event, successCallback: Runnable) = node.callCancellable(event, successCallback)
-
     fun attach() {
         MinecraftServer.getGlobalEventHandler().addChild(node)
     }
 
     fun detach() {
         node.parent?.removeChild(node)
-    }
-
-    fun createChild(module: GameModule, filter: Predicate<Event>): EventNode<Event> {
-        val child = EventNode.event(module::class.simpleName.orEmpty(), EventFilter.ALL, filter)
-        child.priority = module.eventPriority
-        node.addChild(child)
-        return child
     }
 }

@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.module.database
 
-import com.bluedragonmc.server.GameContext
+import com.bluedragonmc.server.*
 import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.event.DataLoadedEvent
 import com.bluedragonmc.server.event.PlayerLeaveGameEvent
@@ -96,7 +96,7 @@ class StatisticsModule(private vararg val recorders: StatisticRecorder) : GameMo
         }
     }
 
-    override fun initialize(parent: GameContext, eventNode: EventNode<Event>) {
+    override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>) {
         mostRecentInstance = this
 
         val ingameOnlyEventNode = EventNode.event("$this-ingame", EventFilter.ALL) { event: Event -> parent.state == GameState.INGAME }
@@ -243,9 +243,9 @@ class StatisticsModule(private vararg val recorders: StatisticRecorder) : GameMo
 
     class EventStatisticRecorder<T : Event>(
         private val eventType: Class<T>,
-        val handler: suspend StatisticsModule.(GameContext, T) -> Unit,
+        val handler: suspend StatisticsModule.(ModuleHolder, T) -> Unit,
     ) : StatisticRecorder() {
-        override fun subscribe(module: StatisticsModule, game: GameContext, eventNode: EventNode<Event>) {
+        override fun subscribe(module: StatisticsModule, game: ModuleHolder, eventNode: EventNode<Event>) {
             eventNode.addListener(eventType) { event ->
                 Database.IO.launch { handler(module, game, event) }
             }
@@ -253,13 +253,13 @@ class StatisticsModule(private vararg val recorders: StatisticRecorder) : GameMo
     }
 
     class MultiStatisticRecorder(private vararg val recorders: StatisticRecorder) : StatisticRecorder() {
-        override fun subscribe(module: StatisticsModule, game: GameContext, eventNode: EventNode<Event>) {
+        override fun subscribe(module: StatisticsModule, game: ModuleHolder, eventNode: EventNode<Event>) {
             recorders.forEach { it.subscribe(module, game, eventNode) }
         }
     }
 
     abstract class StatisticRecorder {
 
-        abstract fun subscribe(module: StatisticsModule, game: GameContext, eventNode: EventNode<Event>)
+        abstract fun subscribe(module: StatisticsModule, game: ModuleHolder, eventNode: EventNode<Event>)
     }
 }

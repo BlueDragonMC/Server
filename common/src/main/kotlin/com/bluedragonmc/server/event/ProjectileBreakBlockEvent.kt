@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.event
 
-import com.bluedragonmc.server.GameContext
+import com.bluedragonmc.server.*
 import net.minestom.server.coordinate.Point
 import net.minestom.server.entity.Player
 import net.minestom.server.event.trait.PlayerInstanceEvent
@@ -8,7 +8,7 @@ import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
 
 class ProjectileBreakBlockEvent(
-    game: GameContext,
+    game: ModuleHolder,
     private val instance: Instance,
     private val shooter: Player,
     val block: Block,

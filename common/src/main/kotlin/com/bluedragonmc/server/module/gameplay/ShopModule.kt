@@ -2,7 +2,7 @@ package com.bluedragonmc.server.module.gameplay
 
 import com.bluedragonmc.server.ALT_COLOR_1
 import com.bluedragonmc.server.CustomPlayer
-import com.bluedragonmc.server.GameContext
+import com.bluedragonmc.server.*
 import com.bluedragonmc.server.event.GameEvent
 import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
@@ -33,9 +33,9 @@ import net.minestom.server.item.Material
 @DependsOn(GuiModule::class)
 class ShopModule : GameModule() {
 
-    private lateinit var parent: GameContext
+    private lateinit var parent: ModuleHolder
 
-    override fun initialize(parent: GameContext, eventNode: EventNode<Event>) {
+    override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>) {
         this.parent = parent
     }
 
@@ -212,7 +212,7 @@ class ShopModule : GameModule() {
     }
 
     sealed class ShopPurchaseEvent(
-        game: GameContext,
+        game: ModuleHolder,
         private val player: Player,
         val price: Int,
         val currency: Material
@@ -225,11 +225,11 @@ class ShopModule : GameModule() {
             this.isCancelled = cancel
         }
 
-        class Item(game: GameContext, player: Player, price: Int, currency: Material, val itemStack: ItemStack) :
+        class Item(game: ModuleHolder, player: Player, price: Int, currency: Material, val itemStack: ItemStack) :
             ShopPurchaseEvent(game, player, price, currency)
 
         class VirtualItem(
-            game: GameContext,
+            game: ModuleHolder,
             player: Player,
             price: Int,
             currency: Material,

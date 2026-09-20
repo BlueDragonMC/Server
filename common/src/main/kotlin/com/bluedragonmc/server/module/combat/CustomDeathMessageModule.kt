@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.module.combat
 
-import com.bluedragonmc.server.GameContext
+import com.bluedragonmc.server.*
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.utils.GameState
@@ -15,7 +15,7 @@ import net.minestom.server.event.player.PlayerDeathEvent
 
 class CustomDeathMessageModule : GameModule() {
 
-    override fun initialize(parent: GameContext, eventNode: EventNode<Event>) {
+    override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>) {
         eventNode.addListener(PlayerDeathEvent::class.java) { event ->
             if (parent.state != GameState.INGAME) {
                 event.chatMessage = null

@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.module.database
 
-import com.bluedragonmc.server.GameContext
+import com.bluedragonmc.server.*
 import com.bluedragonmc.server.ALT_COLOR_1
 import com.bluedragonmc.server.ALT_COLOR_2
 import com.bluedragonmc.server.CustomPlayer
@@ -31,12 +31,12 @@ import java.time.Duration
  */
 class AwardsModule : GameModule() {
 
-    private lateinit var parent: GameContext
+    private lateinit var parent: ModuleHolder
     private val postGameAwards = mutableMapOf<PlayerAwardReason, Int>()
 
     private data class PlayerAwardReason(val player: Player, val reason: Component)
 
-    override fun initialize(parent: GameContext, eventNode: EventNode<Event>) {
+    override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>) {
         this.parent = parent
 
         eventNode.addListener(PlayerLeaveGameEvent::class.java) { event ->

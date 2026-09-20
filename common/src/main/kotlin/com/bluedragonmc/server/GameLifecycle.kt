@@ -51,7 +51,14 @@ class GameLifecycle(private val game: Game) {
         val instancesToRemove = MinecraftServer.getInstanceManager().instances.filter { game.ownsInstance(it) }
 
         // the NotifyInstanceRemovedMessage is published when the MessagingModule is unregistered
-        while (game.modules.isNotEmpty()) game.unregister(game.modules.first())
+
+        // Unregister modules in reverse registration order. Provider modules (players,
+        // state, info, events) are registered first, so they need to remain available
+        // while the other modules deinitialize.
+        val modulesToUnregister = game.modules.toList().asReversed()
+        for (module in modulesToUnregister) {
+            if (game.modules.contains(module)) game.unregister(module)
+        }
 
         if (queueAllPlayers) {
             val gameType = gameType {

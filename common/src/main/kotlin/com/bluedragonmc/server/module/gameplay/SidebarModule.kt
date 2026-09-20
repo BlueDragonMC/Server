@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.module.gameplay
 
-import com.bluedragonmc.server.GameContext
+import com.bluedragonmc.server.*
 import com.bluedragonmc.server.*
 import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.event.*
@@ -32,10 +32,10 @@ import java.util.*
  */
 class SidebarModule(private val title: String) : GameModule() {
 
-    private lateinit var parent: GameContext
+    private lateinit var parent: ModuleHolder
     private val sidebars = mutableMapOf<Player, Sidebar>()
 
-    override fun initialize(parent: GameContext, eventNode: EventNode<Event>) {
+    override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>) {
         this.parent = parent
         parent.players.forEach { player ->
             sidebars[player] = createSidebar().apply { addViewer(player) }
@@ -112,7 +112,7 @@ class SidebarModule(private val title: String) : GameModule() {
 
         private companion object {
 
-            private fun getHeader(game: GameContext): Iterable<Component> {
+            private fun getHeader(game: ModuleHolder): Iterable<Component> {
                 val dateString = Calendar.getInstance().run {
                     listOf(
                         get(Calendar.MONTH) + 1,

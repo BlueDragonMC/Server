@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.impl
 
-import com.bluedragonmc.server.GameContext
+import com.bluedragonmc.server.*
 import com.bluedragonmc.server.GameRegistry
 import com.bluedragonmc.api.grpc.*
 import com.bluedragonmc.api.grpc.Map
@@ -53,9 +53,9 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
     @DependsOn(InstanceModule::class)
     class MessagingModule : GameModule() {
 
-        private lateinit var parent: GameContext
+        private lateinit var parent: ModuleHolder
 
-        override fun initialize(parent: GameContext, eventNode: EventNode<Event>): Unit = runBlocking {
+        override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>): Unit = runBlocking {
             this@MessagingModule.parent = parent
             Messaging.outgoing.initGame(parent.id, parent.data.gameType, parent.rpcGameState)
 

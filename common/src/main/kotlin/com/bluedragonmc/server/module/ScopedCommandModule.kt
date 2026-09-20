@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.module
 
-import com.bluedragonmc.server.GameContext
+import com.bluedragonmc.server.*
 import com.bluedragonmc.server.GameRegistry
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.event.PlayerJoinGameEvent
@@ -21,10 +21,10 @@ import java.lang.ref.WeakReference
  * [See Documentation](https://developer.bluedragonmc.com/modules/scopedcommandmodule/)
  */
 class ScopedCommandModule : GameModule() {
-    private lateinit var parent: GameContext
+    private lateinit var parent: ModuleHolder
 
     override fun initialize(
-        parent: GameContext,
+        parent: ModuleHolder,
         eventNode: EventNode<Event>
     ) {
         this.parent = parent
@@ -113,5 +113,5 @@ class ScopedCommandModule : GameModule() {
         private val registeredCommands: MutableMap<String, ScopedCommand> = mutableMapOf()
     }
 
-    private data class ScopedCommand(val command: Command, val games: MutableList<WeakReference<GameContext>>)
+    private data class ScopedCommand(val command: Command, val games: MutableList<WeakReference<ModuleHolder>>)
 }

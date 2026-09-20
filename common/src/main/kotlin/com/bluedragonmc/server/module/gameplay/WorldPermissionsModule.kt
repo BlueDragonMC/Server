@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.module.gameplay
 
-import com.bluedragonmc.server.GameContext
+import com.bluedragonmc.server.*
 import com.bluedragonmc.server.event.ProjectileBreakBlockEvent
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.utils.toBlockVec
@@ -37,7 +37,7 @@ class WorldPermissionsModule(
     override val eventPriority: Int
         get() = -999 // Lower numbers run first; this module needs to have priority to cancel events early
 
-    override fun initialize(parent: GameContext, eventNode: EventNode<Event>) {
+    override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>) {
         eventNode.addListener(PlayerBlockBreakEvent::class.java) { event ->
             if (exceptions.contains(event.block)) return@addListener
             event.isCancelled = !allowBlockBreak
