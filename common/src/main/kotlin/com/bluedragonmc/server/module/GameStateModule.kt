@@ -9,7 +9,7 @@ import java.time.Duration
 
 class GameStateModule(private val lifecycle: GameLifecycle) : GameModule() {
 
-    var state: GameState
+    override var state: GameState
         get() = lifecycle.state
         set(value) {
             lifecycle.state = value

@@ -1,5 +1,8 @@
 package com.bluedragonmc.server.module.minigame
 
+import com.bluedragonmc.server.module.PlayerListModule
+import com.bluedragonmc.server.module.GameStateModule
+import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.*
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.event.CountdownEvent
@@ -37,6 +40,7 @@ import java.time.Duration
  * @property countdownSeconds How long the countdown lasts, in seconds.
  */
 @SoftDependsOn(SpawnpointModule::class)
+@DependsOn(GameStateModule::class, PlayerListModule::class)
 class CountdownModule(
     private val threshold: Int,
     private val allowMoveDuringCountdown: Boolean = true,
@@ -50,10 +54,10 @@ class CountdownModule(
 
     override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>) {
         eventNode.addListener(PlayerJoinGameEvent::class.java) {
-            if (parent.state == GameState.STARTING || parent.state == GameState.INGAME || parent.state == GameState.ENDING || countdownRunning) return@addListener
-            if (threshold > 0 && parent.players.size >= threshold) {
+            if (state == GameState.STARTING || state == GameState.INGAME || state == GameState.ENDING || countdownRunning) return@addListener
+            if (threshold > 0 && players.size >= threshold) {
                 startCountdown(parent)
-                parent.state = GameState.STARTING
+                state = GameState.STARTING
             }
         }
 
@@ -67,22 +71,22 @@ class CountdownModule(
 
         eventNode.addListener(RemoveEntityFromInstanceEvent::class.java) { event ->
             if (event.entity !is Player) return@addListener
-            if (threshold > 0 && countdownRunning && parent.players.size < threshold) {
+            if (threshold > 0 && countdownRunning && players.size < threshold) {
                 // Stop the countdown
                 cancelCountdown()
-                parent.audience.showTitle(
+                audience.showTitle(
                     Title.title(
                         Component.translatable("module.countdown.cancelled", NamedTextColor.RED),
                         Component.translatable(
                             "module.countdown.cancelled.subtitle",
                             NamedTextColor.RED,
-                            Component.text(parent.players.size),
+                            Component.text(players.size),
                             Component.text(threshold)
                         ),
                         Title.Times.times(Duration.ZERO, Duration.ofSeconds(5), Duration.ofSeconds(1))
                     )
                 )
-                parent.state = GameState.WAITING
+                state = GameState.WAITING
             }
         }
         eventNode.addListener(PlayerMoveEvent::class.java) { event ->
@@ -99,8 +103,8 @@ class CountdownModule(
 
         eventNode.addListener(GameStartEvent::class.java) {
             cancelCountdown()
-            parent.state = GameState.INGAME
-            parent.players.forEach { player ->
+            state = GameState.INGAME
+            players.forEach { player ->
                 player.synchronizeNextTick()
             }
         }
@@ -119,7 +123,7 @@ class CountdownModule(
                     return@addListener
                 }
                 if (seconds > 0) {
-                    parent.audience.showTitle(
+                    audience.showTitle(
                         Title.title(
                             Component.text(seconds, BRAND_COLOR_PRIMARY_2),
                             Component.empty(),
@@ -129,7 +133,7 @@ class CountdownModule(
                     parent.callEvent(CountdownEvent.CountdownTickEvent(parent, secondsLeft!!))
                     secondsLeft = secondsLeft!! - 1
                 } else {
-                    parent.audience.sendTitlePart(
+                    audience.sendTitlePart(
                         TitlePart.TITLE,
                         Component.translatable("module.countdown.go", NamedTextColor.GREEN)
                             .decorate(TextDecoration.BOLD)
@@ -143,7 +147,7 @@ class CountdownModule(
     private fun startCountdown(parent: ModuleHolder) {
         cancelCountdown()
         parent.callEvent(CountdownEvent.CountdownStartEvent(parent))
-        if (!allowMoveDuringCountdown) parent.players.filter { it.isActive }.forEach { it.teleport(it.respawnPoint) }
+        if (!allowMoveDuringCountdown) players.filter { it.isActive }.forEach { it.teleport(it.respawnPoint) }
         secondsLeft = countdownSeconds
         countdownRunning = true
     }

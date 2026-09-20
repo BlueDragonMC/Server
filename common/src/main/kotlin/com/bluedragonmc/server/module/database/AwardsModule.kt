@@ -1,4 +1,8 @@
 package com.bluedragonmc.server.module.database
+import com.bluedragonmc.server.module.PlayerListModule
+import com.bluedragonmc.server.module.GameStateModule
+import com.bluedragonmc.server.module.GameInfoModule
+import com.bluedragonmc.server.module.DependsOn
 
 import com.bluedragonmc.server.*
 import com.bluedragonmc.server.ALT_COLOR_1
@@ -29,6 +33,7 @@ import java.time.Duration
  *
  * [See Documentation](https://developer.bluedragonmc.com/modules/awardsmodule/)
  */
+@DependsOn(GameInfoModule::class, GameStateModule::class, PlayerListModule::class)
 class AwardsModule : GameModule() {
 
     private lateinit var parent: ModuleHolder
@@ -48,7 +53,7 @@ class AwardsModule : GameModule() {
         }
 
         eventNode.addListener(WinModule.WinnerDeclaredEvent::class.java) { _ ->
-            parent.players.forEach { player ->
+            players.forEach { player ->
                 distributePostGameAwards(player)
             }
         }
@@ -63,7 +68,7 @@ class AwardsModule : GameModule() {
      * Distributes the specified award when the game ends or the player is eliminated (they leave or become a spectator).
      */
     fun awardCoinsAfterGame(player: Player, amount: Int, reason: Component) {
-        if (parent.state == GameState.ENDING) {
+        if (state == GameState.ENDING) {
             awardCoins(player, amount, reason)
             return
         }
@@ -100,7 +105,7 @@ class AwardsModule : GameModule() {
                     .delay(Duration.ofSeconds(2)).schedule()
         }
         Database.IO.launch {
-            Messaging.outgoing.recordCoinAward(player.uuid, amount, parent.id)
+            Messaging.outgoing.recordCoinAward(player.uuid, amount, id)
         }
     }
 

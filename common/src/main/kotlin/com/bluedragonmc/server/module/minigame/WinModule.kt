@@ -1,14 +1,11 @@
 package com.bluedragonmc.server.module.minigame
 
-import com.bluedragonmc.server.*
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_3
+import com.bluedragonmc.server.ModuleHolder
 import com.bluedragonmc.server.event.GameEvent
-import com.bluedragonmc.server.module.DependsOn
-import com.bluedragonmc.server.module.GameModule
-import com.bluedragonmc.server.module.GlobalCosmeticModule
-import com.bluedragonmc.server.module.SoftDependsOn
+import com.bluedragonmc.server.module.*
 import com.bluedragonmc.server.utils.CircularList
 import com.bluedragonmc.server.utils.FireworkUtils
 import com.bluedragonmc.server.utils.GameState
@@ -31,7 +28,7 @@ import java.time.Duration
  *
  * [See Documentation](https://developer.bluedragonmc.com/modules/winmodule/)
  */
-@DependsOn(SpawnpointModule::class)
+@DependsOn(SpawnpointModule::class, GameStateModule::class, PlayerListModule::class)
 @SoftDependsOn(SpectatorModule::class, TeamModule::class, GlobalCosmeticModule::class)
 class WinModule(
     val winCondition: WinCondition = WinCondition.MANUAL,
@@ -43,7 +40,7 @@ class WinModule(
     override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>) {
         this.parent = parent
         eventNode.addListener(SpectatorModule.StartSpectatingEvent::class.java) {
-            if (winCondition == WinCondition.MANUAL || parent.state != GameState.INGAME) return@addListener
+            if (winCondition == WinCondition.MANUAL || state != GameState.INGAME) return@addListener
             val spectatorModule =
                 getModule<SpectatorModule>() // This module is required for all the win conditions
             if (winCondition == WinCondition.LAST_TEAM_ALIVE) {
@@ -52,10 +49,10 @@ class WinModule(
                 }
                 when (remainingTeams.size) {
                     1 -> declareWinner(remainingTeams.first())
-                    0 -> parent.endGameLater(Duration.ofSeconds(3)) // Should never happen outside of testing
+                    0 -> getModule<GameStateModule>().endGameLater(Duration.ofSeconds(3)) // Should never happen outside of testing
                 }
-            } else if (winCondition == WinCondition.LAST_PLAYER_ALIVE && parent.players.size - spectatorModule.spectatorCount() <= 1) {
-                parent.players.firstOrNull { player -> !spectatorModule.isSpectating(player) }
+            } else if (winCondition == WinCondition.LAST_PLAYER_ALIVE && players.size - spectatorModule.spectatorCount() <= 1) {
+                players.firstOrNull { player -> !spectatorModule.isSpectating(player) }
                     ?.let { declareWinner(it) }
             }
         }
@@ -70,13 +67,13 @@ class WinModule(
         MinecraftServer.getGlobalEventHandler().callCancellable(WinnerDeclaredEvent(parent, winningTeamName, winningTeamPlayers)) {
             isWinnerDeclared = true
             // Normal message
-            parent.players.forEach {
+            players.forEach {
                 it.sendMessage(
                     Component.translatable("module.win.team_won", BRAND_COLOR_PRIMARY_2, winningTeamName)
                         .surroundWithSeparators()
                 )
             }
-            for (p in parent.players) {
+            for (p in players) {
                 if (winningTeamPlayers.contains(p)) {
                     p.showTitle(
                         Title.title(
@@ -95,7 +92,7 @@ class WinModule(
                     )
                 )
             }
-            parent.endGameLater(Duration.ofSeconds(5))
+            getModule<GameStateModule>().endGameLater(Duration.ofSeconds(5))
         }
     }
 

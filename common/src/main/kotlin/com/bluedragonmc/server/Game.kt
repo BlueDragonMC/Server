@@ -1,7 +1,5 @@
 package com.bluedragonmc.server
 
-import com.bluedragonmc.api.grpc.CommonTypes
-import com.bluedragonmc.api.grpc.gameState
 import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.game.GameData
 import com.bluedragonmc.server.module.GameInfoModule
@@ -20,21 +18,12 @@ import net.minestom.server.event.player.PlayerDisconnectEvent
 import net.minestom.server.instance.Instance
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.time.Duration
 import java.util.concurrent.CompletableFuture
 import java.util.function.Consumer
 import kotlin.random.Random
 import kotlin.reflect.jvm.jvmName
 
 abstract class Game(final val data: GameData) : ModuleHolder(), PacketGroupingAudience {
-
-    val rpcGameState: CommonTypes.GameState
-        get() = gameState {
-            gameState = state.mapToRpcState()
-            openSlots = maxPlayers - players.size
-            joinable = state.canPlayersJoin
-            maxSlots = maxPlayers
-        }
 
     internal val roster = PlayerManager(this)
     val players: List<Player> get() = roster.players
@@ -130,8 +119,6 @@ abstract class Game(final val data: GameData) : ModuleHolder(), PacketGroupingAu
         roster.add(player, sendPlayer)
 
     override fun getPlayers(): Collection<Player> = roster.players
-
-    fun endGameLater(delay: Duration) = lifecycle.endLater(delay)
 
     fun endGame(queueAllPlayers: Boolean = true) = lifecycle.end(queueAllPlayers)
 

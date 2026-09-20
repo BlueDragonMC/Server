@@ -7,7 +7,11 @@ import com.bluedragonmc.server.event.PlayerLeaveGameEvent
 import com.bluedragonmc.server.model.PlayerDocument
 import com.bluedragonmc.server.model.PlayerRecord
 import com.bluedragonmc.server.model.StatisticRecord
+import com.bluedragonmc.server.module.DependsOn
+import com.bluedragonmc.server.module.GameInfoModule
 import com.bluedragonmc.server.module.GameModule
+import com.bluedragonmc.server.module.GameStateModule
+import com.bluedragonmc.server.module.PlayerListModule
 import com.bluedragonmc.server.module.minigame.WinModule
 import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.utils.GameState
@@ -37,6 +41,7 @@ import java.util.function.Predicate
  *
  * [See Documentation](https://developer.bluedragonmc.com/modules/statisticsmodule/)
  */
+@DependsOn(PlayerListModule::class, GameStateModule::class, GameInfoModule::class)
 class StatisticsModule(private vararg val recorders: StatisticRecorder) : GameModule() {
 
     companion object {
@@ -99,11 +104,11 @@ class StatisticsModule(private vararg val recorders: StatisticRecorder) : GameMo
     override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>) {
         mostRecentInstance = this
 
-        val ingameOnlyEventNode = EventNode.event("$this-ingame", EventFilter.ALL) { event: Event -> parent.state == GameState.INGAME }
+        val ingameOnlyEventNode = EventNode.event("$this-ingame", EventFilter.ALL) { event: Event -> state == GameState.INGAME }
         eventNode.addChild(ingameOnlyEventNode)
 
         recorders.forEach {
-            it.subscribe(this, parent, ingameOnlyEventNode)
+            it.subscribe(this, ingameOnlyEventNode)
         }
 
         eventNode.addListener(PlayerLeaveGameEvent::class.java) { event ->
@@ -112,7 +117,7 @@ class StatisticsModule(private vararg val recorders: StatisticRecorder) : GameMo
             }
         }
         eventNode.addListener(WinModule.WinnerDeclaredEvent::class.java) { event ->
-            event.game.players.forEach { player ->
+            players.forEach { player ->
                 Database.IO.launch {
                     commit(player)
                 }
@@ -243,23 +248,23 @@ class StatisticsModule(private vararg val recorders: StatisticRecorder) : GameMo
 
     class EventStatisticRecorder<T : Event>(
         private val eventType: Class<T>,
-        val handler: suspend StatisticsModule.(ModuleHolder, T) -> Unit,
+        val handler: suspend StatisticsModule.(T) -> Unit,
     ) : StatisticRecorder() {
-        override fun subscribe(module: StatisticsModule, game: ModuleHolder, eventNode: EventNode<Event>) {
+        override fun subscribe(module: StatisticsModule, eventNode: EventNode<Event>) {
             eventNode.addListener(eventType) { event ->
-                Database.IO.launch { handler(module, game, event) }
+                Database.IO.launch { module.handler(event) }
             }
         }
     }
 
     class MultiStatisticRecorder(private vararg val recorders: StatisticRecorder) : StatisticRecorder() {
-        override fun subscribe(module: StatisticsModule, game: ModuleHolder, eventNode: EventNode<Event>) {
-            recorders.forEach { it.subscribe(module, game, eventNode) }
+        override fun subscribe(module: StatisticsModule, eventNode: EventNode<Event>) {
+            recorders.forEach { it.subscribe(module, eventNode) }
         }
     }
 
     abstract class StatisticRecorder {
 
-        abstract fun subscribe(module: StatisticsModule, game: ModuleHolder, eventNode: EventNode<Event>)
+        abstract fun subscribe(module: StatisticsModule, eventNode: EventNode<Event>)
     }
 }

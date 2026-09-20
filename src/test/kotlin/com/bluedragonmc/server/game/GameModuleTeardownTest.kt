@@ -5,8 +5,9 @@ import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.ModuleHolder
 import com.bluedragonmc.server.api.DatabaseConnectionStub
 import com.bluedragonmc.server.api.OutgoingRPCHandlerStub
+import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
-import com.bluedragonmc.server.players
+import com.bluedragonmc.server.module.PlayerListModule
 import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.service.Maps
 import com.bluedragonmc.server.service.Messaging
@@ -21,16 +22,14 @@ import kotlin.test.assertNotNull
 @EnvTest
 class GameModuleTeardownTest {
 
+    @DependsOn(PlayerListModule::class)
     private class ProviderUsingModule : GameModule() {
-        private lateinit var parent: ModuleHolder
         var playersAtTeardown: List<Player>? = null
 
-        override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>) {
-            this.parent = parent
-        }
+        override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>) {}
 
         override fun deinitialize() {
-            playersAtTeardown = parent.players
+            playersAtTeardown = players
         }
     }
 

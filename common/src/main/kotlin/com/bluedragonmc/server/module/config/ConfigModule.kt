@@ -1,4 +1,6 @@
 package com.bluedragonmc.server.module.config
+import com.bluedragonmc.server.module.GameInfoModule
+import com.bluedragonmc.server.module.DependsOn
 
 import com.bluedragonmc.server.*
 import com.bluedragonmc.server.module.GameModule
@@ -38,6 +40,7 @@ import kotlin.io.path.exists
  * @property mapSource [Maps.MapSource] containing map-specific configuration to load.
  * If not specified, the game's map source will be used.
  */
+@DependsOn(GameInfoModule::class)
 class ConfigModule(private val configFileName: String? = null, private val mapSource: Maps.MapSource? = null) : GameModule() {
 
     private lateinit var parent: ModuleHolder
@@ -54,7 +57,7 @@ class ConfigModule(private val configFileName: String? = null, private val mapSo
 
     override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>) {
         this.parent = parent
-        resolvedMapSource = mapSource ?: parent.data.mapSource
+        resolvedMapSource = mapSource ?: data.mapSource
         initialized = true
     }
 

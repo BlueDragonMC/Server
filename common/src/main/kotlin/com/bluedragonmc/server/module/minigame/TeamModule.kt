@@ -1,5 +1,7 @@
 package com.bluedragonmc.server.module.minigame
 
+import com.bluedragonmc.server.module.PlayerListModule
+import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.*
 import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.event.GameStartEvent
@@ -31,6 +33,7 @@ import java.util.concurrent.CopyOnWriteArraySet
  *
  * [See Documentation](https://developer.bluedragonmc.com/modules/teammodule/)
  */
+@DependsOn(PlayerListModule::class)
 class TeamModule(
     private val autoTeams: Boolean = false,
     private val autoTeamMode: AutoTeamMode = AutoTeamMode.PLAYER_COUNT,
@@ -45,24 +48,24 @@ class TeamModule(
         eventNode.addListener(GameStartEvent::class.java) {
             // Auto team system
             if (autoTeams) {
-                logger.debug("Splitting ${parent.players.size} players into teams using strategy $autoTeamMode")
+                logger.debug("Splitting ${players.size} players into teams using strategy $autoTeamMode")
                 when (autoTeamMode) {
                     AutoTeamMode.PLAYER_COUNT -> {
                         var teamNumber = 0
-                        parent.players.chunked(autoTeamCount) { players ->
+                        players.chunked(autoTeamCount) { teamPlayers ->
                             val team = addTeam(teamNumToName(teamNumber++), allowFriendlyFire)
-                            players.forEach { player -> team.addPlayer(player) }
+                            teamPlayers.forEach { player -> team.addPlayer(player) }
                         }
                         logger.info("Created ${_teams.size} teams with $autoTeamCount players per team.")
                     }
 
                     AutoTeamMode.TEAM_COUNT -> {
                         val teamCount = autoTeamCount
-                        val playersPerTeam = (parent.players.size / teamCount).coerceAtLeast(1)
+                        val playersPerTeam = (players.size / teamCount).coerceAtLeast(1)
                         // The players per team is rounded, so some teams might have to be larger than the optimal
                         // amount of players per team. For example, if there are 10 players and 3 teams, there must
                         // be one team with 4 players instead of 3 in order to keep the number of teams constant.
-                        var compensation = parent.players.size - playersPerTeam * teamCount
+                        var compensation = players.size - playersPerTeam * teamCount
                         var rollingIndex = 0
                         for (i in 0 until teamCount) {
                             val startIndex = rollingIndex // Start at the current index
@@ -71,10 +74,10 @@ class TeamModule(
                                 rollingIndex++ // If we need to compensate, add another player to this team
                                 compensation-- // Decrement the number of players we have to compensate for
                             }
-                            rollingIndex = rollingIndex.coerceAtMost(parent.players.size)
-                            val players = parent.players.subList(startIndex, rollingIndex)
+                            rollingIndex = rollingIndex.coerceAtMost(players.size)
+                            val teamPlayers = players.subList(startIndex, rollingIndex)
                             val team = addTeam(teamNumToName(i), allowFriendlyFire)
-                            players.forEach { player -> team.addPlayer(player) }
+                            teamPlayers.forEach { player -> team.addPlayer(player) }
                         }
                         logger.info("Created ${_teams.size} teams with $playersPerTeam players per team.")
                     }

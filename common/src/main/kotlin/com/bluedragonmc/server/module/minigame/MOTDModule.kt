@@ -1,5 +1,7 @@
 package com.bluedragonmc.server.module.minigame
 
+import com.bluedragonmc.server.module.GameInfoModule
+import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.*
@@ -24,6 +26,7 @@ import net.minestom.server.event.EventNode
  * [See Documentation](https://developer.bluedragonmc.com/modules/motdmodule/)
  */
 @SoftDependsOn(ConfigModule::class)
+@DependsOn(GameInfoModule::class)
 class MOTDModule(private val motd: Component, private var showMapName: Boolean = true) : GameModule() {
 
     override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>) {
@@ -41,7 +44,7 @@ class MOTDModule(private val motd: Component, private var showMapName: Boolean =
             event.player.sendMessage(
                 buildComponent {
                     // Game name
-                    +Component.text(parent.data.name, BRAND_COLOR_PRIMARY_1, TextDecoration.BOLD)
+                    +Component.text(data.name, BRAND_COLOR_PRIMARY_1, TextDecoration.BOLD)
                     +Component.newline()
                     +buildComponent {
                         // MOTD

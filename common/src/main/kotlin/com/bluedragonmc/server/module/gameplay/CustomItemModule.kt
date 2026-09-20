@@ -1,5 +1,7 @@
 package com.bluedragonmc.server.module.gameplay
 
+import com.bluedragonmc.server.module.GameInfoModule
+import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.*
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
@@ -40,6 +42,7 @@ import java.time.Duration
  *
  * @property items Vararg [CustomItem] that defines all items recognized by this module.
  */
+@DependsOn(GameInfoModule::class)
 class CustomItemModule(vararg val items: CustomItem) : GameModule() {
 
     companion object {
@@ -103,7 +106,7 @@ class CustomItemModule(vararg val items: CustomItem) : GameModule() {
     fun registerItem(item: CustomItem) {
         cooldownPlayers[item] = mutableMapOf()
 
-        val itemEventNode = EventNode.event("custom-item-${parent.id}-${item.uid}", EventFilter.ITEM) { event ->
+        val itemEventNode = EventNode.event("custom-item-${id}-${item.uid}", EventFilter.ITEM) { event ->
             getCustomItemId(event.itemStack) == item.uid
         }
 

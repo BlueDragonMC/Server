@@ -1,6 +1,5 @@
 package com.bluedragonmc.server.module
 
-import com.bluedragonmc.api.grpc.CommonTypes
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.*
 import com.bluedragonmc.server.game.GameData
@@ -12,14 +11,15 @@ import net.minestom.server.event.EventNode
  */
 class GameInfoModule(private val game: Game) : GameModule() {
 
-    val id: String
+    override val id: String
         get() = game.id
 
-    val data: GameData
+    override val data: GameData
         get() = game.data
 
-    val rpcGameState: CommonTypes.GameState
-        get() = game.rpcGameState
+    /** The maximum number of players allowed in this game. */
+    val maxPlayers: Int
+        get() = game.maxPlayers
 
     override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>) {}
 }

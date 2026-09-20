@@ -1,5 +1,6 @@
 package com.bluedragonmc.server.module.minigame
 
+import com.bluedragonmc.server.module.PlayerListModule
 import com.bluedragonmc.server.*
 import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.event.KitSelectedEvent
@@ -37,7 +38,7 @@ import net.minestom.server.item.Material
  * @property giveKitsOnSelect If `true`, players will be given their kits as soon as they select them.
  * @property selectableKits A list of [Kit]s that players can choose from.
  */
-@DependsOn(GuiModule::class)
+@DependsOn(GuiModule::class, PlayerListModule::class)
 open class KitsModule(
     val showMenu: Boolean = false,
     val forceSelection: Boolean = false,
@@ -58,7 +59,7 @@ open class KitsModule(
             }
         }
         eventNode.addListener(GameStartEvent::class.java) {
-            if (giveKitsOnStart) for (player in parent.players) giveKit(player)
+            if (giveKitsOnStart) for (player in players) giveKit(player)
         }
 
         if (forceSelection) {

@@ -1,10 +1,9 @@
 package com.bluedragonmc.server.module.gameplay
 
 import com.bluedragonmc.server.*
-import com.bluedragonmc.server.*
 import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.event.*
-import com.bluedragonmc.server.module.GameModule
+import com.bluedragonmc.server.module.*
 import com.bluedragonmc.server.utils.GameState
 import com.bluedragonmc.server.utils.withGradient
 import kotlinx.coroutines.runBlocking
@@ -30,6 +29,7 @@ import java.util.*
  *
  * [See Documentation](https://developer.bluedragonmc.com/modules/sidebarmodule/)
  */
+@DependsOn(GameInfoModule::class, GameStateModule::class, PlayerListModule::class)
 class SidebarModule(private val title: String) : GameModule() {
 
     private lateinit var parent: ModuleHolder
@@ -37,7 +37,7 @@ class SidebarModule(private val title: String) : GameModule() {
 
     override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>) {
         this.parent = parent
-        parent.players.forEach { player ->
+        players.forEach { player ->
             sidebars[player] = createSidebar().apply { addViewer(player) }
             if (::binding.isInitialized)
                 binding.updateFor(player)
@@ -81,7 +81,7 @@ class SidebarModule(private val title: String) : GameModule() {
 
             fun getSpacer() = text(" ".repeat(spaces++))
 
-            fun getStatusSection(): Collection<Component> = when (module.parent.state) {
+            fun getStatusSection(): Collection<Component> = when (module.state) {
                 GameState.SERVER_STARTING -> listOf(
                     getSpacer(),
                     Component.translatable("module.sidebar.server_starting", BRAND_COLOR_PRIMARY_2),
@@ -105,14 +105,14 @@ class SidebarModule(private val title: String) : GameModule() {
         }
 
         fun update() {
-            module.parent.players.forEach { player ->
+            module.players.forEach { player ->
                 updateFor(player)
             }
         }
 
         private companion object {
 
-            private fun getHeader(game: ModuleHolder): Iterable<Component> {
+            private fun getHeader(module: SidebarModule): Iterable<Component> {
                 val dateString = Calendar.getInstance().run {
                     listOf(
                         get(Calendar.MONTH) + 1,
@@ -121,7 +121,7 @@ class SidebarModule(private val title: String) : GameModule() {
                     ).joinToString("/")
                 }
                 val serverId = runBlocking { Environment.getServerName().substringAfter("-") }
-                return setOf(text("$dateString · $serverId · ${game.id}", DARK_GRAY))
+                return setOf(text("$dateString · $serverId · ${module.id}", DARK_GRAY))
             }
 
             private fun getFooter(player: Player): Iterable<Component> {
@@ -138,7 +138,7 @@ class SidebarModule(private val title: String) : GameModule() {
         }
 
         internal fun updateFor(player: Player) {
-            val lines = getHeader(module.parent) + updateFunction(ScoreboardBindingUtils(), player) + getFooter(player)
+            val lines = getHeader(module) + updateFunction(ScoreboardBindingUtils(), player) + getFooter(player)
             val old = module.sidebars[player] ?: module.createSidebar()
 
             if (old.lines.size == lines.size) {

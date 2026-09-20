@@ -1,5 +1,8 @@
 package com.bluedragonmc.server.module.minigame
 
+import com.bluedragonmc.server.module.PlayerListModule
+import com.bluedragonmc.server.module.GameStateModule
+import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.*
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.event.*
@@ -28,6 +31,7 @@ import java.time.Duration
  *
  * [See Documentation](https://developer.bluedragonmc.com/modules/votestartmodule/)
  */
+@DependsOn(GameStateModule::class, PlayerListModule::class)
 class VoteStartModule(
     private val minPlayers: Int = 2,
     private val countdownSeconds: Int = 5,
@@ -79,7 +83,7 @@ class VoteStartModule(
         MinecraftServer.getSchedulerManager().buildTask {
             if (countdown != null) {
                 if (countdown!! > 0) {
-                    parent.audience.showTitle(
+                    audience.showTitle(
                         Title.title(
                             Component.text(countdown!!, BRAND_COLOR_PRIMARY_2),
                             Component.empty(),
@@ -88,7 +92,7 @@ class VoteStartModule(
                     )
                     parent.callEvent(CountdownEvent.CountdownTickEvent(parent, countdown!!))
                 } else {
-                    parent.audience.sendTitlePart(
+                    audience.sendTitlePart(
                         TitlePart.TITLE,
                         Component.translatable("module.countdown.go", NamedTextColor.GREEN)
                             .decorate(TextDecoration.BOLD)
@@ -97,7 +101,7 @@ class VoteStartModule(
                     cancelCountdown()
                     clearPlayerInventories()
                     parent.callEvent(GameStartEvent(parent))
-                    parent.state = GameState.INGAME
+                    state = GameState.INGAME
                     votes.clear()
                 }
 
@@ -118,7 +122,7 @@ class VoteStartModule(
     }
 
     private fun clearPlayerInventories() {
-        for (player in parent.players) {
+        for (player in players) {
             for ((index, stack) in player.inventory.itemStacks.withIndex()) {
                 if (stack == voteStartItem || stack == cancelVoteItem) {
                     player.inventory.setItemStack(index, ItemStack.AIR)
@@ -130,7 +134,7 @@ class VoteStartModule(
     private var countdown: Int? = null
 
     private fun update() {
-        if (parent.players.size >= minPlayers && votes.size >= parent.players.size / 2f) {
+        if (players.size >= minPlayers && votes.size >= players.size / 2f) {
             startCountdown()
         } else if (countdown != null) {
             cancelCountdown()
@@ -142,13 +146,13 @@ class VoteStartModule(
             if (countdown == null) {
                 countdown = countdownSeconds
             }
-            parent.state = GameState.STARTING
+            state = GameState.STARTING
         }
     }
 
     private fun cancelCountdown() {
         if (countdown != null) {
-            parent.audience.showTitle(
+            audience.showTitle(
                 Title.title(
                     Component.translatable("module.countdown.cancelled", NamedTextColor.RED),
                     Component.translatable("module.votestart.cancelled.subtitle", NamedTextColor.RED),
@@ -157,8 +161,8 @@ class VoteStartModule(
             )
         }
         countdown = null
-        if (parent.state == GameState.STARTING) {
-            parent.state = GameState.WAITING
+        if (state == GameState.STARTING) {
+            state = GameState.WAITING
         }
     }
 

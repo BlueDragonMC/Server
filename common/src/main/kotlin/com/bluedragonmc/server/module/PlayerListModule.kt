@@ -11,7 +11,7 @@ import net.minestom.server.event.EventNode
  */
 class PlayerListModule(private val provider: () -> List<Player>) : GameModule(), PacketGroupingAudience {
 
-    val players: List<Player>
+    override val players: List<Player>
         get() = provider()
 
     override fun getPlayers(): Collection<Player> = players

@@ -1,5 +1,8 @@
 package com.bluedragonmc.server.module.minigame
 
+import com.bluedragonmc.server.module.PlayerListModule
+import com.bluedragonmc.server.module.GameStateModule
+import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.*
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.CustomPlayer
@@ -24,6 +27,7 @@ import net.minestom.server.event.player.PlayerDeathEvent
  * [See Documentation](https://developer.bluedragonmc.com/modules/spectatormodule/)
  */
 @SoftDependsOn(TeamModule::class, PlayerResetModule::class)
+@DependsOn(GameStateModule::class, PlayerListModule::class)
 class SpectatorModule(var spectateOnDeath: Boolean, var spectateOnLeave: Boolean = true) : GameModule() {
     private val spectators = mutableListOf<Player>()
     private lateinit var parent: ModuleHolder
@@ -31,7 +35,7 @@ class SpectatorModule(var spectateOnDeath: Boolean, var spectateOnLeave: Boolean
     override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>) {
         this.parent = parent
         eventNode.addListener(PlayerDeathEvent::class.java) { event ->
-            if (parent.state == GameState.INGAME && spectateOnDeath && !isSpectating(event.player)) addSpectator(event.player)
+            if (state == GameState.INGAME && spectateOnDeath && !isSpectating(event.player)) addSpectator(event.player)
         }
         eventNode.addListener(EntityAttackEvent::class.java) { event ->
             if (event.entity is Player) {
@@ -43,15 +47,15 @@ class SpectatorModule(var spectateOnDeath: Boolean, var spectateOnLeave: Boolean
         }
 
         eventNode.addListener(PlayerLeaveGameEvent::class.java) { event ->
-            if (spectateOnLeave && parent.state == GameState.INGAME) {
-                parent.players.forEach { it.sendMessage(Component.translatable("module.spectator.disconnect", BRAND_COLOR_PRIMARY_2, event.player.name)) }
+            if (spectateOnLeave && state == GameState.INGAME) {
+                players.forEach { it.sendMessage(Component.translatable("module.spectator.disconnect", BRAND_COLOR_PRIMARY_2, event.player.name)) }
                 addSpectator(event.player, updateDisplayName = false)
             }
         }
     }
 
     override fun deinitialize() {
-        parent.players.forEach(::removeSpectator)
+        players.forEach(::removeSpectator)
     }
 
     /**

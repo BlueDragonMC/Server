@@ -54,7 +54,7 @@ class IncomingRPCHandlerImpl(serverPort: Int) : IncomingRPCHandler {
                 logger.error("Failed to create instance from request: $request")
                 it.printStackTrace()
             }.getOrElse { null }
-            val state = game?.rpcGameState ?: gameState {
+            val state = game?.let { it.state.toRpcGameState(it.players.size, it.maxPlayers) } ?: gameState {
                 gameState = CommonTypes.EnumGameState.ERROR
                 joinable = false
                 openSlots = 0
@@ -106,7 +106,7 @@ class IncomingRPCHandlerImpl(serverPort: Int) : IncomingRPCHandler {
             return getInstancesResponse {
                 GameRegistry.games.forEach { game ->
                     instances += GetInstancesResponseKt.runningInstance {
-                        this.gameState = game.rpcGameState
+                        this.gameState = game.state.toRpcGameState(game.players.size, game.maxPlayers)
                         this.instanceUuid = game.id
                         this.gameType = game.data.gameType
                         game.getPlayers().forEach { player ->

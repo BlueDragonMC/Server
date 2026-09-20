@@ -35,7 +35,24 @@ open class ModuleHolder {
     /**
      * A list of modules that have been loaded and subscribed to an event node.
      */
-    val modules: MutableList<GameModule> = CopyOnWriteArrayList()
+    @PublishedApi
+    internal val modules: MutableList<GameModule> = CopyOnWriteArrayList()
+
+    /**
+     * The simple names of every loaded module, in registration order.
+     */
+    fun getModuleNames(): List<String> = modules.map { it::class.simpleName.orEmpty() }
+
+    /**
+     * Unregisters the first loaded module whose simple class name matches [name].
+     *
+     * @return `true` if a module was found and unregistered.
+     */
+    fun unregisterModule(name: String): Boolean {
+        val module = modules.firstOrNull { it::class.simpleName == name } ?: return false
+        unregister(module)
+        return true
+    }
 
     private fun <T : GameModule> hasModule(type: KClass<T>): Boolean = modules.any { type.isInstance(it) }
     inline fun <reified T : GameModule> hasModule(): Boolean = modules.any { it is T }

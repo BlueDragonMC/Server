@@ -107,12 +107,10 @@ class GameCommand(name: String, usageString: String, vararg aliases: String?) : 
     subcommand("module") {
         subcommand("list") {
             syntax {
-                sender.sendMessage(formatMessageTranslated("command.game.module.list", game.modules.size))
-                for (module in game.modules) {
-                    sender.sendMessage(
-                        text(module.javaClass.simpleName, BRAND_COLOR_PRIMARY_1)
-                            .hoverEvent(HoverEvent.showText(module.toString() withColor NamedTextColor.GRAY))
-                    )
+                val moduleNames = game.getModuleNames()
+                sender.sendMessage(formatMessageTranslated("command.game.module.list", moduleNames.size))
+                for (moduleName in moduleNames) {
+                    sender.sendMessage(text(moduleName, BRAND_COLOR_PRIMARY_1))
                 }
             }.requireInGame()
         }
@@ -120,14 +118,11 @@ class GameCommand(name: String, usageString: String, vararg aliases: String?) : 
             val moduleArgument by WordArgument
             syntax(moduleArgument) {
                 val modToRemove = get(moduleArgument)
-                for (module in game.modules) {
-                    if (module.javaClass.simpleName == modToRemove) {
-                        game.unregister(module)
-                        sender.sendMessage(formatMessageTranslated("command.game.module.unloaded", module.javaClass.simpleName))
-                        return@syntax
-                    }
+                if (game.unregisterModule(modToRemove)) {
+                    sender.sendMessage(formatMessageTranslated("command.game.module.unloaded", modToRemove))
+                } else {
+                    sender.sendMessage(formatErrorTranslated("command.game.module.not_found"))
                 }
-                sender.sendMessage(formatErrorTranslated("command.game.module.not_found"))
             }
         }
     }

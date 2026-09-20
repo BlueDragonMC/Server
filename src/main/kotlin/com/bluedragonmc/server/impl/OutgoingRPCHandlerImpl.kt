@@ -9,7 +9,10 @@ import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.api.OutgoingRPCHandler
 import com.bluedragonmc.server.event.GameStateChangedEvent
 import com.bluedragonmc.server.module.DependsOn
+import com.bluedragonmc.server.module.GameInfoModule
 import com.bluedragonmc.server.module.GameModule
+import com.bluedragonmc.server.module.GameStateModule
+import com.bluedragonmc.server.module.PlayerListModule
 import com.bluedragonmc.server.module.instance.InstanceModule
 import com.bluedragonmc.server.service.Messaging
 import com.bluedragonmc.server.utils.GameState
@@ -50,23 +53,20 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
         }
     }
 
-    @DependsOn(InstanceModule::class)
+    @DependsOn(InstanceModule::class, PlayerListModule::class, GameStateModule::class, GameInfoModule::class)
     class MessagingModule : GameModule() {
 
-        private lateinit var parent: ModuleHolder
-
         override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>): Unit = runBlocking {
-            this@MessagingModule.parent = parent
-            Messaging.outgoing.initGame(parent.id, parent.data.gameType, parent.rpcGameState)
+            Messaging.outgoing.initGame(id, data.gameType, rpcGameState())
 
             eventNode.listenAsync<GameStateChangedEvent> { event ->
-                Messaging.outgoing.updateGameState(parent.id, event.game.rpcGameState)
+                Messaging.outgoing.updateGameState(id, rpcGameState())
 
                 if (event.newState == GameState.ENDING) {
-                    val players = event.game.players.map { it.uuid }
+                    val playerIds = players.map { it.uuid }
                     MinecraftServer.getSchedulerManager().buildTask {
                         Messaging.IO.launch {
-                            Messaging.outgoing.getMarathonLeaderboard(players, true)
+                            Messaging.outgoing.getMarathonLeaderboard(playerIds, true)
                         }
                     }.delay(Duration.ofSeconds(2)).schedule()
                 }
@@ -82,7 +82,7 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
             eventNode.listen<PlayerSpawnEvent> { event ->
                 MinecraftServer.getSchedulerManager().scheduleNextTick {
                     Messaging.IO.launch {
-                        Messaging.outgoing.updateGameState(parent.id, parent.rpcGameState)
+                        Messaging.outgoing.updateGameState(id, rpcGameState())
                     }
                 }
             }
@@ -90,15 +90,18 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
             eventNode.listen<PlayerDisconnectEvent> { event ->
                 MinecraftServer.getSchedulerManager().scheduleNextTick {
                     Messaging.IO.launch {
-                        Messaging.outgoing.updateGameState(parent.id, parent.rpcGameState)
+                        Messaging.outgoing.updateGameState(id, rpcGameState())
                     }
                 }
             }
         }
 
+        private fun rpcGameState() =
+            state.toRpcGameState(players.size, getModule<GameInfoModule>().maxPlayers)
+
         override fun deinitialize() {
             Messaging.IO.launch {
-                Messaging.outgoing.notifyInstanceRemoved(parent.id)
+                Messaging.outgoing.notifyInstanceRemoved(id)
             }
         }
     }

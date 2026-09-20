@@ -56,7 +56,7 @@ class ModuleHolderTest {
     fun `Module with no dependencies is registered`() {
         val module = SimpleGameModule()
         instance.use(module)
-        assertContains(instance.modules, module)
+        assertContains(instance.getModuleNames(), module::class.simpleName)
         verify {
             instance.register(module, any())
         }
@@ -68,12 +68,12 @@ class ModuleHolderTest {
         val dependent = SimpleDependent()
 
         instance.use(dependent)
-        assertTrue(instance.modules.isEmpty())
+        assertTrue(instance.getModuleNames().isEmpty())
         verify(inverse = true) {
             instance.register(dependent, any()) // Make sure the dependent module was not registered too early
         }
         instance.use(module)
-        assertContentEquals(instance.modules, listOf(module, dependent))
+        assertContentEquals(instance.getModuleNames(), listOf(module::class.simpleName, dependent::class.simpleName))
         verifyOrder {
             // Make sure the two modules were registered, and in the correct order
             instance.register(module, any())
@@ -87,12 +87,12 @@ class ModuleHolderTest {
         val dependent = SimpleSoftDependent()
 
         instance.use(dependent)
-        assertTrue(instance.modules.isEmpty())
+        assertTrue(instance.getModuleNames().isEmpty())
         verify(inverse = true) {
             instance.register(dependent, any()) // Make sure the dependent module was not registered too early
         }
         instance.use(module)
-        assertContentEquals(instance.modules, listOf(module, dependent))
+        assertContentEquals(instance.getModuleNames(), listOf(module::class.simpleName, dependent::class.simpleName))
         verifyOrder {
             // Make sure the two modules were registered, and in the correct order
             instance.register(module, any())
@@ -105,12 +105,12 @@ class ModuleHolderTest {
         val dependent = SimpleSoftDependent()
 
         instance.use(dependent)
-        assertTrue(instance.modules.isEmpty())
+        assertTrue(instance.getModuleNames().isEmpty())
         verify(inverse = true) {
             instance.register(dependent, any()) // Make sure the dependent module was not registered too early
         }
         instance.checkUnmetDependencies()
-        assertContentEquals(instance.modules, listOf(dependent))
+        assertContentEquals(instance.getModuleNames(), listOf(dependent::class.simpleName))
         verify {
             // Make sure the module was registered
             instance.register(dependent, any())
@@ -197,10 +197,10 @@ class ModuleHolderTest {
         val module = SimpleGameModule()
 
         instance.use(module)
-        assertContentEquals(instance.modules, listOf(module))
+        assertContentEquals(instance.getModuleNames(), listOf(module::class.simpleName))
         instance.use(module)
-        assertContentEquals(instance.modules, listOf(module))
-        assertEquals(1, instance.modules.size)
+        assertContentEquals(instance.getModuleNames(), listOf(module::class.simpleName))
+        assertEquals(1, instance.getModuleNames().size)
     }
 
     @Test

@@ -1,6 +1,10 @@
 package com.bluedragonmc.server.module
 
 import com.bluedragonmc.server.ModuleHolder
+import com.bluedragonmc.server.game.GameData
+import com.bluedragonmc.server.utils.GameState
+import net.minestom.server.adventure.audience.PacketGroupingAudience
+import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import org.slf4j.Logger
@@ -72,5 +76,24 @@ abstract class GameModule {
             )
         }
     }
+
+    /** The players in this module's game. Requires [PlayerListModule]. */
+    open val players: List<Player> get() = getModule<PlayerListModule>().players
+
+    /** The audience of this module's game. Requires [PlayerListModule]. */
+    open val audience: PacketGroupingAudience get() = getModule<PlayerListModule>()
+
+    /** The state of this module's game. Requires [GameStateModule]. */
+    open var state: GameState
+        get() = getModule<GameStateModule>().state
+        set(value) {
+            getModule<GameStateModule>().state = value
+        }
+
+    /** The unique identifier of this module's game. Requires [GameInfoModule]. */
+    open val id: String get() = getModule<GameInfoModule>().id
+
+    /** The metadata of this module's game. Requires [GameInfoModule]. */
+    open val data: GameData get() = getModule<GameInfoModule>().data
 
 }

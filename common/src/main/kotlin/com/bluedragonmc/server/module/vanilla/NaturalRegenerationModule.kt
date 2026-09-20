@@ -1,5 +1,6 @@
 package com.bluedragonmc.server.module.vanilla
 
+import com.bluedragonmc.server.module.PlayerListModule
 import com.bluedragonmc.server.*
 import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.module.DependsOn
@@ -17,7 +18,7 @@ import java.time.Duration
  *
  * [See Documentation](https://developer.bluedragonmc.com/modules/naturalregenerationmodule/)
  */
-@DependsOn(OldCombatModule::class)
+@DependsOn(OldCombatModule::class, PlayerListModule::class)
 class NaturalRegenerationModule : GameModule() {
 
     private val combatStatus = hashMapOf<Player, Int>()
@@ -29,7 +30,7 @@ class NaturalRegenerationModule : GameModule() {
             combatStatus[event.target] = 0
         }
         eventNode.addListener(GameStartEvent::class.java) {
-            parent.players.forEach { combatStatus[it] = 0 }
+            players.forEach { combatStatus[it] = 0 }
             MinecraftServer.getSchedulerManager().buildTask {
                 for (s in combatStatus) {
                     combatStatus[s.key] = combatStatus.getOrDefault(s.key, 0) + 1

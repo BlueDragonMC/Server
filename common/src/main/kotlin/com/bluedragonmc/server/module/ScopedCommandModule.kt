@@ -1,8 +1,8 @@
 package com.bluedragonmc.server.module
 
-import com.bluedragonmc.server.*
-import com.bluedragonmc.server.GameRegistry
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.GameRegistry
+import com.bluedragonmc.server.ModuleHolder
 import com.bluedragonmc.server.event.PlayerJoinGameEvent
 import com.bluedragonmc.server.event.PlayerLeaveGameEvent
 import net.minestom.server.MinecraftServer
@@ -20,6 +20,7 @@ import java.lang.ref.WeakReference
  *
  * [See Documentation](https://developer.bluedragonmc.com/modules/scopedcommandmodule/)
  */
+@DependsOn(PlayerListModule::class)
 class ScopedCommandModule : GameModule() {
     private lateinit var parent: ModuleHolder
 
@@ -43,7 +44,7 @@ class ScopedCommandModule : GameModule() {
 
         unregisterUnusedCommands()
 
-        parent.players.forEach(Player::refreshCommands)
+        players.forEach(Player::refreshCommands)
     }
 
     /**
@@ -83,7 +84,7 @@ class ScopedCommandModule : GameModule() {
             }
             MinecraftServer.getCommandManager().register(command)
 
-            parent.players.forEach(Player::refreshCommands)
+            players.forEach(Player::refreshCommands)
         }
 
         if (registration.games.none { it.get() == parent }) {
@@ -97,7 +98,7 @@ class ScopedCommandModule : GameModule() {
         registration.games.removeAll { it.get() == parent }
 
         unregisterUnusedCommands()
-        parent.players.forEach(Player::refreshCommands)
+        players.forEach(Player::refreshCommands)
     }
 
     companion object {

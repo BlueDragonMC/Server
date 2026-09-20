@@ -1,6 +1,5 @@
 package com.bluedragonmc.server.module.database
 
-import com.bluedragonmc.server.*
 import com.bluedragonmc.server.event.PlayerKillPlayerEvent
 import com.bluedragonmc.server.module.minigame.WinModule
 import com.bluedragonmc.server.utils.GameState
@@ -11,16 +10,16 @@ object StatRecorders {
      * Increments a statistic when a player kills another player.
      * One is added to the attacker's "kills" statistic.
      */
-    val PLAYER_KILLS = StatisticsModule.EventStatisticRecorder(PlayerKillPlayerEvent::class.java) { game, event ->
-        incrementStatistic(event.attacker, getStatPrefix(game) + "_kills")
+    val PLAYER_KILLS = StatisticsModule.EventStatisticRecorder(PlayerKillPlayerEvent::class.java) { event ->
+        incrementStatistic(event.attacker, statPrefix() + "_kills")
     }
 
     /**
      * Increments a statistic when a player dies by any cause.
      */
-    val PLAYER_DEATHS_ALL = StatisticsModule.EventStatisticRecorder(PlayerDeathEvent::class.java) { game, event ->
-        if (game.state == GameState.INGAME) {
-            incrementStatistic(event.player, getStatPrefix(game) + "_deaths")
+    val PLAYER_DEATHS_ALL = StatisticsModule.EventStatisticRecorder(PlayerDeathEvent::class.java) { event ->
+        if (state == GameState.INGAME) {
+            incrementStatistic(event.player, statPrefix() + "_deaths")
         }
     }
 
@@ -29,8 +28,8 @@ object StatRecorders {
      * One is added to the target's "deaths_by_player" statistic.
      */
     val PLAYER_DEATHS_BY_PLAYER =
-        StatisticsModule.EventStatisticRecorder(PlayerKillPlayerEvent::class.java) { game, event ->
-            incrementStatistic(event.target, getStatPrefix(game) + "_deaths_by_player")
+        StatisticsModule.EventStatisticRecorder(PlayerKillPlayerEvent::class.java) { event ->
+            incrementStatistic(event.target, statPrefix() + "_deaths_by_player")
         }
 
     /**
@@ -44,12 +43,12 @@ object StatRecorders {
      * Records a "wins" and a "losses" statistic when a winner is declared.
      */
     val WINS_AND_LOSSES =
-        StatisticsModule.EventStatisticRecorder(WinModule.WinnerDeclaredEvent::class.java) { game, event ->
-            ArrayList(game.players).forEach { player ->
+        StatisticsModule.EventStatisticRecorder(WinModule.WinnerDeclaredEvent::class.java) { event ->
+            ArrayList(players).forEach { player ->
                 if (player in event.winningTeamPlayers) {
-                    incrementStatistic(player, getStatPrefix(game) + "_wins")
+                    incrementStatistic(player, statPrefix() + "_wins")
                 } else {
-                    incrementStatistic(player, getStatPrefix(game) + "_losses")
+                    incrementStatistic(player, statPrefix() + "_losses")
                 }
             }
         }
@@ -58,10 +57,10 @@ object StatRecorders {
         KILLS_AND_DEATHS, WINS_AND_LOSSES
     )
 
-    private fun getStatPrefix(game: ModuleHolder): String {
-        val data = game.data
-        val mode = data.mode
-        return if (mode.isNullOrBlank()) "game_${data.name.lowercase()}"
-        else "game_${data.name.lowercase()}_${mode.lowercase()}"
+    private fun StatisticsModule.statPrefix(): String {
+        val gameData = data
+        val mode = gameData.mode
+        return if (mode.isNullOrBlank()) "game_${gameData.name.lowercase()}"
+        else "game_${gameData.name.lowercase()}_${mode.lowercase()}"
     }
 }
