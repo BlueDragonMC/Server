@@ -1,17 +1,29 @@
 package com.bluedragonmc.server.module
 
-import com.bluedragonmc.server.*
+import com.bluedragonmc.server.ModuleHolder
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import kotlin.reflect.full.findAnnotation
+import kotlin.reflect.KClass
 
 abstract class GameModule {
 
     open val eventPriority = 0
 
     lateinit var eventNode: EventNode<Event>
+
+    /**
+     * The [ModuleHolder] that this module was registered with.
+     * Set by [ModuleHolder.register] before [initialize] is called.
+     */
+    @PublishedApi
+    internal lateinit var holder: ModuleHolder
+        private set
+
+    internal fun attach(holder: ModuleHolder) {
+        this.holder = holder
+    }
 
     abstract fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>)
     open fun deinitialize() {}
@@ -20,9 +32,45 @@ abstract class GameModule {
         LoggerFactory.getLogger(javaClass)
     }
 
-    open fun getRequiredDependencies() = this::class.findAnnotation<DependsOn>()?.dependencies ?: emptyArray()
-    open fun getSoftDependencies() = this::class.findAnnotation<SoftDependsOn>()?.dependencies ?: emptyArray()
+    open fun getRequiredDependencies(): Array<out KClass<out GameModule>> =
+        javaClass.getAnnotation(DependsOn::class.java)?.dependencies ?: emptyArray<KClass<out GameModule>>()
 
-    fun getDependencies() = arrayOf(*getRequiredDependencies(), *getSoftDependencies())
+    open fun getSoftDependencies(): Array<out KClass<out GameModule>> =
+        javaClass.getAnnotation(SoftDependsOn::class.java)?.dependencies ?: emptyArray<KClass<out GameModule>>()
+
+    fun getDependencies(): Array<out KClass<out GameModule>> =
+        arrayOf(*getRequiredDependencies(), *getSoftDependencies())
+
+    /**
+     * Finds a module that this module has declared in [DependsOn] or [SoftDependsOn].
+     *
+     * @throws IllegalStateException if this module does not declare the requested type, or the module is not loaded.
+     */
+    inline fun <reified T : GameModule> getModule(): T {
+        checkAccessible(T::class, T::class.isInstance(this))
+        return holder.requireModule(T::class)
+    }
+
+    /**
+     * Finds a module that this module has declared in [DependsOn] or [SoftDependsOn], or returns `null` if it is
+     * not loaded.
+     *
+     * @throws IllegalStateException if this module does not declare the requested type.
+     */
+    inline fun <reified T : GameModule> getModuleOrNull(): T? {
+        checkAccessible(T::class, T::class.isInstance(this))
+        return holder.findModule(T::class)
+    }
+
+    @PublishedApi
+    internal fun checkAccessible(type: KClass<out GameModule>, isSelf: Boolean) {
+        val accessible = isSelf || getDependencies().any { it.java.isAssignableFrom(type.java) }
+        if (!accessible) {
+            error(
+                "${this::class.simpleName} accessed ${type.simpleName} " +
+                    "without declaring it in @DependsOn or @SoftDependsOn"
+            )
+        }
+    }
 
 }

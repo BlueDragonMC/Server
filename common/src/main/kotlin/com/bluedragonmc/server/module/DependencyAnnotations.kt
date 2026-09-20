@@ -1,5 +1,6 @@
 package com.bluedragonmc.server.module
 
+import java.lang.annotation.Inherited
 import kotlin.reflect.KClass
 
 /**
@@ -9,6 +10,7 @@ import kotlin.reflect.KClass
  * annotated, and an error will be thrown if the
  * dependencies were not found.
  */
+@Inherited
 @Target(AnnotationTarget.CLASS)
 annotation class DependsOn(vararg val dependencies: KClass<out GameModule>)
 
@@ -21,5 +23,6 @@ annotation class DependsOn(vararg val dependencies: KClass<out GameModule>)
  * Unlike [DependsOn], an error will not be thrown if
  * a soft dependency is not found.
  */
+@Inherited
 @Target(AnnotationTarget.CLASS)
 annotation class SoftDependsOn(vararg val dependencies: KClass<out GameModule>)

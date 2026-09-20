@@ -6,6 +6,7 @@ import ca.atlasengine.projectiles.entities.FireballProjectile
 import ca.atlasengine.projectiles.entities.ThrownItemProjectile
 import com.bluedragonmc.server.event.ProjectileBreakBlockEvent
 import com.bluedragonmc.server.module.GameModule
+import com.bluedragonmc.server.module.SoftDependsOn
 import com.bluedragonmc.server.module.vanilla.ItemDropModule
 import com.bluedragonmc.server.utils.CoordinateUtils
 import net.kyori.adventure.sound.Sound
@@ -44,6 +45,7 @@ import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.random.Random
 
+@SoftDependsOn(ItemDropModule::class)
 class ProjectileModule : GameModule() {
 
     private lateinit var parent: ModuleHolder
@@ -336,7 +338,7 @@ class ProjectileModule : GameModule() {
     ) = object : Explosion(centerX, centerY, centerZ, strength) {
 
         override fun prepare(instance: Instance): List<Point> {
-            val dropItems = parent.getModuleOrNull<ItemDropModule>()?.dropBlocksOnBreak == true
+            val dropItems = getModuleOrNull<ItemDropModule>()?.dropBlocksOnBreak == true
             val positions = CoordinateUtils.getAllInBox(
                 Pos(centerX.toDouble() - strength, centerY.toDouble() - strength, centerZ.toDouble() - strength),
                 Pos(centerX.toDouble() + strength, centerY.toDouble() + strength, centerZ.toDouble() + strength)
@@ -358,7 +360,7 @@ class ProjectileModule : GameModule() {
                 if (dropItems && !event.isCancelled) {
                     val material = block.material()
                     if (material != null)
-                        parent.getModule<ItemDropModule>().dropItem(ItemStack.of(material), instance, pos)
+                        getModule<ItemDropModule>().dropItem(ItemStack.of(material), instance, pos)
                 }
                 return@filter !event.isCancelled
             }

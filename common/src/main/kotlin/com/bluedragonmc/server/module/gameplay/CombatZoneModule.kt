@@ -44,7 +44,7 @@ class CombatZonesModule(
 
     override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>) {
         this.parent = parent
-        mapZonesModule = parent.getModule()
+        mapZonesModule = getModule()
         startingCombatZones.forEach { zone ->
             addCombatZone(zone)
         }

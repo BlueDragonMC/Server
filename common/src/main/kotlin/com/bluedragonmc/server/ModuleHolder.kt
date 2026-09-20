@@ -40,18 +40,23 @@ open class ModuleHolder {
     private fun <T : GameModule> hasModule(type: KClass<T>): Boolean = modules.any { type.isInstance(it) }
     inline fun <reified T : GameModule> hasModule(): Boolean = modules.any { it is T }
 
-    inline fun <reified T : GameModule> getModule(): T {
-        return getModuleOrNull() ?: error("No module found of type ${T::class.simpleName} on game $this.")
-    }
+    /**
+     * Looks up a loaded module by type, without any dependency validation.
+     *
+     * Only this holder's own internals, [Game], and other trusted non-module callers should use this.
+     * [GameModule]s must use their dependency-checked [GameModule.getModule]/[GameModule.getModuleOrNull].
+     */
+    @Suppress("UNCHECKED_CAST")
+    @PublishedApi
+    internal fun <T : GameModule> findModule(type: KClass<T>): T? =
+        modules.firstOrNull { type.isInstance(it) } as T?
 
-    inline fun <reified T : GameModule> getModuleOrNull(): T? {
-        for (module in modules) {
-            if (module is T) return module
-        }
-        return null
-    }
+    @PublishedApi
+    internal fun <T : GameModule> requireModule(type: KClass<T>): T =
+        findModule(type) ?: error("No module found of type ${type.simpleName} on game $this.")
 
     open fun <T : GameModule> register(module: T, filter: Predicate<Event>) {
+        module.attach(this)
         val node = EventNode.event(module::class.simpleName.orEmpty(), EventFilter.ALL, filter)
         node.priority = module.eventPriority
         rootEventNode.addChild(node)

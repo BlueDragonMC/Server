@@ -12,11 +12,11 @@ import net.minestom.server.event.EventNode
  *
  * [See Documentation](https://developer.bluedragonmc.com/modules/instancetimemodule/)
  */
-@DependsOn(ConfigModule::class)
+@DependsOn(ConfigModule::class, InstanceModule::class)
 class InstanceTimeModule(val default: Int = 12000) : GameModule() {
     override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>) {
-        val time = parent.getModule<ConfigModule>().getConfig().node("world", "time").getInt(default)
-        parent.getOwnedInstances().forEach {
+        val time = getModule<ConfigModule>().getConfig().node("world", "time").getInt(default)
+        getModule<InstanceModule>().getOwnedInstances().forEach {
             it.time = time.toLong()
             it.defaultClock()?.pause()
         }

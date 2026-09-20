@@ -29,7 +29,7 @@ class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule(
         if ((spawnpointProvider is ConfigSpawnpointProvider || spawnpointProvider is TeamConfigSpawnpointProvider) && !parent.hasModule<ConfigModule>()) {
             error("Config module not present! (Team)ConfigSpawnpointProvider cannot find any spawn points.")
         }
-        spawnpointProvider.initialize(parent)
+        spawnpointProvider.initialize(this)
         logger.debug("Initialized spawnpoint provider: ${spawnpointProvider::class.simpleName}")
         eventNode.addListener(PlayerSpawnEvent::class.java) { event ->
             event.player.respawnPoint = spawnpointProvider.getSpawnpoint(event.player)
@@ -43,7 +43,7 @@ class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule(
         /**
          * Called when the spawnpoint module is loaded.
          */
-        fun initialize(game: ModuleHolder)
+        fun initialize(module: SpawnpointModule)
 
         /**
          * Returns a spawnpoint for the specified player.
@@ -63,7 +63,7 @@ class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule(
         private val cachedSpawnpoints = hashMapOf<Player, Pos>()
         private val list = CircularList(listOf(*spawns))
         private var i = 0
-        override fun initialize(game: ModuleHolder) {}
+        override fun initialize(module: SpawnpointModule) {}
 
         override fun getSpawnpoint(player: Player): Pos {
             return cachedSpawnpoints.getOrPut(player) { list[i++] }
@@ -76,7 +76,7 @@ class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule(
      * Spawns all players at a single location.
      */
     class SingleSpawnpointProvider(private val spawn: Pos) : SpawnpointProvider {
-        override fun initialize(game: ModuleHolder) {}
+        override fun initialize(module: SpawnpointModule) {}
 
         override fun getSpawnpoint(player: Player): Pos {
             return spawn
@@ -95,8 +95,8 @@ class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule(
         private lateinit var spawnpoints: CircularList<Pos>
         private var n = 0
 
-        override fun initialize(game: ModuleHolder) {
-            val config = game.getModule<ConfigModule>().getConfig()
+        override fun initialize(module: SpawnpointModule) {
+            val config = module.getModule<ConfigModule>().getConfig()
             val spawnpointList =
                 config.node("world", "spawnpoints").getList(Pos::class.java)
 
@@ -149,10 +149,10 @@ class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule(
 
         private lateinit var teamModule: TeamModule
 
-        override fun initialize(game: ModuleHolder) {
-            this.teamModule = game.getModule()
+        override fun initialize(module: SpawnpointModule) {
+            this.teamModule = module.getModule()
 
-            val config = game.getModule<ConfigModule>().getConfig()
+            val config = module.getModule<ConfigModule>().getConfig()
             val spawnpointList =
                 config.node("world", "spawnpoints").getList(Pos::class.java)
 

@@ -19,39 +19,39 @@ import java.time.Duration
 
 /** The players that belong to this holder. */
 val ModuleHolder.players: List<Player>
-    get() = getModule<PlayerListModule>().players
+    get() = requireModule(PlayerListModule::class).players
 
 /** The audience that broadcasts to every player in this holder. */
 val ModuleHolder.audience: PacketGroupingAudience
-    get() = getModule<PlayerListModule>()
+    get() = requireModule(PlayerListModule::class)
 
 /** The current game state. */
 var ModuleHolder.state: GameState
-    get() = getModule<GameStateModule>().state
+    get() = requireModule(GameStateModule::class).state
     set(value) {
-        getModule<GameStateModule>().state = value
+        requireModule(GameStateModule::class).state = value
     }
 
 /** The unique identifier of the game. */
 val ModuleHolder.id: String
-    get() = getModule<GameInfoModule>().id
+    get() = requireModule(GameInfoModule::class).id
 
 /** The metadata of the game. */
 val ModuleHolder.data: GameData
-    get() = getModule<GameInfoModule>().data
+    get() = requireModule(GameInfoModule::class).data
 
 /** The RPC representation of the game state. */
 val ModuleHolder.rpcGameState: CommonTypes.GameState
-    get() = getModule<GameInfoModule>().rpcGameState
+    get() = requireModule(GameInfoModule::class).rpcGameState
 
 /** The single instance owned by this holder. */
-fun ModuleHolder.getInstance(): Instance = getModule<InstanceModule>().getInstance()
+fun ModuleHolder.getInstance(): Instance = requireModule(InstanceModule::class).getInstance()
 
 /** Every instance owned by this holder. */
-fun ModuleHolder.getOwnedInstances(): List<Instance> = getModule<InstanceModule>().getOwnedInstances()
+fun ModuleHolder.getOwnedInstances(): List<Instance> = requireModule(InstanceModule::class).getOwnedInstances()
 
 /** Ends the holder's game. */
-fun ModuleHolder.endGame(queueAllPlayers: Boolean = true) = getModule<GameStateModule>().endGame(queueAllPlayers)
+fun ModuleHolder.endGame(queueAllPlayers: Boolean = true) = requireModule(GameStateModule::class).endGame(queueAllPlayers)
 
 /** Ends the holder's game after [delay]. */
-fun ModuleHolder.endGameLater(delay: Duration = Duration.ZERO) = getModule<GameStateModule>().endGameLater(delay)
+fun ModuleHolder.endGameLater(delay: Duration = Duration.ZERO) = requireModule(GameStateModule::class).endGameLater(delay)

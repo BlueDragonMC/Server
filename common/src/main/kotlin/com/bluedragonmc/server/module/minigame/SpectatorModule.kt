@@ -23,7 +23,7 @@ import net.minestom.server.event.player.PlayerDeathEvent
  *
  * [See Documentation](https://developer.bluedragonmc.com/modules/spectatormodule/)
  */
-@SoftDependsOn(TeamModule::class)
+@SoftDependsOn(TeamModule::class, PlayerResetModule::class)
 class SpectatorModule(var spectateOnDeath: Boolean, var spectateOnLeave: Boolean = true) : GameModule() {
     private val spectators = mutableListOf<Player>()
     private lateinit var parent: ModuleHolder
@@ -76,10 +76,10 @@ class SpectatorModule(var spectateOnDeath: Boolean, var spectateOnLeave: Boolean
     fun removeSpectator(player: Player) {
         spectators.remove(player)
         if (player is CustomPlayer && player.isSpectating) player.stopSpectating()
-        if (parent.hasModule<PlayerResetModule>()) player.gameMode = parent.getModule<PlayerResetModule>().defaultGameMode
+        if (parent.hasModule<PlayerResetModule>()) player.gameMode = getModule<PlayerResetModule>().defaultGameMode
         parent.callEvent(StopSpectatingEvent(parent, player))
 
-        val teamColor = parent.getModuleOrNull<TeamModule>()?.getTeam(player)?.name?.color()
+        val teamColor = getModuleOrNull<TeamModule>()?.getTeam(player)?.name?.color()
         (player as CustomPlayer).updateDisplayName(teamColor)
     }
 

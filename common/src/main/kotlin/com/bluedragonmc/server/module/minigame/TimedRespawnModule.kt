@@ -2,7 +2,9 @@ package com.bluedragonmc.server.module.minigame
 
 import com.bluedragonmc.server.*
 import com.bluedragonmc.server.event.GameEvent
+import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
+import com.bluedragonmc.server.module.SoftDependsOn
 import com.bluedragonmc.server.utils.manage
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -20,11 +22,13 @@ import java.time.Duration
  *
  * [See Documentation](https://developer.bluedragonmc.com/modules/timedrespawnmodule/)
  */
+@DependsOn(SpectatorModule::class)
+@SoftDependsOn(PlayerResetModule::class)
 class TimedRespawnModule(private val seconds: Int = 5) : GameModule() {
     override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>) {
         eventNode.addListener(PlayerDeathEvent::class.java) { event ->
             MinecraftServer.getSchedulerManager().buildTask {
-                if (parent.getModule<SpectatorModule>().isSpectating(event.player)) return@buildTask
+                if (getModule<SpectatorModule>().isSpectating(event.player)) return@buildTask
                 event.player.respawn()
                 event.player.gameMode = GameMode.SPECTATOR
                 event.player.showTitle(
@@ -36,7 +40,7 @@ class TimedRespawnModule(private val seconds: Int = 5) : GameModule() {
                 MinecraftServer.getSchedulerManager().buildTask {
                     parent.callEvent(TimedRespawnEvent(parent, event.player))
                     if (parent.hasModule<PlayerResetModule>()) {
-                        val mode = parent.getModule<PlayerResetModule>().defaultGameMode
+                        val mode = getModule<PlayerResetModule>().defaultGameMode
                         if (mode != null) event.player.gameMode = mode
                     }
                     event.player.teleport(event.player.respawnPoint)

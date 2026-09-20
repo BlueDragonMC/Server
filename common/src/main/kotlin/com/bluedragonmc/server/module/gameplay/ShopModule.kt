@@ -40,7 +40,7 @@ class ShopModule : GameModule() {
     }
 
     fun createShop(title: Component, shopItemsBuilder: ShopItemsBuilder.() -> Unit): Shop {
-        val menu = parent.getModule<GuiModule>().createMenu(title, InventoryType.CHEST_6_ROW, true) {
+        val menu = getModule<GuiModule>().createMenu(title, InventoryType.CHEST_6_ROW, true) {
             shopItemsBuilder(ShopItemsBuilder(this@ShopModule, this@createMenu))
         }
         menu.onOpened { player -> menu.rerender(player) }

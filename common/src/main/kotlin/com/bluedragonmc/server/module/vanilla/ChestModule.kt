@@ -48,7 +48,7 @@ class ChestModule : GameModule() {
                 pos = rootChest.second
 
                 chest = chests.getOrPut(pos) {
-                    Chest(parent, inventoryType, event.instance, pos).also {
+                    Chest(this@ChestModule, inventoryType, event.instance, pos).also {
                         MinecraftServer.getGlobalEventHandler()
                             .call(ChestPopulateEvent(event.player, pos, pos, inventoryType, it.getMenu(event.player)))
                     }
@@ -56,7 +56,7 @@ class ChestModule : GameModule() {
 
             } else if (event.block.compare(Block.ENDER_CHEST)) {
                 chest = chests.getOrPut(event.blockPosition) {
-                    EnderChest(parent,
+                    EnderChest(this@ChestModule,
                         event.blockPosition,
                         event.instance)
                 }
@@ -120,7 +120,7 @@ class ChestModule : GameModule() {
 //        }
     }
 
-    class EnderChest(private val game: ModuleHolder, override val position: Point, override val instance: Instance) :
+    class EnderChest(private val game: ChestModule, override val position: Point, override val instance: Instance) :
         ChestBlock() {
 
         companion object {
@@ -146,7 +146,7 @@ class ChestModule : GameModule() {
     }
 
     class Chest(
-        private val game: ModuleHolder,
+        private val game: ChestModule,
         inventoryType: InventoryType,
         override val instance: Instance,
         override val position: Point,

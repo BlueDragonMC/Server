@@ -5,8 +5,10 @@ import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_3
 import com.bluedragonmc.server.event.GameEvent
+import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.GlobalCosmeticModule
+import com.bluedragonmc.server.module.SoftDependsOn
 import com.bluedragonmc.server.utils.CircularList
 import com.bluedragonmc.server.utils.FireworkUtils
 import com.bluedragonmc.server.utils.GameState
@@ -29,6 +31,8 @@ import java.time.Duration
  *
  * [See Documentation](https://developer.bluedragonmc.com/modules/winmodule/)
  */
+@DependsOn(SpawnpointModule::class)
+@SoftDependsOn(SpectatorModule::class, TeamModule::class, GlobalCosmeticModule::class)
 class WinModule(
     val winCondition: WinCondition = WinCondition.MANUAL,
 ) : GameModule() {
@@ -41,9 +45,9 @@ class WinModule(
         eventNode.addListener(SpectatorModule.StartSpectatingEvent::class.java) {
             if (winCondition == WinCondition.MANUAL || parent.state != GameState.INGAME) return@addListener
             val spectatorModule =
-                parent.getModule<SpectatorModule>() // This module is required for all the win conditions
+                getModule<SpectatorModule>() // This module is required for all the win conditions
             if (winCondition == WinCondition.LAST_TEAM_ALIVE) {
-                val remainingTeams = parent.getModule<TeamModule>().teams.filter { team ->
+                val remainingTeams = getModule<TeamModule>().teams.filter { team ->
                     team.players.any { player -> !spectatorModule.isSpectating(player) }
                 }
                 when (remainingTeams.size) {
@@ -103,7 +107,7 @@ class WinModule(
 
     private fun scheduleWinFireworks(player: Player) {
         val colors = if (parent.hasModule<GlobalCosmeticModule>()) {
-            parent.getModule<GlobalCosmeticModule>().getFireworkColor(player).ifEmpty { defaultColors }
+            getModule<GlobalCosmeticModule>().getFireworkColor(player).ifEmpty { defaultColors }
         } else {
             if (player.name.color() != null && player.name.color() != NamedTextColor.GRAY) {
                 arrayOf(player.name.color()!!)
@@ -112,7 +116,7 @@ class WinModule(
             }
         }
         val instance = player.instance ?: return
-        val availablePositions = parent.getModule<SpawnpointModule>().spawnpointProvider.getAllSpawnpoints()
+        val availablePositions = getModule<SpawnpointModule>().spawnpointProvider.getAllSpawnpoints()
         val fireworkMeta = colors.map {
             FireworkList(
                 1,

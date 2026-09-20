@@ -1,7 +1,6 @@
 package com.bluedragonmc.server.game
 
-import com.bluedragonmc.server.*
-import com.bluedragonmc.server.*
+import com.bluedragonmc.server.ModuleHolder
 import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.SoftDependsOn
@@ -214,19 +213,13 @@ class ModuleHolderTest {
     }
 
     @Test
-    fun getModule() {
+    fun `hasModule reflects registered modules`() {
         val module = SimpleGameModule()
 
-        assertThrows<IllegalStateException> {
-            instance.getModule<SimpleGameModule>()
-        }
         assertFalse(instance.hasModule<SimpleGameModule>())
 
         instance.use(module)
 
-        assertDoesNotThrow {
-            instance.getModule<SimpleGameModule>()
-        }
         assertTrue(instance.hasModule<SimpleGameModule>())
     }
 

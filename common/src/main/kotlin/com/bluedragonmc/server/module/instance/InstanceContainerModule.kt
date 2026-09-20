@@ -26,7 +26,7 @@ class InstanceContainerModule : InstanceModule() {
 
     override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>) {
         // Create a copy of the loaded InstanceContainer to prevent modifying the state of the original
-        val mapProviderModule = parent.getModule<MapProviderModule>()
+        val mapProviderModule = getModule<MapProviderModule>()
         this.instance = mapProviderModule.instanceContainer.copy().apply {
             chunkLoader = mapProviderModule.instanceContainer.chunkLoader
         }

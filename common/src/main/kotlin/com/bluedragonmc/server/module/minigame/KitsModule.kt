@@ -77,7 +77,7 @@ open class KitsModule(
      * Displays the kit selection menu to the specified player.
      */
     fun selectKit(player: Player) {
-        val menu = parent.getModule<GuiModule>().createMenu(title = KITS_MENU_TITLE, inventoryType = InventoryType.CHEST_1_ROW, isPerPlayer = true) {
+        val menu = getModule<GuiModule>().createMenu(title = KITS_MENU_TITLE, inventoryType = InventoryType.CHEST_1_ROW, isPerPlayer = true) {
             for (selectableKit in selectableKits) {
                 val index = selectableKits.indexOf(selectableKit)
                 slot(index, selectableKit.icon, { player ->

@@ -6,6 +6,7 @@ import com.bluedragonmc.server.event.CountdownEvent
 import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.event.PlayerJoinGameEvent
 import com.bluedragonmc.server.module.GameModule
+import com.bluedragonmc.server.module.SoftDependsOn
 import com.bluedragonmc.server.utils.GameState
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -35,6 +36,7 @@ import java.time.Duration
  * @property allowMoveDuringCountdown If `false`, players will be blocked from moving while the countdown is running.
  * @property countdownSeconds How long the countdown lasts, in seconds.
  */
+@SoftDependsOn(SpawnpointModule::class)
 class CountdownModule(
     private val threshold: Int,
     private val allowMoveDuringCountdown: Boolean = true,
@@ -85,7 +87,7 @@ class CountdownModule(
         }
         eventNode.addListener(PlayerMoveEvent::class.java) { event ->
             if (countdownRunning && !allowMoveDuringCountdown) {
-                val spawnpoint = parent.getModuleOrNull<SpawnpointModule>()?.spawnpointProvider?.getSpawnpoint(event.player)
+                val spawnpoint = getModuleOrNull<SpawnpointModule>()?.spawnpointProvider?.getSpawnpoint(event.player)
                 if (spawnpoint == null) {
                     event.isCancelled = true
                     return@addListener

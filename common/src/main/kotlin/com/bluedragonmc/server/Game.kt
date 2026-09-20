@@ -5,6 +5,7 @@ import com.bluedragonmc.api.grpc.gameState
 import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.game.GameData
 import com.bluedragonmc.server.module.GameInfoModule
+import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.GameStateModule
 import com.bluedragonmc.server.module.PlayerListModule
 import com.bluedragonmc.server.module.minigame.WinModule
@@ -53,6 +54,22 @@ abstract class Game(final val data: GameData) : ModuleHolder(), PacketGroupingAu
     internal val lifecycle = GameLifecycle(this)
 
     override val rootEventNode: EventNode<Event> get() = events.node
+
+    /**
+     * Finds a loaded module of the given type.
+     *
+     * Unlike [GameModule.getModule], a game may look up any of its modules without declaring a dependency,
+     * since the game is responsible for wiring its own modules together.
+     */
+    inline fun <reified T : GameModule> getModule(): T = requireModule(T::class)
+
+    /**
+     * Finds a loaded module of the given type, or returns `null` if it is not loaded.
+     *
+     * Unlike [GameModule.getModuleOrNull], a game may look up any of its modules without declaring a dependency,
+     * since the game is responsible for wiring its own modules together.
+     */
+    inline fun <reified T : GameModule> getModuleOrNull(): T? = findModule(T::class)
 
     open val maxPlayers = 8
 

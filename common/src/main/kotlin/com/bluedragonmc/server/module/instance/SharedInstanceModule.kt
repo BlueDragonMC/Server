@@ -32,7 +32,7 @@ class SharedInstanceModule : InstanceModule() {
     }
 
     override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>) {
-        instanceContainer = parent.getModule<MapProviderModule>().instanceContainer
+        instanceContainer = getModule<MapProviderModule>().instanceContainer
         if (!instanceContainer.isRegistered) {
             MinecraftServer.getInstanceManager().registerInstance(instanceContainer)
         }

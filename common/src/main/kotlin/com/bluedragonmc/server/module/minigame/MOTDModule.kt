@@ -27,7 +27,7 @@ import net.minestom.server.event.EventNode
 class MOTDModule(private val motd: Component, private var showMapName: Boolean = true) : GameModule() {
 
     override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>) {
-        val node = parent.getModuleOrNull<ConfigModule>()?.getConfig()?.node("world")
+        val node = getModuleOrNull<ConfigModule>()?.getConfig()?.node("world")
 
         if (!parent.hasModule<ConfigModule>()) {
             showMapName = false

@@ -63,9 +63,10 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
                 Messaging.outgoing.updateGameState(parent.id, event.game.rpcGameState)
 
                 if (event.newState == GameState.ENDING) {
+                    val players = event.game.players.map { it.uuid }
                     MinecraftServer.getSchedulerManager().buildTask {
                         Messaging.IO.launch {
-                            Messaging.outgoing.getMarathonLeaderboard(event.game.players.map { it.uuid }, true)
+                            Messaging.outgoing.getMarathonLeaderboard(players, true)
                         }
                     }.delay(Duration.ofSeconds(2)).schedule()
                 }

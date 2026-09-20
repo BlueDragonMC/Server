@@ -14,7 +14,7 @@ class GlobalCosmeticModule : GameModule() {
     private lateinit var cosmetics: CosmeticsModule
 
     override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>) {
-        cosmetics = parent.getModule<CosmeticsModule>()
+        cosmetics = getModule<CosmeticsModule>()
     }
 
     fun getFireworkColor(player: Player) = cosmetics.getCosmeticInGroup<WinFireworks>(player)?.fireworkColors ?: emptyArray()
