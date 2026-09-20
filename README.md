@@ -1,8 +1,8 @@
 # Server
 
-![GitHub Workflow Status (with branch)](https://img.shields.io/github/actions/workflow/status/BlueDragonMC/Server/docker-publish.yml?branch=main&label=Docker%20Build&logo=github)
+![GitHub Workflow Status (with branch)](https://img.shields.io/github/actions/workflow/status/BlueDragonMC/Server/maven-publish.yml?branch=main&label=Publish&logo=github)
 ![GitHub last commit](https://img.shields.io/github/last-commit/BlueDragonMC/Server)
-![Jitpack CI Status](https://img.shields.io/badge/dynamic/json?color=blue&label=jitpack&query=%24.status&url=https%3A%2F%2Fjitpack.io%2Fapi%2Fbuilds%2Fcom.github.BlueDragonMC%2FServer%2Flatest&logo=gradle)
+![Latest version](https://img.shields.io/badge/dynamic/xml?url=https%3A%2F%2Freposilite.bluedragonmc.com%2Freleases%2Fcom%2Fbluedragonmc%2Fserver%2Fcommon%2Fmaven-metadata.xml&query=%2Fmetadata%2Fversioning%2Flatest&label=Latest%20Version)
 
 [![BlueDragon Logo](./favicon_64.png)](https://bluedragonmc.com)
 
