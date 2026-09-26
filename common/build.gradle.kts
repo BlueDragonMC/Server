@@ -44,6 +44,12 @@ val javadocJar by tasks.registering(Jar::class) {
     archiveClassifier.set("javadoc")
 }
 
+tasks.processResources {
+    from(rootProject.file("LICENSE")) {
+        into("META-INF")
+    }
+}
+
 publishing {
     val rootVersion = rootProject.version.toString()
     val inCI = rootVersion != "dev"
@@ -68,6 +74,16 @@ publishing {
             from(components["java"])
             artifact(sourcesJar)
             artifact(javadocJar)
+
+            pom {
+                licenses {
+                    license {
+                        name = "Apache License, Version 2.0"
+                        url = "https://www.apache.org/licenses/LICENSE-2.0.txt"
+                        distribution = "repo"
+                    }
+                }
+            }
         }
     }
 }
