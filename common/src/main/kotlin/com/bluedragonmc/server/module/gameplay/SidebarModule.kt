@@ -5,6 +5,7 @@ import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.event.*
 import com.bluedragonmc.server.module.*
 import com.bluedragonmc.server.utils.GameState
+import com.bluedragonmc.server.utils.manage
 import com.bluedragonmc.server.utils.withGradient
 import kotlinx.coroutines.runBlocking
 import net.kyori.adventure.text.Component
@@ -164,7 +165,9 @@ class SidebarModule(private val title: String) : GameModule() {
 
         init {
             val updateNextTick = {
-                MinecraftServer.getSchedulerManager().scheduleNextTick(::update)
+                MinecraftServer.getSchedulerManager()
+                    .scheduleNextTick(::update)
+                    .manage(module.parent)
             }
 
             updateNextTick()
