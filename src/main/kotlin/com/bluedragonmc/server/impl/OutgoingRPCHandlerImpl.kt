@@ -1,24 +1,17 @@
 package com.bluedragonmc.server.impl
 
-import com.bluedragonmc.server.*
-import com.bluedragonmc.server.GameRegistry
 import com.bluedragonmc.api.grpc.*
 import com.bluedragonmc.api.grpc.Map
 import com.bluedragonmc.api.grpc.Queue
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.GameRegistry
+import com.bluedragonmc.server.ModuleHolder
 import com.bluedragonmc.server.api.OutgoingRPCHandler
 import com.bluedragonmc.server.event.GameStateChangedEvent
-import com.bluedragonmc.server.module.DependsOn
-import com.bluedragonmc.server.module.GameInfoModule
-import com.bluedragonmc.server.module.GameModule
-import com.bluedragonmc.server.module.GameStateModule
-import com.bluedragonmc.server.module.PlayerListModule
+import com.bluedragonmc.server.module.*
 import com.bluedragonmc.server.module.instance.InstanceModule
 import com.bluedragonmc.server.service.Messaging
-import com.bluedragonmc.server.utils.GameState
-import com.bluedragonmc.server.utils.listen
-import com.bluedragonmc.server.utils.listenAsync
-import com.bluedragonmc.server.utils.miniMessage
+import com.bluedragonmc.server.utils.*
 import io.grpc.ManagedChannelBuilder
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -84,7 +77,7 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
                     Messaging.IO.launch {
                         Messaging.outgoing.updateGameState(id, rpcGameState())
                     }
-                }
+                }.manage(parent)
             }
 
             eventNode.listen<PlayerDisconnectEvent> { event ->
@@ -92,7 +85,7 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
                     Messaging.IO.launch {
                         Messaging.outgoing.updateGameState(id, rpcGameState())
                     }
-                }
+                }.manage(parent)
             }
         }
 
