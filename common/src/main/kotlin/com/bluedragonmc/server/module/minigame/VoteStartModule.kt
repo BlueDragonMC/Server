@@ -8,13 +8,11 @@ import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.event.*
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.utils.GameState
-import com.bluedragonmc.server.utils.manage
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.title.Title
 import net.kyori.adventure.title.TitlePart
-import net.minestom.server.MinecraftServer
 import net.minestom.server.component.DataComponents
 import net.minestom.server.entity.Player
 import net.minestom.server.entity.PlayerHand
@@ -76,11 +74,11 @@ class VoteStartModule(
         }
         eventNode.addListener(PlayerLeaveGameEvent::class.java) { event ->
             votes.remove(event.player)
-            MinecraftServer.getSchedulerManager().scheduleNextTick {
+            scheduleNextTick {
                 update()
             }
         }
-        MinecraftServer.getSchedulerManager().buildTask {
+        buildTask {
             if (countdown != null) {
                 if (countdown!! > 0) {
                     audience.showTitle(
@@ -107,7 +105,7 @@ class VoteStartModule(
 
                 countdown = countdown?.minus(1)
             }
-        }.repeat(Duration.ofSeconds(1)).schedule().manage(parent)
+        }.repeat(Duration.ofSeconds(1)).schedule()
         eventNode.addListener(GameStateChangedEvent::class.java) { event ->
             if (event.newState != GameState.WAITING && event.newState != GameState.STARTING) {
                 clearPlayerInventories()

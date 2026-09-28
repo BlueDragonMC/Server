@@ -46,7 +46,7 @@ class InstantRespawnModule : GameModule() {
                     EventDispatcher.call(respawnEvent)
                     teleport(respawnEvent.respawnPosition).thenRun { refreshAfterTeleport() }
 
-                    MinecraftServer.getSchedulerManager().scheduleNextTick {
+                    scheduleNextTick {
                         isDead = false
                     }
                 }

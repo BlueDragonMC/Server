@@ -6,8 +6,6 @@ import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.combat.OldCombatModule
-import com.bluedragonmc.server.utils.manage
-import net.minestom.server.MinecraftServer
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
@@ -31,12 +29,12 @@ class NaturalRegenerationModule : GameModule() {
         }
         eventNode.addListener(GameStartEvent::class.java) {
             players.forEach { combatStatus[it] = 0 }
-            MinecraftServer.getSchedulerManager().buildTask {
+            buildTask {
                 for (s in combatStatus) {
                     combatStatus[s.key] = combatStatus.getOrDefault(s.key, 0) + 1
                     if (combatStatus[s.key]!! >= 15) s.key.health += 0.5f
                 }
-            }.repeat(Duration.ofSeconds(1)).schedule().manage(parent)
+            }.repeat(Duration.ofSeconds(1)).schedule()
         }
     }
 }

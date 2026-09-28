@@ -5,7 +5,6 @@ import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.event.*
 import com.bluedragonmc.server.module.*
 import com.bluedragonmc.server.utils.GameState
-import com.bluedragonmc.server.utils.manage
 import com.bluedragonmc.server.utils.withGradient
 import kotlinx.coroutines.runBlocking
 import net.kyori.adventure.text.Component
@@ -14,7 +13,6 @@ import net.kyori.adventure.text.format.NamedTextColor.DARK_GRAY
 import net.kyori.adventure.text.format.NamedTextColor.RED
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.translation.GlobalTranslator
-import net.minestom.server.MinecraftServer
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
@@ -44,7 +42,7 @@ class SidebarModule(private val title: String) : GameModule() {
                 binding.updateFor(player)
         }
         eventNode.addListener(PlayerJoinGameEvent::class.java) { event ->
-            MinecraftServer.getSchedulerManager().scheduleNextTick {
+            scheduleNextTick {
                 val sidebar = sidebars.getOrPut(event.player) { createSidebar() }
                 sidebar.addViewer(event.player)
                 if (::binding.isInitialized)
@@ -165,9 +163,7 @@ class SidebarModule(private val title: String) : GameModule() {
 
         init {
             val updateNextTick = {
-                MinecraftServer.getSchedulerManager()
-                    .scheduleNextTick(::update)
-                    .manage(module.parent)
+                module.scheduleNextTick { update() }
             }
 
             updateNextTick()

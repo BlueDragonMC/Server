@@ -11,7 +11,6 @@ import com.bluedragonmc.server.module.GuiModule
 import com.bluedragonmc.server.utils.splitAndFormatLore
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
-import net.minestom.server.MinecraftServer
 import net.minestom.server.component.DataComponents
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
@@ -67,8 +66,7 @@ open class KitsModule(
                 if ((event.inventory as? Inventory)?.title != KITS_MENU_TITLE) return@addListener
                 if (!selectedKits.containsKey(event.player)) {
                     // scheduleNextTick works around an issue where InventoryCloseEvent wasn't always firing
-                    MinecraftServer.getSchedulerManager()
-                        .scheduleNextTick { selectKit(event.player) }
+                    scheduleNextTick { selectKit(event.player) }
                 }
             }
         }

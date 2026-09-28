@@ -40,6 +40,7 @@ object GameRegistry {
 
     internal fun remove(game: Game) {
         _games.remove(game)
+        game.cancelTasks()
     }
 
     fun findGame(player: Player): Game? =

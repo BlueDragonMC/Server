@@ -60,6 +60,8 @@ class GameLifecycle(private val game: Game) {
             if (game.modules.contains(module)) game.unregister(module)
         }
 
+        game.cancelTasks()
+
         if (queueAllPlayers) {
             val gameType = gameType {
                 name = game.data.name

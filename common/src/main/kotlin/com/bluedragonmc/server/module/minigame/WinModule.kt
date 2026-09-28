@@ -131,9 +131,10 @@ class WinModule(
         var delay = 0L
         for (i in 1..3) {
             availablePositions.forEachIndexed { index, fireworkPosition ->
-                MinecraftServer.getSchedulerManager().buildTask {
+                buildTask {
                     if (player.instance?.uuid != instance.uuid) return@buildTask
                     FireworkUtils.spawnFirework(
+                        this,
                         player.instance!!,
                         fireworkPosition.add(0.0, 0.0, 0.0),
                         1500,

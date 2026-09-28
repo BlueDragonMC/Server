@@ -3,7 +3,6 @@ package com.bluedragonmc.server.module.vanilla
 import com.bluedragonmc.server.*
 import com.bluedragonmc.server.module.GameModule
 import net.kyori.adventure.sound.Sound
-import net.minestom.server.MinecraftServer
 import net.minestom.server.entity.Entity
 import net.minestom.server.entity.EntityType
 import net.minestom.server.entity.Player
@@ -39,7 +38,7 @@ class FireworkRocketModule(private val boostElytra: Boolean = true) : GameModule
                     SoundEvent.ENTITY_FIREWORK_ROCKET_LAUNCH, Sound.Source.PLAYER, 2.0f, 1.0f
                 ), event.player.position
             )
-            MinecraftServer.getSchedulerManager().buildTask {
+            buildTask {
                 event.instance.sendGroupedPacket(EntityStatusPacket(firework.entityId, 17))
                 firework.remove()
             }.delay(Duration.ofSeconds(1)).schedule()
@@ -52,11 +51,11 @@ class FireworkRocketModule(private val boostElytra: Boolean = true) : GameModule
     }
 
     fun elytraBoostPlayer(player: Player) {
-        val velocityTask = MinecraftServer.getSchedulerManager().buildTask {
+        val velocityTask = buildTask {
             player.velocity = player.position.direction().mul(30.0)
         }.repeat(1, TimeUnit.SERVER_TICK).schedule()
 
-        MinecraftServer.getSchedulerManager().buildTask {
+        buildTask {
             velocityTask.cancel()
         }.delay(30, TimeUnit.SERVER_TICK).schedule()
     }

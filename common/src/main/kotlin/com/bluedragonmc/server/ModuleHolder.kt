@@ -1,6 +1,8 @@
 package com.bluedragonmc.server
 
 import com.bluedragonmc.server.module.GameModule
+import com.bluedragonmc.server.utils.TaskScheduler
+import com.bluedragonmc.server.utils.TaskScope
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventFilter
 import net.minestom.server.event.EventNode
@@ -10,7 +12,9 @@ import java.util.function.Consumer
 import java.util.function.Predicate
 import kotlin.reflect.KClass
 
-open class ModuleHolder {
+open class ModuleHolder : TaskScheduler {
+
+    override val taskScope = TaskScope()
 
     private val logger = LoggerFactory.getLogger(ModuleHolder::class.java)
 
@@ -84,10 +88,16 @@ open class ModuleHolder {
     open fun unregister(module: GameModule) {
         logger.debug("Unregistering module {}", module)
         module.deinitialize()
+        module.cancelTasks()
         modules.remove(module)
         val node = module.eventNode
         node.parent?.removeChild(node)
     }
+
+    /**
+     * Cancels every task scheduled through this holder's [taskScope].
+     */
+    internal fun cancelTasks() = taskScope.cancelAll()
 
     /**
      * Dispatches [event] on this holder's root event node.

@@ -7,7 +7,6 @@ import com.bluedragonmc.server.utils.listen
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
-import net.minestom.server.MinecraftServer
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.*
 import net.minestom.server.entity.damage.DamageType
@@ -204,7 +203,7 @@ class NPCModule : GameModule() {
         override fun updateNewViewer(player: Player) {
             player.sendPacket(addPlayerPacket)
 
-            MinecraftServer.getSchedulerManager().scheduleNextTick {
+            scheduleNextTick {
                 player.sendPacket(passengersPacket)
             }
 

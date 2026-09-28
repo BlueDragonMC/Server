@@ -4,10 +4,8 @@ import com.bluedragonmc.server.*
 import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.combat.OldCombatModule
-import com.bluedragonmc.server.utils.manage
 import com.bluedragonmc.server.utils.withColor
 import net.kyori.adventure.text.format.NamedTextColor
-import net.minestom.server.MinecraftServer
 import net.minestom.server.coordinate.Point
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
@@ -62,11 +60,11 @@ class CombatZonesModule(
         }
 
         if (!allowLeaveDuringCombat)
-            MinecraftServer.getSchedulerManager().buildTask {
+            buildTask {
                 for (s in combatStatus) {
                     combatStatus[s.key] = combatStatus.getOrDefault(s.key, 1000) + 1
                 }
-            }.repeat(Duration.ofSeconds(1)).schedule().manage(parent)
+            }.repeat(Duration.ofSeconds(1)).schedule()
     }
 
     fun addCombatZone(zone: MapZonesModule.MapZone) {

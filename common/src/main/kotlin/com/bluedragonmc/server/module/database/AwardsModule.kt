@@ -21,7 +21,6 @@ import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.title.Title
-import net.minestom.server.MinecraftServer
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
@@ -101,7 +100,7 @@ class AwardsModule : GameModule() {
             val oldLevel = CustomPlayer.getXpLevel(prev).toInt()
             val newLevel = CustomPlayer.getXpLevel(player.data.experience).toInt()
             if (newLevel > oldLevel)
-                MinecraftServer.getSchedulerManager().buildTask { notifyLevelUp(player, oldLevel, newLevel) }
+                buildTask { notifyLevelUp(player, oldLevel, newLevel) }
                     .delay(Duration.ofSeconds(2)).schedule()
         }
         Database.IO.launch {

@@ -3,6 +3,8 @@ package com.bluedragonmc.server.module
 import com.bluedragonmc.server.ModuleHolder
 import com.bluedragonmc.server.game.GameData
 import com.bluedragonmc.server.utils.GameState
+import com.bluedragonmc.server.utils.TaskScheduler
+import com.bluedragonmc.server.utils.TaskScope
 import net.minestom.server.adventure.audience.PacketGroupingAudience
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
@@ -11,7 +13,9 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import kotlin.reflect.KClass
 
-abstract class GameModule {
+abstract class GameModule : TaskScheduler {
+
+    override val taskScope = TaskScope()
 
     open val eventPriority = 0
 
@@ -31,6 +35,11 @@ abstract class GameModule {
 
     abstract fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>)
     open fun deinitialize() {}
+
+    /**
+     * Cancels every task scheduled through this module's [taskScope].
+     */
+    internal fun cancelTasks() = taskScope.cancelAll()
 
     val logger: Logger by lazy {
         LoggerFactory.getLogger(javaClass)

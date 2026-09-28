@@ -6,11 +6,10 @@ import com.bluedragonmc.server.*
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.module.GameModule
+import com.bluedragonmc.server.utils.TaskScheduler
 import com.bluedragonmc.server.utils.displayName
-import com.bluedragonmc.server.utils.manage
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
-import net.minestom.server.MinecraftServer
 import net.minestom.server.component.DataComponents
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
@@ -104,6 +103,7 @@ class CustomItemModule(vararg val items: CustomItem) : GameModule() {
     }
 
     fun registerItem(item: CustomItem) {
+        item.scheduler = this
         cooldownPlayers[item] = mutableMapOf()
 
         val itemEventNode = EventNode.event("custom-item-${id}-${item.uid}", EventFilter.ITEM) { event ->
@@ -169,9 +169,9 @@ class CustomItemModule(vararg val items: CustomItem) : GameModule() {
             val durationMillis = duration.toMillis()
             cooldownPlayers[item]!![player] = System.currentTimeMillis() + durationMillis - item.cooldown.toMillis()
             player.sendPacket(SetCooldownPacket(item.cooldownGroup, (durationMillis * 0.02).toInt()))
-            MinecraftServer.getSchedulerManager().buildTask {
+            buildTask {
                 setCooldownRemaining(player, item, Duration.ZERO)
-            }.delay(duration).schedule().manage(parent)
+            }.delay(duration).schedule()
         }
     }
 
@@ -197,6 +197,9 @@ class CustomItemModule(vararg val items: CustomItem) : GameModule() {
          */
         abstract val uid: String
         open val cooldown: Duration = Duration.ZERO
+
+        lateinit var scheduler: TaskScheduler
+            internal set
 
         internal val cooldownGroup get() = "bluedragon:custom-item-$uid"
 

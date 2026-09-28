@@ -7,6 +7,7 @@ import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.GuiModule
 import com.bluedragonmc.server.utils.SoundUtils
+import com.bluedragonmc.server.utils.TaskScheduler
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
 import net.minestom.server.MinecraftServer
@@ -77,6 +78,8 @@ class ChestModule : GameModule() {
 
     abstract class ChestBlock {
 
+        protected abstract val scheduler: TaskScheduler
+
         private var isOpen: Boolean = false
 
         abstract fun getMenu(player: Player): GuiModule.Menu
@@ -107,14 +110,14 @@ class ChestModule : GameModule() {
         }
 
         private fun updateState() {
-            MinecraftServer.getSchedulerManager().scheduleNextTick {
+            scheduler.scheduleNextTick {
                 instance.sendBlockAction(position, 0x1, viewers.size.toByte())
             }
         }
 
 //        init {
 //            // This task mimicks the vanilla server's behavior, even though it is inefficient
-//            MinecraftServer.getSchedulerManager().buildTask {
+//            buildTask {
 //                if (viewers.isNotEmpty()) instance.sendBlockAction(position, 0x1, viewers.size.toByte())
 //            }.repeat(Duration.ofMillis(500)).schedule()
 //        }
@@ -122,6 +125,8 @@ class ChestModule : GameModule() {
 
     class EnderChest(private val game: ChestModule, override val position: Point, override val instance: Instance) :
         ChestBlock() {
+
+        override val scheduler get() = game
 
         companion object {
             private val enderChestMenus = mutableMapOf<Player, GuiModule.Menu>()
@@ -151,6 +156,8 @@ class ChestModule : GameModule() {
         override val instance: Instance,
         override val position: Point,
     ) : ChestBlock() {
+
+        override val scheduler get() = game
 
         private val menu by lazy {
             game.getModule<GuiModule>().createMenu(

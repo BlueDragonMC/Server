@@ -73,19 +73,19 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
             }
 
             eventNode.listen<PlayerSpawnEvent> { event ->
-                MinecraftServer.getSchedulerManager().scheduleNextTick {
+                scheduleNextTick {
                     Messaging.IO.launch {
                         Messaging.outgoing.updateGameState(id, rpcGameState())
                     }
-                }.manage(parent)
+                }
             }
 
             eventNode.listen<PlayerDisconnectEvent> { event ->
-                MinecraftServer.getSchedulerManager().scheduleNextTick {
+                scheduleNextTick {
                     Messaging.IO.launch {
                         Messaging.outgoing.updateGameState(id, rpcGameState())
                     }
-                }.manage(parent)
+                }
             }
         }
 
