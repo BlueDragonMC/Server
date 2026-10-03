@@ -103,25 +103,14 @@ class ArgumentGameId(id: String) : Argument<Game>(id) {
 }
 
 /**
- * An argument that returns a [PlayerDocument] for a player that could possibly be offline.
- * Online players are suggested to the player, but offline players can be passed to this argument
- * and properly converted into a PlayerDocument.
+ * An argument that returns the username passed by the sender and suggests online players' names.
+ *
+ * Resolve the value with [resolveOfflinePlayer] from a `suspendSyntax` handler.
  */
-class ArgumentOfflinePlayer(id: String) : Argument<PlayerDocument>(id) {
+class ArgumentOfflinePlayerName(id: String) : Argument<String>(id) {
+    private val backingArgument = ArgumentString(id)
 
-    override fun parse(sender: CommandSender, input: String): PlayerDocument {
-        val doc: PlayerDocument?
-        runBlocking {
-            doc = try {
-                // If the input is a UUID, use that to look up the player. If not, consider the input a username.
-                Database.connection.getPlayerDocument(UUID.fromString(input))
-            } catch (_: IllegalArgumentException) {
-                Database.connection.getPlayerDocument(input)
-            }
-        }
-        if (doc == null) throw ArgumentSyntaxException("Offline player not found", input, -1)
-        return doc
-    }
+    override fun parse(sender: CommandSender, input: String) = backingArgument.parse(sender, input)
 
     override fun parser(): ArgumentParserType = ArgumentParserType.STRING
 
@@ -139,6 +128,15 @@ class ArgumentOfflinePlayer(id: String) : Argument<PlayerDocument>(id) {
         }
     }
 }
+
+/** Looks up a player document by UUID or username. Meant to be used with [ArgumentOfflinePlayerName]. */
+suspend fun resolveOfflinePlayer(input: String): PlayerDocument? =
+    try {
+        // If the input is a UUID, use that to look up the player. If not, consider the input a username.
+        Database.connection.getPlayerDocument(UUID.fromString(input))
+    } catch (_: IllegalArgumentException) {
+        Database.connection.getPlayerDocument(input)
+    }
 
 /**
  * An argument that returns a [String] representing a player name. The string is not validated.
@@ -178,6 +176,6 @@ object WordArgument : ArgumentTypeDelegation<String>(::ArgumentWord)
 object StringArgument : ArgumentTypeDelegation<String>(::ArgumentString)
 object GameArgument : ArgumentTypeDelegation<Game>(::ArgumentGameId)
 object PlayerArgument : ArgumentTypeDelegation<EntityFinder>(::ArgumentPlayer)
-object OfflinePlayerArgument : ArgumentTypeDelegation<PlayerDocument>(::ArgumentOfflinePlayer)
+object OfflinePlayerNameArgument : ArgumentTypeDelegation<String>(::ArgumentOfflinePlayerName)
 object OptionalPlayerArgument : ArgumentTypeDelegation<String>(::ArgumentOptionalPlayer)
 object InstanceArgument : ArgumentTypeDelegation<Instance>(::ArgumentInstance)

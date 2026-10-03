@@ -1,10 +1,11 @@
 package com.bluedragonmc.server.command.punishment
 
 import com.bluedragonmc.server.command.BlueDragonCommand
-import com.bluedragonmc.server.command.OfflinePlayerArgument
-import com.bluedragonmc.server.service.Database
+import com.bluedragonmc.server.command.OfflinePlayerNameArgument
+import com.bluedragonmc.server.command.resolveOfflinePlayer
 import com.bluedragonmc.server.model.PlayerDocument
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class PardonCommand(name: String, usageString: String, vararg aliases: String) : BlueDragonCommand(name, aliases, block = {
 
@@ -16,11 +17,17 @@ class PardonCommand(name: String, usageString: String, vararg aliases: String) :
 
     usage(usageString)
 
-    val playerArgument by OfflinePlayerArgument
-    syntax(playerArgument) {
-        val document = get(playerArgument)
+    val playerArgument by OfflinePlayerNameArgument
+    suspendSyntax(playerArgument) {
+        val playerName = get(playerArgument)
 
-        Database.IO.launch {
+        val document = withContext(Dispatchers.IO) { resolveOfflinePlayer(playerName) }
+        if (document == null) {
+            sender.sendMessage(formatErrorTranslated("argument.entity.notfound.player", playerName))
+            return@suspendSyntax
+        }
+
+        withContext(Dispatchers.IO) {
             document.compute(PlayerDocument::punishments) { punishments ->
                 punishments.forEach {
                     if (it.isInEffect()) {

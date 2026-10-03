@@ -182,6 +182,10 @@ open class GuiModule : GameModule() {
             if (isPerPlayer) {
                 cachedInventories.remove(player)
                 player.openInventory(getInventory(player))
+            } else if (this::cachedInventory.isInitialized) {
+                items.forEach { item ->
+                    cachedInventory.setItemStack(item.index, item.itemStackBuilder(player))
+                }
             }
         }
 

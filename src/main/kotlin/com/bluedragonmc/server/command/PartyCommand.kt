@@ -1,16 +1,30 @@
 package com.bluedragonmc.server.command
 
-import com.bluedragonmc.server.GameRegistry
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
+import com.bluedragonmc.server.GameRegistry
 import com.bluedragonmc.server.service.Messaging
 import com.bluedragonmc.server.service.Permissions
 import com.bluedragonmc.server.utils.miniMessage
 import com.bluedragonmc.server.utils.plus
 import com.bluedragonmc.server.utils.surroundWithSeparators
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.JoinConfiguration
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.entity.Player
+import java.util.*
+
+/**
+ * Resolves a possibly-offline player name to a UUID.
+ * Returns `null` and notifies the sender if the player could not be found.
+ */
+private suspend fun BlueDragonCommand.CommandCtx.resolvePartyTarget(name: String): UUID? =
+    withContext(Dispatchers.IO) { resolveOfflinePlayer(name)?.uuid }
+        ?: run {
+            sender.sendMessage(Component.translatable("argument.entity.notfound.player", NamedTextColor.RED))
+            null
+        }
 
 class PartyCommand(name: String, usageString: String, vararg aliases: String) :
     BlueDragonCommand(name, aliases, block = {
@@ -31,16 +45,18 @@ class PartyCommand(name: String, usageString: String, vararg aliases: String) :
          */
 
         subcommand("invite") {
-            val playerArgument by OfflinePlayerArgument
+            val playerArgument by OfflinePlayerNameArgument
             suspendSyntax(playerArgument) {
-                Messaging.outgoing.inviteToParty(player.uuid, get(playerArgument).uuid)
+                val uuid = resolvePartyTarget(get(playerArgument)) ?: return@suspendSyntax
+                Messaging.outgoing.inviteToParty(player.uuid, uuid)
             }
         }
 
         subcommand("kick") {
-            val playerArgument by OfflinePlayerArgument
+            val playerArgument by OfflinePlayerNameArgument
             suspendSyntax(playerArgument) {
-                Messaging.outgoing.kickFromParty(player.uuid, get(playerArgument).uuid)
+                val uuid = resolvePartyTarget(get(playerArgument)) ?: return@suspendSyntax
+                Messaging.outgoing.kickFromParty(player.uuid, uuid)
             }
         }
 
@@ -58,9 +74,10 @@ class PartyCommand(name: String, usageString: String, vararg aliases: String) :
         }
 
         subcommand("accept") {
-            val playerArgument by OfflinePlayerArgument
+            val playerArgument by OfflinePlayerNameArgument
             suspendSyntax(playerArgument) {
-                Messaging.outgoing.acceptPartyInvitation(get(playerArgument).uuid, player.uuid)
+                val uuid = resolvePartyTarget(get(playerArgument)) ?: return@suspendSyntax
+                Messaging.outgoing.acceptPartyInvitation(uuid, player.uuid)
             }
         }
 
@@ -76,9 +93,10 @@ class PartyCommand(name: String, usageString: String, vararg aliases: String) :
         }
 
         subcommand("transfer") {
-            val playerArgument by OfflinePlayerArgument
+            val playerArgument by OfflinePlayerNameArgument
             suspendSyntax(playerArgument) {
-                Messaging.outgoing.transferParty(player, get(playerArgument).uuid)
+                val uuid = resolvePartyTarget(get(playerArgument)) ?: return@suspendSyntax
+                Messaging.outgoing.transferParty(player, uuid)
             }
         }
 
@@ -144,9 +162,10 @@ class PartyCommand(name: String, usageString: String, vararg aliases: String) :
         }
 
         // If the player adds a player as the first argument instead of typing `invite <player>`
-        val playerArgument by OfflinePlayerArgument
+        val playerArgument by OfflinePlayerNameArgument
         suspendSyntax(playerArgument) {
-            Messaging.outgoing.inviteToParty(player.uuid, get(playerArgument).uuid)
+            val uuid = resolvePartyTarget(get(playerArgument)) ?: return@suspendSyntax
+            Messaging.outgoing.inviteToParty(player.uuid, uuid)
         }
 
     })

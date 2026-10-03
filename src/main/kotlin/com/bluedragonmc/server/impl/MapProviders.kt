@@ -38,11 +38,14 @@ class PolarMapProvider : Maps.MapProvider<PolarLoader>() {
         return PolarLoader(response.body!!.byteStream())
     }
 
-    override suspend fun saveMap(source: Maps.MapSource, instance: InstanceContainer) {
+    override fun serializeMap(instance: InstanceContainer): ByteArray {
         val loader = instance.chunkLoader as PolarLoader
         instance.saveInstance() // update Polar's internal representation of the world (will not write any data to disk)
-        val mapBytes = PolarWriter.write(loader.world(), PolarDataConverter.NOOP)
-        val request = Request.Builder().url(source.url).method("POST", mapBytes.toRequestBody()).build()
+        return PolarWriter.write(loader.world(), PolarDataConverter.NOOP)
+    }
+
+    override suspend fun uploadMap(source: Maps.MapSource, bytes: ByteArray) {
+        val request = Request.Builder().url(source.url).method("POST", bytes.toRequestBody()).build()
         client.newCall(request).await()
     }
 }
@@ -63,8 +66,12 @@ class AnvilMapProvider : Maps.MapProvider<AnvilLoader>() {
         }
     }
 
-    override suspend fun saveMap(source: Maps.MapSource, instance: InstanceContainer) {
-        TODO()
+    override fun serializeMap(instance: InstanceContainer): ByteArray {
+        TODO("Anvil map saving is not implemented")
+    }
+
+    override suspend fun uploadMap(source: Maps.MapSource, bytes: ByteArray) {
+        TODO("Anvil map saving is not implemented")
     }
 }
 

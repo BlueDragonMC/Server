@@ -4,14 +4,15 @@ import com.bluedragonmc.server.ModuleHolder
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.service.Maps
-import kotlinx.coroutines.Deferred
+import com.bluedragonmc.server.utils.DeferredChunkLoader
 import kotlinx.coroutines.async
-import kotlinx.coroutines.runBlocking
 import net.minestom.server.MinecraftServer
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.instance.InstanceUnregisterEvent
-import net.minestom.server.instance.*
+import net.minestom.server.instance.DynamicChunk
+import net.minestom.server.instance.InstanceContainer
+import net.minestom.server.instance.LightingChunk
 import net.minestom.server.registry.RegistryKey
 import net.minestom.server.tag.Tag
 import net.minestom.server.world.DimensionType
@@ -66,13 +67,5 @@ class MapProviderModule(
                 loadedMaps.entries.removeIf { (_, instance) -> instance == event.instance }
             }
         }
-    }
-
-    private class DeferredChunkLoader(val delegate: Deferred<ChunkLoader>) : ChunkLoader {
-        override fun loadChunk(
-            p0: Instance?, p1: Int, p2: Int
-        ): Chunk? = runBlocking { delegate.await().loadChunk(p0, p1, p2) }
-
-        override fun saveChunk(p0: Chunk?) = runBlocking { delegate.await().saveChunk(p0) }
     }
 }

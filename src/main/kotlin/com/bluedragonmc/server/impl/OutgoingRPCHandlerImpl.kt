@@ -16,7 +16,6 @@ import com.bluedragonmc.server.utils.listen
 import com.bluedragonmc.server.utils.miniMessage
 import io.grpc.ManagedChannelBuilder
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import net.kyori.adventure.text.Component
 import net.minestom.server.MinecraftServer
 import net.minestom.server.command.CommandSender
@@ -52,8 +51,11 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
     class MessagingModule : GameModule() {
 
         override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>) {
-            runBlocking {
-                Messaging.outgoing.initGame(id, data.gameType, rpcGameState())
+            val gameId = id
+            val gameType = data.gameType
+            val initialState = rpcGameState()
+            Messaging.IO.launch {
+                Messaging.outgoing.initGame(gameId, gameType, initialState)
             }
 
             eventNode.listen<GameStateChangedEvent> { event ->

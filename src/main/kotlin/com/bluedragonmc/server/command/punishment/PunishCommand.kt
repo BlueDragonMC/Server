@@ -1,16 +1,13 @@
 package com.bluedragonmc.server.command.punishment
 
 import com.bluedragonmc.server.bootstrap.GlobalPunishments
-import com.bluedragonmc.server.command.BlueDragonCommand
-import com.bluedragonmc.server.command.OfflinePlayerArgument
-import com.bluedragonmc.server.command.StringArrayArgument
-import com.bluedragonmc.server.command.WordArgument
+import com.bluedragonmc.server.command.*
 import com.bluedragonmc.server.event.DataLoadedEvent
 import com.bluedragonmc.server.model.PlayerDocument
 import com.bluedragonmc.server.model.Punishment
 import com.bluedragonmc.server.model.PunishmentType
-import com.bluedragonmc.server.service.Database
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import net.minestom.server.MinecraftServer
 import net.minestom.server.command.builder.exception.ArgumentSyntaxException
 import java.util.*
@@ -20,12 +17,12 @@ class PunishCommand(name: String, usageString: String, vararg aliases: String) :
 
         usage(usageString)
 
-        val playerArgument by OfflinePlayerArgument
+        val playerArgument by OfflinePlayerNameArgument
         val durationArgument by WordArgument
         val reasonArgument by StringArrayArgument
 
-        syntax(playerArgument, durationArgument, reasonArgument) {
-            val document = get(playerArgument)
+        suspendSyntax(playerArgument, durationArgument, reasonArgument) {
+            val playerName = get(playerArgument)
             val duration = parseDuration(get(durationArgument))
             val reason = get(reasonArgument)
             val type = if (ctx.commandName.contains("ban")) PunishmentType.BAN else PunishmentType.MUTE
@@ -39,31 +36,39 @@ class PunishCommand(name: String, usageString: String, vararg aliases: String) :
                 active = true
             )
 
-            Database.IO.launch {
-                document.compute(PlayerDocument::punishments) { punishments ->
+            val document = withContext(Dispatchers.IO) {
+                val doc = resolveOfflinePlayer(playerName)
+                doc?.compute(PlayerDocument::punishments) { punishments ->
                     punishments.add(punishment)
                     punishments
                 }
-                MinecraftServer.getSchedulerManager().scheduleNextTick {
-                    val target = getPlayer(playerArgument)
-                    target?.let {
-                        // If the player is on the server, call the DataLoadedEvent to send them the ban message
-                        MinecraftServer.getGlobalEventHandler().call(DataLoadedEvent(target))
-                        if (type == PunishmentType.MUTE) {
-                            // Send a chat message telling the player they were muted.
-                            it.sendMessage(GlobalPunishments.getMuteMessage(punishment))
-                        }
-                    }
-                    player.sendMessage(
-                        formatMessageTranslated(
-                            if (type === PunishmentType.BAN) "command.ban.success" else "command.mute.success",
-                            target?.name ?: document.username,
-                            get(durationArgument),
-                            reason.joinToString(" ")
-                        )
-                    )
+                doc
+            }
+            if (document == null) {
+                sender.sendMessage(
+                    formatErrorTranslated("argument.entity.notfound.player", playerName)
+                )
+                return@suspendSyntax
+            }
+
+            val target = MinecraftServer.getConnectionManager()
+                .getOnlinePlayerByUuid(document.uuid)
+            target?.let {
+                // If the player is on the server, call the DataLoadedEvent to send them the ban message
+                MinecraftServer.getGlobalEventHandler().call(DataLoadedEvent(target))
+                if (type == PunishmentType.MUTE) {
+                    // Send a chat message telling the player they were muted.
+                    it.sendMessage(GlobalPunishments.getMuteMessage(punishment))
                 }
             }
+            player.sendMessage(
+                formatMessageTranslated(
+                    if (type === PunishmentType.BAN) "command.ban.success" else "command.mute.success",
+                    target?.name ?: document.username,
+                    get(durationArgument),
+                    reason.joinToString(" ")
+                )
+            )
         }
     }) {
     companion object {

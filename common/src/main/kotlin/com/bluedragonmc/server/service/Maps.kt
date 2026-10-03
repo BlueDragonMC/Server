@@ -79,9 +79,21 @@ object Maps {
         abstract suspend fun provideMap(source: MapSource): L
 
         /**
-         * Posts the binary contents of the map to the map's URL.
+         * Serializes the current contents of [instance] into the map's binary format.
          */
-        abstract suspend fun saveMap(source: MapSource, instance: InstanceContainer)
+        abstract fun serializeMap(instance: InstanceContainer): ByteArray
+
+        /**
+         * Posts serialized map [bytes] to the map's URL.
+         */
+        abstract suspend fun uploadMap(source: MapSource, bytes: ByteArray)
+
+        /**
+         * Serializes and uploads the map. Prefer running [serializeMap] on the tick thread
+         * and then [uploadMap] on a background thread instead of using this method.
+         */
+        suspend fun saveMap(source: MapSource, instance: InstanceContainer) =
+            uploadMap(source, serializeMap(instance))
     }
 
     private val mapProviders = mutableMapOf<CommonTypes.MapFormat, MapProvider<*>>()
@@ -90,14 +102,27 @@ object Maps {
         mapProviders[source.format]?.provideMap(source)
             ?: error("No valid map provider found to fulfill request: $source")
 
+    fun serializeMap(source: MapSource, instance: InstanceContainer): ByteArray =
+        (mapProviders[source.format] as? MapProvider<ChunkLoader>)?.serializeMap(instance)
+            ?: error("No valid map provider found to fulfill serialize request: $source")
+
+    suspend fun uploadMap(source: MapSource, bytes: ByteArray) =
+        (mapProviders[source.format] as? MapProvider<ChunkLoader>)?.uploadMap(source, bytes)
+            ?: error("No valid map provider found to fulfill save request: $source")
+
     suspend fun saveMap(source: MapSource, instance: InstanceContainer) =
         (mapProviders[source.format] as? MapProvider<ChunkLoader>)?.saveMap(source, instance)
             ?: error("No valid map provider found to fulfill save request: $source")
 
     suspend fun saveMapConfig(source: MapSource, config: ConfigurationNode) {
-        val json = GsonConfigurationLoader.builder().buildAndSaveString(config)
-        Messaging.outgoing.updateMapConfig(source.id, json)
+        Messaging.outgoing.updateMapConfig(source.id, serializeMapConfig(config))
     }
+
+    /**
+     * Serializes a map configuration to JSON.
+     */
+    fun serializeMapConfig(config: ConfigurationNode): String =
+        GsonConfigurationLoader.builder().buildAndSaveString(config)
 
     fun registerMapProvider(format: CommonTypes.MapFormat, mapProvider: MapProvider<*>) {
         mapProviders[format] = mapProvider

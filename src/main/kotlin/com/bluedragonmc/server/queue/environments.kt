@@ -6,7 +6,6 @@ import com.bluedragonmc.server.VersionInfo
 import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.api.Queue
 import com.bluedragonmc.server.bootstrap.prod.AgonesIntegration
-import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.util.*
@@ -50,9 +49,7 @@ class ConfiguredEnvironment : Environment() {
             } else if (isDev() || !isAgonesEnabled) {
                 "dev-" + UUID.randomUUID().toString().take(5) + "-" + UUID.randomUUID().toString().take(5)
             } else {
-                runBlocking {
-                    AgonesIntegration.stub.getGameServer(Agones.Empty.getDefaultInstance()).objectMeta.name
-                }
+                AgonesIntegration.stub.getGameServer(Agones.Empty.getDefaultInstance()).objectMeta.name
             }
         }
         return serverName

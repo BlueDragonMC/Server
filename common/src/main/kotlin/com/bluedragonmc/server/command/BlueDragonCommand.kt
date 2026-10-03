@@ -1,17 +1,13 @@
 package com.bluedragonmc.server.command
 
-import com.bluedragonmc.server.GameRegistry
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.CustomPlayer
+import com.bluedragonmc.server.GameRegistry
 import com.bluedragonmc.server.command.BlueDragonCommand.Companion.errorColor
 import com.bluedragonmc.server.model.PlayerDocument
 import com.bluedragonmc.server.service.Permissions
-import com.bluedragonmc.server.utils.component1
-import com.bluedragonmc.server.utils.component2
-import com.bluedragonmc.server.utils.component3
-import com.bluedragonmc.server.utils.withColor
-import kotlinx.coroutines.runBlocking
+import com.bluedragonmc.server.utils.*
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.JoinConfiguration
 import net.kyori.adventure.text.format.NamedTextColor
@@ -186,8 +182,14 @@ open class BlueDragonCommand(
 
     class BlockingSyntax(parent: Command, args: List<Argument<*>>, handler: suspend CommandCtx.() -> Unit) :
         Syntax(parent, args, {
-            runBlocking {
-                handler()
+            TickDispatcher.launch {
+                try {
+                    handler()
+                } catch (e: Throwable) {
+                    if (e is SilentCommandException) return@launch
+                    e.printStackTrace()
+                    sender.sendMessage("There was an internal error executing this command." withColor errorColor)
+                }
             }
         })
 
