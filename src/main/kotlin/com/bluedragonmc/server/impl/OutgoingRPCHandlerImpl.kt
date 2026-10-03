@@ -13,7 +13,6 @@ import com.bluedragonmc.server.module.instance.InstanceModule
 import com.bluedragonmc.server.service.Messaging
 import com.bluedragonmc.server.utils.GameState
 import com.bluedragonmc.server.utils.listen
-import com.bluedragonmc.server.utils.listenAsync
 import com.bluedragonmc.server.utils.miniMessage
 import io.grpc.ManagedChannelBuilder
 import kotlinx.coroutines.launch
@@ -52,8 +51,10 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
     @DependsOn(InstanceModule::class, PlayerListModule::class, GameStateModule::class, GameInfoModule::class)
     class MessagingModule : GameModule() {
 
-        override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>): Unit = runBlocking {
-            Messaging.outgoing.initGame(id, data.gameType, rpcGameState())
+        override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>) {
+            runBlocking {
+                Messaging.outgoing.initGame(id, data.gameType, rpcGameState())
+            }
 
             eventNode.listen<GameStateChangedEvent> { event ->
                 val gameId = id
@@ -72,10 +73,11 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
                 }
             }
 
-            eventNode.listenAsync<AddEntityToInstanceEvent> { event ->
-                val gameId = GameRegistry.findGame(event.instance.uuid)?.id
-                if (gameId != null) {
-                    Messaging.outgoing.recordInstanceChange(event.entity as? Player ?: return@listenAsync, gameId)
+            eventNode.listen<AddEntityToInstanceEvent> { event ->
+                val gameId = GameRegistry.findGame(event.instance.uuid)?.id ?: return@listen
+                val player = event.entity as? Player ?: return@listen
+                launch {
+                    Messaging.outgoing.recordInstanceChange(player, gameId)
                 }
             }
 
@@ -83,7 +85,7 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
                 scheduleNextTick {
                     val gameId = id
                     val gameState = rpcGameState()
-                    Messaging.IO.launch {
+                    launch {
                         Messaging.outgoing.updateGameState(gameId, gameState)
                     }
                 }
@@ -93,7 +95,7 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
                 scheduleNextTick {
                     val gameId = id
                     val gameState = rpcGameState()
-                    Messaging.IO.launch {
+                    launch {
                         Messaging.outgoing.updateGameState(gameId, gameState)
                     }
                 }
