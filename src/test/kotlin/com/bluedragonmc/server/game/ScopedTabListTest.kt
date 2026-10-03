@@ -6,6 +6,7 @@ import com.bluedragonmc.server.ModuleHolder
 import com.bluedragonmc.server.api.DatabaseConnectionStub
 import com.bluedragonmc.server.api.OutgoingRPCHandlerStub
 import com.bluedragonmc.server.module.instance.InstanceModule
+import com.bluedragonmc.server.module.gameplay.NPCModule
 import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.service.Maps
 import com.bluedragonmc.server.service.Messaging
@@ -299,5 +300,26 @@ class ScopedTabListTest {
 
         gameOne.endGame(queueAllPlayers = false)
         gameTwo.endGame(queueAllPlayers = false)
+    }
+
+    @Test
+    fun `NPC tab list entries are not filtered out`(env: Env) {
+        val game = createGame(env)
+        game.use(NPCModule())
+
+        val alice = connect(env, game.instanceA)
+        game.addPlayer(alice.player, sendPlayer = false)
+        alice.connection.clear()
+
+        // NPCs are entities, not players, but they use a player-model tab list entry to show their skin. That entry
+        // must not be mistaken for a player from another game and cancelled.
+        val npc = game.getModule<NPCModule>().addNPC(instance = game.instanceA, position = Pos(0.5, 42.0, 0.5))
+
+        assertTrue(
+            alice.connection.tabListUpdatesMentioning(npc.uuid).isNotEmpty(),
+            "An NPC's tab list entry must reach players even though it is not a real player in the game",
+        )
+
+        game.endGame(queueAllPlayers = false)
     }
 }

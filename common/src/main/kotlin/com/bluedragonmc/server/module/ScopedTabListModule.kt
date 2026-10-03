@@ -64,13 +64,21 @@ class ScopedTabListModule : GameModule() {
             val recipient = event.player
             val containsForeignPlayer = packet.entries.any { entry ->
                 entry.uuid != recipient.uuid // The recipient's own entry is always allowed, since the client needs it for their own skin.
-                        && players.none { it.uuid == entry.uuid }
+                        && isPlayerInAnotherGame(entry.uuid)
             }
             if (containsForeignPlayer) event.isCancelled = true
         }
         // Removals are always safe to forward: removing a player the client does not know about is a no-op.
         // Letting them through also guarantees that a player who disconnects is removed from every tab list.
     }
+
+    /**
+     * Whether [uuid] belongs to an online player who is not a member of this game.
+     * NPCs need to be exempt from this filter for them to display properly.
+     */
+    private fun isPlayerInAnotherGame(uuid: UUID): Boolean =
+        MinecraftServer.getConnectionManager().onlinePlayers.any { it.uuid == uuid } &&
+                players.none { it.uuid == uuid }
 
     private fun removePlayersFromOtherGames(player: Player) {
         val toRemove = MinecraftServer.getConnectionManager().onlinePlayers
