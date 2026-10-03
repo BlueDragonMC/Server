@@ -2,7 +2,7 @@ package com.bluedragonmc.server.command
 
 import com.bluedragonmc.server.service.Messaging
 import com.bluedragonmc.server.service.Permissions
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.launch
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.MinecraftServer
@@ -27,17 +27,22 @@ class MessageCommand(name: String, vararg aliases: String) : BlueDragonCommand(n
             sender.sendMessage(senderMessage)
             player.sendMessage(receiverMessage)
         } else {
-            runBlocking {
-                val recipient = Messaging.outgoing.queryPlayer(username = playerName)
-                if (!recipient.isOnline) {
+            Messaging.IO.launch {
+                try {
+                    val recipient = Messaging.outgoing.queryPlayer(username = playerName)
+                    if (!recipient.isOnline) {
+                        sender.sendMessage(formatMessageTranslated("command.msg.fail", playerName))
+                        return@launch
+                    }
+                    val recipientUuid = UUID.fromString(recipient.uuid!!)
+                    val color = Permissions.getMetadata(recipientUuid).rankColor
+                    val senderMessage = formatMessageTranslated("command.msg.sent", Component.text(playerName, color), message)
+                    Messaging.outgoing.sendPrivateMessage(message, sender, recipientUuid)
+                    sender.sendMessage(senderMessage)
+                } catch (e: Exception) {
+                    e.printStackTrace()
                     sender.sendMessage(formatMessageTranslated("command.msg.fail", playerName))
-                    return@runBlocking
                 }
-                val recipientUuid = UUID.fromString(recipient.uuid!!)
-                val color = Permissions.getMetadata(recipientUuid).rankColor
-                val senderMessage = formatMessageTranslated("command.msg.sent", Component.text(playerName, color), message)
-                Messaging.outgoing.sendPrivateMessage(message, sender, recipientUuid)
-                sender.sendMessage(senderMessage)
             }
         }
     }

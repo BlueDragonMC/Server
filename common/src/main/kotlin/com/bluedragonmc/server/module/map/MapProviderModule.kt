@@ -15,6 +15,7 @@ import net.minestom.server.instance.*
 import net.minestom.server.registry.RegistryKey
 import net.minestom.server.tag.Tag
 import net.minestom.server.world.DimensionType
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Supplies an [InstanceContainer] to the [com.bluedragonmc.server.module.instance.InstanceContainerModule].
@@ -56,7 +57,7 @@ class MapProviderModule(
     }
 
     companion object {
-        val loadedMaps = mutableMapOf<String, InstanceContainer>()
+        val loadedMaps = ConcurrentHashMap<String, InstanceContainer>()
         val MAP_NAME_TAG = Tag.String("anvil_file_map_name")
 
         init {

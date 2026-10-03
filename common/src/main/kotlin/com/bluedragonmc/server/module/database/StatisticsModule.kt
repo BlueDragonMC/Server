@@ -62,8 +62,8 @@ class StatisticsModule(private vararg val recorders: StatisticRecorder) : GameMo
 
         internal fun recordStatistic(player: Player, key: String, value: Double) {
             player as CustomPlayer
+            necessaryUpdates.computeIfAbsent(player) { ConcurrentHashMap.newKeySet() }.add(key)
             player.data.statistics[key] = value
-            necessaryUpdates.getOrPut(player) { mutableSetOf() }.add(key)
         }
 
         init {
@@ -128,7 +128,7 @@ class StatisticsModule(private vararg val recorders: StatisticRecorder) : GameMo
         history.clear()
     }
 
-    private val history = mutableMapOf<Pair<Player, String>, Pair<Double?, Double>>()
+    private val history = ConcurrentHashMap<Pair<Player, String>, Pair<Double?, Double>>()
 
     fun getHistory(): List<StatisticRecord> {
         return history.map { (playerAndKey, values) ->
@@ -151,10 +151,9 @@ class StatisticsModule(private vararg val recorders: StatisticRecorder) : GameMo
         player as CustomPlayer
 
         // Record the change in the game's statistic history for logging purposes
-        if (history.containsKey(player to key)) {
-            history[player to key] = history[player to key]?.first to value
-        } else {
-            history[player to key] = player.data.statistics[key] to value
+        history.compute(player to key) { _, existing ->
+            if (existing != null) existing.first to value
+            else player.data.statistics[key] to value
         }
 
         Companion.recordStatistic(player, key, value)

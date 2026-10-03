@@ -1,6 +1,9 @@
 package com.bluedragonmc.server.bootstrap
 
-import com.bluedragonmc.api.grpc.*
+import com.bluedragonmc.api.grpc.JukeboxOuterClass
+import com.bluedragonmc.api.grpc.copy
+import com.bluedragonmc.api.grpc.playerSongInfo
+import com.bluedragonmc.api.grpc.playerSongQueue
 import com.bluedragonmc.jukebox.api.Song
 import com.bluedragonmc.jukebox.impl.NBSSongLoader
 import com.bluedragonmc.server.ModuleHolder
@@ -13,7 +16,6 @@ import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.MinecraftServer
-import net.minestom.server.property.ServerProperties
 import net.minestom.server.component.DataComponents
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.Player
@@ -27,6 +29,7 @@ import net.minestom.server.inventory.InventoryType
 import net.minestom.server.inventory.click.Click
 import net.minestom.server.item.Material
 import net.minestom.server.item.component.TooltipDisplay
+import net.minestom.server.property.ServerProperties
 import net.minestom.server.sound.SoundEvent
 import net.minestom.server.timer.Task
 import java.io.File
@@ -234,6 +237,7 @@ object Jukebox : Bootstrap() {
                     set(DataComponents.TOOLTIP_DISPLAY, TooltipDisplay(false, setOf(DataComponents.JUKEBOX_PLAYABLE)))
                 }) {
                     isCancelled = true
+                    val currentTick = getState(player)?.tick ?: 0
                     Messaging.IO.launch {
                         val queue = Messaging.outgoing.getSongInfo(player)
                         val song = playerSongInfo {
@@ -247,7 +251,7 @@ object Jukebox : Bootstrap() {
                                 // Add the song to the end of the queue
                                 songs.addAll(queue.songsList)
                                 songs.add(song)
-                                startingTick = getState(player)?.tick ?: 0
+                                startingTick = currentTick
                                 startedPlayingAt = currentTimestamp()
                             } else {
                                 // Replace the first item in the queue
@@ -274,7 +278,10 @@ object Jukebox : Bootstrap() {
             // When the player loads in, start playing the song that they were listening to previously
             event.player.eventNode().addListener(EventListener.builder(PlayerLoadedEvent::class.java).handler {
                 Messaging.IO.launch {
-                    updateSongQueueFromIncomingMessage(event.player, job.await())
+                    val queue = job.await()
+                    event.player.scheduler().scheduleNextTick {
+                        updateSongQueueFromIncomingMessage(event.player, queue)
+                    }
                 }
             }.expireCount(1).build())
         }
@@ -298,7 +305,6 @@ object Jukebox : Bootstrap() {
 
     fun updateSongQueueFromIncomingMessage(player: Player, queue: JukeboxOuterClass.PlayerSongQueue) {
         val firstItem = queue.songsList.firstOrNull()
-        val current = getState(player)
 
         // Cancel and restart the song task with the new first song in the queue
         playStates.remove(player)?.task?.cancel()

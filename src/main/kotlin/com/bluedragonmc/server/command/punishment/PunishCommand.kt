@@ -44,23 +44,25 @@ class PunishCommand(name: String, usageString: String, vararg aliases: String) :
                     punishments.add(punishment)
                     punishments
                 }
-                val target = getPlayer(playerArgument)
-                target?.let {
-                    // If the player is on the server, call the DataLoadedEvent to send them the ban message
-                    MinecraftServer.getGlobalEventHandler().call(DataLoadedEvent(target))
-                    if (type == PunishmentType.MUTE) {
-                        // Send a chat message telling the player they were muted.
-                        it.sendMessage(GlobalPunishments.getMuteMessage(punishment))
+                MinecraftServer.getSchedulerManager().scheduleNextTick {
+                    val target = getPlayer(playerArgument)
+                    target?.let {
+                        // If the player is on the server, call the DataLoadedEvent to send them the ban message
+                        MinecraftServer.getGlobalEventHandler().call(DataLoadedEvent(target))
+                        if (type == PunishmentType.MUTE) {
+                            // Send a chat message telling the player they were muted.
+                            it.sendMessage(GlobalPunishments.getMuteMessage(punishment))
+                        }
                     }
-                }
-                player.sendMessage(
-                    formatMessageTranslated(
-                        if (type === PunishmentType.BAN) "command.ban.success" else "command.mute.success",
-                        target?.name ?: document.username,
-                        get(durationArgument),
-                        reason.joinToString(" ")
+                    player.sendMessage(
+                        formatMessageTranslated(
+                            if (type === PunishmentType.BAN) "command.ban.success" else "command.mute.success",
+                            target?.name ?: document.username,
+                            get(durationArgument),
+                            reason.joinToString(" ")
+                        )
                     )
-                )
+                }
             }
         }
     }) {

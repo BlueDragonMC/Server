@@ -160,7 +160,7 @@ class NPCModule : GameModule() {
                 textDisplayMeta.text = customName
                 textDisplayMeta.billboardRenderConstraints = AbstractDisplayMeta.BillboardConstraints.CENTER
                 textDisplayMeta.setNotifyAboutChanges(true)
-                nametagDisplay.setInstance(instance, position.add(0.0, 2.0, 0.0)).join()
+                nametagDisplay.setInstance(instance, position.add(0.0, 2.0, 0.0))
                 nametagDisplay.eventNode().listen<EntityTickEvent> {
                     val nametagPosition = position.add(0.0, 2.0, 0.0)
                     if (nametagDisplay.position != nametagPosition) {
@@ -172,8 +172,9 @@ class NPCModule : GameModule() {
             val armorStand = Entity(EntityType.ARMOR_STAND)
             armorStand.isInvisible = true
 
-            setInstance(instance, position).join()
-            addPassenger(armorStand)
+            setInstance(instance, position).thenRun {
+                instance.scheduleNextTick { addPassenger(armorStand) }
+            }
         }
 
         private fun enableFullSkin() {

@@ -1,13 +1,14 @@
 package com.bluedragonmc.server.impl
 
-import com.bluedragonmc.server.GameRegistry
 import com.bluedragonmc.api.grpc.*
+import com.bluedragonmc.server.GameRegistry
 import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.api.IncomingRPCHandler
 import com.bluedragonmc.server.bootstrap.Jukebox
 import com.bluedragonmc.server.utils.miniMessage
 import com.google.protobuf.Empty
 import io.grpc.ServerBuilder
+import kotlinx.coroutines.suspendCancellableCoroutine
 import net.kyori.adventure.key.Key
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.sound.SoundStop
@@ -15,6 +16,21 @@ import net.minestom.server.MinecraftServer
 import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.TimeUnit
+import kotlin.coroutines.resume
+
+/**
+ * Runs [block] on the next server tick and suspends the calling coroutine until it completes.
+ */
+private suspend fun <T> onTick(block: () -> T): T =
+    suspendCancellableCoroutine { cont ->
+        MinecraftServer.getSchedulerManager().scheduleNextTick {
+            try {
+                cont.resume(block())
+            } catch (e: Throwable) {
+                cont.resumeWith(Result.failure(e))
+            }
+        }
+    }
 
 class IncomingRPCHandlerImpl(serverPort: Int) : IncomingRPCHandler {
 
@@ -49,7 +65,7 @@ class IncomingRPCHandlerImpl(serverPort: Int) : IncomingRPCHandler {
 
         override suspend fun createInstance(request: GsClient.CreateInstanceRequest): GsClient.CreateInstanceResponse {
             val game = runCatching {
-                Environment.queue.createInstance(request)
+                onTick { Environment.queue.createInstance(request) }
             }.onFailure {
                 logger.error("Failed to create instance from request: $request")
                 it.printStackTrace()
@@ -118,15 +134,17 @@ class IncomingRPCHandlerImpl(serverPort: Int) : IncomingRPCHandler {
         }
 
         override suspend fun endGame(request: GsClient.EndGameRequest): Empty {
-            val game = GameRegistry.findGame(request.gameId)
-            game?.endGame(request.queuePlayersForLobby)
+            onTick {
+                val game = GameRegistry.findGame(request.gameId)
+                game?.endGame(request.queuePlayersForLobby)
+            }
             return Empty.getDefaultInstance()
         }
     }
 
     class PlayerHolderService : PlayerHolderGrpcKt.PlayerHolderCoroutineImplBase() {
         override suspend fun sendPlayer(request: PlayerHolderOuterClass.SendPlayerRequest): PlayerHolderOuterClass.SendPlayerResponse {
-            Environment.queue.sendPlayer(request)
+            onTick { Environment.queue.sendPlayer(request) }
             return sendPlayerResponse {
                 successes += PlayerHolderOuterClass.SendPlayerResponse.SuccessFlags.SET_INSTANCE
             }
@@ -147,9 +165,12 @@ class IncomingRPCHandlerImpl(serverPort: Int) : IncomingRPCHandler {
 
     class JukeboxService : JukeboxGrpcKt.JukeboxCoroutineImplBase() {
         override suspend fun setSongQueue(request: JukeboxOuterClass.SetSongQueueRequest): Empty {
-            val player = MinecraftServer.getConnectionManager().getOnlinePlayerByUuid(UUID.fromString(request.playerUuid))
-            if (player != null) {
-                Jukebox.updateSongQueueFromIncomingMessage(player, request.queue)
+            onTick {
+                val player = MinecraftServer.getConnectionManager()
+                    .getOnlinePlayerByUuid(UUID.fromString(request.playerUuid))
+                if (player != null) {
+                    Jukebox.updateSongQueueFromIncomingMessage(player, request.queue)
+                }
             }
             return Empty.getDefaultInstance()
         }

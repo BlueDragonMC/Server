@@ -121,7 +121,9 @@ class CosmeticsModule : GameModule() {
             }
             cosmetics
         }
-        parent.callEvent(PlayerEquipCosmeticEvent(player, cosmetic, group!!))
+        parent.scheduleNextTick {
+            parent.callEvent(PlayerEquipCosmeticEvent(player, cosmetic, group!!))
+        }
     }
 
     suspend fun unequipCosmeticsInGroup(player: Player, groupId: String) {
@@ -135,7 +137,9 @@ class CosmeticsModule : GameModule() {
             }
             cosmetics
         }
-        parent.callEvent(PlayerUnequipCosmeticEvent(player, group))
+        parent.scheduleNextTick {
+            parent.callEvent(PlayerUnequipCosmeticEvent(player, group))
+        }
     }
 
     fun getCategories() = categories

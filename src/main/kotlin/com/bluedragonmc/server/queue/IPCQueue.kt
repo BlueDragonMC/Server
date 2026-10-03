@@ -1,10 +1,10 @@
 package com.bluedragonmc.server.queue
 
-import com.bluedragonmc.server.GameRegistry
 import com.bluedragonmc.api.grpc.CommonTypes
 import com.bluedragonmc.api.grpc.GsClient
 import com.bluedragonmc.api.grpc.PlayerHolderOuterClass.SendPlayerRequest
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.GameRegistry
 import com.bluedragonmc.server.api.Queue
 import com.bluedragonmc.server.game.GameData
 import com.bluedragonmc.server.module.instance.InstanceModule
@@ -23,16 +23,10 @@ import java.util.*
 object IPCQueue : Queue() {
     private val logger = LoggerFactory.getLogger(IPCQueue::class.java)
 
-    private val queuedPlayers = mutableListOf<Player>()
-
     override fun queue(player: Player, gameType: CommonTypes.GameType) {
         player.sendMessage(Component.translatable("queue.adding", NamedTextColor.DARK_GRAY))
         Database.IO.launch {
-            if (queuedPlayers.contains(player)) {
-                Messaging.outgoing.removeFromQueue(player)
-            } else {
-                Messaging.outgoing.addToQueue(player, gameType)
-            }
+            Messaging.outgoing.addToQueue(player, gameType)
         }
     }
 
