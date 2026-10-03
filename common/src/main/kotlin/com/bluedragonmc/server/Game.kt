@@ -6,6 +6,7 @@ import com.bluedragonmc.server.module.GameInfoModule
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.GameStateModule
 import com.bluedragonmc.server.module.PlayerListModule
+import com.bluedragonmc.server.module.ScopedTabListModule
 import com.bluedragonmc.server.module.minigame.WinModule
 import com.bluedragonmc.server.service.Messaging
 import com.bluedragonmc.server.utils.GameState
@@ -77,6 +78,7 @@ abstract class Game(final val data: GameData) : ModuleHolder(), PacketGroupingAu
         use(PlayerListModule { roster.players })
         use(GameStateModule(lifecycle))
         use(GameInfoModule(this))
+        use(ScopedTabListModule())
 
         Messaging.outgoing.onGameCreated(this)
         handleEvent<PlayerDisconnectEvent> { event ->

@@ -66,7 +66,6 @@ fun start() {
         Jukebox,
         OpenToLAN,
         PerInstanceChat,
-        PerInstanceTabList,
         ServerListPingHandler,
         TabListFormat,
         DevInstanceRouter,

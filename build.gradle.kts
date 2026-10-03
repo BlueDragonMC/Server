@@ -93,6 +93,8 @@ kotlin {
 
 tasks.test {
     useJUnitPlatform()
+    // Matches Minestom's own test setup. Required for tests that create players directly.
+    systemProperty("minestom.inside-test", "true")
 }
 
 tasks.shadowJar {
