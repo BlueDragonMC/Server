@@ -1,5 +1,12 @@
 package com.bluedragonmc.server.utils
 
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import net.minestom.server.MinecraftServer
 import net.minestom.server.timer.ExecutionType
 import net.minestom.server.timer.Task
@@ -7,11 +14,18 @@ import net.minestom.server.timer.TaskSchedule
 import java.time.Duration
 import java.time.temporal.TemporalUnit
 import java.util.*
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
 
-class TaskScope internal constructor() {
+class TaskScope internal constructor(name: String = "TaskScope") {
 
     private val tasks: MutableSet<Task> =
         Collections.synchronizedSet(Collections.newSetFromMap(WeakHashMap()))
+
+    private val job = SupervisorJob()
+
+    internal val coroutineScope: CoroutineScope =
+        CoroutineScope(Dispatchers.IO + job + CoroutineName(name))
 
     internal fun buildTask(block: Runnable): ScopedTaskBuilder = ScopedTaskBuilder(this, block)
 
@@ -23,13 +37,14 @@ class TaskScope internal constructor() {
     }
 
     /**
-     * Cancels every task that is still alive.
+     * Cancels every task and coroutine that is still alive.
      */
     fun cancelAll() {
         synchronized(tasks) {
             for (task in tasks) task.cancel()
         }
         tasks.clear()
+        job.cancel()
     }
 }
 
@@ -74,4 +89,18 @@ interface TaskScheduler {
     fun buildTask(block: Runnable): ScopedTaskBuilder = taskScope.buildTask(block)
 
     fun scheduleNextTick(block: Runnable): Task = taskScope.scheduleNextTick(block)
+
+    /**
+     * Launches a coroutine tied to this scheduler's lifetime. The returned [Job] is
+     * cancelled when this scheduler's [taskScope] is cancelled, i.e. when a module is
+     * unregistered or a game ends.
+     *
+     * Runs on the scope's dispatcher ([Dispatchers.IO]) by default. Pass [context] to
+     * override it, or use `withContext` inside [block] to switch dispatchers.
+     */
+    fun launch(
+        context: CoroutineContext = EmptyCoroutineContext,
+        start: CoroutineStart = CoroutineStart.DEFAULT,
+        block: suspend CoroutineScope.() -> Unit,
+    ): Job = taskScope.coroutineScope.launch(context, start, block)
 }

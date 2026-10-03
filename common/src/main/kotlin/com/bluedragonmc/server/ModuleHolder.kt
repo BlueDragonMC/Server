@@ -14,7 +14,7 @@ import kotlin.reflect.KClass
 
 open class ModuleHolder : TaskScheduler {
 
-    override val taskScope = TaskScope()
+    override val taskScope = TaskScope("holder:${javaClass.simpleName}")
 
     private val logger = LoggerFactory.getLogger(ModuleHolder::class.java)
 

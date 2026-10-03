@@ -15,7 +15,7 @@ import kotlin.reflect.KClass
 
 abstract class GameModule : TaskScheduler {
 
-    override val taskScope = TaskScope()
+    override val taskScope = TaskScope("module:${javaClass.simpleName}")
 
     open val eventPriority = 0
 

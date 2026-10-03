@@ -11,6 +11,9 @@ import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.service.Maps
 import com.bluedragonmc.server.service.Messaging
 import com.bluedragonmc.server.utils.cancelOn
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeoutOrNull
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.timer.TaskSchedule
@@ -97,6 +100,34 @@ class ScopedTaskTest {
         env.tick()
         env.tick()
         assertEquals(runsBeforeEnd, runs, "The game's task should not run after the game ends")
+    }
+
+    @Test
+    fun `Module coroutines are cancelled when the module is unregistered`() {
+        val game = TestGame()
+        game.init()
+
+        val job = game.counter.launch { awaitCancellation() }
+
+        game.unregister(game.counter)
+
+        val joined = runBlocking { withTimeoutOrNull(5_000) { job.join(); true } }
+        assertTrue(joined == true, "The module's coroutine was not cancelled (timed out)")
+        assertTrue(job.isCancelled, "The module's coroutine should be cancelled when the module is unregistered")
+    }
+
+    @Test
+    fun `Game coroutines are cancelled when the game ends`() {
+        val game = TestGame()
+        game.init()
+
+        val job = game.launch { awaitCancellation() }
+
+        game.endGame(queueAllPlayers = false)
+
+        val joined = runBlocking { withTimeoutOrNull(5_000) { job.join(); true } }
+        assertTrue(joined == true, "The game's coroutine was not cancelled (timed out)")
+        assertTrue(job.isCancelled, "The game's coroutine should be cancelled when the game ends")
     }
 
     @Test
