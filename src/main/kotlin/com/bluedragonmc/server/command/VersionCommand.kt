@@ -3,6 +3,7 @@ package com.bluedragonmc.server.command
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
 import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.utils.clickEvent
+import com.bluedragonmc.server.utils.surroundWithSeparators
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.event.ClickEvent
 import net.kyori.adventure.text.format.NamedTextColor
@@ -45,11 +46,9 @@ class VersionCommand(name: String, usageString: String, vararg aliases: String?)
                     duration.toHoursPart(),
                     duration.toMinutesPart(),
                     duration.toSecondsPart(),
-                    Git.group() ?: "?",
-                    Git.artifact() ?: "?",
-                    Git.commit() ?: "?",
-                    Git.branch() ?: "?"
-                )
+                    // Minestom version
+                    Git.version() ?: "?"
+                ).surroundWithSeparators()
             )
             if (Environment.isDev) {
                 sender.sendMessage(Component.translatable("command.version.development_warning", NamedTextColor.RED))
