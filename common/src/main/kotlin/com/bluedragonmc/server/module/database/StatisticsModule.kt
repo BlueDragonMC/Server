@@ -1,17 +1,13 @@
 package com.bluedragonmc.server.module.database
 
-import com.bluedragonmc.server.*
 import com.bluedragonmc.server.CustomPlayer
+import com.bluedragonmc.server.ModuleHolder
 import com.bluedragonmc.server.event.DataLoadedEvent
 import com.bluedragonmc.server.event.PlayerLeaveGameEvent
 import com.bluedragonmc.server.model.PlayerDocument
 import com.bluedragonmc.server.model.PlayerRecord
 import com.bluedragonmc.server.model.StatisticRecord
-import com.bluedragonmc.server.module.DependsOn
-import com.bluedragonmc.server.module.GameInfoModule
-import com.bluedragonmc.server.module.GameModule
-import com.bluedragonmc.server.module.GameStateModule
-import com.bluedragonmc.server.module.PlayerListModule
+import com.bluedragonmc.server.module.*
 import com.bluedragonmc.server.module.minigame.WinModule
 import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.utils.GameState
@@ -49,8 +45,6 @@ class StatisticsModule(private vararg val recorders: StatisticRecorder) : GameMo
         private val statisticsCache: Cache<String, List<PlayerDocument>> =
             Caffeine.newBuilder().expireAfterWrite(Duration.ofMinutes(5)).build()
 
-        private lateinit var mostRecentInstance: StatisticsModule
-
         private val necessaryUpdates = ConcurrentHashMap<CustomPlayer, MutableSet<String>>()
 
         private val logger = LoggerFactory.getLogger(Companion::class.java)
@@ -66,9 +60,16 @@ class StatisticsModule(private vararg val recorders: StatisticRecorder) : GameMo
             }
         }
 
+        internal fun recordStatistic(player: Player, key: String, value: Double) {
+            player as CustomPlayer
+            player.data.statistics[key] = value
+            necessaryUpdates.getOrPut(player) { mutableSetOf() }.add(key)
+        }
+
         init {
             MinecraftServer.getGlobalEventHandler().listenAsync<DataLoadedEvent> { event ->
-                mostRecentInstance.incrementStatistic(event.player, "times_data_loaded")
+                val player = event.player as CustomPlayer
+                recordStatistic(player, "times_data_loaded", (player.data.statistics["times_data_loaded"] ?: 0.0) + 1.0)
             }
             MinecraftServer.getSchedulerManager().buildTask {
                 // Commit all queued updates
@@ -102,8 +103,6 @@ class StatisticsModule(private vararg val recorders: StatisticRecorder) : GameMo
     }
 
     override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>) {
-        mostRecentInstance = this
-
         val ingameOnlyEventNode = EventNode.event("$this-ingame", EventFilter.ALL) { event: Event -> state == GameState.INGAME }
         eventNode.addChild(ingameOnlyEventNode)
 
@@ -158,11 +157,7 @@ class StatisticsModule(private vararg val recorders: StatisticRecorder) : GameMo
             history[player to key] = player.data.statistics[key] to value
         }
 
-        // Update the local player data to reflect the change
-        player.data.statistics[key] = value
-
-        // Queue a database update operation
-        necessaryUpdates.getOrPut(player) { mutableSetOf() }.add(key)
+        Companion.recordStatistic(player, key, value)
     }
 
     /**
@@ -248,11 +243,11 @@ class StatisticsModule(private vararg val recorders: StatisticRecorder) : GameMo
 
     class EventStatisticRecorder<T : Event>(
         private val eventType: Class<T>,
-        val handler: suspend StatisticsModule.(T) -> Unit,
+        val handler: StatisticsModule.(T) -> Unit,
     ) : StatisticRecorder() {
         override fun subscribe(module: StatisticsModule, eventNode: EventNode<Event>) {
             eventNode.addListener(eventType) { event ->
-                Database.IO.launch { module.handler(event) }
+                module.handler(event)
             }
         }
     }
@@ -264,7 +259,6 @@ class StatisticsModule(private vararg val recorders: StatisticRecorder) : GameMo
     }
 
     abstract class StatisticRecorder {
-
         abstract fun subscribe(module: StatisticsModule, eventNode: EventNode<Event>)
     }
 }

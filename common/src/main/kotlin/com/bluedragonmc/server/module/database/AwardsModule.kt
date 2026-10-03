@@ -75,36 +75,22 @@ class AwardsModule : GameModule() {
         postGameAwards[reasonStruct] = postGameAwards.getOrDefault(reasonStruct, 0) + amount
     }
 
-    private fun notifyLevelUp(player: CustomPlayer, oldLevel: Int, newLevel: Int) {
-        player.showTitle(
-            Title.title(
-                Component.text("LEVEL UP!").withGradient(ALT_COLOR_1, ALT_COLOR_2).withDecoration(TextDecoration.BOLD),
-                Component.text("You are now level ", ALT_COLOR_1) + Component.text(newLevel)
-            )
-        )
-        val msg = buildComponent {
-            +Component.translatable("module.award.level_up.1", ALT_COLOR_1)
-            +Component.newline()
-            +Component.translatable("module.award.level_up.2", Component.text(oldLevel, ALT_COLOR_2), Component.text(newLevel, ALT_COLOR_2))
-        }
-        player.sendMessage(msg.surroundWithSeparators())
-        player.playSound(Sound.sound(SoundEvent.ENTITY_PLAYER_LEVELUP, Sound.Source.PLAYER, 1.0F, 1.0F))
-    }
-
     private fun addCoins(player: Player, amount: Int) {
         player as CustomPlayer
         require(player.isDataInitialized()) { "Player's data has not loaded!" }
+        val gameId = id
+        val scope = taskScope
         Database.IO.launch {
             player.data.compute(PlayerDocument::coins) { it + amount }
             val prev = player.data.compute(PlayerDocument::experience) { it + amount }
             val oldLevel = CustomPlayer.getXpLevel(prev).toInt()
             val newLevel = CustomPlayer.getXpLevel(player.data.experience).toInt()
             if (newLevel > oldLevel)
-                buildTask { notifyLevelUp(player, oldLevel, newLevel) }
+                scope.buildTask { notifyLevelUp(player, oldLevel, newLevel) }
                     .delay(Duration.ofSeconds(2)).schedule()
         }
         Database.IO.launch {
-            Messaging.outgoing.recordCoinAward(player.uuid, amount, id)
+            Messaging.outgoing.recordCoinAward(player.uuid, amount, gameId)
         }
     }
 
@@ -132,4 +118,20 @@ class AwardsModule : GameModule() {
         val AWARD_REASON_WIN = Component.translatable("module.win.coins.won")
         val AWARD_REASON_PARTICIPATION = Component.translatable("module.win.coins.participation")
     }
+}
+
+private fun notifyLevelUp(player: CustomPlayer, oldLevel: Int, newLevel: Int) {
+    player.showTitle(
+        Title.title(
+            Component.text("LEVEL UP!").withGradient(ALT_COLOR_1, ALT_COLOR_2).withDecoration(TextDecoration.BOLD),
+            Component.text("You are now level ", ALT_COLOR_1) + Component.text(newLevel)
+        )
+    )
+    val msg = buildComponent {
+        +Component.translatable("module.award.level_up.1", ALT_COLOR_1)
+        +Component.newline()
+        +Component.translatable("module.award.level_up.2", Component.text(oldLevel, ALT_COLOR_2), Component.text(newLevel, ALT_COLOR_2))
+    }
+    player.sendMessage(msg.surroundWithSeparators())
+    player.playSound(Sound.sound(SoundEvent.ENTITY_PLAYER_LEVELUP, Sound.Source.PLAYER, 1.0F, 1.0F))
 }

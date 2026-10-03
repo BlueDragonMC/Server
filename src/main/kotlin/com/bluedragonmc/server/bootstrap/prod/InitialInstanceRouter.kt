@@ -1,7 +1,7 @@
 package com.bluedragonmc.server.bootstrap.prod
 
-import com.bluedragonmc.server.GameRegistry
 import com.bluedragonmc.server.CustomPlayer
+import com.bluedragonmc.server.GameRegistry
 import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.bootstrap.Bootstrap
 import com.bluedragonmc.server.module.instance.InstanceModule
@@ -15,11 +15,11 @@ import kotlinx.coroutines.withTimeout
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.MinecraftServer
-import net.minestom.server.property.ServerProperties
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.player.AsyncPlayerConfigurationEvent
 import net.minestom.server.network.ConnectionState
+import net.minestom.server.property.ServerProperties
 import net.minestom.server.timer.TaskSchedule
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -101,13 +101,15 @@ object InitialInstanceRouter : Bootstrap(EnvType.PRODUCTION) {
                 return@listenSuspend
             }
 
-            logger.info("Spawning player ${event.player.username} in game '${game.id}' and instance '${instance.uuid}'")
+            val gameId = game.id
+            val player = event.player
+            logger.info("Spawning player ${player.username} in game '$gameId' and instance '${instance.uuid}'")
             event.spawningInstance = instance
 
             if (game.hasModule<SpawnpointModule>()) {
                 // Force the player to spawn at their spawnpoint
-                event.player.respawnPoint =
-                    game.getModule<SpawnpointModule>().spawnpointProvider.getSpawnpoint(event.player)
+                player.respawnPoint =
+                    game.getModule<SpawnpointModule>().spawnpointProvider.getSpawnpoint(player)
             }
 
 
@@ -116,19 +118,25 @@ object InitialInstanceRouter : Bootstrap(EnvType.PRODUCTION) {
             // Wait up to 10 seconds for the player to enter the PLAY phase and then add them to the game.
             MinecraftServer.getSchedulerManager().submitTask {
                 ticks ++
-                if (event.player.playerConnection.clientState == ConnectionState.PLAY) {
-                    game.addPlayer(event.player, sendPlayer = false)
+                val currentGame = GameRegistry.findGame(gameId)
+                if (currentGame == null) {
+                    // The game has ended while the player was waiting to spawn.
+                    player.kick(INSTANCE_NOT_REGISTERED)
+                    return@submitTask TaskSchedule.stop()
+                }
+                if (player.playerConnection.clientState == ConnectionState.PLAY) {
+                    currentGame.addPlayer(player, sendPlayer = false)
                     return@submitTask TaskSchedule.stop()
                 } else if (ticks < ServerProperties.SERVER_TICKS_PER_SECOND.get() * 10) {
                     return@submitTask TaskSchedule.nextTick()
                 } else {
-                    event.player.kick(LOAD_TIMED_OUT)
+                    player.kick(LOAD_TIMED_OUT)
                     return@submitTask TaskSchedule.stop()
                 }
             }
 
             Messaging.IO.launch {
-                Messaging.outgoing.playerTransfer(event.player, game.id)
+                Messaging.outgoing.playerTransfer(player, gameId)
             }
         }
     }

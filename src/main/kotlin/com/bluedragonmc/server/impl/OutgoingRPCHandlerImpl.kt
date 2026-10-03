@@ -11,7 +11,10 @@ import com.bluedragonmc.server.event.GameStateChangedEvent
 import com.bluedragonmc.server.module.*
 import com.bluedragonmc.server.module.instance.InstanceModule
 import com.bluedragonmc.server.service.Messaging
-import com.bluedragonmc.server.utils.*
+import com.bluedragonmc.server.utils.GameState
+import com.bluedragonmc.server.utils.listen
+import com.bluedragonmc.server.utils.listenAsync
+import com.bluedragonmc.server.utils.miniMessage
 import io.grpc.ManagedChannelBuilder
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -52,8 +55,12 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
         override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>): Unit = runBlocking {
             Messaging.outgoing.initGame(id, data.gameType, rpcGameState())
 
-            eventNode.listenAsync<GameStateChangedEvent> { event ->
-                Messaging.outgoing.updateGameState(id, rpcGameState())
+            eventNode.listen<GameStateChangedEvent> { event ->
+                val gameId = id
+                val gameState = rpcGameState()
+                Messaging.IO.launch {
+                    Messaging.outgoing.updateGameState(gameId, gameState)
+                }
 
                 if (event.newState == GameState.ENDING) {
                     val playerIds = players.map { it.uuid }
@@ -74,16 +81,20 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
 
             eventNode.listen<PlayerSpawnEvent> { event ->
                 scheduleNextTick {
+                    val gameId = id
+                    val gameState = rpcGameState()
                     Messaging.IO.launch {
-                        Messaging.outgoing.updateGameState(id, rpcGameState())
+                        Messaging.outgoing.updateGameState(gameId, gameState)
                     }
                 }
             }
 
             eventNode.listen<PlayerDisconnectEvent> { event ->
                 scheduleNextTick {
+                    val gameId = id
+                    val gameState = rpcGameState()
                     Messaging.IO.launch {
-                        Messaging.outgoing.updateGameState(id, rpcGameState())
+                        Messaging.outgoing.updateGameState(gameId, gameState)
                     }
                 }
             }
@@ -93,8 +104,9 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
             state.toRpcGameState(players.size, getModule<GameInfoModule>().maxPlayers)
 
         override fun deinitialize() {
+            val gameId = id
             Messaging.IO.launch {
-                Messaging.outgoing.notifyInstanceRemoved(id)
+                Messaging.outgoing.notifyInstanceRemoved(gameId)
             }
         }
     }

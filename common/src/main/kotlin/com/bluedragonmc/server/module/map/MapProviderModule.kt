@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.module.map
 
-import com.bluedragonmc.server.*
+import com.bluedragonmc.server.ModuleHolder
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.service.Maps
@@ -45,8 +45,9 @@ class MapProviderModule(
 
         // If not, create a new InstanceContainer
         instanceContainer = MinecraftServer.getInstanceManager().createInstanceContainer(dimensionType)
+        val source = mapSource
         instanceContainer.chunkLoader = DeferredChunkLoader(Database.IO.async {
-            Maps.provideMap(mapSource)
+            Maps.provideMap(source)
         })
         instanceContainer.setChunkSupplier(::LightingChunk)
         instanceContainer.setTag(MAP_NAME_TAG, mapSource.id)
