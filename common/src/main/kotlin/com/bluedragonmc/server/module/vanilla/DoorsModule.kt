@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.module.vanilla
 
-import com.bluedragonmc.server.*
+import com.bluedragonmc.server.ModuleHolder
 import com.bluedragonmc.server.module.GameModule
 import net.kyori.adventure.sound.Sound
 import net.minestom.server.adventure.audience.PacketGroupingAudience
@@ -68,58 +68,60 @@ class DoorsModule(private val allowDoors: Boolean = true, private val allowTrapd
     fun getSounds(material: Material): Pair<SoundEvent, SoundEvent>? {
         // See yarn: net.minecraft.block.BlockSetType or mojmap: net.minecraft.world.level.block.state.properties.BlockSetType
         return when (material) {
-            Block.ACACIA_DOOR,
-            Block.BIRCH_DOOR,
-            Block.DARK_OAK_DOOR,
-            Block.PALE_OAK_DOOR,
-            Block.JUNGLE_DOOR,
-            Block.MANGROVE_DOOR,
-            Block.SPRUCE_DOOR,
-            Block.OAK_DOOR -> SoundEvent.BLOCK_WOODEN_DOOR_OPEN to SoundEvent.BLOCK_WOODEN_DOOR_CLOSE
+            Material.ACACIA_DOOR,
+            Material.BIRCH_DOOR,
+            Material.DARK_OAK_DOOR,
+            Material.PALE_OAK_DOOR,
+            Material.JUNGLE_DOOR,
+            Material.MANGROVE_DOOR,
+            Material.POPLAR_DOOR,
+            Material.SPRUCE_DOOR,
+            Material.OAK_DOOR -> SoundEvent.BLOCK_WOODEN_DOOR_OPEN to SoundEvent.BLOCK_WOODEN_DOOR_CLOSE
 
-            Block.CHERRY_DOOR -> SoundEvent.BLOCK_CHERRY_WOOD_DOOR_OPEN to SoundEvent.BLOCK_CHERRY_WOOD_DOOR_CLOSE
+            Material.CHERRY_DOOR -> SoundEvent.BLOCK_CHERRY_WOOD_DOOR_OPEN to SoundEvent.BLOCK_CHERRY_WOOD_DOOR_CLOSE
 
-            Block.CRIMSON_DOOR,
-            Block.WARPED_DOOR -> SoundEvent.BLOCK_NETHER_WOOD_DOOR_OPEN to SoundEvent.BLOCK_NETHER_WOOD_DOOR_CLOSE
+            Material.CRIMSON_DOOR,
+            Material.WARPED_DOOR -> SoundEvent.BLOCK_NETHER_WOOD_DOOR_OPEN to SoundEvent.BLOCK_NETHER_WOOD_DOOR_CLOSE
 
 
-            Block.BAMBOO_DOOR -> SoundEvent.BLOCK_BAMBOO_WOOD_DOOR_OPEN to SoundEvent.BLOCK_BAMBOO_WOOD_DOOR_CLOSE
+            Material.BAMBOO_DOOR -> SoundEvent.BLOCK_BAMBOO_WOOD_DOOR_OPEN to SoundEvent.BLOCK_BAMBOO_WOOD_DOOR_CLOSE
 
-            Block.COPPER_DOOR,
-            Block.EXPOSED_COPPER_DOOR,
-            Block.WEATHERED_COPPER_DOOR,
-            Block.OXIDIZED_COPPER_DOOR,
-            Block.WAXED_COPPER_DOOR,
-            Block.WAXED_EXPOSED_COPPER_DOOR,
-            Block.WAXED_WEATHERED_COPPER_DOOR,
-            Block.WAXED_OXIDIZED_COPPER_DOOR -> SoundEvent.BLOCK_COPPER_DOOR_OPEN to SoundEvent.BLOCK_COPPER_DOOR_CLOSE
+            Material.COPPER_DOOR,
+            Material.EXPOSED_COPPER_DOOR,
+            Material.WEATHERED_COPPER_DOOR,
+            Material.OXIDIZED_COPPER_DOOR,
+            Material.WAXED_COPPER_DOOR,
+            Material.WAXED_EXPOSED_COPPER_DOOR,
+            Material.WAXED_WEATHERED_COPPER_DOOR,
+            Material.WAXED_OXIDIZED_COPPER_DOOR -> SoundEvent.BLOCK_COPPER_DOOR_OPEN to SoundEvent.BLOCK_COPPER_DOOR_CLOSE
 
             // trapdoors
 
-            Block.OAK_TRAPDOOR,
-            Block.SPRUCE_TRAPDOOR,
-            Block.BIRCH_TRAPDOOR,
-            Block.JUNGLE_TRAPDOOR,
-            Block.ACACIA_TRAPDOOR,
-            Block.MANGROVE_TRAPDOOR,
-            Block.PALE_OAK_TRAPDOOR,
-            Block.DARK_OAK_TRAPDOOR -> SoundEvent.BLOCK_WOODEN_TRAPDOOR_OPEN to SoundEvent.BLOCK_WOODEN_TRAPDOOR_CLOSE
+            Material.OAK_TRAPDOOR,
+            Material.SPRUCE_TRAPDOOR,
+            Material.BIRCH_TRAPDOOR,
+            Material.JUNGLE_TRAPDOOR,
+            Material.ACACIA_TRAPDOOR,
+            Material.MANGROVE_TRAPDOOR,
+            Material.PALE_OAK_TRAPDOOR,
+            Material.POPLAR_TRAPDOOR,
+            Material.DARK_OAK_TRAPDOOR -> SoundEvent.BLOCK_WOODEN_TRAPDOOR_OPEN to SoundEvent.BLOCK_WOODEN_TRAPDOOR_CLOSE
 
-            Block.CHERRY_TRAPDOOR -> SoundEvent.BLOCK_CHERRY_WOOD_TRAPDOOR_OPEN to SoundEvent.BLOCK_CHERRY_WOOD_TRAPDOOR_CLOSE
+            Material.CHERRY_TRAPDOOR -> SoundEvent.BLOCK_CHERRY_WOOD_TRAPDOOR_OPEN to SoundEvent.BLOCK_CHERRY_WOOD_TRAPDOOR_CLOSE
 
-            Block.CRIMSON_TRAPDOOR,
-            Block.WARPED_TRAPDOOR -> SoundEvent.BLOCK_NETHER_WOOD_TRAPDOOR_OPEN to SoundEvent.BLOCK_NETHER_WOOD_TRAPDOOR_CLOSE
+            Material.CRIMSON_TRAPDOOR,
+            Material.WARPED_TRAPDOOR -> SoundEvent.BLOCK_NETHER_WOOD_TRAPDOOR_OPEN to SoundEvent.BLOCK_NETHER_WOOD_TRAPDOOR_CLOSE
 
-            Block.BAMBOO_TRAPDOOR -> SoundEvent.BLOCK_BAMBOO_WOOD_TRAPDOOR_OPEN to SoundEvent.BLOCK_BAMBOO_WOOD_TRAPDOOR_CLOSE
+            Material.BAMBOO_TRAPDOOR -> SoundEvent.BLOCK_BAMBOO_WOOD_TRAPDOOR_OPEN to SoundEvent.BLOCK_BAMBOO_WOOD_TRAPDOOR_CLOSE
 
-            Block.COPPER_TRAPDOOR,
-            Block.EXPOSED_COPPER_TRAPDOOR,
-            Block.WEATHERED_COPPER_TRAPDOOR,
-            Block.OXIDIZED_COPPER_TRAPDOOR,
-            Block.WAXED_COPPER_TRAPDOOR,
-            Block.WAXED_EXPOSED_COPPER_TRAPDOOR,
-            Block.WAXED_WEATHERED_COPPER_TRAPDOOR,
-            Block.WAXED_OXIDIZED_COPPER_TRAPDOOR -> SoundEvent.BLOCK_COPPER_TRAPDOOR_OPEN to SoundEvent.BLOCK_COPPER_TRAPDOOR_CLOSE
+            Material.COPPER_TRAPDOOR,
+            Material.EXPOSED_COPPER_TRAPDOOR,
+            Material.WEATHERED_COPPER_TRAPDOOR,
+            Material.OXIDIZED_COPPER_TRAPDOOR,
+            Material.WAXED_COPPER_TRAPDOOR,
+            Material.WAXED_EXPOSED_COPPER_TRAPDOOR,
+            Material.WAXED_WEATHERED_COPPER_TRAPDOOR,
+            Material.WAXED_OXIDIZED_COPPER_TRAPDOOR -> SoundEvent.BLOCK_COPPER_TRAPDOOR_OPEN to SoundEvent.BLOCK_COPPER_TRAPDOOR_CLOSE
 
             else -> null
         }
@@ -154,6 +156,7 @@ class DoorsModule(private val allowDoors: Boolean = true, private val allowTrapd
             Block.CRIMSON_DOOR,
             Block.JUNGLE_DOOR,
             Block.MANGROVE_DOOR,
+            Block.POPLAR_DOOR,
             Block.SPRUCE_DOOR,
             Block.WARPED_DOOR,
             Block.OAK_DOOR,
@@ -177,6 +180,7 @@ class DoorsModule(private val allowDoors: Boolean = true, private val allowTrapd
             Block.DARK_OAK_TRAPDOOR,
             Block.PALE_OAK_TRAPDOOR,
             Block.MANGROVE_TRAPDOOR,
+            Block.POPLAR_TRAPDOOR,
             Block.BAMBOO_TRAPDOOR,
             Block.CRIMSON_TRAPDOOR,
             Block.WARPED_TRAPDOOR,

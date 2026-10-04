@@ -6,6 +6,7 @@ import net.minestom.server.entity.EntityType
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.enchant.Enchantment
 import net.minestom.server.registry.RegistryKey
+import net.minestom.server.registry.TagKey
 import kotlin.random.Random
 
 object CombatUtils {
@@ -33,9 +34,9 @@ object CombatUtils {
     fun getDamageModifier(enchants: Map<RegistryKey<Enchantment>, Int>, targetEntity: Entity): Float =
         if (enchants.containsKey(Enchantment.SHARPNESS)) {
             enchants[Enchantment.SHARPNESS]!! * 1.25f
-        } else if (enchants.containsKey(Enchantment.SMITE) && isUndead(targetEntity)) {
+        } else if (enchants.containsKey(Enchantment.SMITE) && targetEntity.entityType in undeadMobs) {
             enchants[Enchantment.SMITE]!! * 2.5f
-        } else if (enchants.containsKey(Enchantment.BANE_OF_ARTHROPODS) && isArthropod(targetEntity)) {
+        } else if (enchants.containsKey(Enchantment.BANE_OF_ARTHROPODS) && targetEntity.entityType in arthropodMobs) {
             enchants[Enchantment.BANE_OF_ARTHROPODS]!! * 2.5f
         } else 0.0f
 
@@ -44,25 +45,19 @@ object CombatUtils {
             0.5f + enchants[Enchantment.POWER]!! * 0.5f
         else 0.0f
 
+    /**
+     * The entities affected by Smite
+     */
+    private val undeadMobs: Set<EntityType> by lazy { entityTag("minecraft:undead") }
 
-    private val UNDEAD_MOBS = setOf(
-        EntityType.DROWNED,
-        EntityType.HUSK,
-        EntityType.PHANTOM,
-        EntityType.SKELETON,
-        EntityType.SKELETON_HORSE,
-        EntityType.STRAY,
-        EntityType.WITHER,
-        EntityType.WITHER_SKELETON,
-        EntityType.ZOGLIN,
-        EntityType.ZOMBIE,
-        EntityType.ZOMBIE_VILLAGER,
-        EntityType.ZOMBIFIED_PIGLIN,
-    )
+    /**
+     * The entities affected by Bane of Arthropods
+     */
+    private val arthropodMobs: Set<EntityType> by lazy { entityTag("minecraft:arthropod") }
 
-    private fun isUndead(entity: Entity) = UNDEAD_MOBS.contains(entity.entityType)
-
-    private fun isArthropod(entity: Entity) =
-        entity.entityType == EntityType.SPIDER || entity.entityType == EntityType.CAVE_SPIDER || entity.entityType == EntityType.ENDERMITE || entity.entityType == EntityType.SILVERFISH
-
+    private fun entityTag(key: String): Set<EntityType> {
+        val registry = EntityType.staticRegistry()
+        val tag = registry.getTag(TagKey.ofHash("#$key")) ?: return emptySet()
+        return tag.mapNotNull { registry.get(it) }.toSet()
+    }
 }

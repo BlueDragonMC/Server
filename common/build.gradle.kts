@@ -31,6 +31,13 @@ dependencies {
     compileOnly(libs.serialization.json)
     compileOnly(libs.fastutil)
     compileOnly(libs.slf4j)
+
+    testImplementation(kotlin("test"))
+    testImplementation(libs.junit.api)
+    testImplementation(libs.minestom)
+    testImplementation(libs.minestom.testing)
+    testImplementation(libs.coroutines.core)
+    testRuntimeOnly(libs.junit.engine)
 }
 
 val sourcesJar by tasks.registering(Jar::class) {
@@ -90,6 +97,8 @@ publishing {
 
 tasks.getByName<Test>("test") {
     useJUnitPlatform()
+    // Matches Minestom's own test setup. Required for tests that create players directly.
+    systemProperty("minestom.inside-test", "true")
 }
 
 kotlin {
