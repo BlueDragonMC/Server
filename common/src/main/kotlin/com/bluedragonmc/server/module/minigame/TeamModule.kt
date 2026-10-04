@@ -1,13 +1,13 @@
 package com.bluedragonmc.server.module.minigame
 
-import com.bluedragonmc.server.module.PlayerListModule
-import com.bluedragonmc.server.module.DependsOn
-import com.bluedragonmc.server.*
 import com.bluedragonmc.server.CustomPlayer
+import com.bluedragonmc.server.ModuleHolder
 import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.event.PlayerLeaveGameEvent
 import com.bluedragonmc.server.event.TeamAssignedEvent
+import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.module.GameModule
+import com.bluedragonmc.server.module.PlayerListModule
 import com.bluedragonmc.server.module.combat.OldCombatModule
 import com.bluedragonmc.server.module.minigame.TeamModule.Team
 import com.bluedragonmc.server.utils.toPlainText
@@ -202,8 +202,8 @@ class TeamModule(
 
         fun addPlayer(player: Player, sendChatMessage: Boolean = true) {
             require(getTeam(player) == null) { "Player must not already be on a team!" }
-            eventNode.call(TeamAssignedEvent(parent, player, this))
             _players.add(player)
+            eventNode.call(TeamAssignedEvent(parent, player, this))
             if (::scoreboardTeam.isInitialized)
                 scoreboardTeam.addMember(player.username)
 

@@ -1,6 +1,6 @@
 package com.bluedragonmc.server.module.minigame
 
-import com.bluedragonmc.server.*
+import com.bluedragonmc.server.ModuleHolder
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.SoftDependsOn
 import com.bluedragonmc.server.module.config.ConfigModule
@@ -163,9 +163,8 @@ class SpawnpointModule(val spawnpointProvider: SpawnpointProvider) : GameModule(
             spawnpoints = CircularList(if (allowRandomOrder) spawnpointList.shuffled() else spawnpointList)
         }
 
-        private fun teamOf(player: Player) = teamModule.getTeam(player)
         override fun getSpawnpoint(player: Player) =
-            teamOf(player)?.let { team ->
+            teamModule.getTeam(player)?.let { team ->
                 cachedSpawnpoints.getOrPut(team) { spawnpoints[n++] }
             } ?: noTeamSpawnpoints.getOrPut(player) { spawnpoints[m++] }
 
