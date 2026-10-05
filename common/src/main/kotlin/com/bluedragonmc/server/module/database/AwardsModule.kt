@@ -12,7 +12,7 @@ import com.bluedragonmc.server.event.PlayerLeaveGameEvent
 import com.bluedragonmc.server.model.PlayerDocument
 import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.minigame.SpectatorModule
-import com.bluedragonmc.server.module.minigame.WinModule
+import com.bluedragonmc.server.module.minigame.win.WinModule
 import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.service.Messaging
 import com.bluedragonmc.server.utils.*

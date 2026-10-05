@@ -7,7 +7,7 @@ import com.bluedragonmc.server.module.GameModule
 import com.bluedragonmc.server.module.GameStateModule
 import com.bluedragonmc.server.module.PlayerListModule
 import com.bluedragonmc.server.module.ScopedTabListModule
-import com.bluedragonmc.server.module.minigame.WinModule
+import com.bluedragonmc.server.module.minigame.win.WinModule
 import com.bluedragonmc.server.service.Messaging
 import com.bluedragonmc.server.utils.GameState
 import net.minestom.server.adventure.audience.PacketGroupingAudience

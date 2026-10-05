@@ -4,7 +4,7 @@ import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.GameRegistry
 import com.bluedragonmc.server.event.GameStartEvent
-import com.bluedragonmc.server.module.minigame.WinModule
+import com.bluedragonmc.server.module.minigame.win.WinModule
 import com.bluedragonmc.server.utils.GameState
 import com.bluedragonmc.server.utils.buildComponent
 import com.bluedragonmc.server.utils.surroundWithSeparators

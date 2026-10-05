@@ -1,7 +1,7 @@
 package com.bluedragonmc.server.module.database
 
 import com.bluedragonmc.server.event.PlayerKillPlayerEvent
-import com.bluedragonmc.server.module.minigame.WinModule
+import com.bluedragonmc.server.module.minigame.win.WinModule
 import com.bluedragonmc.server.utils.GameState
 import net.minestom.server.event.player.PlayerDeathEvent
 

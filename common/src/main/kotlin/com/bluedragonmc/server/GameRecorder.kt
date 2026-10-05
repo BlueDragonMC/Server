@@ -6,7 +6,7 @@ import com.bluedragonmc.server.model.PlayerRecord
 import com.bluedragonmc.server.model.TeamRecord
 import com.bluedragonmc.server.module.database.StatisticsModule
 import com.bluedragonmc.server.module.minigame.TeamModule
-import com.bluedragonmc.server.module.minigame.WinModule
+import com.bluedragonmc.server.module.minigame.win.WinModule
 import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.utils.toPlainText

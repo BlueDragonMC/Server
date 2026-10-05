@@ -8,7 +8,7 @@ import com.bluedragonmc.server.model.PlayerDocument
 import com.bluedragonmc.server.model.PlayerRecord
 import com.bluedragonmc.server.model.StatisticRecord
 import com.bluedragonmc.server.module.*
-import com.bluedragonmc.server.module.minigame.WinModule
+import com.bluedragonmc.server.module.minigame.win.WinModule
 import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.utils.GameState
 import com.bluedragonmc.server.utils.listenAsync
