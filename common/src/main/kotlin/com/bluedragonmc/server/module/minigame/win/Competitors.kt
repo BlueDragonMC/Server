@@ -34,7 +34,7 @@ sealed class Competitor {
         override val displayName: Component
             get() = Component.text(
                 player.username,
-                (player as CustomPlayer).permissionMetadata.rankColor
+                (player as? CustomPlayer)?.permissionMetadata?.rankColor ?: player.displayName?.color()
             )
         override val players: Collection<Player> get() = listOf(player)
         override fun equals(other: Any?) = other is PlayerCompetitor && other.player.uuid == player.uuid
