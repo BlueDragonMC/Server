@@ -1,7 +1,9 @@
 package com.bluedragonmc.server.command
 
+import com.bluedragonmc.api.grpc.PartySvc
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.GameRegistry
+import com.bluedragonmc.server.service.ChatLogger
 import com.bluedragonmc.server.service.Messaging
 import com.bluedragonmc.server.service.Permissions
 import com.bluedragonmc.server.utils.miniMessage
@@ -25,6 +27,10 @@ private suspend fun BlueDragonCommand.CommandCtx.resolvePartyTarget(name: String
             sender.sendMessage(Component.translatable("argument.entity.notfound.player", NamedTextColor.RED))
             null
         }
+
+private fun PartySvc.PartyListResponse.PlayerEntry.displayName(): Component =
+    if (color.isBlank()) miniMessage.deserialize(username)
+    else miniMessage.deserialize("<$color>$username")
 
 class PartyCommand(name: String, usageString: String, vararg aliases: String) :
     BlueDragonCommand(name, aliases, block = {
@@ -104,12 +110,12 @@ class PartyCommand(name: String, usageString: String, vararg aliases: String) :
             suspendSyntax {
                 val response = Messaging.outgoing.listPartyMembers(player.uuid)
                 if (response.playersCount > 0) {
-                    val leader = response.playersList.find { it.role == "Leader" }
+                    val leader = response.playersList.find { it.role == PartySvc.PartyListResponse.Role.LEADER }
                     val members = response.playersList.filter { it != leader }
                     val leaderText = leader?.let {
                         formatMessageTranslated(
                             "puffin.party.list.leader",
-                            miniMessage.deserialize(it.username)
+                            it.displayName()
                         )
                     }
                     val membersText = formatMessageTranslated(
@@ -117,7 +123,7 @@ class PartyCommand(name: String, usageString: String, vararg aliases: String) :
                         members.size,
                         Component.join(
                             JoinConfiguration.separator(Component.text(", ", BRAND_COLOR_PRIMARY_2)),
-                            members.map { miniMessage.deserialize(it.username) })
+                            members.map { it.displayName() })
                     )
                     val text = if (leaderText != null) leaderText + Component.newline() + membersText else membersText
                     sender.sendMessage(text.surroundWithSeparators())
@@ -168,7 +174,11 @@ class PartyCommand(name: String, usageString: String, vararg aliases: String) :
             Messaging.outgoing.inviteToParty(player.uuid, uuid)
         }
 
-    })
+    }) {
+    // Party chat is recorded as ChatLogType.PARTY; so don't also log it as a command.
+    override fun shouldLogAsCommand(arguments: String) =
+        arguments.substringBefore(' ') != "chat"
+}
 
 suspend fun handlePartyChat(message: String, player: Player) {
     val msg = if (Permissions.hasPermission(player.uuid, "chat.minimessage") != true) {
@@ -179,6 +189,7 @@ suspend fun handlePartyChat(message: String, player: Player) {
         message
     }
     Messaging.outgoing.partyChat(msg, player)
+    ChatLogger.logPartyChat(player, message)
 }
 
 class PartyChatShorthandCommand(name: String, usageString: String, vararg aliases: String) :
@@ -191,4 +202,7 @@ class PartyChatShorthandCommand(name: String, usageString: String, vararg aliase
         suspendSyntax(messageArgument) {
             handlePartyChat(get(messageArgument).joinToString(" "), player)
         }
-    })
+    }) {
+    // Party chat is recorded as ChatLogType.PARTY, so don't also log it as a command.
+    override fun shouldLogAsCommand(arguments: String) = false
+}

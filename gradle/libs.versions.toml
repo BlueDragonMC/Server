@@ -17,7 +17,7 @@ fastutil = "8.5.18"
 polar = "2026-10-10-d85e3ce" # temporary - see https://github.com/hollow-cube/polar/pull/80
 slf4j = "2.0.18"
 # Auto-generated GRPC/Protobuf messaging code
-rpc = "2026-07-13-f05505c"
+rpc = "2026-10-11-e474a2b"
 # Messaging dependencies
 grpc = "1.71.0"
 grpc-kotlin-stub = "1.4.1"

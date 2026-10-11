@@ -1,6 +1,7 @@
 package com.bluedragonmc.server.api
 
 import com.bluedragonmc.server.CustomPlayer
+import com.bluedragonmc.server.model.ChatLogDocument
 import com.bluedragonmc.server.model.GameDocument
 import com.bluedragonmc.server.model.PlayerDocument
 import net.minestom.server.entity.Player
@@ -26,4 +27,6 @@ class DatabaseConnectionStub : DatabaseConnection {
     override suspend fun <T> updatePlayer(playerUuid: String, field: KMutableProperty<T>, value: T) {}
 
     override suspend fun logGame(game: GameDocument) {}
+
+    override suspend fun logChatMessage(chatLog: ChatLogDocument) {}
 }

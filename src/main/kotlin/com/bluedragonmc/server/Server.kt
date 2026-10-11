@@ -66,6 +66,7 @@ fun start() {
         Jukebox,
         OpenToLAN,
         PerInstanceChat,
+        ChatLogging, // Must run after PerInstanceChat so that chat logs record the players who received the message
         ServerListPingHandler,
         TabListFormat,
         DevInstanceRouter,

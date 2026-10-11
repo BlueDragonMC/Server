@@ -4,6 +4,7 @@ import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.api.DatabaseConnection
 import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.event.DataLoadedEvent
+import com.bluedragonmc.server.model.ChatLogDocument
 import com.bluedragonmc.server.model.GameDocument
 import com.bluedragonmc.server.model.PlayerDocument
 import com.bluedragonmc.server.model.Punishment
@@ -57,6 +58,7 @@ internal class DatabaseConnectionImpl(connectionString: String) : DatabaseConnec
 
     private fun getPlayersCollection(): CoroutineCollection<PlayerDocument> = database.getCollection("players")
     private fun getGamesCollection(): CoroutineCollection<GameDocument> = database.getCollection("games")
+    private fun getChatLogsCollection(): CoroutineCollection<ChatLogDocument> = database.getCollection("chatLogs")
 
     override suspend fun getPlayerDocument(username: String): PlayerDocument? {
         MinecraftServer.getConnectionManager().getOnlinePlayerByUsername(username)?.let {
@@ -142,5 +144,9 @@ internal class DatabaseConnectionImpl(connectionString: String) : DatabaseConnec
 
     override suspend fun logGame(game: GameDocument) {
         getGamesCollection().insertOne(game)
+    }
+
+    override suspend fun logChatMessage(chatLog: ChatLogDocument) {
+        getChatLogsCollection().insertOne(chatLog)
     }
 }

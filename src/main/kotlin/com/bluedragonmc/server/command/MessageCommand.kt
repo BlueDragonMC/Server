@@ -1,5 +1,6 @@
 package com.bluedragonmc.server.command
 
+import com.bluedragonmc.server.service.ChatLogger
 import com.bluedragonmc.server.service.Messaging
 import com.bluedragonmc.server.service.Permissions
 import kotlinx.coroutines.launch
@@ -17,7 +18,8 @@ class MessageCommand(name: String, vararg aliases: String) : BlueDragonCommand(n
     syntax(playerArgument, messageArgument) {
         val playerName = get(playerArgument)
         val player = MinecraftServer.getConnectionManager().getOnlinePlayerByUsername(playerName)
-        val message = Component.text(get(messageArgument).joinToString(" "), NamedTextColor.GRAY)
+        val rawMessage = get(messageArgument).joinToString(" ")
+        val message = Component.text(rawMessage, NamedTextColor.GRAY)
         val senderName = (sender as? Player)?.name ?: Component.translatable("command.msg.console")
         if (player != null) {
             // Player is on the same server and online
@@ -26,6 +28,7 @@ class MessageCommand(name: String, vararg aliases: String) : BlueDragonCommand(n
             val receiverMessage = formatMessageTranslated("command.msg.received", senderName, message)
             sender.sendMessage(senderMessage)
             player.sendMessage(receiverMessage)
+            ChatLogger.logPrivateMessage(sender, player.uuid, player.username, rawMessage)
         } else {
             Messaging.IO.launch {
                 try {
@@ -39,6 +42,12 @@ class MessageCommand(name: String, vararg aliases: String) : BlueDragonCommand(n
                     val senderMessage = formatMessageTranslated("command.msg.sent", Component.text(playerName, color), message)
                     Messaging.outgoing.sendPrivateMessage(message, sender, recipientUuid)
                     sender.sendMessage(senderMessage)
+                    ChatLogger.logPrivateMessage(
+                        sender,
+                        recipientUuid,
+                        recipient.username.ifBlank { playerName },
+                        rawMessage
+                    )
                 } catch (e: Exception) {
                     e.printStackTrace()
                     sender.sendMessage(formatMessageTranslated("command.msg.fail", playerName))
@@ -46,4 +55,7 @@ class MessageCommand(name: String, vararg aliases: String) : BlueDragonCommand(n
             }
         }
     }
-})
+}) {
+    // Private messages are recorded as ChatLogType.PRIVATE, so don't also log them as commands.
+    override fun shouldLogAsCommand(arguments: String) = false
+}

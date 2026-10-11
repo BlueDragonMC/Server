@@ -118,6 +118,11 @@ open class BlueDragonCommand(
         block()
     }
 
+    /**
+     * Whether this command should be recorded in the chat logs.
+     */
+    open fun shouldLogAsCommand(arguments: String): Boolean = true
+
     fun usage(block: CommandCtx.() -> Unit) = setDefaultExecutor { sender, context ->
         if (sender is ConsoleSender) {
             block(CommandCtx(sender, context))
