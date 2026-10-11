@@ -21,6 +21,7 @@ import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.title.Title
+import net.minestom.server.MinecraftServer
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
@@ -79,14 +80,13 @@ class AwardsModule : GameModule() {
         player as CustomPlayer
         require(player.isDataInitialized()) { "Player's data has not loaded!" }
         val gameId = id
-        val scope = taskScope
         Database.IO.launch {
             player.data.compute(PlayerDocument::coins) { it + amount }
             val prev = player.data.compute(PlayerDocument::experience) { it + amount }
             val oldLevel = CustomPlayer.getXpLevel(prev).toInt()
             val newLevel = CustomPlayer.getXpLevel(player.data.experience).toInt()
             if (newLevel > oldLevel)
-                scope.buildTask { notifyLevelUp(player, oldLevel, newLevel) }
+                MinecraftServer.getSchedulerManager().buildTask { notifyLevelUp(player, oldLevel, newLevel) }
                     .delay(Duration.ofSeconds(2)).schedule()
         }
         Database.IO.launch {

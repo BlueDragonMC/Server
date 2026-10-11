@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.seconds
 
 @EnvTest
 class ScopedTaskTest {
@@ -103,6 +104,24 @@ class ScopedTaskTest {
     }
 
     @Test
+    fun `Tasks scheduled on a cancelled scope are cancelled immediately`(env: Env) {
+        val game = TestGame()
+        game.init()
+
+        var runs = 0
+        game.endGame(queueAllPlayers = false)
+
+        // The TaskScope is cancelled when the game ends. Try to schedule a new task after the scope is cancelled:
+        val task = game.counter.taskScope.scheduleNextTick { runs++ }
+
+        env.tick()
+        env.tick()
+
+        assertFalse(task.isAlive, "A task scheduled on a cancelled scope should be cancelled")
+        assertEquals(0, runs, "A task scheduled on a cancelled scope should never run")
+    }
+
+    @Test
     fun `Module coroutines are cancelled when the module is unregistered`() {
         val game = TestGame()
         game.init()
@@ -111,8 +130,8 @@ class ScopedTaskTest {
 
         game.unregister(game.counter)
 
-        val joined = runBlocking { withTimeoutOrNull(5_000) { job.join(); true } }
-        assertTrue(joined == true, "The module's coroutine was not cancelled (timed out)")
+        val joined = runBlocking { withTimeoutOrNull(5.seconds) { job.join(); true } }
+        assertEquals(true, joined, "The module's coroutine was not cancelled (timed out)")
         assertTrue(job.isCancelled, "The module's coroutine should be cancelled when the module is unregistered")
     }
 
@@ -125,8 +144,8 @@ class ScopedTaskTest {
 
         game.endGame(queueAllPlayers = false)
 
-        val joined = runBlocking { withTimeoutOrNull(5_000) { job.join(); true } }
-        assertTrue(joined == true, "The game's coroutine was not cancelled (timed out)")
+        val joined = runBlocking { withTimeoutOrNull(5.seconds) { job.join(); true } }
+        assertEquals(true, joined, "The game's coroutine was not cancelled (timed out)")
         assertTrue(job.isCancelled, "The game's coroutine should be cancelled when the game ends")
     }
 

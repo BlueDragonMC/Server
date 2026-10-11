@@ -1,23 +1,21 @@
 package com.bluedragonmc.server.utils
 
-import kotlinx.coroutines.CoroutineName
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import net.minestom.server.MinecraftServer
 import net.minestom.server.timer.ExecutionType
 import net.minestom.server.timer.Task
 import net.minestom.server.timer.TaskSchedule
+import org.slf4j.LoggerFactory
+import java.lang.Runnable
 import java.time.Duration
 import java.time.temporal.TemporalUnit
 import java.util.*
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
-class TaskScope internal constructor(name: String = "TaskScope") {
+class TaskScope internal constructor(private val name: String = "TaskScope") {
+
+    private val logger = LoggerFactory.getLogger(TaskScope::class.java)
 
     private val tasks: MutableSet<Task> =
         Collections.synchronizedSet(Collections.newSetFromMap(WeakHashMap()))
@@ -27,23 +25,38 @@ class TaskScope internal constructor(name: String = "TaskScope") {
     internal val coroutineScope: CoroutineScope =
         CoroutineScope(Dispatchers.IO + job + CoroutineName(name))
 
+    private var cancelled = false
+
     internal fun buildTask(block: Runnable): ScopedTaskBuilder = ScopedTaskBuilder(this, block)
 
     fun scheduleNextTick(block: Runnable): Task =
         MinecraftServer.getSchedulerManager().scheduleNextTick(block).also(::track)
 
     internal fun track(task: Task) {
-        tasks.add(task)
+        synchronized(tasks) {
+            if (cancelled) {
+                task.cancel()
+                logger.warn(
+                    "Task scheduled on inactive scope '{}'; cancelling it.",
+                    name,
+                    Throwable("Late task scheduling")
+                )
+                return
+            }
+            tasks.add(task)
+        }
     }
 
     /**
-     * Cancels every task and coroutine that is still alive.
+     * Cancels every task and coroutine that is still alive, and prevents
+     * future tasks from being scheduled.
      */
     fun cancelAll() {
         synchronized(tasks) {
+            cancelled = true
             for (task in tasks) task.cancel()
+            tasks.clear()
         }
-        tasks.clear()
         job.cancel()
     }
 }
