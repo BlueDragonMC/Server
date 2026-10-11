@@ -29,13 +29,23 @@ class PolarMapProvider : Maps.MapProvider<PolarLoader>() {
         logger.info("Providing Polar map at ${source.url}")
         val request = Request.Builder().url(source.url).build()
         val response = client.newCall(request).await()
-        val body = response.body!!
-        logger.info("Got response of length ${body.contentLength()}")
-        if (body.contentLength() == 0L) {
-            logger.info("Map has no contents. Providing an empty map with default values.")
+        val body = response.body
+            ?: error("No response body while downloading map '${source.id}' from ${source.url}")
+        logger.info("Got response of length ${body.contentLength()} (HTTP ${response.code})")
+
+        if (response.code == 404 || (response.isSuccessful && body.contentLength() == 0L)) {
+            logger.info("Map '${source.id}' has no contents yet. Providing an empty map with default values.")
             return PolarLoader(PolarWorld())
         }
-        return PolarLoader(response.body!!.byteStream())
+        if (!response.isSuccessful) {
+            error("Failed to download map '${source.id}' from ${source.url}: HTTP ${response.code}")
+        }
+
+        return try {
+            PolarLoader(body.byteStream())
+        } catch (e: Throwable) {
+            throw java.io.IOException("Failed to parse map '${source.id}' downloaded from ${source.url}", e)
+        }
     }
 
     override fun serializeMap(instance: InstanceContainer): ByteArray {
