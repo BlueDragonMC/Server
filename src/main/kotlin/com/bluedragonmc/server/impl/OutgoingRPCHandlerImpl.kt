@@ -60,7 +60,7 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
 
             eventNode.listen<GameStateChangedEvent> { event ->
                 val gameId = id
-                val gameState = rpcGameState()
+                val gameState = event.newState.toRpcGameState(players.size, getModule<GameInfoModule>().maxPlayers)
                 Messaging.IO.launch {
                     Messaging.outgoing.updateGameState(gameId, gameState)
                 }

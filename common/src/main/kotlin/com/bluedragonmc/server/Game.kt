@@ -2,11 +2,7 @@ package com.bluedragonmc.server
 
 import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.game.GameData
-import com.bluedragonmc.server.module.GameInfoModule
-import com.bluedragonmc.server.module.GameModule
-import com.bluedragonmc.server.module.GameStateModule
-import com.bluedragonmc.server.module.PlayerListModule
-import com.bluedragonmc.server.module.ScopedTabListModule
+import com.bluedragonmc.server.module.*
 import com.bluedragonmc.server.module.minigame.win.WinModule
 import com.bluedragonmc.server.service.Messaging
 import com.bluedragonmc.server.utils.GameState
@@ -24,7 +20,7 @@ import java.util.function.Consumer
 import kotlin.random.Random
 import kotlin.reflect.jvm.jvmName
 
-abstract class Game(final val data: GameData) : ModuleHolder(), PacketGroupingAudience {
+abstract class Game(val data: GameData) : ModuleHolder(), PacketGroupingAudience {
 
     internal val roster = PlayerManager(this)
     val players: List<Player> get() = roster.players
@@ -35,7 +31,7 @@ abstract class Game(final val data: GameData) : ModuleHolder(), PacketGroupingAu
      * A random, 4-character identifier unique to this game.
      */
     val id = (0 until 4).map {
-        'a' + Random.Default.nextInt(0, 26)
+        'a' + Random.nextInt(0, 26)
     }.joinToString("")
 
     internal val recorder = GameRecorder(this)
