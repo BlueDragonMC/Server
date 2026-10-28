@@ -4,8 +4,8 @@ import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.bootstrap.*
 import com.bluedragonmc.server.bootstrap.dev.DevInstanceRouter
 import com.bluedragonmc.server.bootstrap.dev.OpenToLAN
-import com.bluedragonmc.server.bootstrap.prod.AgonesIntegration
 import com.bluedragonmc.server.bootstrap.prod.InitialInstanceRouter
+import com.bluedragonmc.server.bootstrap.prod.ServerLifecycle
 import com.bluedragonmc.server.queue.GameLoader
 import com.bluedragonmc.server.queue.createEnvironment
 import net.minestom.server.Auth
@@ -52,7 +52,7 @@ fun start() {
     val eventNode = MinecraftServer.getGlobalEventHandler()
 
     val services = listOf(
-        AgonesIntegration,
+        ServerLifecycle,
         Commands,
         CustomPlayerProvider,
         DefaultDimensionTypes,
@@ -92,4 +92,5 @@ fun start() {
 
     // Start the server & bind to port 25565
     minecraftServer.start("0.0.0.0", 25565)
+    ServerLifecycle.markReady()
 }

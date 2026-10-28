@@ -1,11 +1,9 @@
 package com.bluedragonmc.server.queue
 
-import agones.dev.sdk.Agones
 import com.bluedragonmc.server.GitVersionInfo
 import com.bluedragonmc.server.VersionInfo
 import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.api.Queue
-import com.bluedragonmc.server.bootstrap.prod.AgonesIntegration
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.util.*
@@ -27,11 +25,13 @@ class ConfiguredEnvironment : Environment() {
         else -> defaultQueue()
     }
 
-    override val mongoConnectionString: String = System.getenv("BLUEDRAGON_MONGO_CONNECTION_STRING") ?: defaultMongoConnectionString()
+    override val mongoConnectionString: String =
+        System.getenv("BLUEDRAGON_MONGO_CONNECTION_STRING") ?: defaultMongoConnectionString()
     override val puffinHostname: String = System.getenv("BLUEDRAGON_PUFFIN_HOSTNAME") ?: defaultPuffinHostname()
     override val puffinPort: Int = System.getenv("BLUEDRAGON_PUFFIN_PORT")?.toIntOrNull() ?: 50051
     override val grpcServerPort: Int = System.getenv("BLUEDRAGON_GRPC_SERVER_PORT")?.toIntOrNull() ?: 50051
-    override val luckPermsHostname: String = System.getenv("BLUEDRAGON_LUCKPERMS_HOSTNAME") ?: defaultLuckPermsHostname()
+    override val luckPermsHostname: String =
+        System.getenv("BLUEDRAGON_LUCKPERMS_HOSTNAME") ?: defaultLuckPermsHostname()
 
     override val gameClasses: Collection<String> = GameLoader.gameNames
     override val versionInfo: VersionInfo = GitVersionInfo
@@ -40,17 +40,12 @@ class ConfiguredEnvironment : Environment() {
     override val defaultGameName: String = System.getenv("BLUEDRAGON_DEFAULT_GAME") ?: super.defaultGameName
 
     private lateinit var serverName: String
-    private val isAgonesEnabled get() = System.getenv("BLUEDRAGON_AGONES_DISABLED") == null
 
     override suspend fun getServerName(): String {
         if (!::serverName.isInitialized) {
-            serverName = if (System.getenv("HOSTNAME") != null) {
-                System.getenv("HOSTNAME")
-            } else if (isDev() || !isAgonesEnabled) {
-                "dev-" + UUID.randomUUID().toString().take(5) + "-" + UUID.randomUUID().toString().take(5)
-            } else {
-                AgonesIntegration.stub.getGameServer(Agones.Empty.getDefaultInstance()).objectMeta.name
-            }
+            serverName = System.getenv("BLUEDRAGON_SERVER_NAME")?.takeIf { it.isNotBlank() }
+                ?: System.getenv("HOSTNAME")?.takeIf { it.isNotBlank() }
+                        ?: ("dev-" + UUID.randomUUID().toString().take(5) + "-" + UUID.randomUUID().toString().take(5))
         }
         return serverName
     }

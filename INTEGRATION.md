@@ -9,9 +9,8 @@ with [BlueDragonMC/Puffin](https://github.com/BlueDragonMC/Puffin).
 
 In production, BlueDragon runs in a [Kubernetes](https://kubernetes.io/) cluster.
 
-* Game servers are controlled by [Agones](https://agones.dev) with
-  a [fleet](https://agones.dev/site/docs/reference/fleet/).
-* Proxies are not currently handled by a fleet, however this may change in the future.
+* Game servers run in a Kubernetes `Deployment` named `server`; Puffin discovers their pods by the `app=server` label.
+* Proxies also run in Kubernetes Deployments.
 
 ## 2: Messaging
 
@@ -19,7 +18,6 @@ In production, BlueDragon runs in a [Kubernetes](https://kubernetes.io/) cluster
 
 | Service name                                                                                                | Purpose                                                              | Implemented By     |
 |-------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------|:-------------------|
-| [agones](https://github.com/BlueDragonMC/RPC/blob/master/src/main/proto/agones.proto)                       | Interacting with the Agones SDK                                      | Agones SDK         |
 | [gs_client](https://github.com/BlueDragonMC/RPC/blob/master/src/main/proto/gs_client.proto)                 | Client methods which are implemented by each game server             | Game server        |
 | [party_svc](https://github.com/BlueDragonMC/RPC/blob/master/src/main/proto/party_svc.proto)                 | Handling the BlueDragon party system                                 | Puffin             |
 | [player_holder](https://github.com/BlueDragonMC/RPC/blob/master/src/main/proto/player_holder.proto)         | Client methods which are implemented by each proxy and game server   | Game server, Proxy |
@@ -110,11 +108,16 @@ mode) should be enabled.
 
 Each server has at least one lobby, which is initialized on startup.
 
-### 4.3: Agones Integration
+### 4.3: Kubernetes Lifecycle
 
-When a server starts up, it should contact its local Agones gRPC or HTTP server and send a "Ready" request.
-Periodically, health pings should be sent to the same endpoint. If they are not sent, the server will be shut down due
-to a health check failure.
+Game servers expose lifecycle endpoints on `BLUEDRAGON_HEALTH_PORT` (default `8081`):
+
+* `GET /health`: liveness probe. Returns `200` only if the server has ticked recently and messaging is connected.
+* `GET /ready`: readiness probe. Returns `200` only if the server has started, is not draining, and has ticked recently.
+* `GET /drain`: initiate a graceful shutdown. Kubernetes calls this from the pod's `preStop` hook.
+
+Puffin only treats a pod as a placement candidate when it is Ready. When a pod is deleted, the server gives players a
+2-hour countdown, stops accepting new players, and exits once the server is empty or the countdown ends.
 
 ### 4.4: World Loading
 

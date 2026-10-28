@@ -41,9 +41,17 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
             .build()
 
     init {
-        MinecraftServer.getSchedulerManager().buildShutdownTask {
-            channel.shutdown()
+        Runtime.getRuntime().addShutdownHook(Thread(::close, "outgoing-rpc-shutdown"))
+    }
+
+    override fun close() {
+        if (channel.isShutdown) return
+
+        channel.shutdown()
+        try {
             channel.awaitTermination(10, TimeUnit.SECONDS)
+        } catch (_: InterruptedException) {
+            Thread.currentThread().interrupt()
         }
     }
 
@@ -108,6 +116,8 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
             state.toRpcGameState(players.size, getModule<GameInfoModule>().maxPlayers)
 
         override fun deinitialize() {
+            if (MinecraftServer.isStopping()) return
+
             val gameId = id
             Messaging.IO.launch {
                 Messaging.outgoing.notifyInstanceRemoved(gameId)

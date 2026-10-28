@@ -4,6 +4,7 @@ import com.bluedragonmc.server.*
 import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.event.*
 import com.bluedragonmc.server.module.*
+import com.bluedragonmc.server.shutdown.ServerShutdownNotice
 import com.bluedragonmc.server.utils.GameState
 import com.bluedragonmc.server.utils.withGradient
 import kotlinx.coroutines.runBlocking
@@ -20,6 +21,9 @@ import net.minestom.server.scoreboard.Sidebar
 import net.minestom.server.scoreboard.Sidebar.ScoreboardLine
 import java.util.*
 
+/** The maximum number of sidebar lines a client can display. */
+private const val MAX_SIDEBAR_LINES = 15
+
 /**
  * A module that shows a per-player sidebar to all players in the game.
  * Sidebars are created by adding "bindings", which can be updated at
@@ -34,8 +38,15 @@ class SidebarModule(private val title: String) : GameModule() {
     private lateinit var parent: ModuleHolder
     private val sidebars = mutableMapOf<Player, Sidebar>()
 
+    private val noticeListener: () -> Unit = {
+        if (::binding.isInitialized) {
+            runCatching { scheduleNextTick { binding.update() } }
+        }
+    }
+
     override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>) {
         this.parent = parent
+        ServerShutdownNotice.addListener(noticeListener)
         players.forEach { player ->
             sidebars[player] = createSidebar().apply { addViewer(player) }
             if (::binding.isInitialized)
@@ -53,6 +64,12 @@ class SidebarModule(private val title: String) : GameModule() {
             sidebars[event.player]?.removeViewer(event.player)
             sidebars.remove(event.player)
         }
+    }
+
+    override fun deinitialize() {
+        ServerShutdownNotice.removeListener(noticeListener)
+        sidebars.forEach { (player, sidebar) -> sidebar.removeViewer(player) }
+        sidebars.clear()
     }
 
     private lateinit var binding: ScoreboardBinding
@@ -137,8 +154,26 @@ class SidebarModule(private val title: String) : GameModule() {
         }
 
         internal fun updateFor(player: Player) {
-            val lines = getHeader(module) + updateFunction(ScoreboardBindingUtils(), player) + getFooter(player)
-            val old = module.sidebars[player] ?: module.createSidebar()
+            val baseLines = (getHeader(module) + updateFunction(ScoreboardBindingUtils(), player) + getFooter(player))
+                .toMutableList()
+            val notice = ServerShutdownNotice.current
+
+            val lines = if (notice != null && baseLines.size < MAX_SIDEBAR_LINES) {
+                baseLines.apply { add(1, notice.line) }
+            } else {
+                baseLines
+            }
+
+            val old = module.sidebars[player]
+            if (old == null) {
+                val new = module.createSidebar()
+                lines.forEachIndexed { i, line ->
+                    new.createLine(ScoreboardLine("line-$i", line, lines.size - i, Sidebar.NumberFormat.blank()))
+                }
+                new.addViewer(player)
+                module.sidebars[player] = new
+                return
+            }
 
             if (old.lines.size == lines.size) {
                 updateExisting(old, lines)

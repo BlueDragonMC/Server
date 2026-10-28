@@ -16,6 +16,7 @@ RUN --mount=target=/home/gradle/.gradle,type=cache \
 FROM eclipse-temurin:25-jre-alpine
 EXPOSE 25565
 EXPOSE 50051
+EXPOSE 8081
 WORKDIR /server
 
 LABEL com.bluedragonmc.image=server

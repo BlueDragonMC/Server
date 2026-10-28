@@ -1,18 +1,30 @@
 package com.bluedragonmc.server.command
 
-import com.bluedragonmc.server.GameRegistry
 import com.bluedragonmc.api.grpc.CommonTypes
+import com.bluedragonmc.server.GameRegistry
 import com.bluedragonmc.server.api.Environment
+import com.bluedragonmc.server.bootstrap.prod.ServerLifecycle
 import com.bluedragonmc.server.module.minigame.SpawnpointModule
 import com.bluedragonmc.server.service.Messaging
 
 class LobbyCommand(name: String, vararg aliases: String?) : BlueDragonCommand(name, aliases, block = {
     requirePlayers()
     suspendSyntax {
+        val lobbyGameType = CommonTypes.GameType.newBuilder()
+            .setName(Environment.defaultGameName)
+            .build()
+
+        if (ServerLifecycle.isDraining()) {
+            // If this server is draining, always try to send the player to a lobby on a different server
+            Messaging.outgoing.removeFromQueue(player)
+            Messaging.outgoing.addToQueue(player, lobbyGameType)
+            return@suspendSyntax
+        }
+
         val localLobby = GameRegistry.games.filter { it.data.name == Environment.defaultGameName }.randomOrNull()
 
         if (localLobby == null) {
-            Messaging.outgoing.addToQueue(player, CommonTypes.GameType.newBuilder().setName("Lobby").build())
+            Messaging.outgoing.addToQueue(player, lobbyGameType)
             return@suspendSyntax
         }
 

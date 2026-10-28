@@ -43,6 +43,12 @@ object InitialInstanceRouter : Bootstrap(EnvType.PRODUCTION) {
                 return@listenSuspend
             }
 
+            if (ServerLifecycle.isDraining()) {
+                logger.warn("Rejecting login for ${event.player.username} because the server is draining.")
+                event.player.kick(Component.translatable("server.shutdown.kick").color(NamedTextColor.RED))
+                return@listenSuspend
+            }
+
             val dataLoadJob = Database.IO.async {
                 // Load player data from the database
                 withTimeout(5000.milliseconds) {

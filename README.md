@@ -42,15 +42,18 @@ Environment variables:
 
 * `PUFFIN_VELOCITY_SECRET` - Your Velocity proxy forwarding secret (optional). If not specified, Mojang authentication
   will be enabled.
-* `BLUEDRAGON_AGONES_HEALTHCHECK_INTERVAL_MS` - The amount of time in between Agones healthcheck pings, in milliseconds.
-* `BLUEDRAGON_AGONES_RESERVATION_TIME_MS` - The amount of time in between Agones server reservations, in milliseconds.
-* `BLUEDRAGON_AGONES_DISABLED` - Disables Agones integration if set to any value.
+* `BLUEDRAGON_HEALTH_PORT` - The port used for lifecycle endpoints (`/health`, `/ready`, and `/drain`). Defaults to `8081`.
+* `BLUEDRAGON_SHUTDOWN_COUNTDOWN_SECONDS` - How long players are given before a draining server stops. Defaults to `7200` (2 hours).
+* `BLUEDRAGON_TICK_TIMEOUT_MS` - The maximum time since the last tick before the server is considered unhealthy. Defaults to `100`.
+* `BLUEDRAGON_DRAIN_QUIESCENCE_MS` - How long a draining server must remain empty before it stops early. Defaults to `15000`.
+* `BLUEDRAGON_LIFECYCLE_DISABLED` - Disables the lifecycle HTTP endpoints if set to any value.
 * `BLUEDRAGON_ENV_TYPE` - Set to "DEV" to enable development mode.
 * `BLUEDRAGON_QUEUE_TYPE` - Set to "IPC" to use Puffin or "TEST" for the `TestQueue`. If not present, a default value is
   inferred.
 * `BLUEDRAGON_MONGO_CONNECTION_STRING` - The connection string used to connect to MongoDB.
 * `BLUEDRAGON_PUFFIN_HOSTNAME` - The hostname used to connect to Puffin.
 * `BLUEDRAGON_LUCKPERMS_HOSTNAME` - The hostname used to connect to LuckPerms.
+* `BLUEDRAGON_SERVER_NAME` - Overrides the server name. If unset, `HOSTNAME` is used.
 * `HOSTNAME` - Used to determine the server name. Provided by default in Docker or Kubernetes environments.
 * `SERVER_INSTANCE_MIN_INACTIVE_TIME` - The amount of time that an instance must be inactive before it is cleaned up.
 * `SERVER_INSTANCE_CLEANUP_PERIOD` - The amount of time in between instance cleanup tasks.

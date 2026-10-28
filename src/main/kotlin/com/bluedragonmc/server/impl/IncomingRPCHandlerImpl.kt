@@ -5,6 +5,7 @@ import com.bluedragonmc.server.GameRegistry
 import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.api.IncomingRPCHandler
 import com.bluedragonmc.server.bootstrap.Jukebox
+import com.bluedragonmc.server.bootstrap.prod.ServerLifecycle
 import com.bluedragonmc.server.utils.miniMessage
 import com.google.protobuf.Empty
 import io.grpc.ServerBuilder
@@ -64,6 +65,19 @@ class IncomingRPCHandlerImpl(serverPort: Int) : IncomingRPCHandler {
         private val ZERO_UUID_STRING = ZERO_UUID.toString()
 
         override suspend fun createInstance(request: GsClient.CreateInstanceRequest): GsClient.CreateInstanceResponse {
+            if (ServerLifecycle.isDraining()) {
+                logger.info("Rejecting instance creation request because the server is draining: $request")
+                return createInstanceResponse {
+                    success = false
+                    gameState = gameState {
+                        gameState = CommonTypes.EnumGameState.ERROR
+                        joinable = false
+                        openSlots = 0
+                        maxSlots = 0
+                    }
+                }
+            }
+
             val game = runCatching {
                 onTick { Environment.queue.createInstance(request) }
             }.onFailure {
@@ -143,7 +157,15 @@ class IncomingRPCHandlerImpl(serverPort: Int) : IncomingRPCHandler {
     }
 
     class PlayerHolderService : PlayerHolderGrpcKt.PlayerHolderCoroutineImplBase() {
+
+        private val logger = LoggerFactory.getLogger(this::class.java)
+
         override suspend fun sendPlayer(request: PlayerHolderOuterClass.SendPlayerRequest): PlayerHolderOuterClass.SendPlayerResponse {
+            if (ServerLifecycle.isDraining()) {
+                logger.info("Rejecting player transfer because the server is draining: ${request.playerUuid}")
+                return sendPlayerResponse { playerFound = false }
+            }
+
             onTick { Environment.queue.sendPlayer(request) }
             return sendPlayerResponse {
                 successes += PlayerHolderOuterClass.SendPlayerResponse.SuccessFlags.SET_INSTANCE

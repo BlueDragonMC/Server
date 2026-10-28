@@ -21,6 +21,9 @@ class OutgoingRPCHandlerStub : OutgoingRPCHandler {
         return true
     }
 
+    override fun close() {
+    }
+
     override suspend fun initGameServer(serverName: String) {
 
     }

@@ -18,6 +18,7 @@ import java.util.*
 interface OutgoingRPCHandler {
 
     fun isConnected(): Boolean
+    fun close()
 
     suspend fun initGameServer(serverName: String)
 
