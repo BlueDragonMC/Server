@@ -44,6 +44,7 @@ Environment variables:
   will be enabled.
 * `BLUEDRAGON_HEALTH_PORT` - The port used for lifecycle endpoints (`/health`, `/ready`, and `/drain`). Defaults to `8081`.
 * `BLUEDRAGON_SHUTDOWN_COUNTDOWN_SECONDS` - How long players are given before a draining server stops. Defaults to `7200` (2 hours).
+* `BLUEDRAGON_COUNTDOWN_HIDDEN_SECONDS` - How long the shutdown countdown stays hidden at the start of a drain. Defaults to `3600` (1 hour). At least 60 seconds of the countdown is always visible.
 * `BLUEDRAGON_TICK_TIMEOUT_MS` - The maximum time since the last tick before the server is considered unhealthy. Defaults to `100`.
 * `BLUEDRAGON_DRAIN_QUIESCENCE_MS` - How long a draining server must remain empty before it stops early. Defaults to `15000`.
 * `BLUEDRAGON_LIFECYCLE_DISABLED` - Disables the lifecycle HTTP endpoints if set to any value.

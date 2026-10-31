@@ -32,12 +32,19 @@ object ServerLifecycle : Bootstrap(EnvType.PRODUCTION) {
 
     private const val NANOS_PER_MILLI = 1_000_000L
 
+    /** Always leave at least this much of the countdown visible. */
+    private const val MIN_VISIBLE_COUNTDOWN_SECONDS = 60L
+
     private val lifecyclePort =
         (System.getenv("BLUEDRAGON_HEALTH_PORT")?.toIntOrNull() ?: 8081).coerceIn(1, 65535)
     private val tickTimeoutNanos =
         envLong("BLUEDRAGON_TICK_TIMEOUT_MS", 100).coerceAtLeast(1) * NANOS_PER_MILLI
     private val countdownSeconds =
         envLong("BLUEDRAGON_SHUTDOWN_COUNTDOWN_SECONDS", 2 * 60 * 60L).coerceAtLeast(1)
+    private val countdownHiddenSeconds =
+        envLong("BLUEDRAGON_COUNTDOWN_HIDDEN_SECONDS", 60 * 60L).coerceAtLeast(0)
+    private val effectiveHiddenSeconds =
+        countdownHiddenSeconds.coerceIn(0L, (countdownSeconds - MIN_VISIBLE_COUNTDOWN_SECONDS).coerceAtLeast(0L))
     private val drainQuiescenceNanos =
         envLong("BLUEDRAGON_DRAIN_QUIESCENCE_MS", 15_000L) * NANOS_PER_MILLI
 
@@ -193,7 +200,16 @@ object ServerLifecycle : Bootstrap(EnvType.PRODUCTION) {
         }
     }
 
+    /**
+     * The countdown is hidden for the first part of the drain so players who
+     * finish their game during that window are moved without a shutdown warning.
+     */
+    private fun shouldAnnounce(remainingSeconds: Long): Boolean =
+        remainingSeconds <= countdownSeconds - effectiveHiddenSeconds
+
     private fun updateNotice(remainingSeconds: Long) {
+        if (!shouldAnnounce(remainingSeconds)) return
+
         val line = if (remainingSeconds <= 0) {
             Component.translatable("server.shutdown.sidebar.now")
         } else {
@@ -205,6 +221,8 @@ object ServerLifecycle : Bootstrap(EnvType.PRODUCTION) {
     }
 
     private fun announceMilestone(remainingSeconds: Long) {
+        if (!shouldAnnounce(remainingSeconds)) return
+
         val message = Component.translatable(
             "server.shutdown.chat",
             Component.text(ShutdownCountdown.formatChat(remainingSeconds)),
