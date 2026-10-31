@@ -2,7 +2,7 @@ metadata.format.version = "1.1"
 
 [versions]
 kotlin = "2.3.0"
-minestom = "26_3-SNAPSHOT"
+minestom = "2026-10-31-000563430b"
 #minestom = "dev"
 jukebox = "2026-07-13-3d8993c"
 configurate = "4.2.0"
@@ -29,8 +29,8 @@ coroutines = "1.10.2"
 
 [libraries]
 kotlin-jvm = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
-minestom = { group = "net.minestom", name = "minestom", version.ref = "minestom" }
-minestom-testing = { group = "net.minestom", name = "testing", version.ref = "minestom" }
+minestom = { group = "com.bluedragonmc", name = "minestom", version.ref = "minestom" }
+minestom-testing = { group = "com.bluedragonmc", name = "testing", version.ref = "minestom" }
 jukebox = { group = "com.bluedragonmc", name = "jukebox", version.ref = "jukebox" }
 #jukebox = { group = "com.bluedragonmc", name = "jukebox", version = "dev" }
 configurate-yaml = { group = "org.spongepowered", name = "configurate-yaml", version.ref = "configurate" }
