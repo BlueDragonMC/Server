@@ -1,11 +1,15 @@
 package com.bluedragonmc.server.bootstrap.prod
 
+import com.bluedragonmc.api.grpc.gameType
+import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.bootstrap.Bootstrap
+import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.service.Messaging
 import com.bluedragonmc.server.shutdown.ServerShutdownNotice
 import com.bluedragonmc.server.shutdown.ShutdownCountdown
 import com.sun.net.httpserver.HttpExchange
 import com.sun.net.httpserver.HttpServer
+import kotlinx.coroutines.launch
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.MinecraftServer
@@ -47,6 +51,8 @@ object ServerLifecycle : Bootstrap(EnvType.PRODUCTION) {
         countdownHiddenSeconds.coerceIn(0L, (countdownSeconds - MIN_VISIBLE_COUNTDOWN_SECONDS).coerceAtLeast(0L))
     private val drainQuiescenceNanos =
         envLong("BLUEDRAGON_DRAIN_QUIESCENCE_MS", 15_000L) * NANOS_PER_MILLI
+    private val lobbyTransferTimeoutNanos =
+        envLong("BLUEDRAGON_LOBBY_TRANSFER_TIMEOUT_MS", 30_000L) * NANOS_PER_MILLI
 
     private val lastTickNanos = AtomicLong(0L)
 
@@ -234,14 +240,8 @@ object ServerLifecycle : Bootstrap(EnvType.PRODUCTION) {
         val players = MinecraftServer.getConnectionManager().onlinePlayers
         if (players.isEmpty()) return
 
-        runCatching {
-            MinecraftServer.getSchedulerManager().scheduleNextTick {
-                players.forEach { player ->
-                    runCatching { player.sendMessage(message) }
-                }
-            }
-        }.onFailure {
-            logger.warn("Failed to schedule a shutdown chat message", it)
+        MinecraftServer.getSchedulerManager().scheduleNextTick {
+            players.forEach { player -> player.sendMessage(message) }
         }
     }
 
@@ -256,32 +256,58 @@ object ServerLifecycle : Bootstrap(EnvType.PRODUCTION) {
             updateNotice(0)
             val players = MinecraftServer.getConnectionManager().onlinePlayers
             if (players.isNotEmpty()) {
-                val message = Component.translatable("server.shutdown.chat.now").color(NamedTextColor.RED)
-                val kickMessage = Component.translatable("server.shutdown.kick").color(NamedTextColor.RED)
-                val kicked = CompletableFuture<Unit>()
+                sendToOnlinePlayers(Component.translatable("server.shutdown.moving").color(NamedTextColor.RED))
 
-                runCatching {
-                    MinecraftServer.getSchedulerManager().scheduleNextTick {
-                        try {
-                            players.forEach { player ->
-                                runCatching {
-                                    player.sendMessage(message)
-                                    player.kick(kickMessage)
-                                }
-                            }
-                        } finally {
-                            kicked.complete(Unit)
+                val lobbyGameType = gameType { name = Environment.defaultGameName }
+                players.forEach { player ->
+                    Database.IO.launch {
+                        runCatching {
+                            Messaging.outgoing.removeFromQueue(player)
+                            Messaging.outgoing.addToQueue(player, lobbyGameType)
+                        }.onFailure {
+                            logger.warn("Failed to queue ${player.username} for a lobby", it)
                         }
                     }
-                }.onFailure {
-                    logger.error("Failed to schedule player kicks during shutdown", it)
-                    kicked.complete(Unit)
                 }
 
-                runCatching { kicked.get(5, TimeUnit.SECONDS) }
-                // Give disconnect packets a moment to reach the proxy before Kubernetes
-                // sends SIGTERM and the process stops.
-                runCatching { Thread.sleep(2_000) }
+                // Give the queue a chance to move players to a lobby on another server.
+                val deadline = System.nanoTime() + lobbyTransferTimeoutNanos
+                while (MinecraftServer.getConnectionManager().onlinePlayers.isNotEmpty() &&
+                    System.nanoTime() < deadline
+                ) {
+                    Thread.sleep(500)
+                }
+
+                val remaining = MinecraftServer.getConnectionManager().onlinePlayers
+                if (remaining.isNotEmpty()) {
+                    logger.warn("Kicking ${remaining.size} players that could not be moved to a lobby.")
+                    val message = Component.translatable("server.shutdown.chat.now").color(NamedTextColor.RED)
+                    val kickMessage = Component.translatable("server.shutdown.kick").color(NamedTextColor.RED)
+                    val kicked = CompletableFuture<Unit>()
+
+                    runCatching {
+                        MinecraftServer.getSchedulerManager().scheduleNextTick {
+                            try {
+                                remaining.forEach { player ->
+                                    runCatching {
+                                        player.sendMessage(message)
+                                        player.kick(kickMessage)
+                                    }
+                                }
+                            } finally {
+                                kicked.complete(Unit)
+                            }
+                        }
+                    }.onFailure {
+                        logger.error("Failed to schedule player kicks during shutdown", it)
+                        kicked.complete(Unit)
+                    }
+
+                    runCatching { kicked.get(5, TimeUnit.SECONDS) }
+                    // Give disconnect packets a moment to reach the proxy before Kubernetes
+                    // sends SIGTERM and the process stops.
+                    runCatching { Thread.sleep(2_000) }
+                }
             }
         }
 

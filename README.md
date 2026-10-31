@@ -47,6 +47,7 @@ Environment variables:
 * `BLUEDRAGON_COUNTDOWN_HIDDEN_SECONDS` - How long the shutdown countdown stays hidden at the start of a drain. Defaults to `3600` (1 hour). At least 60 seconds of the countdown is always visible.
 * `BLUEDRAGON_TICK_TIMEOUT_MS` - The maximum time since the last tick before the server is considered unhealthy. Defaults to `100`.
 * `BLUEDRAGON_DRAIN_QUIESCENCE_MS` - How long a draining server must remain empty before it stops early. Defaults to `15000`.
+* `BLUEDRAGON_LOBBY_TRANSFER_TIMEOUT_MS` - How long to wait for players to be moved to a lobby when the drain completes before kicking them. Defaults to `30000`.
 * `BLUEDRAGON_LIFECYCLE_DISABLED` - Disables the lifecycle HTTP endpoints if set to any value.
 * `BLUEDRAGON_ENV_TYPE` - Set to "DEV" to enable development mode.
 * `BLUEDRAGON_QUEUE_TYPE` - Set to "IPC" to use Puffin or "TEST" for the `TestQueue`. If not present, a default value is
