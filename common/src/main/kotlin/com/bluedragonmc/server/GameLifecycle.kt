@@ -72,6 +72,7 @@ class GameLifecycle(private val game: Game) {
             Environment.queue.bulkEnqueue(game.players.map { it to gameType })
         }
 
+        val logger = logger // Shadow here so that reference to `this` (GameLifecycle) isn't held within the task
         MinecraftServer.getSchedulerManager().buildTask {
             instancesToRemove.forEach { instance ->
                 if (instance.isRegistered) {
@@ -79,7 +80,7 @@ class GameLifecycle(private val game: Game) {
                     InstanceUtils.forceUnregisterInstance(instance)
                 }
             }
-        }.executionType(ExecutionType.TICK_START).delay(Duration.ofSeconds(10))
+        }.executionType(ExecutionType.TICK_START).delay(Duration.ofSeconds(10)).schedule()
 
         game.roster.clear()
         game.events.detach()
