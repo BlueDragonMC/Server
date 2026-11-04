@@ -7,7 +7,7 @@ minestom = "2026-10-31-000563430b"
 jukebox = "2026-07-13-3d8993c"
 configurate = "4.2.0"
 minimessage = "5.1.1"
-kmongo = "5.2.1"
+mongodb = "5.14.0"
 caffeine = "3.2.0"
 okhttp = "4.12.0"
 serialization = "1.8.0"
@@ -17,7 +17,7 @@ fastutil = "8.5.18"
 polar = "2026-10-10-d85e3ce" # temporary - see https://github.com/hollow-cube/polar/pull/80
 slf4j = "2.0.18"
 # Auto-generated GRPC/Protobuf messaging code
-rpc = "2026-10-28-4f9fd8a"
+rpc = "2026-10-31-015108b"
 # Messaging dependencies
 grpc = "1.71.0"
 grpc-kotlin-stub = "1.4.1"
@@ -39,7 +39,9 @@ configurate-extra-kotlin = { group = "org.spongepowered", name = "configurate-ex
 minimessage = { group = "net.kyori", name = "adventure-text-minimessage", version.ref = "minimessage" }
 atlas-projectiles = { group = "ca.atlasengine", name = "atlas-projectiles", version.ref = "atlas-projectiles" }
 fastutil = { group = "it.unimi.dsi", name = "fastutil", version.ref = "fastutil" }
-kmongo = { group = "org.litote.kmongo", name = "kmongo-coroutine-serialization", version.ref = "kmongo" }
+mongodb-kotlin-coroutine = { group = "org.mongodb", name = "mongodb-driver-kotlin-coroutine", version.ref = "mongodb" }
+mongodb-kotlin-extensions = { group = "org.mongodb", name = "mongodb-driver-kotlin-extensions", version.ref = "mongodb" }
+bson-kotlinx = { group = "org.mongodb", name = "bson-kotlinx", version.ref = "mongodb" }
 serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "serialization" }
 caffeine = { group = "com.github.ben-manes.caffeine", name = "caffeine", version.ref = "caffeine" }
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }

@@ -23,12 +23,13 @@ repositories {
 dependencies {
     compileOnly(libs.minestom)
     compileOnly(libs.atlas.projectiles)
-    compileOnly(libs.kmongo)
     compileOnly(libs.caffeine)
     compileOnly(libs.minimessage)
     compileOnly(libs.bundles.configurate)
     compileOnly(libs.bundles.messaging)
     compileOnly(libs.serialization.json)
+    compileOnly(libs.coroutines.core)
+    compileOnly(kotlin("reflect"))
     compileOnly(libs.fastutil)
     compileOnly(libs.slf4j)
 

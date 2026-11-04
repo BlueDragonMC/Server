@@ -35,7 +35,11 @@ dependencies {
     implementation(libs.atlas.projectiles)
     implementation(libs.jukebox) // Jukebox (for note block song file parsing)
     implementation(libs.minimessage) // MiniMessage
-    implementation(libs.kmongo) // Database support
+    implementation(libs.mongodb.kotlin.coroutine) // Database support
+    implementation(libs.mongodb.kotlin.extensions)
+    implementation(libs.bson.kotlinx)
+    implementation(libs.serialization.json)
+    implementation(kotlin("reflect"))
     implementation(libs.caffeine) // Caching library for database responses
     implementation(libs.bundles.configurate) // Configurate for game configuration
     implementation(libs.bundles.messaging) // Messaging

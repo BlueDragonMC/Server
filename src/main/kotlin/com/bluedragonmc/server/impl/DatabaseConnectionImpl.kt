@@ -12,19 +12,19 @@ import com.mongodb.ConnectionString
 import com.mongodb.MongoClientSettings
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Sorts
+import com.mongodb.client.model.Updates
+import com.mongodb.kotlin.client.coroutine.MongoClient
+import com.mongodb.kotlin.client.coroutine.MongoCollection
+import com.mongodb.kotlin.client.coroutine.MongoDatabase
+import com.mongodb.kotlin.client.model.Filters.elemMatch
+import com.mongodb.kotlin.client.model.Filters.eq
+import com.mongodb.kotlin.client.model.path
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.toList
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.MinecraftServer
 import net.minestom.server.entity.Player
-import org.litote.kmongo.coroutine.CoroutineClient
-import org.litote.kmongo.coroutine.CoroutineCollection
-import org.litote.kmongo.coroutine.CoroutineDatabase
-import org.litote.kmongo.coroutine.coroutine
-import org.litote.kmongo.elemMatch
-import org.litote.kmongo.eq
-import org.litote.kmongo.path
-import org.litote.kmongo.reactivestreams.KMongo
-import org.litote.kmongo.setValue
 import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -34,8 +34,8 @@ internal class DatabaseConnectionImpl(connectionString: String) : DatabaseConnec
 
     private val logger = LoggerFactory.getLogger(this::class.java)
 
-    private val client: CoroutineClient by lazy {
-        KMongo.createClient(MongoClientSettings.builder()
+    private val client: MongoClient by lazy {
+        MongoClient.create(MongoClientSettings.builder()
             .applyConnectionString(ConnectionString(connectionString))
             .applyToSocketSettings { block ->
                 block.connectTimeout(5, TimeUnit.SECONDS)
@@ -43,7 +43,7 @@ internal class DatabaseConnectionImpl(connectionString: String) : DatabaseConnec
             .applyToClusterSettings { block ->
                 block.serverSelectionTimeout(5, TimeUnit.SECONDS)
             }
-            .build()).coroutine
+            .build())
     }
 
     init {
@@ -52,31 +52,31 @@ internal class DatabaseConnectionImpl(connectionString: String) : DatabaseConnec
         }
     }
 
-    private val database: CoroutineDatabase by lazy {
+    private val database: MongoDatabase by lazy {
         client.getDatabase(Environment.dbName)
     }
 
-    private fun getPlayersCollection(): CoroutineCollection<PlayerDocument> = database.getCollection("players")
-    private fun getGamesCollection(): CoroutineCollection<GameDocument> = database.getCollection("games")
-    private fun getChatLogsCollection(): CoroutineCollection<ChatLogDocument> = database.getCollection("chatLogs")
+    private fun getPlayersCollection(): MongoCollection<PlayerDocument> = database.getCollection("players")
+    private fun getGamesCollection(): MongoCollection<GameDocument> = database.getCollection("games")
+    private fun getChatLogsCollection(): MongoCollection<ChatLogDocument> = database.getCollection("chatLogs")
 
     override suspend fun getPlayerDocument(username: String): PlayerDocument? {
         MinecraftServer.getConnectionManager().getOnlinePlayerByUsername(username)?.let {
             return (it as CustomPlayer).data
         }
-        return getPlayersCollection().findOne(PlayerDocument::usernameLower eq username.lowercase())
+        return getPlayersCollection().find(PlayerDocument::usernameLower eq username.lowercase()).firstOrNull()
     }
 
     override suspend fun getPlayerDocument(uuid: UUID): PlayerDocument? {
         MinecraftServer.getConnectionManager().getOnlinePlayerByUuid(uuid)?.let {
             return (it as CustomPlayer).data
         }
-        return getPlayersCollection().findOne(Filters.eq(PlayerDocument::uuid.path(), uuid.toString()))
+        return getPlayersCollection().find(Filters.eq(PlayerDocument::uuid.path(), uuid.toString())).firstOrNull()
     }
 
     override suspend fun getPlayerDocument(player: Player): PlayerDocument {
         val col = getPlayersCollection()
-        val foundDocument = col.findOneById(player.uuid.toString())
+        val foundDocument = col.find(Filters.eq("_id", player.uuid.toString())).firstOrNull()
         return if (foundDocument == null) {
             // Create a document if it doesn't exist
             val newDocument = PlayerDocument(uuid = player.uuid)
@@ -126,7 +126,7 @@ internal class DatabaseConnectionImpl(connectionString: String) : DatabaseConnec
         }
 
         return getPlayersCollection()
-            .find("{\"statistics.$key\": {\$exists: true}}")
+            .find(Filters.exists("statistics.$key"))
             .sort(sort)
             .limit(limit)
             .toList()
@@ -135,11 +135,12 @@ internal class DatabaseConnectionImpl(connectionString: String) : DatabaseConnec
 
     override suspend fun getPlayerForPunishmentId(id: String): PlayerDocument? {
         return getPlayersCollection()
-            .findOne(PlayerDocument::punishments elemMatch Filters.regex(Punishment::id.path(), "^$id"))
+            .find(PlayerDocument::punishments elemMatch Filters.regex(Punishment::id.path(), "^$id"))
+            .firstOrNull()
     }
 
     override suspend fun <T> updatePlayer(playerUuid: String, field: KMutableProperty<T>, value: T) {
-        getPlayersCollection().updateOneById(playerUuid, setValue(field, value))
+        getPlayersCollection().updateOne(Filters.eq("_id", playerUuid), Updates.set(field.path(), value))
     }
 
     override suspend fun logGame(game: GameDocument) {
