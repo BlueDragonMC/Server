@@ -5,8 +5,23 @@ plugins {
     id("org.jetbrains.kotlin.jvm")
 }
 
+val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")
+val javaVersion = libs.findVersion("jvm").get().requiredVersion
+
 tasks.withType<KotlinCompile> {
     compilerOptions {
-        jvmTarget.set(JvmTarget.JVM_25)
+        jvmTarget.set(JvmTarget.fromTarget(javaVersion))
+    }
+}
+
+kotlin {
+    jvmToolchain {
+        languageVersion.set(JavaLanguageVersion.of(javaVersion.toInt()))
+    }
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(javaVersion.toInt()))
     }
 }

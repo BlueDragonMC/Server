@@ -3,8 +3,8 @@ import java.util.*
 
 plugins {
     id("server.common-conventions")
-    kotlin("plugin.serialization") version "2.4.21"
-    id("net.kyori.blossom") version "2.1.0"
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.blossom)
     `maven-publish`
 }
 
@@ -86,12 +86,6 @@ fun getPublishingVersion(): String = if (isInCI()) {
     "$date-$commitSha"
 } else {
     "dev"
-}
-
-kotlin {
-    jvmToolchain {
-        languageVersion.set(JavaLanguageVersion.of(25))
-    }
 }
 
 tasks.test {

@@ -1,7 +1,11 @@
 metadata.format.version = "1.1"
 
 [versions]
+# @keep Used by build-logic for the Java toolchain
+jvm = "25"
 kotlin = "2.4.21"
+dokka = "2.2.0"
+blossom = "2.1.0"
 minestom = "2026-10-31-000563430b"
 #minestom = "dev"
 jukebox = "2026-07-13-3d8993c"
@@ -66,3 +70,9 @@ slf4j = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4j" }
 configurate = ["configurate-yaml", "configurate-gson", "configurate-extra-kotlin"]
 messaging = ["rpc", "grpc-protobuf", "grpc-netty", "grpc-kotlin-stub", "protobuf-kotlin"]
 tinylog = ["tinylog-api", "tinylog-impl", "tinylog-slf4j"]
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+dokka = { id = "org.jetbrains.dokka-javadoc", version.ref = "dokka" }
+blossom = { id = "net.kyori.blossom", version.ref = "blossom" }

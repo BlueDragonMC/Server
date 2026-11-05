@@ -1,7 +1,7 @@
 plugins {
     id("server.common-conventions")
-    id("org.jetbrains.dokka-javadoc") version "2.2.0"
-    kotlin("plugin.serialization") version "2.4.21"
+    alias(libs.plugins.dokka)
+    alias(libs.plugins.kotlin.serialization)
     `maven-publish`
 }
 
@@ -100,10 +100,4 @@ tasks.getByName<Test>("test") {
     useJUnitPlatform()
     // Matches Minestom's own test setup. Required for tests that create players directly.
     systemProperty("minestom.inside-test", "true")
-}
-
-kotlin {
-    jvmToolchain {
-        languageVersion.set(JavaLanguageVersion.of(25))
-    }
 }
