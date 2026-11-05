@@ -1,7 +1,7 @@
 metadata.format.version = "1.1"
 
 [versions]
-kotlin = "2.3.0"
+kotlin = "2.4.21"
 minestom = "2026-10-31-000563430b"
 #minestom = "dev"
 jukebox = "2026-07-13-3d8993c"

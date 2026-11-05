@@ -3,7 +3,7 @@ import java.util.*
 
 plugins {
     id("server.common-conventions")
-    kotlin("plugin.serialization") version "2.3.0"
+    kotlin("plugin.serialization") version "2.4.21"
     id("net.kyori.blossom") version "2.1.0"
     `maven-publish`
 }
