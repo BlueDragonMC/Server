@@ -3,7 +3,6 @@ import java.util.*
 
 plugins {
     id("server.common-conventions")
-    id("com.gradleup.shadow") version "9.4.0"
     kotlin("plugin.serialization") version "2.3.0"
     id("net.kyori.blossom") version "2.1.0"
     `maven-publish`
@@ -101,14 +100,23 @@ tasks.test {
     systemProperty("minestom.inside-test", "true")
 }
 
-tasks.shadowJar {
-    duplicatesStrategy = DuplicatesStrategy.INCLUDE
-    mergeServiceFiles()
-}
-
 tasks.jar {
-    dependsOn(tasks.shadowJar)
     manifest {
         attributes["Main-Class"] = "com.bluedragonmc.server.ServerKt"
     }
+}
+
+// Create a folder of dependency JARs to put on the classpath at runtime
+val installThinDistLibs by tasks.registering(Sync::class) {
+    dependsOn(configurations.named("runtimeClasspath"))
+    into(layout.buildDirectory.dir("thin-dist/lib"))
+    from(configurations.named("runtimeClasspath").map { configuration ->
+        configuration.files.filter { file -> file.isFile && file.name.endsWith(".jar") }
+    })
+}
+
+val installThinDist by tasks.registering(Copy::class) {
+    dependsOn(tasks.jar, installThinDistLibs)
+    into(layout.buildDirectory.dir("thin-dist"))
+    from(tasks.jar)
 }

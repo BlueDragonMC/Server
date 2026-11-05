@@ -1,18 +1,13 @@
-# syntax = docker/dockerfile:1.2
-# This Dockerfile must be run with BuildKit enabled
-# see https://docs.docker.com/engine/reference/builder/#buildkit
-# for the Dockerfile that is run on our CI/CD pipeline, see production.Dockerfile
-
-# Build the project into an executable JAR
+# Build the server
 FROM gradle:9.5.1-jdk25 AS build
 # Copy build files and source code
 COPY . /work
 WORKDIR /work
 # Run gradle in the /work directory
 RUN --mount=target=/home/gradle/.gradle,type=cache \
-    /usr/bin/gradle --console=plain --stacktrace --no-daemon -x test build
+    /usr/bin/gradle --console=plain --stacktrace --no-daemon -x test installThinDist
 
-# Run the built JAR and expose port 25565
+# Run the built application
 FROM eclipse-temurin:25-jre-alpine
 EXPOSE 25565
 EXPOSE 50051
@@ -25,8 +20,10 @@ LABEL com.bluedragonmc.environment=development
 # Copy config files and assets
 COPY favicon_64.png /server/favicon_64.png
 
-# Copy the built JAR from the previous step
-COPY --from=build /work/build/libs/Server-*-all.jar /server/server.jar
+# Copy dependency JARs
+COPY --from=build /work/build/thin-dist/lib /server/lib
+# Copy the server itself
+COPY --from=build /work/build/thin-dist/Server-*.jar /server/server.jar
 
 # Run the server
-CMD ["java", "-jar", "/server/server.jar"]
+CMD ["java", "-cp", "/server/server.jar:/server/lib/*", "com.bluedragonmc.server.ServerKt"]

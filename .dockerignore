@@ -2,6 +2,8 @@
 .gradle
 # IntelliJ project files
 .idea
+# Kotlin compiler caches
+.kotlin
 # Assets
 worlds
 favicon_hq.png

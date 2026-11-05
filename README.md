@@ -24,7 +24,12 @@ available [here](https://wiki.minestom.net).
 
 ## Usage
 
-Build with `./gradlew build` and run the JAR created at `build/libs/Server-x.x.x-all.jar`.
+Build with `./gradlew installThinDist`, then run it with:
+
+```shell
+java -cp "build/thin-dist/Server-dev.jar:build/thin-dist/lib/*" com.bluedragonmc.server.ServerKt
+```
+
 Requires Java 25 or higher.
 
 ## Development
