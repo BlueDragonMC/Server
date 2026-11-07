@@ -38,6 +38,7 @@ dependencies {
     implementation(libs.mongodb.kotlin.extensions)
     implementation(libs.bson.kotlinx)
     implementation(libs.serialization.json)
+    implementation(libs.coroutines.core)
     implementation(kotlin("reflect"))
     implementation(libs.caffeine) // Caching library for database responses
     implementation(libs.bundles.configurate) // Configurate for game configuration
