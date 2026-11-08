@@ -105,9 +105,9 @@ tasks.jar {
 val installThinDistLibs by tasks.registering(Sync::class) {
     dependsOn(configurations.named("runtimeClasspath"))
     into(layout.buildDirectory.dir("thin-dist/lib"))
-    from(configurations.named("runtimeClasspath").map { configuration ->
-        configuration.files.filter { file -> file.isFile && file.name.endsWith(".jar") }
-    })
+    from(configurations.named("runtimeClasspath")) {
+        include("*.jar")
+    }
 }
 
 val installThinDist by tasks.registering(Copy::class) {
