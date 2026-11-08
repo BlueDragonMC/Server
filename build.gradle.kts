@@ -102,7 +102,7 @@ tasks.jar {
 }
 
 // Create a folder of dependency JARs to put on the classpath at runtime
-val installThinDistLibs by tasks.registering(Sync::class) {
+val installThinDistLibs = tasks.register<Sync>("installThinDistLibs") {
     dependsOn(configurations.named("runtimeClasspath"))
     into(layout.buildDirectory.dir("thin-dist/lib"))
     from(configurations.named("runtimeClasspath")) {
@@ -110,7 +110,7 @@ val installThinDistLibs by tasks.registering(Sync::class) {
     }
 }
 
-val installThinDist by tasks.registering(Copy::class) {
+val installThinDist = tasks.register<Copy>("installThinDist") {
     dependsOn(tasks.jar, installThinDistLibs)
     into(layout.buildDirectory.dir("thin-dist"))
     from(tasks.jar)
