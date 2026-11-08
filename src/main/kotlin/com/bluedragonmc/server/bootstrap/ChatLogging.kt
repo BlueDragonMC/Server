@@ -17,7 +17,9 @@ object ChatLogging : Bootstrap() {
 
     override fun hook(eventNode: EventNode<Event>) {
         eventNode.listen<PlayerChatEvent> { event ->
-            ChatLogger.logChat(event.player as CustomPlayer, event.rawMessage, event.recipients)
+            val player = event.player as CustomPlayer
+            logger.info("<{}> {}", player.username, event.rawMessage)
+            ChatLogger.logChat(player, event.rawMessage, event.recipients)
         }
 
         eventNode.listen<PlayerCommandEvent> { event ->
