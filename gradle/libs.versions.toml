@@ -18,7 +18,7 @@ serialization = "1.12.0"
 tinylog = "2.8.1"
 atlas-projectiles = "3.0.0-fork"
 fastutil = "8.5.19"
-polar = "2026-10-10-d85e3ce" # temporary - see https://github.com/hollow-cube/polar/pull/80
+polar = "1.16.1"
 slf4j = "2.0.20"
 # Auto-generated GRPC/Protobuf messaging code
 rpc = "2026-10-31-015108b"
