@@ -123,23 +123,33 @@ abstract class Game(val data: GameData) : ModuleHolder(), PacketGroupingAudience
     fun isInactive(): Boolean = lifecycle.isInactive()
 
     fun init() {
-        // Initialize mandatory modules for core functionality, like game state updates
-        useMandatoryModules()
+        try {
+            // Initialize mandatory modules for core functionality, like game state updates
+            useMandatoryModules()
 
-        // Run the game's initialization code
-        initialize()
+            // Run the game's initialization code
+            initialize()
 
-        // Make sure all module dependencies are resolved
-        checkUnmetDependencies()
+            // Make sure all module dependencies are resolved
+            checkUnmetDependencies()
 
-        logger.debug("Initializing game with modules: {}", modules.map { it::class.simpleName ?: it::class.jvmName })
+            logger.debug("Initializing game with modules: {}", modules.map { it::class.simpleName ?: it::class.jvmName })
 
-        // Let the queue system send players to the game
-        GameRegistry.add(this)
-        state = GameState.WAITING
+            // Let the queue system send players to the game
+            GameRegistry.add(this)
+            state = GameState.WAITING
 
-        // Allow the game to start receiving events
-        events.attach()
+            // Allow the game to start receiving events
+            events.attach()
+        } catch (e: Throwable) {
+            logger.error("Failed to initialize game {} ({})", id, data.name, e)
+            try {
+                lifecycle.abortInitialization()
+            } catch (cleanup: Throwable) {
+                e.addSuppressed(cleanup)
+            }
+            throw e
+        }
     }
 
     protected abstract fun initialize()

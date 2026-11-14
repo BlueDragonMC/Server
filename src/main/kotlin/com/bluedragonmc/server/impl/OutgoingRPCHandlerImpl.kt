@@ -15,6 +15,7 @@ import com.bluedragonmc.server.utils.GameState
 import com.bluedragonmc.server.utils.listen
 import com.bluedragonmc.server.utils.miniMessage
 import io.grpc.ManagedChannelBuilder
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import net.kyori.adventure.text.Component
 import net.minestom.server.MinecraftServer
@@ -58,11 +59,13 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
     @DependsOn(InstanceModule::class, PlayerListModule::class, GameStateModule::class, GameInfoModule::class)
     class MessagingModule : GameModule() {
 
+        private var initJob: Job? = null
+
         override fun initialize(parent: ModuleHolder, eventNode: EventNode<Event>) {
             val gameId = id
             val gameType = data.gameType
             val initialState = rpcGameState()
-            Messaging.IO.launch {
+            initJob = Messaging.IO.launch {
                 Messaging.outgoing.initGame(gameId, gameType, initialState)
             }
 
@@ -119,7 +122,9 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
             if (MinecraftServer.isStopping()) return
 
             val gameId = id
+            val creationJob = initJob ?: return
             Messaging.IO.launch {
+                creationJob.join() // Wait for the "game created" message to be received before sending
                 Messaging.outgoing.notifyInstanceRemoved(gameId)
             }
         }

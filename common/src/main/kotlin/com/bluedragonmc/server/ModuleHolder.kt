@@ -82,16 +82,34 @@ open class ModuleHolder : TaskScheduler {
         node.priority = module.eventPriority
         rootEventNode.addChild(node)
         module.eventNode = node
-        module.initialize(this, node)
+        try {
+            module.initialize(this, node)
+        } catch (e: Throwable) {
+            try {
+                module.deinitialize()
+            } catch (cleanup: Throwable) {
+                e.addSuppressed(cleanup)
+            }
+            try {
+                module.cancelTasks()
+            } catch (cleanup: Throwable) {
+                e.addSuppressed(cleanup)
+            }
+            node.parent?.removeChild(node)
+            throw e
+        }
     }
 
     open fun unregister(module: GameModule) {
         logger.debug("Unregistering module {}", module)
-        module.deinitialize()
-        module.cancelTasks()
-        modules.remove(module)
-        val node = module.eventNode
-        node.parent?.removeChild(node)
+        try {
+            module.deinitialize()
+        } finally {
+            module.cancelTasks()
+            modules.remove(module)
+            val node = module.eventNode
+            node.parent?.removeChild(node)
+        }
     }
 
     /**

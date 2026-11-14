@@ -6,7 +6,9 @@ import com.bluedragonmc.server.event.GameStateChangedEvent
 import com.bluedragonmc.server.utils.GameState
 import com.bluedragonmc.server.utils.InstanceUtils
 import net.minestom.server.MinecraftServer
+import net.minestom.server.instance.Instance
 import net.minestom.server.timer.ExecutionType
+import net.minestom.server.timer.TaskSchedule
 import org.slf4j.LoggerFactory
 import java.time.Duration
 
@@ -42,47 +44,89 @@ class GameLifecycle(private val game: Game) {
     }
 
     fun end(queueAllPlayers: Boolean = true) {
+        try {
+            game.recorder.log()
+            state = GameState.ENDING
+        } finally {
+            teardown(
+                queueAllPlayers = queueAllPlayers,
+                instanceRemovalDelay = TaskSchedule.duration(Duration.ofSeconds(10)),
+            )
+        }
+    }
 
-        game.recorder.log()
+    /**
+     * Cleans up a game in response to a failure in [Game.init].
+     */
+    fun abortInitialization() {
+        teardown(queueAllPlayers = false, instanceRemovalDelay = TaskSchedule.nextTick())
+    }
 
-        state = GameState.ENDING
+    /**
+     * Releases all resources owned by a game.
+     */
+    private fun teardown(queueAllPlayers: Boolean, instanceRemovalDelay: TaskSchedule) {
+        val instancesToRemove = try {
+            game.getOwnedInstances()
+        } catch (e: Exception) {
+            logger.warn("Could not collect instances owned by game ${game.id}", e)
+            emptyList()
+        }
+
         GameRegistry.remove(game)
-
-        val instancesToRemove = MinecraftServer.getInstanceManager().instances.filter { game.ownsInstance(it) }
 
         // the NotifyInstanceRemovedMessage is published when the MessagingModule is unregistered
 
         // Unregister modules in reverse registration order. Provider modules (players,
         // state, info, events) are registered first, so they need to remain available
         // while the other modules deinitialize.
-        val modulesToUnregister = game.modules.toList().asReversed()
-        for (module in modulesToUnregister) {
-            if (game.modules.contains(module)) game.unregister(module)
+        for (module in game.modules.toList().asReversed()) {
+            if (!game.modules.contains(module)) continue
+            try {
+                game.unregister(module)
+            } catch (e: Exception) {
+                logger.warn(
+                    "Failed to unregister module ${module::class.simpleName} of game ${game.id}",
+                    e
+                )
+            }
         }
-
-        game.cancelTasks()
 
         if (queueAllPlayers) {
-            val gameType = gameType {
-                name = game.data.name
-                if (game.data.mode != null) {
-                    mode = game.data.mode
+            try {
+                val gameType = gameType {
+                    name = game.data.name
+                    if (game.data.mode != null) {
+                        mode = game.data.mode
+                    }
                 }
+                Environment.queue.bulkEnqueue(game.players.map { it to gameType })
+            } catch (e: Exception) {
+                logger.error("Failed to queue players from game ${game.id}", e)
             }
-            Environment.queue.bulkEnqueue(game.players.map { it to gameType })
         }
 
-        val logger = logger // Shadow here so that reference to `this` (GameLifecycle) isn't held within the task
-        MinecraftServer.getSchedulerManager().buildTask {
-            instancesToRemove.forEach { instance ->
-                if (instance.isRegistered) {
-                    logger.info("Forcefully unregistering instance ${instance.uuid}...")
-                    InstanceUtils.forceUnregisterInstance(instance)
-                }
-            }
-        }.executionType(ExecutionType.TICK_START).delay(Duration.ofSeconds(10)).schedule()
+        scheduleInstanceRemoval(instancesToRemove, instanceRemovalDelay)
 
         game.roster.clear()
         game.events.detach()
+    }
+
+    private fun scheduleInstanceRemoval(instances: List<Instance>, delay: TaskSchedule) {
+        if (instances.isEmpty()) return
+
+        val gameId = game.id
+        val logger = logger
+        MinecraftServer.getSchedulerManager().buildTask {
+            instances.forEach { instance ->
+                if (!instance.isRegistered) return@forEach
+                logger.info("Forcefully unregistering instance ${instance.uuid}...")
+                try {
+                    InstanceUtils.forceUnregisterInstance(instance)
+                } catch (e: Exception) {
+                    logger.warn("Failed to unregister instance ${instance.uuid} of game $gameId", e)
+                }
+            }
+        }.executionType(ExecutionType.TICK_START).delay(delay).schedule()
     }
 }
