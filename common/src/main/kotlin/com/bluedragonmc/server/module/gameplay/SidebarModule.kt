@@ -7,7 +7,6 @@ import com.bluedragonmc.server.module.*
 import com.bluedragonmc.server.shutdown.ServerShutdownNotice
 import com.bluedragonmc.server.utils.GameState
 import com.bluedragonmc.server.utils.withGradient
-import kotlinx.coroutines.runBlocking
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.Component.text
 import net.kyori.adventure.text.format.NamedTextColor.DARK_GRAY
@@ -136,8 +135,7 @@ class SidebarModule(private val title: String) : GameModule() {
                         get(Calendar.YEAR).toString().takeLast(2)
                     ).joinToString("/")
                 }
-                val serverId = runBlocking { Environment.getServerName().substringAfter("-") }
-                return setOf(text("$dateString · $serverId · ${module.id}", DARK_GRAY))
+                return setOf(text("$dateString · ${module.shortId}", DARK_GRAY))
             }
 
             private fun getFooter(player: Player): Iterable<Component> {

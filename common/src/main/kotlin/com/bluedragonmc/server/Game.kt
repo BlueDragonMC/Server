@@ -6,6 +6,7 @@ import com.bluedragonmc.server.module.*
 import com.bluedragonmc.server.module.minigame.win.WinModule
 import com.bluedragonmc.server.service.Messaging
 import com.bluedragonmc.server.utils.GameState
+import com.bluedragonmc.server.utils.uuidV7
 import net.minestom.server.adventure.audience.PacketGroupingAudience
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
@@ -17,7 +18,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.concurrent.CompletableFuture
 import java.util.function.Consumer
-import kotlin.random.Random
 import kotlin.reflect.jvm.jvmName
 
 abstract class Game(val data: GameData) : ModuleHolder(), PacketGroupingAudience {
@@ -28,11 +28,12 @@ abstract class Game(val data: GameData) : ModuleHolder(), PacketGroupingAudience
     protected val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
     /**
-     * A random, 4-character identifier unique to this game.
+     * A random identifier unique to this game.
      */
-    val id = (0 until 4).map {
-        'a' + Random.nextInt(0, 26)
-    }.joinToString("")
+    val id = uuidV7().toString()
+
+    /** A short version of the game ID to be shown to players */
+    val shortId = id.takeLast(8)
 
     internal val recorder = GameRecorder(this)
     internal val instances = GameInstances(this)

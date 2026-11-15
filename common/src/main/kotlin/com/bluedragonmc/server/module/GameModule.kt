@@ -102,6 +102,9 @@ abstract class GameModule : TaskScheduler {
     /** The unique identifier of this module's game. Requires [GameInfoModule]. */
     open val id: String get() = getModule<GameInfoModule>().id
 
+    /** The short, display-friendly identifier of this module's game. Requires [GameInfoModule]. */
+    open val shortId: String get() = getModule<GameInfoModule>().shortId
+
     /** The metadata of this module's game. Requires [GameInfoModule]. */
     open val data: GameData get() = getModule<GameInfoModule>().data
 

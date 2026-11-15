@@ -14,6 +14,10 @@ class GameInfoModule(private val game: Game) : GameModule() {
     override val id: String
         get() = game.id
 
+    /** The last few characters of the game's ID, suitable for displaying to players. */
+    override val shortId: String
+        get() = game.shortId
+
     override val data: GameData
         get() = game.data
 
