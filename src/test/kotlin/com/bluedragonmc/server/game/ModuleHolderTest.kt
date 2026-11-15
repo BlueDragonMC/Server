@@ -38,6 +38,14 @@ class ModuleHolderTest {
     @SoftDependsOn(SimpleGameModule::class)
     private class SimpleSoftDependent : GameModuleStub()
 
+    private open class NeverRegisteredModule : GameModuleStub()
+
+    @SoftDependsOn(NeverRegisteredModule::class)
+    private class WaitingSoftDependent : GameModuleStub()
+
+    @SoftDependsOn(WaitingSoftDependent::class)
+    private class DependentOnWaitingSoftDependent : GameModuleStub()
+
     @DependsOn(SimpleDependent::class)
     private class MultiLevelDependent : GameModuleStub()
 
@@ -113,6 +121,29 @@ class ModuleHolderTest {
         assertContentEquals(instance.getModuleNames(), listOf(dependent::class.simpleName))
         verify {
             // Make sure the module was registered
+            instance.register(dependent, any())
+        }
+    }
+
+    @Test
+    fun `Checking unmet dependencies registers waiting soft dependencies first`() {
+        val softDependent = WaitingSoftDependent()
+        val dependent = DependentOnWaitingSoftDependent()
+
+        // Both stay waiting: the soft dependency is missing for the first module,
+        // and the second module's soft dependency has not been registered yet.
+        instance.use(dependent)
+        instance.use(softDependent)
+
+        assertDoesNotThrow {
+            instance.checkUnmetDependencies()
+        }
+        assertContentEquals(
+            listOf(softDependent::class.simpleName, dependent::class.simpleName),
+            instance.getModuleNames(),
+        )
+        verifyOrder {
+            instance.register(softDependent, any())
             instance.register(dependent, any())
         }
     }

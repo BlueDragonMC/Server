@@ -136,9 +136,13 @@ open class ModuleHolder : TaskScheduler {
         waiting.removeIf { it.module == module }
 
         // Before adding this dependency, add any of its soft dependencies (if present)
-        for ((waitingModule, waitingFilter, waitingCallback) in waiting) {
-            if (module.getSoftDependencies().any { it.isInstance(waitingModule) }) {
-                add(waitingModule, waitingFilter, waitingCallback as Consumer<GameModule>)
+        val softDependencies = module.getSoftDependencies()
+        val depsToRegister = waiting.filter { candidate ->
+            softDependencies.any { dep -> dep.isInstance(candidate.module) }
+        }
+        for (softDependency in depsToRegister) {
+            if (waiting.remove(softDependency)) {
+                add(softDependency.module, softDependency.filter, softDependency.callback as Consumer<GameModule>)
             }
         }
 
