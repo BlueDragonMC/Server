@@ -3,6 +3,7 @@ package com.bluedragonmc.server.command
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.GameRegistry
+import com.bluedragonmc.server.game.GameModeId
 import com.bluedragonmc.server.module.map.MapProviderModule.Companion.MAP_NAME_TAG
 import com.bluedragonmc.server.module.minigame.SpawnpointModule
 import com.bluedragonmc.server.utils.*
@@ -50,9 +51,10 @@ class InstanceCommand(name: String, usageString: String, vararg aliases: String?
                         // Game name
                         if (game?.data?.name != null) {
                             +text(game.data.name, NamedTextColor.YELLOW)
-                            if (game.data.mode != null) {
+                            val displayMode = game.data.mode.value.takeIf { it != GameModeId.DEFAULT.value }
+                            if (displayMode != null) {
                                 +text(" (", NamedTextColor.GRAY)
-                                +text(game.data.mode!!, NamedTextColor.DARK_GREEN)
+                                +text(displayMode, NamedTextColor.DARK_GREEN)
                                 +text(")", NamedTextColor.GRAY)
                             }
                         } else {
@@ -87,7 +89,10 @@ class InstanceCommand(name: String, usageString: String, vararg aliases: String?
                                         text(" · ", NamedTextColor.GRAY) +
                                         text(game.data.mapSource.id, NamedTextColor.GOLD) +
                                         text(" · ", NamedTextColor.GRAY) +
-                                        text(game.data.mode ?: "--", NamedTextColor.DARK_GREEN)
+                                        text(
+                                            game.data.mode.value.takeIf { it != GameModeId.DEFAULT.value } ?: "--",
+                                            NamedTextColor.DARK_GREEN,
+                                        )
                             )
                         )
                     }

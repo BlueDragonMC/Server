@@ -7,14 +7,12 @@ import com.bluedragonmc.server.service.Maps
 data class GameData(
     val name: String,
     val mapSource: Maps.MapSource,
-    val mode: String? = null,
+    val mode: GameModeId,
 ) {
     val gameType: CommonTypes.GameType
         get() = gameType {
             name = this@GameData.name
+            mode = this@GameData.mode.value
             mapId = mapSource.id
-            if (this@GameData.mode != null) {
-                mode = this@GameData.mode
-            }
         }
 }

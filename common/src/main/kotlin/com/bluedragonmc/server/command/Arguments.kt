@@ -1,10 +1,10 @@
 package com.bluedragonmc.server.command
 
-import com.bluedragonmc.server.GameRegistry
 import com.bluedragonmc.server.Game
+import com.bluedragonmc.server.GameRegistry
+import com.bluedragonmc.server.game.GameModes
 import com.bluedragonmc.server.model.PlayerDocument
 import com.bluedragonmc.server.service.Database
-import kotlinx.coroutines.runBlocking
 import net.minestom.server.MinecraftServer
 import net.minestom.server.command.ArgumentParserType
 import net.minestom.server.command.CommandSender
@@ -16,6 +16,7 @@ import net.minestom.server.command.builder.arguments.minecraft.ArgumentUUID
 import net.minestom.server.command.builder.arguments.number.ArgumentInteger
 import net.minestom.server.command.builder.arguments.relative.ArgumentRelativeBlockPosition
 import net.minestom.server.command.builder.exception.ArgumentSyntaxException
+import net.minestom.server.command.builder.suggestion.Suggestion
 import net.minestom.server.command.builder.suggestion.SuggestionEntry
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
@@ -23,9 +24,13 @@ import net.minestom.server.item.ItemStack
 import net.minestom.server.network.NetworkBuffer
 import net.minestom.server.utils.entity.EntityFinder
 import net.minestom.server.utils.location.RelativeVec
-import java.util.UUID
+import java.util.*
 import kotlin.reflect.KFunction
 import kotlin.reflect.KProperty
+
+/** The argument fragment currently being typed. */
+private val Suggestion.currentWord: String
+    get() = input.substringAfterLast(' ').removeSuffix("\u0000")
 
 open class ArgumentTypeDelegation<T : Any>(private val block: (property: KProperty<*>) -> Argument<T>) {
 
@@ -57,9 +62,10 @@ class ArgumentInstance(id: String) : Argument<Instance>(id) {
 
     init {
         setSuggestionCallback { _, _, suggestion ->
+            val prefix = suggestion.currentWord
             suggestion.entries.addAll(MinecraftServer.getInstanceManager().instances.map {
                 SuggestionEntry(it.uuid.toString())
-            }.filter { it.entry.startsWith(suggestion.input) })
+            }.filter { prefix.isEmpty() || it.entry.startsWith(prefix) })
         }
     }
 
@@ -81,9 +87,10 @@ class ArgumentGameId(id: String) : Argument<Game>(id) {
 
     init {
         setSuggestionCallback { _, _, suggestion ->
+            val prefix = suggestion.currentWord
             suggestion.entries.addAll(GameRegistry.games.map {
                 SuggestionEntry(it.id)
-            }.filter { it.entry.startsWith(suggestion.input) })
+            }.filter { prefix.isEmpty() || it.entry.startsWith(prefix) })
         }
     }
 
@@ -103,6 +110,32 @@ class ArgumentGameId(id: String) : Argument<Game>(id) {
 }
 
 /**
+ * An argument for a game mode. Suggests the modes registered for the game named by the
+ * `game` argument.
+ */
+class ArgumentGameMode(id: String) : Argument<String>(id) {
+    private val backingArgument = ArgumentWord(id)
+
+    init {
+        setSuggestionCallback { _, context, suggestion ->
+            val game = context.getOrDefault("game", "")
+            if (game.isBlank()) return@setSuggestionCallback
+
+            val prefix = suggestion.currentWord.lowercase()
+            GameModes.visibleModes(game)
+                .filter { prefix.isEmpty() || it.id.value.startsWith(prefix) }
+                .forEach { suggestion.addEntry(SuggestionEntry(it.id.value)) }
+        }
+    }
+
+    override fun parse(sender: CommandSender, input: String) = backingArgument.parse(sender, input)
+
+    override fun parser(): ArgumentParserType = backingArgument.parser()
+
+    override fun nodeProperties(): ByteArray? = backingArgument.nodeProperties()
+}
+
+/**
  * An argument that returns the username passed by the sender and suggests online players' names.
  *
  * Resolve the value with [resolveOfflinePlayer] from a `suspendSyntax` handler.
@@ -116,8 +149,9 @@ class ArgumentOfflinePlayerName(id: String) : Argument<String>(id) {
 
     init {
         setSuggestionCallback { _, _, suggestion ->
+            val prefix = suggestion.currentWord
             suggestion.entries.addAll(MinecraftServer.getConnectionManager().onlinePlayers.filter {
-                suggestion.input.isEmpty() || it.username.startsWith(suggestion.input)
+                prefix.isEmpty() || it.username.startsWith(prefix)
             }.map { SuggestionEntry(it.username) })
         }
     }
@@ -152,8 +186,9 @@ class ArgumentOptionalPlayer(id: String) : Argument<String>(id) {
 
     init {
         setSuggestionCallback { _, _, suggestion ->
+            val prefix = suggestion.currentWord
             suggestion.entries.addAll(MinecraftServer.getConnectionManager().onlinePlayers.filter {
-                suggestion.input.isEmpty() || it.username.startsWith(suggestion.input)
+                prefix.isEmpty() || it.username.startsWith(prefix)
             }.map { SuggestionEntry(it.username) })
         }
     }
@@ -175,6 +210,7 @@ object ItemStackArgument : ArgumentTypeDelegation<ItemStack>(::ArgumentItemStack
 object WordArgument : ArgumentTypeDelegation<String>(::ArgumentWord)
 object StringArgument : ArgumentTypeDelegation<String>(::ArgumentString)
 object GameArgument : ArgumentTypeDelegation<Game>(::ArgumentGameId)
+object GameModeArgument : ArgumentTypeDelegation<String>(::ArgumentGameMode)
 object PlayerArgument : ArgumentTypeDelegation<EntityFinder>(::ArgumentPlayer)
 object OfflinePlayerNameArgument : ArgumentTypeDelegation<String>(::ArgumentOfflinePlayerName)
 object OptionalPlayerArgument : ArgumentTypeDelegation<String>(::ArgumentOptionalPlayer)

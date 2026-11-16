@@ -65,7 +65,7 @@ class GameInitializationFailureTest {
         GameData(
             "test",
             Maps.MapSource("test", "test", CommonTypes.MapFormat.UNRECOGNIZED, ""),
-            null,
+            GameModeId.DEFAULT,
         )
     ) {
         val instanceModule = TestInstanceModule()
@@ -81,7 +81,7 @@ class GameInitializationFailureTest {
         GameData(
             "test",
             Maps.MapSource("test", "test", CommonTypes.MapFormat.UNRECOGNIZED, ""),
-            null,
+            GameModeId.DEFAULT,
         )
     ) {
         val instanceModule = TestInstanceModule()

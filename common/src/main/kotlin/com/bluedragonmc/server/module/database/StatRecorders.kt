@@ -1,6 +1,7 @@
 package com.bluedragonmc.server.module.database
 
 import com.bluedragonmc.server.event.PlayerKillPlayerEvent
+import com.bluedragonmc.server.game.GameModeId
 import com.bluedragonmc.server.module.minigame.win.WinModule
 import com.bluedragonmc.server.utils.GameState
 import net.minestom.server.event.player.PlayerDeathEvent
@@ -60,7 +61,7 @@ object StatRecorders {
     private fun StatisticsModule.statPrefix(): String {
         val gameData = data
         val mode = gameData.mode
-        return if (mode.isNullOrBlank()) "game_${gameData.name.lowercase()}"
-        else "game_${gameData.name.lowercase()}_${mode.lowercase()}"
+        return if (mode == GameModeId.DEFAULT) "game_${gameData.name.lowercase()}"
+        else "game_${gameData.name.lowercase()}_${mode.value}"
     }
 }

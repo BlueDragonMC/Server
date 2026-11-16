@@ -1,8 +1,8 @@
 package com.bluedragonmc.server.bootstrap.prod
 
-import com.bluedragonmc.api.grpc.gameType
 import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.bootstrap.Bootstrap
+import com.bluedragonmc.server.game.GameRequest
 import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.service.Messaging
 import com.bluedragonmc.server.shutdown.ServerShutdownNotice
@@ -258,7 +258,7 @@ object ServerLifecycle : Bootstrap(EnvType.PRODUCTION) {
             if (players.isNotEmpty()) {
                 sendToOnlinePlayers(Component.translatable("server.shutdown.moving").color(NamedTextColor.RED))
 
-                val lobbyGameType = gameType { name = Environment.defaultGameName }
+                val lobbyGameType = GameRequest.create(Environment.defaultGameName).toProto()
                 players.forEach { player ->
                     Database.IO.launch {
                         runCatching {

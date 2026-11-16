@@ -62,7 +62,7 @@ class ScopedTabListTest {
     }
 
     private class TestGame(private val env: Env) : Game(
-        GameData("test", Maps.MapSource("test", "test", CommonTypes.MapFormat.UNRECOGNIZED, ""), null)
+        GameData("test", Maps.MapSource("test", "test", CommonTypes.MapFormat.UNRECOGNIZED, ""), GameModeId.DEFAULT)
     ) {
         lateinit var instanceA: Instance
         lateinit var instanceB: Instance

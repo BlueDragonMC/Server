@@ -37,7 +37,7 @@ class GameModuleTeardownTest {
         GameData(
             "test",
             Maps.MapSource("test", "test", CommonTypes.MapFormat.UNRECOGNIZED, ""),
-            null,
+            GameModeId.DEFAULT,
         )
     ) {
         val providerUsingModule = ProviderUsingModule()

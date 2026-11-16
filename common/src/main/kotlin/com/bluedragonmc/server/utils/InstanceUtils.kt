@@ -1,7 +1,6 @@
 package com.bluedragonmc.server.utils
 
 import com.bluedragonmc.server.GameRegistry
-import com.bluedragonmc.api.grpc.gameType
 import com.bluedragonmc.server.api.Environment
 import net.kyori.adventure.text.Component
 import net.minestom.server.MinecraftServer
@@ -61,9 +60,7 @@ object InstanceUtils {
                 var completionTask: Task? = null
                 val queueTask: Task = MinecraftServer.getSchedulerManager().buildTask {
                     instance.players.forEach {
-                        Environment.queue.queue(it, gameType {
-                            name = Environment.defaultGameName
-                        })
+                        Environment.queue.queue(it, Environment.defaultGameName)
                     }
                 }.repeat(Duration.ofSeconds(10)).schedule()
                 completionTask = MinecraftServer.getSchedulerManager().buildTask {

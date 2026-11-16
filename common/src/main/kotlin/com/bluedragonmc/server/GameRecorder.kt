@@ -1,5 +1,6 @@
 package com.bluedragonmc.server
 
+import com.bluedragonmc.server.game.GameModeId
 import com.bluedragonmc.server.model.GameDocument
 import com.bluedragonmc.server.model.InstanceRecord
 import com.bluedragonmc.server.model.PlayerRecord
@@ -61,7 +62,7 @@ class GameRecorder(private val game: Game) {
         val gameId = game.id
         val gameType = game.data.name
         val mapName = game.data.mapSource.id
-        val mode = game.data.mode
+        val mode = game.data.mode.value.takeIf { it != GameModeId.DEFAULT.value }
         val winningTeam = winningTeam
 
         Database.IO.launch {

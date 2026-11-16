@@ -1,6 +1,5 @@
 package com.bluedragonmc.server
 
-import com.bluedragonmc.api.grpc.gameType
 import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.event.PlayerJoinGameEvent
 import com.bluedragonmc.server.event.PlayerLeaveGameEvent
@@ -39,9 +38,7 @@ class PlayerManager(private val game: Game) {
                         Component.translatable("queue.error.internal_server_error", NamedTextColor.DARK_GRAY)
                     )
                 )
-                Environment.queue.queue(player, gameType {
-                    name = Environment.defaultGameName
-                })
+                Environment.queue.queue(player, Environment.defaultGameName)
                 return AsyncUtils.empty()
             }
         }

@@ -3,6 +3,7 @@ package com.bluedragonmc.server.module.minigame.win
 import com.bluedragonmc.api.grpc.CommonTypes
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.ModuleHolder
+import com.bluedragonmc.server.game.GameModeId
 import com.bluedragonmc.server.api.DatabaseConnectionStub
 import com.bluedragonmc.server.api.OutgoingRPCHandlerStub
 import com.bluedragonmc.server.game.GameData
@@ -56,7 +57,7 @@ class WinModuleTest {
     }
 
     private class TestGame(private val env: Env, val winModule: WinModule) : Game(
-        GameData("test", Maps.MapSource("test", "test", CommonTypes.MapFormat.UNRECOGNIZED, ""), null)
+        GameData("test", Maps.MapSource("test", "test", CommonTypes.MapFormat.UNRECOGNIZED, ""), GameModeId.DEFAULT)
     ) {
         lateinit var createdInstance: Instance
 

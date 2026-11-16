@@ -1,10 +1,10 @@
 package com.bluedragonmc.server.queue
 
 import com.bluedragonmc.server.GameRegistry
-import com.bluedragonmc.api.grpc.CommonTypes
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.api.Queue
 import com.bluedragonmc.server.game.GameData
+import com.bluedragonmc.server.game.GameRequest
 import com.bluedragonmc.server.service.Maps
 import com.bluedragonmc.server.service.Messaging
 import com.github.benmanes.caffeine.cache.Cache
@@ -24,7 +24,7 @@ import kotlin.reflect.jvm.jvmName
  * This is useful for development environments without an external queue service.
  */
 class TestQueue : Queue() {
-    private val queuedPlayers: Cache<Player, CommonTypes.GameType> = Caffeine.newBuilder()
+    private val queuedPlayers: Cache<Player, GameRequest> = Caffeine.newBuilder()
         .expireAfterWrite(Duration.ofSeconds(30))
         .build()
 
@@ -35,30 +35,30 @@ class TestQueue : Queue() {
     /**
      * Adds the player to the queue.
      * @param player The player to add to the queue.
-     * @param gameType The game type which the player wants to join.
+     * @param request The resolved game request which the player wants to join.
      */
-    override fun queue(player: Player, gameType: CommonTypes.GameType) {
+    override fun queue(player: Player, request: GameRequest) {
         if (queuedPlayers.getIfPresent(player) != null) {
             player.sendMessage(Component.translatable("queue.removing", NamedTextColor.RED))
             queuedPlayers.invalidate(player)
             return
         }
-        if (gameType.hasMapId()) {
+        if (request.mapId != null) {
             val mapExists =
-                maps.any { map -> map matches gameType }
+                maps.any { map -> map matches request.toProto() }
             if (!mapExists) {
                 return
             }
         }
-        queuedPlayers.put(player, gameType)
+        queuedPlayers.put(player, request)
         player.sendMessage(
             Component.translatable("queue.added", NamedTextColor.GREEN)
-                .hoverEvent(HoverEvent.showText(Component.text("Test queue debug information\nGame type: $gameType")))
+                .hoverEvent(HoverEvent.showText(Component.text("Test queue debug information\nGame request: $request")))
         )
     }
 
-    override fun bulkEnqueue(requests: List<Pair<Player, CommonTypes.GameType>>) {
-        requests.forEach { (player, gameType) -> queue(player, gameType) }
+    override fun bulkEnqueue(requests: List<Pair<Player, GameRequest>>) {
+        requests.forEach { (player, request) -> queue(player, request) }
     }
 
     /**
@@ -85,8 +85,8 @@ class TestQueue : Queue() {
         MinecraftServer.getSchedulerManager().buildTask {
             try {
                 instanceStarting = false
-                queuedPlayers.asMap().forEach { (player, gameType) ->
-                    if (!GameLoader.gameNames.contains(gameType.name)) {
+                queuedPlayers.asMap().forEach { (player, request) ->
+                    if (!GameLoader.gameNames.contains(request.game)) {
                         player.sendMessage(
                             Component.translatable("queue.error.invalid_game_type", NamedTextColor.RED)
                         )
@@ -94,10 +94,10 @@ class TestQueue : Queue() {
                         return@forEach
                     }
                     val game = GameRegistry.games.firstOrNull {
-                        it.data.name == gameType.name
-                            && (it.data.mapSource matches gameType)
+                        it.data.name == request.game
+                            && (it.data.mapSource matches request.toProto())
                             && (it.data.mapSource.isPlayerAllowed(player.uuid))
-                            && (!gameType.hasMode() || gameType.mode == it.data.mode)
+                            && it.data.mode == request.mode
                     }
                     if (game != null) {
                         logger.info("Found a good game for ${player.username} to join")
@@ -108,14 +108,14 @@ class TestQueue : Queue() {
                     if (instanceStarting) return@forEach
                     logger.info("Starting a new instance for ${player.username}")
                     player.sendMessage(Component.translatable("queue.creating_instance", NamedTextColor.GREEN))
-                    val map = maps.filter { map -> map matches gameType && map.isPlayerAllowed(player.uuid) }.random()
+                    val map = maps.filter { map -> map matches request.toProto() && map.isPlayerAllowed(player.uuid) }.random()
                     logger.info("Map chosen: ${map.id}")
                     try {
                         GameLoader.createNewGame(
                             GameData(
-                                gameType.name,
+                                request.game,
                                 map,
-                                gameType.mode
+                                request.mode
                             )
                         )
                         instanceStarting = true

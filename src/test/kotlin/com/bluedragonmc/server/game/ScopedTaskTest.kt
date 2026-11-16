@@ -43,7 +43,7 @@ class ScopedTaskTest {
         GameData(
             "test",
             Maps.MapSource("test", "test", CommonTypes.MapFormat.UNRECOGNIZED, ""),
-            null,
+            GameModeId.DEFAULT,
         )
     ) {
         val counter = CounterModule()

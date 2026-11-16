@@ -1,8 +1,8 @@
 package com.bluedragonmc.server
 
-import com.bluedragonmc.api.grpc.gameType
 import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.event.GameStateChangedEvent
+import com.bluedragonmc.server.game.GameRequest
 import com.bluedragonmc.server.utils.GameState
 import com.bluedragonmc.server.utils.InstanceUtils
 import net.minestom.server.MinecraftServer
@@ -94,13 +94,8 @@ class GameLifecycle(private val game: Game) {
 
         if (queueAllPlayers) {
             try {
-                val gameType = gameType {
-                    name = game.data.name
-                    if (game.data.mode != null) {
-                        mode = game.data.mode
-                    }
-                }
-                Environment.queue.bulkEnqueue(game.players.map { it to gameType })
+                val request = GameRequest(game.data.name, game.data.mode)
+                Environment.queue.bulkEnqueue(game.players.map { it to request })
             } catch (e: Exception) {
                 logger.error("Failed to queue players from game ${game.id}", e)
             }

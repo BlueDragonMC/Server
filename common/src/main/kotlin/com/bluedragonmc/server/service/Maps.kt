@@ -1,9 +1,12 @@
 package com.bluedragonmc.server.service
 
 import com.bluedragonmc.api.grpc.CommonTypes
+import com.bluedragonmc.server.game.GameModeId
+import com.bluedragonmc.server.game.GameModes
 import com.bluedragonmc.server.module.config.ConfigModule
 import net.minestom.server.instance.ChunkLoader
 import net.minestom.server.instance.InstanceContainer
+import org.slf4j.LoggerFactory
 import org.spongepowered.configurate.ConfigurationNode
 import org.spongepowered.configurate.ConfigurationOptions
 import org.spongepowered.configurate.gson.GsonConfigurationLoader
@@ -13,6 +16,9 @@ import java.io.StringReader
 import java.util.*
 
 object Maps {
+
+    private val logger = LoggerFactory.getLogger(Maps::class.java)
+
     data class MapSource(
         /**
          * The unique identifier for this map.
@@ -43,7 +49,21 @@ object Maps {
         val config: ConfigurationNode
             get() = parse(ConfigModule.SERIALIZATION_OPTIONS)
 
-        val games: List<GameEntry> by lazy { config.node("world", "games").getList(GameEntry::class.java)!! }
+        val games: List<GameEntry> by lazy {
+            val entries = config.node("world", "games").getList(GameEntry::class.java)!!
+            entries.forEach { entry ->
+                if (!GameModes.hasModes(entry.name)) return@forEach
+                entry.mode?.takeIf { it.isNotBlank() }?.let { rawMode ->
+                    if (GameModes.resolve(entry.name, rawMode) == null) {
+                        logger.warn(
+                            "Map '{}' references unknown game mode '{}:{}'; the entry will not match any requests",
+                            id, entry.name, rawMode,
+                        )
+                    }
+                }
+            }
+            entries
+        }
         val whitelist: List<UUID>? by lazy {
             val config = config
             if (!config.node("world").hasChild("whitelist")) return@lazy null
@@ -51,14 +71,34 @@ object Maps {
         }
 
         /**
-         * Returns true if this map is playable on the specified game, false otherwise.
+         * Returns true if this map is playable on the specified game and mode, false otherwise.
          */
-        infix fun matches(gameType: CommonTypes.GameType): Boolean =
-            (!gameType.hasMapId() || gameType.mapId == id)
-                    && games.any { game ->
-                game.name == gameType.name
-                        && (game.mode == null || game.mode == gameType.mode)
+        infix fun matches(gameType: CommonTypes.GameType): Boolean {
+            if (gameType.hasMapId() && gameType.mapId != id) return false
+
+            val requestedMode = if (gameType.hasMode()) GameModeId.fromInputOrNull(gameType.mode) else null
+            return games.any { game ->
+                val mapMode = game.mode?.takeIf { it.isNotBlank() }
+                game.name.equals(gameType.name, ignoreCase = true)
+                        && (mapMode == null || requestedMode != null && GameModeId.fromInputOrNull(mapMode) == requestedMode)
             }
+        }
+
+        /** Returns true if this map supports [game] in any mode. */
+        fun supportsGame(game: String): Boolean =
+            games.any { it.name.equals(game, ignoreCase = true) }
+
+        /** Returns true if this map supports [mode] for [game]. A map entry with no mode supports all modes. */
+        fun supports(game: String, mode: GameModeId): Boolean =
+            games.any { entry ->
+                val entryMode = entry.mode?.takeIf { it.isNotBlank() }
+                entry.name.equals(game, ignoreCase = true)
+                        && (entryMode == null || GameModeId.fromInputOrNull(entryMode) == mode)
+            }
+
+        /** Returns true if this map supports at least one of [modes] for [game]. */
+        fun supportsAny(game: String, modes: Collection<GameModeId>): Boolean =
+            modes.any { supports(game, it) }
 
         /**
          * Returns true if the player is not blocked from joining this map by the whitelist.
@@ -69,10 +109,10 @@ object Maps {
     @ConfigSerializable
     data class GameEntry(
         val name: String,
-        val mode: String?,
+        val mode: String? = null,
     ) {
         // for configurate
-        constructor() : this("", "")
+        constructor() : this("", null)
     }
 
     abstract class MapProvider<L : ChunkLoader> {

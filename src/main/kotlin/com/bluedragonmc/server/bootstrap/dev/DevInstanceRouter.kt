@@ -7,6 +7,7 @@ import com.bluedragonmc.server.bootstrap.Bootstrap
 import com.bluedragonmc.server.bootstrap.prod.InitialInstanceRouter.DATA_LOAD_FAILED
 import com.bluedragonmc.server.Game
 import com.bluedragonmc.server.game.GameData
+import com.bluedragonmc.server.game.GameModes
 import com.bluedragonmc.server.module.minigame.SpawnpointModule
 import com.bluedragonmc.server.queue.GameLoader
 import com.bluedragonmc.server.service.Database
@@ -29,7 +30,8 @@ object DevInstanceRouter : Bootstrap(EnvType.DEVELOPMENT) {
         lobby = GameLoader.createNewGame(
             GameData(
                 Environment.defaultGameName,
-                Maps.MapSource(worldsFolder.name, "file://${worldsFolder.absolutePath}", CommonTypes.MapFormat.ANVIL, File(worldsFolder, "config.yml").readText())
+                Maps.MapSource(worldsFolder.name, "file://${worldsFolder.absolutePath}", CommonTypes.MapFormat.ANVIL, File(worldsFolder, "config.yml").readText()),
+                GameModes.defaultFor(Environment.defaultGameName).id,
             )
         )
 
