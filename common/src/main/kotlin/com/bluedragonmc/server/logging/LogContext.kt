@@ -29,10 +29,22 @@ object LogContext {
         "player_uuid" to uuid,
     )
 
-    fun game(game: Game, instance: Instance? = null): Map<String, String> = fields(
-        "game" to game.data.name,
-        "game_id" to game.id,
-        "map" to game.data.mapSource.id,
+    fun game(game: Game, instance: Instance? = null): Map<String, String> = game(
+        gameId = game.id,
+        game = game.data.name,
+        map = game.data.mapSource.id,
+        instance = instance,
+    )
+
+    fun game(
+        gameId: String?,
+        game: String? = null,
+        map: String? = null,
+        instance: Instance? = null,
+    ): Map<String, String> = fields(
+        "game" to game,
+        "game_id" to gameId,
+        "map" to map,
         "instance_uuid" to instance?.uuid,
     )
 

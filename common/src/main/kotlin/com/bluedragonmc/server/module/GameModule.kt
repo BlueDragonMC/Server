@@ -2,6 +2,8 @@ package com.bluedragonmc.server.module
 
 import com.bluedragonmc.server.ModuleHolder
 import com.bluedragonmc.server.game.GameData
+import com.bluedragonmc.server.logging.GameContextLogger
+import com.bluedragonmc.server.logging.LogContext
 import com.bluedragonmc.server.utils.GameState
 import com.bluedragonmc.server.utils.TaskScheduler
 import com.bluedragonmc.server.utils.TaskScope
@@ -42,7 +44,17 @@ abstract class GameModule : TaskScheduler {
     internal fun cancelTasks() = taskScope.cancelAll()
 
     val logger: Logger by lazy {
-        LoggerFactory.getLogger(javaClass)
+        GameContextLogger(LoggerFactory.getLogger(javaClass)) { logFields() }
+    }
+
+    private fun logFields(): Map<String, String> {
+        if (!::holder.isInitialized) return emptyMap()
+        val info = holder.findModule(GameInfoModule::class) ?: return emptyMap()
+        return LogContext.game(
+            gameId = info.id,
+            game = info.data.name,
+            map = info.data.mapSource.id,
+        )
     }
 
     open fun getRequiredDependencies(): Array<out KClass<out GameModule>> =
