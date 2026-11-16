@@ -2,6 +2,7 @@ package com.bluedragonmc.server
 
 import com.bluedragonmc.server.event.GameStartEvent
 import com.bluedragonmc.server.game.GameData
+import com.bluedragonmc.server.logging.LogContext
 import com.bluedragonmc.server.module.*
 import com.bluedragonmc.server.module.minigame.win.WinModule
 import com.bluedragonmc.server.service.Messaging
@@ -134,7 +135,9 @@ abstract class Game(val data: GameData) : ModuleHolder(), PacketGroupingAudience
             // Make sure all module dependencies are resolved
             checkUnmetDependencies()
 
-            logger.debug("Initializing game with modules: {}", modules.map { it::class.simpleName ?: it::class.jvmName })
+            LogContext.with(LogContext.game(this)) {
+                logger.debug("Initializing game with modules: {}", modules.map { it::class.simpleName ?: it::class.jvmName })
+            }
 
             // Let the queue system send players to the game
             GameRegistry.add(this)
@@ -143,7 +146,9 @@ abstract class Game(val data: GameData) : ModuleHolder(), PacketGroupingAudience
             // Allow the game to start receiving events
             events.attach()
         } catch (e: Throwable) {
-            logger.error("Failed to initialize game {} ({})", id, data.name, e)
+            LogContext.with(LogContext.game(this)) {
+                logger.error("Failed to initialize game {} ({})", id, data.name, e)
+            }
             try {
                 lifecycle.abortInitialization()
             } catch (cleanup: Throwable) {

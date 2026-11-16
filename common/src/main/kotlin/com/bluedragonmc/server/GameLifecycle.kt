@@ -3,6 +3,7 @@ package com.bluedragonmc.server
 import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.event.GameStateChangedEvent
 import com.bluedragonmc.server.game.GameRequest
+import com.bluedragonmc.server.logging.LogContext
 import com.bluedragonmc.server.utils.GameState
 import com.bluedragonmc.server.utils.InstanceUtils
 import net.minestom.server.MinecraftServer
@@ -69,7 +70,9 @@ class GameLifecycle(private val game: Game) {
         val instancesToRemove = try {
             game.getOwnedInstances()
         } catch (e: Exception) {
-            logger.warn("Could not collect instances owned by game ${game.id}", e)
+            LogContext.with(LogContext.game(game)) {
+                logger.warn("Could not collect instances owned by game ${game.id}", e)
+            }
             emptyList()
         }
 
@@ -85,10 +88,12 @@ class GameLifecycle(private val game: Game) {
             try {
                 game.unregister(module)
             } catch (e: Exception) {
-                logger.warn(
-                    "Failed to unregister module ${module::class.simpleName} of game ${game.id}",
-                    e
-                )
+                LogContext.with(LogContext.game(game)) {
+                    logger.warn(
+                        "Failed to unregister module ${module::class.simpleName} of game ${game.id}",
+                        e
+                    )
+                }
             }
         }
 
@@ -97,7 +102,9 @@ class GameLifecycle(private val game: Game) {
                 val request = GameRequest(game.data.name, game.data.mode)
                 Environment.queue.bulkEnqueue(game.players.map { it to request })
             } catch (e: Exception) {
-                logger.error("Failed to queue players from game ${game.id}", e)
+                LogContext.with(LogContext.game(game)) {
+                    logger.error("Failed to queue players from game ${game.id}", e)
+                }
             }
         }
 

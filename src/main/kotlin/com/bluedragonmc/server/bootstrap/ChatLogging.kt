@@ -2,6 +2,7 @@ package com.bluedragonmc.server.bootstrap
 
 import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.command.BlueDragonCommand
+import com.bluedragonmc.server.logging.LogContext
 import com.bluedragonmc.server.service.ChatLogger
 import com.bluedragonmc.server.utils.listen
 import net.minestom.server.MinecraftServer
@@ -18,7 +19,9 @@ object ChatLogging : Bootstrap() {
     override fun hook(eventNode: EventNode<Event>) {
         eventNode.listen<PlayerChatEvent> { event ->
             val player = event.player as CustomPlayer
-            logger.info("<{}> {}", player.username, event.rawMessage)
+            LogContext.with(LogContext.player(player)) {
+                logger.info("<{}> {}", player.username, event.rawMessage)
+            }
             ChatLogger.logChat(player, event.rawMessage, event.recipients)
         }
 

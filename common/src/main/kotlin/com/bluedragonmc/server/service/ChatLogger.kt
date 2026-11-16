@@ -2,6 +2,7 @@ package com.bluedragonmc.server.service
 
 import com.bluedragonmc.server.GameRegistry
 import com.bluedragonmc.server.api.Environment
+import com.bluedragonmc.server.logging.LogContext
 import com.bluedragonmc.server.model.ChatLogDocument
 import com.bluedragonmc.server.model.ChatLogRecipient
 import com.bluedragonmc.server.model.ChatLogType
@@ -76,7 +77,9 @@ object ChatLogger {
                         else ChatLogRecipient(uuid, entry.username)
                     }
             }.getOrElse {
-                logger.warn("Failed to look up party members while logging party chat for '$senderName'", it)
+                LogContext.with(LogContext.player(senderUuid, senderName)) {
+                    logger.warn("Failed to look up party members while logging party chat for '$senderName'", it)
+                }
                 emptyList()
             }
             writeNow(
@@ -104,7 +107,14 @@ object ChatLogger {
         try {
             Database.connection.logChatMessage(document.copy(serverName = Environment.getServerName()))
         } catch (e: Throwable) {
-            logger.error("Failed to write chat log for '${document.playerName}'", e)
+            val playerFields = if (document.playerUuid == CONSOLE_UUID) {
+                emptyMap()
+            } else {
+                LogContext.player(document.playerUuid, document.playerName)
+            }
+            LogContext.with(playerFields) {
+                logger.error("Failed to write chat log for '${document.playerName}'", e)
+            }
         }
     }
 }

@@ -4,6 +4,7 @@ import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.ModuleHolder
 import com.bluedragonmc.server.event.DataLoadedEvent
 import com.bluedragonmc.server.event.PlayerLeaveGameEvent
+import com.bluedragonmc.server.logging.LogContext
 import com.bluedragonmc.server.model.PlayerDocument
 import com.bluedragonmc.server.model.PlayerRecord
 import com.bluedragonmc.server.model.StatisticRecord
@@ -53,8 +54,10 @@ class StatisticsModule(private vararg val recorders: StatisticRecorder) : GameMo
             if (necessaryUpdates.containsKey(player)) {
                 player as CustomPlayer
                 player.data.update(PlayerDocument::statistics, player.data.statistics)
-                necessaryUpdates[player]?.forEach { key ->
-                    logger.info("Recorded statistic '$key' = '${player.data.statistics[key]}' for player '${player.username}'.")
+                LogContext.with(LogContext.player(player)) {
+                    necessaryUpdates[player]?.forEach { key ->
+                        logger.info("Recorded statistic '$key' = '${player.data.statistics[key]}' for player '${player.username}'.")
+                    }
                 }
                 necessaryUpdates.remove(player)
             }

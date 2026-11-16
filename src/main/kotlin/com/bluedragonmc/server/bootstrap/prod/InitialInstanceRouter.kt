@@ -4,6 +4,7 @@ import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.GameRegistry
 import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.bootstrap.Bootstrap
+import com.bluedragonmc.server.logging.LogContext
 import com.bluedragonmc.server.module.instance.InstanceModule
 import com.bluedragonmc.server.module.minigame.SpawnpointModule
 import com.bluedragonmc.server.service.Database
@@ -44,7 +45,9 @@ object InitialInstanceRouter : Bootstrap(EnvType.PRODUCTION) {
             }
 
             if (ServerLifecycle.isDraining()) {
-                logger.warn("Rejecting login for ${event.player.username} because the server is draining.")
+                LogContext.with(LogContext.player(event.player)) {
+                    logger.warn("Rejecting login for ${event.player.username} because the server is draining.")
+                }
                 event.player.kick(Component.translatable("server.shutdown.kick").color(NamedTextColor.RED))
                 return@listenSuspend
             }
@@ -86,7 +89,9 @@ object InitialInstanceRouter : Bootstrap(EnvType.PRODUCTION) {
             val game = if (!destination.isNullOrBlank()) {
                 GameRegistry.findGame(destination)
             } else {
-                logger.warn("Invalid destination ('$destination') supplied for player ${event.player.username}, sending to Lobby.")
+                LogContext.with(LogContext.player(event.player)) {
+                    logger.warn("Invalid destination ('$destination') supplied for player ${event.player.username}, sending to Lobby.")
+                }
                 // If no destination was found, send the player to a lobby.
                 GameRegistry.games.find { it.data.name.equals(Environment.defaultGameName, ignoreCase = true) }
             }
@@ -96,20 +101,28 @@ object InitialInstanceRouter : Bootstrap(EnvType.PRODUCTION) {
             val instance = game?.getModule<InstanceModule>()?.getSpawningInstance(event.player)
             if (instance == null) {
                 // If the instance was not set or doesn't exist, disconnect the player.
-                logger.warn("No instance found for ${event.player.username} to join!")
+                LogContext.with(LogContext.player(event.player)) {
+                    logger.warn("No instance found for ${event.player.username} to join!")
+                }
                 event.player.kick(INVALID_WORLD)
                 return@listenSuspend
             }
 
             if (!instance.isRegistered) {
-                logger.warn("Tried to send ${event.player.username} to an unregistered instance!")
+                LogContext.with(LogContext.player(event.player)) {
+                    logger.warn("Tried to send ${event.player.username} to an unregistered instance!")
+                }
                 event.player.kick(INSTANCE_NOT_REGISTERED)
                 return@listenSuspend
             }
 
             val gameId = game.id
             val player = event.player
-            logger.info("Spawning player ${player.username} in game '$gameId' and instance '${instance.uuid}'")
+            LogContext.with(
+                LogContext.player(player) + LogContext.game(game, instance)
+            ) {
+                logger.info("Spawning player ${player.username} in game '$gameId' and instance '${instance.uuid}'")
+            }
             event.spawningInstance = instance
 
             if (game.hasModule<SpawnpointModule>()) {

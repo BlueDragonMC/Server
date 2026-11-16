@@ -3,6 +3,7 @@ package com.bluedragonmc.server.bootstrap.prod
 import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.bootstrap.Bootstrap
 import com.bluedragonmc.server.game.GameRequest
+import com.bluedragonmc.server.logging.LogContext
 import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.service.Messaging
 import com.bluedragonmc.server.shutdown.ServerShutdownNotice
@@ -265,7 +266,9 @@ object ServerLifecycle : Bootstrap(EnvType.PRODUCTION) {
                             Messaging.outgoing.removeFromQueue(player)
                             Messaging.outgoing.addToQueue(player, lobbyGameType)
                         }.onFailure {
-                            logger.warn("Failed to queue ${player.username} for a lobby", it)
+                            LogContext.with(LogContext.player(player)) {
+                                logger.warn("Failed to queue ${player.username} for a lobby", it)
+                            }
                         }
                     }
                 }

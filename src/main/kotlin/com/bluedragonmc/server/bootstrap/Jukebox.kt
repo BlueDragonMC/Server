@@ -7,6 +7,7 @@ import com.bluedragonmc.api.grpc.playerSongQueue
 import com.bluedragonmc.jukebox.api.Song
 import com.bluedragonmc.jukebox.impl.NBSSongLoader
 import com.bluedragonmc.server.ModuleHolder
+import com.bluedragonmc.server.logging.LogContext
 import com.bluedragonmc.server.module.GuiModule
 import com.bluedragonmc.server.service.Messaging
 import com.google.protobuf.Timestamp
@@ -85,7 +86,9 @@ object Jukebox : Bootstrap() {
     )
 
     private fun play(songName: String, player: Player, startAtTick: Int = 0) {
-        logger.info("Playing song $songName for player ${player.username} starting at tick $startAtTick")
+        LogContext.with(LogContext.player(player)) {
+            logger.info("Playing song $songName for player ${player.username} starting at tick $startAtTick")
+        }
         val song = songs[songName] ?: return
         var task: Task? = null
         var currentTick = startAtTick

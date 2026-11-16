@@ -3,6 +3,7 @@ package com.bluedragonmc.server.module.gameplay
 import com.bluedragonmc.server.module.GameInfoModule
 import com.bluedragonmc.server.module.DependsOn
 import com.bluedragonmc.server.*
+import com.bluedragonmc.server.logging.LogContext
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_1
 import com.bluedragonmc.server.BRAND_COLOR_PRIMARY_2
 import com.bluedragonmc.server.module.GameModule
@@ -69,7 +70,9 @@ class CustomItemModule(vararg val items: CustomItem) : GameModule() {
             val customItem = getCustomItemOrNull(event.itemStack) ?: return@addListener
             val itemEventNode = eventNodes[customItem]
             if (itemEventNode == null) {
-                logger.warn("A player tried to use a custom item (${customItem.uid}) before it was registered!")
+                LogContext.with(LogContext.player(event.player)) {
+                    logger.warn("A player tried to use a custom item (${customItem.uid}) before it was registered!")
+                }
                 return@addListener
             }
             if (cooldownPlayers[customItem]?.containsKey(event.player) == false) {

@@ -4,6 +4,7 @@ import com.bluedragonmc.server.CustomPlayer
 import com.bluedragonmc.server.api.DatabaseConnection
 import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.event.DataLoadedEvent
+import com.bluedragonmc.server.logging.LogContext
 import com.bluedragonmc.server.model.ChatLogDocument
 import com.bluedragonmc.server.model.GameDocument
 import com.bluedragonmc.server.model.PlayerDocument
@@ -97,16 +98,22 @@ internal class DatabaseConnectionImpl(connectionString: String) : DatabaseConnec
                 // Keep an up-to-date record of player usernames
                 player.data.update(PlayerDocument::username, player.username)
                 player.data.update(PlayerDocument::usernameLower, player.username.lowercase())
-                logger.info("Updated username for ${player.uuid}: ${player.data.username} -> ${player.username}")
+                LogContext.with(LogContext.player(player)) {
+                    logger.info("Updated username for ${player.uuid}: ${player.data.username} -> ${player.username}")
+                }
             }
             if (player.data.usernameLower != player.username.lowercase()) {
                 player.data.update(PlayerDocument::usernameLower, player.username.lowercase())
             }
             player.data.update(PlayerDocument::lastJoinDate, System.currentTimeMillis())
             MinecraftServer.getGlobalEventHandler().call(DataLoadedEvent(player))
-            logger.info("Loaded player data for ${player.username}")
+            LogContext.with(LogContext.player(player)) {
+                logger.info("Loaded player data for ${player.username}")
+            }
         } catch (e: Throwable) {
-            logger.error("Player data for ${player.username} failed to load.")
+            LogContext.with(LogContext.player(player)) {
+                logger.error("Player data for ${player.username} failed to load.")
+            }
             MinecraftServer.getExceptionManager().handleException(e)
             player.kick(
                 Component.translatable(

@@ -6,6 +6,7 @@ import com.bluedragonmc.server.api.Environment
 import com.bluedragonmc.server.api.IncomingRPCHandler
 import com.bluedragonmc.server.bootstrap.Jukebox
 import com.bluedragonmc.server.bootstrap.prod.ServerLifecycle
+import com.bluedragonmc.server.logging.LogContext
 import com.bluedragonmc.server.utils.miniMessage
 import com.google.protobuf.Empty
 import io.grpc.ServerBuilder
@@ -66,7 +67,15 @@ class IncomingRPCHandlerImpl(serverPort: Int) : IncomingRPCHandler {
 
         override suspend fun createInstance(request: GsClient.CreateInstanceRequest): GsClient.CreateInstanceResponse {
             if (ServerLifecycle.isDraining()) {
-                logger.info("Rejecting instance creation request because the server is draining: $request")
+                LogContext.with(
+                    LogContext.fields(
+                        "game" to request.game,
+                        "map" to request.mapSource.mapId,
+                        "mode" to request.mode,
+                    )
+                ) {
+                    logger.info("Rejecting instance creation request because the server is draining: $request")
+                }
                 return createInstanceResponse {
                     success = false
                     gameState = gameState {
@@ -81,7 +90,15 @@ class IncomingRPCHandlerImpl(serverPort: Int) : IncomingRPCHandler {
             val game = runCatching {
                 onTick { Environment.queue.createInstance(request) }
             }.onFailure {
-                logger.error("Failed to create instance from request: $request")
+                LogContext.with(
+                    LogContext.fields(
+                        "game" to request.game,
+                        "map" to request.mapSource.mapId,
+                        "mode" to request.mode,
+                    )
+                ) {
+                    logger.error("Failed to create instance from request: $request")
+                }
                 it.printStackTrace()
             }.getOrElse { null }
             val state = game?.let { it.state.toRpcGameState(it.players.size, it.maxPlayers) } ?: gameState {
@@ -162,7 +179,9 @@ class IncomingRPCHandlerImpl(serverPort: Int) : IncomingRPCHandler {
 
         override suspend fun sendPlayer(request: PlayerHolderOuterClass.SendPlayerRequest): PlayerHolderOuterClass.SendPlayerResponse {
             if (ServerLifecycle.isDraining()) {
-                logger.info("Rejecting player transfer because the server is draining: ${request.playerUuid}")
+                LogContext.with(LogContext.player(UUID.fromString(request.playerUuid))) {
+                    logger.info("Rejecting player transfer because the server is draining: ${request.playerUuid}")
+                }
                 return sendPlayerResponse { playerFound = false }
             }
 

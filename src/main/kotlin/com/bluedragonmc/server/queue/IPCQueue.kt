@@ -7,6 +7,7 @@ import com.bluedragonmc.server.GameRegistry
 import com.bluedragonmc.server.api.Queue
 import com.bluedragonmc.server.game.GameData
 import com.bluedragonmc.server.game.GameRequest
+import com.bluedragonmc.server.logging.LogContext
 import com.bluedragonmc.server.module.instance.InstanceModule
 import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.service.Maps
@@ -54,7 +55,9 @@ object IPCQueue : Queue() {
             request.mapSource.mapConfig,
         )
         val game = GameLoader.createNewGame(GameData(gameRequest.game, mapSource, gameRequest.mode))
-        logger.info("Created '${request.game}' game on map '${game.data.mapSource.id}' and mode '${game.data.mode.value}' with id '${game.id}'. (${(System.nanoTime() - start) / 1_000_000}ms)")
+        LogContext.with(LogContext.game(game)) {
+            logger.info("Created '${request.game}' game on map '${game.data.mapSource.id}' and mode '${game.data.mode.value}' with id '${game.id}'. (${(System.nanoTime() - start) / 1_000_000}ms)")
+        }
         // The service will soon be notified of this instance's creation
         // once the mandatory MessagingModule is initialized
         return game
@@ -84,7 +87,9 @@ object IPCQueue : Queue() {
                 Component.text(gameId + "/" + instance.uuid.toString())
             )
         )
-        logger.info("Sending player ${player.username} to game '$gameId' and instance '${instance.uuid}'. (current instance: ${player.instance?.uuid})")
+        LogContext.with(LogContext.player(player) + LogContext.game(game, instance)) {
+            logger.info("Sending player ${player.username} to game '$gameId' and instance '${instance.uuid}'. (current instance: ${player.instance?.uuid})")
+        }
 
         game.addPlayer(player)
     }
