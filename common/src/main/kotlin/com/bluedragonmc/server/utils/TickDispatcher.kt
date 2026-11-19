@@ -6,6 +6,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import net.minestom.server.MinecraftServer
+import org.slf4j.LoggerFactory
 import kotlin.coroutines.CoroutineContext
 
 /**
@@ -24,7 +25,10 @@ object TickDispatcher : CoroutineDispatcher() {
         }
     }
 
-    private val scope = CoroutineScope(TickDispatcher + SupervisorJob())
+    private val scope = CoroutineScope(
+        TickDispatcher + SupervisorJob() +
+            RpcErrors.handler("TickDispatcher", LoggerFactory.getLogger(TickDispatcher::class.java))
+    )
 
     /**
      * Launches [block] on the tick thread. The returned [Job] can be used to cancel the work.

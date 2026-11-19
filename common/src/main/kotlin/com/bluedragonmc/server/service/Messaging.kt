@@ -2,11 +2,15 @@ package com.bluedragonmc.server.service
 
 import com.bluedragonmc.server.api.IncomingRPCHandler
 import com.bluedragonmc.server.api.OutgoingRPCHandler
+import com.bluedragonmc.server.utils.RpcErrors
 import kotlinx.coroutines.*
+import org.slf4j.LoggerFactory
 import kotlin.coroutines.CoroutineContext
 import kotlin.time.Duration.Companion.seconds
 
 object Messaging {
+
+    private val logger = LoggerFactory.getLogger(Messaging::class.java)
 
     lateinit var outgoing: OutgoingRPCHandler
         private set
@@ -29,7 +33,7 @@ object Messaging {
 
     val IO = object : CoroutineScope {
         override val coroutineContext: CoroutineContext =
-            Dispatchers.IO + ioJob + CoroutineName("Messaging IO")
+            Dispatchers.IO + ioJob + CoroutineName("Messaging IO") + RpcErrors.handler("Messaging IO", logger)
     }
 
     /**

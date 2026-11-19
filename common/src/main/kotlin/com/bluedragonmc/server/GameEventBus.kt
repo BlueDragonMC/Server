@@ -27,8 +27,7 @@ class GameEventBus(private val game: Game) {
                 else -> false
             }
         } catch (e: Exception) {
-            logger.error("Error while filtering event $event")
-            e.printStackTrace()
+            logger.error("Error while filtering event $event", e)
             return@event false
         }
     }

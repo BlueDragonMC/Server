@@ -97,9 +97,8 @@ class IncomingRPCHandlerImpl(serverPort: Int) : IncomingRPCHandler {
                         "mode" to request.mode,
                     )
                 ) {
-                    logger.error("Failed to create instance from request: $request")
+                    logger.error("Failed to create instance from request: $request", it)
                 }
-                it.printStackTrace()
             }.getOrElse { null }
             val state = game?.let { it.state.toRpcGameState(it.players.size, it.maxPlayers) } ?: gameState {
                 gameState = CommonTypes.EnumGameState.ERROR

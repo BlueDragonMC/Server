@@ -23,7 +23,7 @@ class TaskScope internal constructor(private val name: String = "TaskScope") {
     private val job = SupervisorJob()
 
     internal val coroutineScope: CoroutineScope =
-        CoroutineScope(Dispatchers.IO + job + CoroutineName(name))
+        CoroutineScope(Dispatchers.IO + job + CoroutineName(name) + RpcErrors.handler(name, logger))
 
     private var cancelled = false
 

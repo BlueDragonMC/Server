@@ -195,7 +195,7 @@ object Jukebox : Bootstrap() {
                     val song = loader.load(child.absolutePath, child.readBytes())
                     songMap.put(song.songName, song)
                 } catch (e: Exception) {
-                    Exception("Failed to load song at path $child", e).printStackTrace()
+                    logger.error("Failed to load song at path $child", e)
                 }
             }
             songs = songMap

@@ -80,7 +80,7 @@ fun start() {
             logger.debug("Initializing service ${it::class.simpleName ?: it::class.qualifiedName}")
             it.hook(eventNode)
         } catch (e: Exception) {
-            Exception("Failed to initialize service ${it::class.qualifiedName}", e).printStackTrace()
+            logger.error("Failed to initialize service ${it::class.qualifiedName}", e)
             exitProcess(1)
         }
     }

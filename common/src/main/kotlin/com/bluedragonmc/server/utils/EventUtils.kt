@@ -3,8 +3,11 @@ package com.bluedragonmc.server.utils
 import kotlinx.coroutines.*
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
+import org.slf4j.LoggerFactory
 import java.util.function.Consumer
 import kotlin.coroutines.CoroutineContext
+
+private val logger = LoggerFactory.getLogger("com.bluedragonmc.server.utils.EventUtils")
 
 /**
  * Shortcut for [EventNode.addListener] using a reified type parameter.
@@ -44,5 +47,6 @@ inline fun <reified T : Event> EventNode<in T>.listenAsync(crossinline consumer:
  */
 val asyncEventCoroutineScope = object : CoroutineScope {
     override val coroutineContext: CoroutineContext =
-        Dispatchers.IO + SupervisorJob() + CoroutineName("Async Event Handling")
+        Dispatchers.IO + SupervisorJob() + CoroutineName("Async Event Handling") +
+            RpcErrors.handler("Async Event Handling", logger)
 }

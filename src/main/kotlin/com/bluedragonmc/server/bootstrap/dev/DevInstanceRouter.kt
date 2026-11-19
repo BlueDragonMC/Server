@@ -49,7 +49,7 @@ object DevInstanceRouter : Bootstrap(EnvType.DEVELOPMENT) {
                     }
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                logger.error("Failed to load player data for ${event.player.username}", e)
                 event.player.kick(DATA_LOAD_FAILED)
             }
 

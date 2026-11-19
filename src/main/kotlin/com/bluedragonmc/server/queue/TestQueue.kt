@@ -120,7 +120,7 @@ class TestQueue : Queue() {
                         )
                         instanceStarting = true
                     } catch (e: Throwable) {
-                        e.printStackTrace()
+                        logger.error("Failed to create a game for ${player.username}", e)
                         player.sendMessage(
                             Component.text(
                                 e::class.jvmName + ": " + e.message.orEmpty(),
@@ -131,7 +131,7 @@ class TestQueue : Queue() {
                     }
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                logger.error("Error while processing the test queue", e)
             }
         }.repeat(Duration.ofMillis(500)).schedule()
     }

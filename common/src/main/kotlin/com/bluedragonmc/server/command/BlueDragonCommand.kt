@@ -8,6 +8,7 @@ import com.bluedragonmc.server.command.BlueDragonCommand.Companion.errorColor
 import com.bluedragonmc.server.model.PlayerDocument
 import com.bluedragonmc.server.service.Permissions
 import com.bluedragonmc.server.utils.*
+import kotlinx.coroutines.CancellationException
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.JoinConfiguration
 import net.kyori.adventure.text.format.NamedTextColor
@@ -21,6 +22,9 @@ import net.minestom.server.command.builder.arguments.Argument
 import net.minestom.server.coordinate.Point
 import net.minestom.server.entity.Player
 import net.minestom.server.utils.entity.EntityFinder
+import org.slf4j.LoggerFactory
+
+private val logger = LoggerFactory.getLogger(BlueDragonCommand::class.java)
 
 /**
  * A basic command class that is extended by BlueDragon commands.
@@ -178,7 +182,7 @@ open class BlueDragonCommand(
                     handler(CommandCtx(sender, context))
                 } catch (e: Throwable) {
                     if (e is SilentCommandException) return@addSyntax
-                    e.printStackTrace()
+                    RpcErrors.log("Error executing command", e, logger)
                     sender.sendMessage("There was an internal error executing this command." withColor errorColor)
                 }
             }, *args.toTypedArray())
@@ -190,9 +194,11 @@ open class BlueDragonCommand(
             TickDispatcher.launch {
                 try {
                     handler()
-                } catch (e: Throwable) {
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
                     if (e is SilentCommandException) return@launch
-                    e.printStackTrace()
+                    RpcErrors.log("Error executing command", e, logger)
                     sender.sendMessage("There was an internal error executing this command." withColor errorColor)
                 }
             }

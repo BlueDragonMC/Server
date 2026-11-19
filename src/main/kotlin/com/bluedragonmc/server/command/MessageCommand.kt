@@ -3,12 +3,17 @@ package com.bluedragonmc.server.command
 import com.bluedragonmc.server.service.ChatLogger
 import com.bluedragonmc.server.service.Messaging
 import com.bluedragonmc.server.service.Permissions
+import com.bluedragonmc.server.utils.RpcErrors
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.MinecraftServer
 import net.minestom.server.entity.Player
+import org.slf4j.LoggerFactory
 import java.util.*
+
+private val logger = LoggerFactory.getLogger(MessageCommand::class.java)
 
 class MessageCommand(name: String, vararg aliases: String) : BlueDragonCommand(name, aliases, block = {
 
@@ -48,8 +53,10 @@ class MessageCommand(name: String, vararg aliases: String) : BlueDragonCommand(n
                         recipient.username.ifBlank { playerName },
                         rawMessage
                     )
+                } catch (e: CancellationException) {
+                    throw e
                 } catch (e: Exception) {
-                    e.printStackTrace()
+                    RpcErrors.log("Failed to send private message to $playerName", e, logger)
                     sender.sendMessage(formatMessageTranslated("command.msg.fail", playerName))
                 }
             }

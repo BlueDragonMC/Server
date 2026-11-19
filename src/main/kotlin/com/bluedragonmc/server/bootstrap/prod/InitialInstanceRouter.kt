@@ -9,7 +9,10 @@ import com.bluedragonmc.server.module.instance.InstanceModule
 import com.bluedragonmc.server.module.minigame.SpawnpointModule
 import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.service.Messaging
+import com.bluedragonmc.server.utils.RpcErrors
 import com.bluedragonmc.server.utils.listenSuspend
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
@@ -70,16 +73,24 @@ object InitialInstanceRouter : Bootstrap(EnvType.PRODUCTION) {
 
             try {
                 dataLoadJob.join()
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                e.printStackTrace()
+                logger.error("Failed to load player data for ${event.player.username}", e)
                 event.player.kick(DATA_LOAD_FAILED)
                 return@listenSuspend
             }
 
             val destination = try {
                 getDestinationJob.await()
+            } catch (_: TimeoutCancellationException) {
+                logger.warn("Timed out determining the destination for ${event.player.username}")
+                event.player.kick(HANDSHAKE_FAILED)
+                return@listenSuspend
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                e.printStackTrace()
+                RpcErrors.log("Failed to determine destination for ${event.player.username}", e, logger)
                 event.player.kick(HANDSHAKE_FAILED)
                 return@listenSuspend
             }

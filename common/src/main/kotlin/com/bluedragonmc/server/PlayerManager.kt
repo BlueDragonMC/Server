@@ -10,6 +10,7 @@ import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.entity.Player
 import net.minestom.server.instance.Instance
 import net.minestom.server.utils.async.AsyncUtils
+import org.slf4j.LoggerFactory
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CopyOnWriteArrayList
 
@@ -18,6 +19,8 @@ import java.util.concurrent.CopyOnWriteArrayList
  * removing, and teleporting them.
  */
 class PlayerManager(private val game: Game) {
+
+    private val logger = LoggerFactory.getLogger(PlayerManager::class.java)
 
     private val _players: MutableList<Player> = CopyOnWriteArrayList()
     val players: List<Player> = _players
@@ -31,7 +34,7 @@ class PlayerManager(private val game: Game) {
                     game.callEvent(PlayerJoinGameEvent(player, game))
                 }
             } catch (e: Throwable) {
-                e.printStackTrace()
+                logger.error("Failed to send ${player.username} to an instance", e)
                 player.sendMessage(
                     Component.translatable(
                         "queue.error_sending", NamedTextColor.RED,
