@@ -8,6 +8,7 @@ import com.bluedragonmc.server.service.Database
 import com.bluedragonmc.server.service.Messaging
 import com.bluedragonmc.server.shutdown.ServerShutdownNotice
 import com.bluedragonmc.server.shutdown.ShutdownCountdown
+import com.bluedragonmc.server.utils.RpcErrors
 import com.sun.net.httpserver.HttpExchange
 import com.sun.net.httpserver.HttpServer
 import kotlinx.coroutines.launch
@@ -267,7 +268,7 @@ object ServerLifecycle : Bootstrap(EnvType.PRODUCTION) {
                             Messaging.outgoing.addToQueue(player, lobbyGameType)
                         }.onFailure {
                             LogContext.with(LogContext.player(player)) {
-                                logger.warn("Failed to queue ${player.username} for a lobby", it)
+                                RpcErrors.log("Failed to queue ${player.username} for a lobby", it, logger)
                             }
                         }
                     }

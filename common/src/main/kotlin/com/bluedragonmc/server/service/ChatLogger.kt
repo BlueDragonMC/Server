@@ -6,6 +6,7 @@ import com.bluedragonmc.server.logging.LogContext
 import com.bluedragonmc.server.model.ChatLogDocument
 import com.bluedragonmc.server.model.ChatLogRecipient
 import com.bluedragonmc.server.model.ChatLogType
+import com.bluedragonmc.server.utils.RpcErrors
 import kotlinx.coroutines.launch
 import net.minestom.server.command.CommandSender
 import net.minestom.server.entity.Player
@@ -78,7 +79,7 @@ object ChatLogger {
                     }
             }.getOrElse {
                 LogContext.with(LogContext.player(senderUuid, senderName)) {
-                    logger.warn("Failed to look up party members while logging party chat for '$senderName'", it)
+                    RpcErrors.log("Failed to look up party members while logging party chat for '$senderName'", it, logger)
                 }
                 emptyList()
             }

@@ -6,6 +6,7 @@ import com.bluedragonmc.server.game.GameRequest
 import com.bluedragonmc.server.logging.LogContext
 import com.bluedragonmc.server.utils.GameState
 import com.bluedragonmc.server.utils.InstanceUtils
+import com.bluedragonmc.server.utils.RpcErrors
 import net.minestom.server.MinecraftServer
 import net.minestom.server.instance.Instance
 import net.minestom.server.timer.ExecutionType
@@ -103,7 +104,7 @@ class GameLifecycle(private val game: Game) {
                 Environment.queue.bulkEnqueue(game.players.map { it to request })
             } catch (e: Exception) {
                 LogContext.with(LogContext.game(game)) {
-                    logger.error("Failed to queue players from game ${game.id}", e)
+                    RpcErrors.log("Failed to queue players from game ${game.id}", e, logger)
                 }
             }
         }
