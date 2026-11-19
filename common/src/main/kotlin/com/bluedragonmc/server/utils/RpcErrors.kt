@@ -44,11 +44,25 @@ object RpcErrors {
         when {
             status == null -> logger.error(message, throwable)
             status.code in TRANSPORT_CODES -> {
-                val detail = status.description ?: status.cause?.message ?: "no details"
-                logger.warn("{}: {} ({})", message, status.code, detail)
+                logger.warn("{}: {} ({})", message, status.code, detailsOf(status))
             }
             else -> logger.error("{}: {}", message, status.code, throwable)
         }
+    }
+
+    /**
+     * Returns the exception message from the deepest cause of the failed [Status] that has a message.
+     */
+    private fun detailsOf(status: Status): String {
+        var detail = status.description
+        var current: Throwable? = status.cause
+        var depth = 0
+        while (current != null && depth < MAX_CAUSE_DEPTH) {
+            current.message?.takeIf { it.isNotBlank() }?.let { detail = it }
+            current = current.cause
+            depth++
+        }
+        return detail ?: "no details"
     }
 
     /**
