@@ -72,7 +72,11 @@ object InitialInstanceRouter : Bootstrap(EnvType.PRODUCTION) {
             // After starting both jobs, wait for them to complete
 
             try {
-                dataLoadJob.join()
+                dataLoadJob.await()
+            } catch (_: TimeoutCancellationException) {
+                logger.warn("Timed out loading player data for ${event.player.username}")
+                event.player.kick(DATA_LOAD_FAILED)
+                return@listenSuspend
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
