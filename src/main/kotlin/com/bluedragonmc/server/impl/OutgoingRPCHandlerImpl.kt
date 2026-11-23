@@ -15,6 +15,7 @@ import com.bluedragonmc.server.service.Messaging
 import com.bluedragonmc.server.utils.GameState
 import com.bluedragonmc.server.utils.listen
 import com.bluedragonmc.server.utils.miniMessage
+import io.grpc.ConnectivityState
 import io.grpc.ManagedChannelBuilder
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -143,7 +144,11 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
     private val jukeboxStub = JukeboxGrpcKt.JukeboxCoroutineStub(channel)
 
     override fun isConnected(): Boolean {
-        return !channel.isShutdown && !channel.isTerminated && ::serverName.isInitialized
+        if (channel.isShutdown || channel.isTerminated || !::serverName.isInitialized) return false
+        return when (channel.getState(true)) {
+            ConnectivityState.READY, ConnectivityState.IDLE, ConnectivityState.CONNECTING -> true
+            ConnectivityState.TRANSIENT_FAILURE, ConnectivityState.SHUTDOWN, null -> false
+        }
     }
 
     override suspend fun initGameServer(serverName: String) {

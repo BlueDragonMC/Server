@@ -347,9 +347,9 @@ object ServerLifecycle : Bootstrap(EnvType.PRODUCTION) {
         return lastTick != 0L && System.nanoTime() - lastTick <= tickTimeoutNanos
     }
 
-    private fun isHealthy(): Boolean = isTicking() && Messaging.isConnected()
+    private fun isHealthy(): Boolean = isTicking()
 
-    private fun isReady(): Boolean = started && !draining && isTicking()
+    private fun isReady(): Boolean = started && !draining && isTicking() && Messaging.isConnected()
 
     private fun handleDrain(exchange: HttpExchange) {
         val future = beginDrain()
