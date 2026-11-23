@@ -21,7 +21,7 @@ fastutil = "8.5.19"
 polar = "1.16.1"
 slf4j = "2.0.20"
 # Auto-generated GRPC/Protobuf messaging code
-rpc = "2026-10-31-015108b"
+rpc = "2026-11-23-1e33d92"
 # Messaging dependencies
 grpc = "1.85.1"
 grpc-kotlin-stub = "1.5.0"

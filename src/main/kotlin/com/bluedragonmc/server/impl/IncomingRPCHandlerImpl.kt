@@ -8,6 +8,7 @@ import com.bluedragonmc.server.bootstrap.Jukebox
 import com.bluedragonmc.server.bootstrap.prod.ServerLifecycle
 import com.bluedragonmc.server.logging.LogContext
 import com.bluedragonmc.server.utils.miniMessage
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.google.protobuf.Empty
 import io.grpc.ServerBuilder
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -17,6 +18,7 @@ import net.kyori.adventure.sound.SoundStop
 import net.minestom.server.MinecraftServer
 import org.slf4j.LoggerFactory
 import java.util.*
+import java.time.Duration
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resume
 
@@ -62,10 +64,30 @@ class IncomingRPCHandlerImpl(serverPort: Int) : IncomingRPCHandler {
 
         private val logger = LoggerFactory.getLogger(this::class.java)
 
-        private val ZERO_UUID = UUID(0L, 0L)
-        private val ZERO_UUID_STRING = ZERO_UUID.toString()
+        companion object {
+            private val ZERO_UUID = UUID(0L, 0L)
+            private val ZERO_UUID_STRING = ZERO_UUID.toString()
+        }
+
+        private val recentRequestIdCache = Caffeine.newBuilder()
+            .expireAfterWrite(Duration.ofMinutes(2))
+            .maximumSize(10_000)
+            .build<String, GsClient.CreateInstanceResponse>()
 
         override suspend fun createInstance(request: GsClient.CreateInstanceRequest): GsClient.CreateInstanceResponse {
+            val requestId = request.requestId.takeIf { request.hasRequestId() && it.isNotBlank() }
+            if (requestId != null) {
+                recentRequestIdCache.getIfPresent(requestId)?.let { return it }
+            }
+
+            val response = createInstance0(request)
+            if (requestId != null && response.success) {
+                recentRequestIdCache.put(requestId, response)
+            }
+            return response
+        }
+
+        private suspend fun createInstance0(request: GsClient.CreateInstanceRequest): GsClient.CreateInstanceResponse {
             if (ServerLifecycle.isDraining()) {
                 LogContext.with(
                     LogContext.fields(

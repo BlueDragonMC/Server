@@ -1,5 +1,6 @@
 package com.bluedragonmc.server.impl
 
+import com.bluedragonmc.api.RpcRetryPolicy
 import com.bluedragonmc.api.grpc.*
 import com.bluedragonmc.api.grpc.Map
 import com.bluedragonmc.api.grpc.Queue
@@ -38,6 +39,7 @@ class OutgoingRPCHandlerImpl(serverAddress: String, serverPort: Int) : OutgoingR
         ManagedChannelBuilder.forAddress(serverAddress, serverPort)
             .defaultLoadBalancingPolicy("round_robin")
             .usePlaintext()
+            .defaultServiceConfig(RpcRetryPolicy.serviceConfig)
             .enableRetry()
             .build()
 
