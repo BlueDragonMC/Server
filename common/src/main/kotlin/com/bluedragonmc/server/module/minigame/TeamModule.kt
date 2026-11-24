@@ -203,7 +203,7 @@ class TeamModule(
         fun addPlayer(player: Player, sendChatMessage: Boolean = true) {
             require(getTeam(player) == null) { "Player must not already be on a team!" }
             _players.add(player)
-            eventNode.call(TeamAssignedEvent(parent, player, this))
+            parent.callEvent(TeamAssignedEvent(parent, player, this))
             if (::scoreboardTeam.isInitialized)
                 scoreboardTeam.addMember(player.username)
 
